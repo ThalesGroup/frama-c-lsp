@@ -1,0 +1,37 @@
+(lang dune 3.13)
+(name frama-c-acsl_lsp)
+(sections (lib .) (lib_root ..) (libexec .) (bin ../../bin))
+(files
+ (lib
+  (META
+   core/acsl_lsp.a
+   core/acsl_lsp.cma
+   core/acsl_lsp.cmi
+   core/acsl_lsp.cmt
+   core/acsl_lsp.cmx
+   core/acsl_lsp.cmxa
+   core/acsl_lsp.ml
+   dune-package
+   opam))
+ (lib_root (frama-c/plugins/acsl_lsp/META))
+ (libexec (core/acsl_lsp.cmxs))
+ (bin (Acsl_lsp)))
+(library
+ (name frama-c-acsl_lsp.core)
+ (kind normal)
+ (archives (byte core/acsl_lsp.cma) (native core/acsl_lsp.cmxa))
+ (plugins (byte core/acsl_lsp.cma) (native core/acsl_lsp.cmxs))
+ (native_archives core/acsl_lsp.a)
+ (requires frama-c.kernel)
+ (main_module_name Acsl_lsp)
+ (modes byte native)
+ (modules
+  (wrapped
+   (group
+    (alias
+     (obj_name acsl_lsp)
+     (visibility public)
+     (kind alias)
+     (source (path Acsl_lsp) (impl (path core/acsl_lsp.ml-gen))))
+    (name Acsl_lsp))
+   (wrapped true))))
