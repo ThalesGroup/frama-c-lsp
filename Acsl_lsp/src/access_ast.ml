@@ -50,9 +50,8 @@ class print_annot out = object
         | GType (_, _) -> Cil.DoChildren
         | GAnnot (ga, _) -> 
           match ga with 
-          | Daxiomatic (name, _, _, _) -> Format.fprintf out "daxiomatic : %s\n" name; Cil.DoChildren
-          | Dinvariant (_, _) -> Format.fprintf out "dinvariant \n"; Cil.DoChildren
-          | _ -> Format.fprintf out "other"; Cil.DoChildren
+              | Dvolatile (_, _, _, _, (_, _)) -> Format.fprintf out "\n"; Cil.DoChildren
+              | _ -> Cil.DoChildren
 
 
 

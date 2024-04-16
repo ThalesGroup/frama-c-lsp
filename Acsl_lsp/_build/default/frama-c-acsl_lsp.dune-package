@@ -1,6 +1,6 @@
 (lang dune 3.13)
 (name frama-c-acsl_lsp)
-(sections (lib .) (lib_root ..) (libexec .) (bin ../../bin))
+(sections (lib .) (lib_root ..) (libexec .))
 (files
  (lib
   (META
@@ -18,8 +18,7 @@
    dune-package
    opam))
  (lib_root (frama-c/plugins/acsl_lsp/META))
- (libexec (core/acsl_lsp.cmxs))
- (bin (Acsl_lsp)))
+ (libexec (core/acsl_lsp.cmxs)))
 (library
  (name frama-c-acsl_lsp.core)
  (kind normal)

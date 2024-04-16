@@ -42,7 +42,7 @@ class print_annot out = object
       Cil.DoChildren   
       *)
 
-      (*      method !vglob_aux g = 
+      method !vglob_aux g = 
         match g with 
         (GCompTag (_, _)|GCompTagDecl (_, _)|GEnumTag (_, _)|GEnumTagDecl (_, _)|
         GVarDecl (_, _)|GFunDecl (_, _, _)|GVar (_, _, _)|GFun (_, _)|GAsm (_, _)|
@@ -50,10 +50,13 @@ class print_annot out = object
         | GType (_, _) -> Cil.DoChildren
         | GAnnot (ga, _) -> 
           match ga with 
-          | Daxiomatic (name, _, _, _) -> Format.fprintf out "daxiomatic : %s\n" name; Cil.DoChildren
-          | Dinvariant (_, _) -> Format.fprintf out "dinvariant \n"; Cil.DoChildren
-          | _ -> Format.fprintf out "other"; Cil.DoChildren*)
+              | Dvolatile (_, _, _, _, (_, _)) -> Format.fprintf out "\n"; Cil.DoChildren
+              | _ -> Cil.DoChildren
 
+
+
+
+          
       method !vstmt_aux s = 
         let annots = Annotations.code_annot s in 
         let anleng = List.length annots in
@@ -72,11 +75,6 @@ class print_annot out = object
           ) annots;
         Cil.DoChildren
 
-(* REMARKS, QUESTIONS --------------------------------- : 
-   - why two position in a location ?
-   - meaning of Filepath.position.pos_cnum and pos_bol
-   *)
-      
 
 end
 

@@ -20,6 +20,3 @@ lib_root: [
 libexec: [
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp.cmxs" {"core/acsl_lsp.cmxs"}
 ]
-bin: [
-  "_build/install/default/bin/Acsl_lsp"
-]
