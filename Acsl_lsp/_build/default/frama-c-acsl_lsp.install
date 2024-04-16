@@ -1,5 +1,6 @@
 lib: [
   "_build/install/default/lib/frama-c-acsl_lsp/META"
+  "_build/install/default/lib/frama-c-acsl_lsp/core/access_ast.ml" {"core/access_ast.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp.a" {"core/acsl_lsp.a"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp.cma" {"core/acsl_lsp.cma"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp.cmi" {"core/acsl_lsp.cmi"}
@@ -7,6 +8,9 @@ lib: [
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp.cmx" {"core/acsl_lsp.cmx"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp.cmxa" {"core/acsl_lsp.cmxa"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp.ml" {"core/acsl_lsp.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Access_ast.cmi" {"core/acsl_lsp__Access_ast.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Access_ast.cmt" {"core/acsl_lsp__Access_ast.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Access_ast.cmx" {"core/acsl_lsp__Access_ast.cmx"}
   "_build/install/default/lib/frama-c-acsl_lsp/dune-package"
   "_build/install/default/lib/frama-c-acsl_lsp/opam"
 ]
