@@ -1,0 +1,138 @@
+% !TEX TS-program = pdflatex
+% !TEX encoding = UTF-8 Unicode
+
+% Example of the Memoir class, an alternative to the default LaTeX classes such as article and book, with many added features built into the class itself.
+
+%\documentclass[12pt,a4paper]{memoir} % for a long document
+\documentclass[12pt,a4paper,article]{memoir} % for a short document
+\usepackage{graphicx} % package for inserting images
+\usepackage{fullpage} 
+\usepackage[left=1.5cm, right=2cm]{geometry}
+\usepackage{hyperref} % package for external links
+\usepackage{biblatex}
+\addbibresource{Bibliography.bib} % importing bibliography file
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan
+}
+\usepackage[utf8]{inputenc} % set input encoding to utf8
+\usepackage{xcolor}
+\usepackage{glossaries}
+% Don't forget to read the Memoir manual: memman.pdf
+
+%%% Examples of Memoir customization
+%%% enable, disable or adjust these as desired
+
+%%% PAGE DIMENSIONS
+% Set up the paper to be as close as possible to both A4 & letter:
+\settrimmedsize{11in}{210mm}{*} % letter = 11in tall; a4 = 210mm wide
+\setlength{\trimtop}{0pt}
+\setlength{\trimedge}{\stockwidth}
+\addtolength{\trimedge}{-\paperwidth}
+\settypeblocksize{*}{\lxvchars}{1.618} % we want to the text block to have golden proportionals
+\setulmargins{50pt}{*}{*} % 50pt upper margins
+\setlrmargins{*}{*}{1.618} % golden ratio again for left/right margins
+\setheaderspaces{*}{*}{1.618}
+\checkandfixthelayout 
+% This is from memman.pdf
+
+%%% \maketitle CUSTOMISATION
+% For more than trivial changes, you may as well do it yourself in a titlepage environment
+
+
+%%% ToC (table of contents) APPEARANCE
+\maxtocdepth{subsection} % include subsections
+\renewcommand{\cftchapterpagefont}{}
+\renewcommand{\cftchapterfont}{}     % no bold!
+
+%%% HEADERS & FOOTERS
+\pagestyle{ruled} % try also: empty , plain , headings , ruled , Ruled , companion
+
+%%% CHAPTERS
+\chapterstyle{hangnum} % try also: default , section , hangnum , companion , article, demo
+
+\renewcommand{\chaptitlefont}{\Huge\sffamily\raggedright} % set sans serif chapter title font
+\renewcommand{\chapnumfont}{\Huge\sffamily\raggedright} % set sans serif chapter number font
+
+%%% SECTIONS
+\hangsecnum % hang the section numbers into the margin to match \chapterstyle{hangnum}
+\maxsecnumdepth{subsection} % number subsections
+
+\setsecheadstyle{\Large\sffamily\raggedright} % set sans serif section font
+\setsubsecheadstyle{\large\sffamily\raggedright} % set sans serif subsection font
+
+
+
+%% END Memoir customization
+
+%% glossary
+\makeglossaries
+
+\newglossaryentry{configuration language}
+{
+    name=configuration language,
+    description={Is a markup language specially suited 
+    for scientific documents}
+}
+
+
+
+%%% BEGIN DOCUMENT
+\begin{document}
+	\begin{titlingpage}
+		\pretitle{\begin{center}\sffamily\huge}
+		\posttitle{\par\end{center}\vskip 0.5em}
+		\title{ \huge \bfseries Internship report }
+		\author{
+		Djamila Mohamed\\
+		Supervisor: Adel Djoudi, Formal Methods Expert\\
+		Referent Professor: Ahmed Bouajjani\\[0.5mm]}
+		\maketitle
+		\includegraphics[width=10cm, height=2cm]{UniversiteParisCite\_EIDD\_WEB.png}
+	\end{titlingpage}
+
+
+
+\tableofcontents * % the asterisk means that the contents itself isn't put into the ToC
+\chapter{The company}
+\section{DIS\_IBS branch}
+\section{Organization chart}
+\parskip
+\parindent
+text
+\chapter{Topic of the internship}
+Java card, EAL certif etc.\\[1mm]
+My role as an intern at Thales DIS is to develop a code assistance tool for Frama-C developers who use ACSL annotations in their C source code. ACSL (ANSI/ISO C Specification Language) is a language used to specify the behaviour of programs written using the C language, it is used to ensure the correctness of functions and verify their behaviour corresponds to their specification. \cite{1}
+
+\chapter{Study of a solution for code editor users}
+\section{Background}
+Developers often struggle to choose the right development environment for their software projects. A lot of editors are greedy in storage capacity and often specialize their tools around few programming languges, which are generally the most popular ones. Let`s take for example Jetbrains' IntelliJ IDEA (Community edition), we are indeed well served with all the Java tooling and libraries, but we will not be able to start Javascript projects or have other Java framework support without paying, and IntelliJ only supports few languages \cite{2}, same goes for other well-known editors.
+Developers want a versatile and lightweight IDE (Integrated Development Environment) with the necessary code assisting tools where they can find all the code comprehension and coding features they can find in regular editors, such as real time code completion help, finding where a method or a variable is defined, displaying information about a symbol when hovering it with the cursor, etc.
+On top of this, such features should be displayed to the user within a reasonable amount of time.
+A solution was recently found in order to make up for these shortcomings, which is based on a client and server communication between the editor and a language server.
+
+\section{Language Servers}
+Language Servers \cite{3} come in handy in our situation. 
+The language server protocol (LSP) is a standardized way for editors and IDEs to communicate with language servers. This protocol defines a set of standard methods and data structures that language servers must implement, allowing them to be integrated with a wide range of development tools.
+By using a language server, editors and IDEs can offload the language-specific processing tasks to the server, which can then provide the necessary code comprehension and coding features to the client in a timely and efficient manner. This approach has several advantages:
+\subsection{Improved Performance}
+Language servers can leverage the processing power of a dedicated server to perform complex language analysis tasks, such as code completion, symbol lookup, and hover information, without burdening the editor or IDE. This results in faster response times and a more responsive development experience for the user.
+\subsection{Language Agnostic}
+Language servers are designed to be language-agnostic, meaning that a single language server can support multiple programming languages. This allows developers to use their preferred editor or IDE with a wide range of languages, without having to switch between different development environments.
+\subsection{Centralized Maintenance}
+Language servers are maintained and updated independently of the editor or IDE, making it easier to keep the language-specific features up-to-date. Developers can benefit from the latest improvements and bug fixes without having to update their entire development environment.
+\subsection{Extensibility}
+Language servers can be extended to support additional features or customized to meet the specific needs of a development team or project. This allows for a more tailored development experience that aligns with the team's workflows and preferences.
+See \cite{4}, [5], [6] for more information about LSP.
+\subsection{Examples of language servers}
+A recent example is the Nickel Language Server developed by Yannik Sander under the Tweag company (developed the Nickel configuration language)
+
+\chapter{Frama-C plugin development}
+\chapter{Future work}
+\chapter{Bibliography}
+\printbibliography
+
+
+\end{document}
