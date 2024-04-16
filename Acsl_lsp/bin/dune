@@ -1,4 +1,0 @@
-(executable
- (public_name Acsl_lsp)
- (name main)
- (libraries Acsl_lsp))

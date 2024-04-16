@@ -52,10 +52,6 @@ class print_annot out = object
           match ga with 
               | Dvolatile (_, _, _, _, (_, _)) -> Format.fprintf out "\n"; Cil.DoChildren
               | _ -> Cil.DoChildren
-
-
-
-
           
       method !vstmt_aux s = 
         let annots = Annotations.code_annot s in 
