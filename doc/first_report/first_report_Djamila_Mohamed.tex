@@ -1,0 +1,150 @@
+\documentclass[10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[myheadings]{fullpage}
+\DeclareUnicodeCharacter{0301}{\hspace{-1ex}\'{ }}
+% Package for headers 
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{listings}
+
+% For figures and stuff
+\usepackage{graphicx, wrapfig, subcaption, setspace, booktabs}
+\usepackage[T1]{fontenc}
+\usepackage{array}
+
+% Change for different font sizes and families
+\usepackage[font=small, labelfont=bf]{caption}
+\usepackage{fourier}
+\usepackage[protrusion=true, expansion=true]{microtype}
+
+% Maths
+\usepackage{amsmath,amssymb}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage[super]{nth}
+
+%Grammar expression
+\usepackage[altpo]{backnaur}
+
+% Bibliography
+\usepackage[
+    sorting=none,
+	backend=bibtex
+]{biblatex} 
+\addbibresource{bibliography.bib}
+
+%% Language and font encodings
+\usepackage[english]{babel}
+\usepackage{csquotes}
+\usepackage{titlesec}
+
+\usepackage{appendix}
+\renewcommand{\appendixpagename}{Annexes}
+\renewcommand{\appendixtocname}{Annexes}
+\setcounter{secnumdepth}{4}
+
+\titleformat{\paragraph}
+{\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}
+\titlespacing*{\paragraph}
+{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
+
+
+\newcommand{\HRule}[1]{\rule{\linewidth}{#1}}
+\onehalfspacing
+\setcounter{tocdepth}{5}
+\setcounter{secnumdepth}{5}
+
+%% Sets page size and margins
+\usepackage[a4paper,top=2cm,bottom=1.5cm,left=2cm,right=2cm,marginparwidth=1.5cm]{geometry}
+
+\pagestyle{fancy}
+\fancyhf{}
+
+% Header and footer information
+\setlength\headheight{15pt}
+\fancyhead[L]{Thales DIS / EIDD} 
+\fancyhead[R]{Djamila Mohamed}
+\fancyhead[C]{\today}
+\fancyfoot[R]{\thepage}
+ \setlength {\marginparwidth }{2cm}
+
+
+\newcolumntype{P}[1]{>{\centering\arraybackslash}p{#1}}
+
+ 
+\begin{document}
+\begin{singlespace}
+\pagenumbering{gobble}
+
+\date{}
+
+% Do not change anything here except in \LARGE \textbf{This is the title of the essay} 
+% /hline before and after the title makes those horoziontal lines appear, you can change the appearance by changing the 2pt to different sizees
+\title{
+		% Change to your faculty if needed
+            \includegraphics[scale=0.75]{UniversiteParisCite\_EIDD\_WEB.png}\\   		
+            \includegraphics[scale=0.60]{Thales-logo-1.png}\\
+            
+		\HRule{2pt} \\
+		\LARGE \textbf{Implementation of a Frama-C plugin and a language server for ACSL/C code assistance} %para que quede encerrado en las lineas
+		\HRule{2pt} \\ [0.5cm]
+		\normalsize \today}
+		
+\date{}
+
+\author{
+          Internship report \\[1cm]
+		 Djamila Mohamed      \\
+          2023-2024 \\ [1cm]
+		 Supervisor:      \\
+	   Adel Djoudi, Formal Methods Expert
+		 }
+		 
+\maketitle
+
+\newpage
+
+\tableofcontents
+\newpage
+
+\newpage
+% Add your own abstract here
+
+
+
+\pagenumbering{arabic}
+% Uncomment the next line if you want keywords/index terms after the abstract. 
+%\textit{\textbf{Keywords}: lorem, ipsum, dolor}
+\section{Introduction}
+\subsection{Thales DIS, IBS}
+Thales Digital Identity and Security is the global business unit (GBU) of Thales which operates in the field of secure software, providing biometrics and encryption solutions. Within the DIS GBU is the Identity and Biometric Solutions business line (BL) which is in charge of digital identity in a government scale and operate on cards and passports. the IBS BL is divided in three subunits : ID Documents Solutions (IDDS), Digital ID \& Verification Solutions and Public Security. I am assigned to the IDDS subunit as an intern software developer, under the supervision of Adel Djoudi, formal methods expert at Thales. 
+
+\subsection{Background}
+In the IDDS subunit, developers work using program analyzers such as Frama-C, a C code analyzer developed by CEA and Inria. This software provides a precise analysis of their code and potential rifts in it by manipulating functional specification in ACSL language. But Frama-C currently does not provide code comprehension and coding features for C and ACSL, some VS Code extensions exist but they are not able to fully satisfy the needs of developers (whyy???).
+The goal of this project is to provide a code assistance tool (reecrire sujet dans la convention de stage)
+
+\section{Integration into the company}
+During my first day at Thales, I was welcomed at the reception and they instantly made me a [badge] with authorizations specific to my role, there are places in can access and others that i can't. M. Djoudi accompanied me through the whole process and introduced me to the IDDS team. 
+Thales DIS gives a lot of attention to any security threats that could occur physically or virtually. 
+
+\section{Documentation}
+\subsection{The Language Server Protocol}
+Developers working in large scale projects often need a code editing environment with the adequate tooling for the specific languages they use in their workspace. Multiple solutions such as Eclipse or IntelliJ IDEA exist for Java projects, as well as other popular programming languages. But the complexity of developing one tool for one language and one specific editor is unreasonable as it forces developers to repeat the same document analysis logic for every code editor or Integrated Development Environement (IDE) with each programming language. 
+%To overcome these, a recent solution was developed : the Language Servers.
+%Language Servers are servers providing methods that can be called remotely via a client, in our case the editor, execute them and send back the results to the client. Ex : we want to go to the definition of a function by using `Ctrl+Click` on its name, this means the editor will send a request to the language server ordering it to execute the function ``Go to defintion'' and will send back a result in form of a text that will be interpreted by the code editor and then display the definition of the function to the user.
+
+\subsection{Frama-C plugin development}
+- how is frama c strucutured
+- what is a plugin and why do we need one in our case
+
+\cite{frama_c_user_manual}
+\cite{developer_manual}
+\cite{cil}
+
+\printbibliography
+\end{singlespace}
+\end{document}
+
