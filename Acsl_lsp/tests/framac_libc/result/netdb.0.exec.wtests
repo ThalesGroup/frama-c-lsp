@@ -1,9 +1,0 @@
-{
-  "dir": "tests/framac_libc/result",
-  "info": "TEST #0 OF TEST FILE tests/framac_libc/netdb.c",
-  "cmd": "frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     netdb.c > \"netdb.res.log\" 2> \"netdb.err.log\"",
-  "out": "netdb.res.log",
-  "err": "netdb.err.log",
-  "oracle_out": "../oracle/netdb.res.oracle",
-  "oracle_err": "../oracle/netdb.err.oracle"
-}

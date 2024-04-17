@@ -1,9 +1,0 @@
-{
-  "dir": "tests/framac_libc/result",
-  "info": "TEST #0 OF TEST FILE tests/framac_libc/math.c",
-  "cmd": "frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     math.c > \"math.res.log\" 2> \"math.err.log\"",
-  "out": "math.res.log",
-  "err": "math.err.log",
-  "oracle_out": "../oracle/math.res.oracle",
-  "oracle_err": "../oracle/math.err.oracle"
-}

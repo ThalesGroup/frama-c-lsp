@@ -1,9 +1,0 @@
-{
-  "dir": "tests/framac_libc/result",
-  "info": "TEST #0 OF TEST FILE tests/framac_libc/locale.c",
-  "cmd": "frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     locale.c > \"locale.res.log\" 2> \"locale.err.log\"",
-  "out": "locale.res.log",
-  "err": "locale.err.log",
-  "oracle_out": "../oracle/locale.res.oracle",
-  "oracle_err": "../oracle/locale.err.oracle"
-}

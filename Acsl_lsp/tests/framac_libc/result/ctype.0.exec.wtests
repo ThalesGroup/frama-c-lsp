@@ -1,9 +1,0 @@
-{
-  "dir": "tests/framac_libc/result",
-  "info": "TEST #0 OF TEST FILE tests/framac_libc/ctype.c",
-  "cmd": "frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     ctype.c > \"ctype.res.log\" 2> \"ctype.err.log\"",
-  "out": "ctype.res.log",
-  "err": "ctype.err.log",
-  "oracle_out": "../oracle/ctype.res.oracle",
-  "oracle_err": "../oracle/ctype.err.oracle"
-}

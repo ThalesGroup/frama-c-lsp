@@ -19,17 +19,30 @@ class print_annot out = object
         (GCompTag (_, _)|GCompTagDecl (_, _)|GEnumTag (_, _)|GEnumTagDecl (_, _)|
         GVarDecl (_, _)|GFun (_, _)|GVar (_, _, _)|GAnnot (_, _)|GAsm (_, _)|
         GPragma (_, _)|GText _ |GType (_, _)) -> Format.fprintf out "\n"; Cil.DoChildren
-        | GFunDecl (_, vf, (pos1, _)) -> 
-          Format.fprintf out "Function %s at line : %d\n" vf.vorig_name pos1.pos_lnum ; Cil.DoChildren*)
+        | GFunDecl (_, vf, (pos_start, _)) -> 
+          Format.fprintf out "Function %s at line : %d\n" vf.vorig_name pos_start.pos_lnum ; Cil.DoChildren*)
       method !vglob_aux g = 
         match g with 
         (GCompTag (_, _)|GCompTagDecl (_, _)|GEnumTag (_, _)|GEnumTagDecl (_, _)|
         GVarDecl (_, _)|GFun (_, _)|GVar (_, _, _)|GAsm (_, _)|
         GPragma (_, _)|GText _ |GType (_, _)) -> Format.fprintf out "\n"; Cil.DoChildren
-        | GFunDecl (_, vf, (pos1, _)) -> 
-          Format.fprintf out "Function %s at line : %d\n" vf.vorig_name pos1.pos_lnum ; Cil.DoChildren (* MARCHE PAAAAAAAAAAAAAS*)
+        | GFunDecl (_, vf, (pos_start, _)) -> 
+          Format.fprintf out "Function %s at line : %d\n" vf.vorig_name pos_start.pos_lnum ; Cil.DoChildren (* doesn't work *)
         | GAnnot (ga, _) -> match ga with 
-          | Dfun_or_pred (li, (pos1,_)) -> Format.fprintf out "var info : %s, path : %s, line : %d\n" li.l_var_info.lv_name (Filepath.normalize (Filepath.basename pos1.pos_path)) pos1.pos_lnum; Cil.DoChildren 
+          | Dfun_or_pred (_, (pos_start,_)) -> 
+            Filepath.Normalized.pp_abs out pos_start.pos_path;
+            Format.fprintf out "\n";
+
+            (*Filepath.pp_pos out pos_end;
+            Format.fprintf out "\n";*)
+            (*Format.fprintf out "var info : %s, path : %s, starts %d:%d ends %d:%d\n" 
+                li.l_var_info.lv_name 
+                (Filepath.normalize (Filepath.basename pos_start.pos_path))
+                pos_start.pos_lnum
+                (pos_start.pos_cnum - pos_start.pos_bol)
+                pos_end.pos_lnum
+                (pos_end.pos_cnum - pos_end.pos_bol); *)
+            Cil.DoChildren 
           | _ -> Format.fprintf out "other\n"; Cil.DoChildren
           
       (*
@@ -43,7 +56,7 @@ class print_annot out = object
             | AAssert (_, _) -> Format.fprintf out "assert\n"
             | AStmtSpec (_, _) -> Format.fprintf out "stmtspec\n"
             | AInvariant (_, _, _) -> Format.fprintf out "inv\n"
-            | AVariant ({term_loc=(pos1, _); _ }, _) -> Format.fprintf out "loop variant at line : %d\n" pos1.pos_lnum 
+            | AVariant ({term_loc=(pos_start, _); _ }, _) -> Format.fprintf out "loop variant at line : %d\n" pos_start.pos_lnum 
             | AAssigns (_, _) -> Format.fprintf out "assigns\n"
             | AAllocation (_, _) ->Format.fprintf out "alloc\n"
             | APragma _ -> Format.fprintf out "pragma\n"
@@ -52,7 +65,8 @@ class print_annot out = object
         Cil.DoChildren
             *)
 
-        method !vstmt_aux s = 
+            (*
+               method !vstmt_aux s = 
           let annots = Annotations.code_annot s in 
           let anleng = List.length annots in
           if anleng <= 0 then Format.fprintf out "no annotations\n"
@@ -66,6 +80,8 @@ class print_annot out = object
             
             ) annots;
           Cil.DoChildren
+          *)
+        
 
 end
 

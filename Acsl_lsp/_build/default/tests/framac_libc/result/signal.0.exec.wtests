@@ -1,9 +1,0 @@
-{
-  "dir": "tests/framac_libc/result",
-  "info": "TEST #0 OF TEST FILE tests/framac_libc/signal.c",
-  "cmd": "frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     signal.c > \"signal.res.log\" 2> \"signal.err.log\"",
-  "out": "signal.res.log",
-  "err": "signal.err.log",
-  "oracle_out": "../oracle/signal.res.oracle",
-  "oracle_err": "../oracle/signal.err.oracle"
-}

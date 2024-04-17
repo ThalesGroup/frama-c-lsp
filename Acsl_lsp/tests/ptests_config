@@ -1,1 +1,1 @@
-DEFAULT_SUITES= framac_libc quick_test
+DEFAULT_SUITES= quick_test

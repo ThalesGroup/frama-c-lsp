@@ -1,9 +1,0 @@
-{
-  "dir": "tests/framac_libc/result",
-  "info": "TEST #0 OF TEST FILE tests/framac_libc/assert.c",
-  "cmd": "frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     assert.c > \"assert.res.log\" 2> \"assert.err.log\"",
-  "out": "assert.res.log",
-  "err": "assert.err.log",
-  "oracle_out": "../oracle/assert.res.oracle",
-  "oracle_err": "../oracle/assert.err.oracle"
-}

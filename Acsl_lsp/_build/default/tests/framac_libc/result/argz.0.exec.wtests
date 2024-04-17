@@ -1,9 +1,0 @@
-{
-  "dir": "tests/framac_libc/result",
-  "info": "TEST #0 OF TEST FILE tests/framac_libc/argz.c",
-  "cmd": "frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     argz.c > \"argz.res.log\" 2> \"argz.err.log\"",
-  "out": "argz.res.log",
-  "err": "argz.err.log",
-  "oracle_out": "../oracle/argz.res.oracle",
-  "oracle_err": "../oracle/argz.err.oracle"
-}
