@@ -1,0 +1,4 @@
+[kernel] Parsing __fc_runtime.c (with preprocessing)
+[kernel:annot-error] netdb.c:61: Warning: unexpected token '15'
+[kernel] User Error: warning annot-error treated as fatal error.
+[kernel] Frama-C aborted: invalid user input.

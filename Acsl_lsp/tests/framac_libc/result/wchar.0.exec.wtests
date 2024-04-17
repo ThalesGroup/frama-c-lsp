@@ -1,0 +1,9 @@
+{
+  "dir": "tests/framac_libc/result",
+  "info": "TEST #0 OF TEST FILE tests/framac_libc/wchar.c",
+  "cmd": "frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     wchar.c > \"wchar.res.log\" 2> \"wchar.err.log\"",
+  "out": "wchar.res.log",
+  "err": "wchar.err.log",
+  "oracle_out": "../oracle/wchar.res.oracle",
+  "oracle_err": "../oracle/wchar.err.oracle"
+}

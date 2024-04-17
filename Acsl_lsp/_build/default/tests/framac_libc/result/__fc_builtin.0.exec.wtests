@@ -1,0 +1,9 @@
+{
+  "dir": "tests/framac_libc/result",
+  "info": "TEST #0 OF TEST FILE tests/framac_libc/__fc_builtin.c",
+  "cmd": "frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     __fc_builtin.c > \"__fc_builtin.res.log\" 2> \"__fc_builtin.err.log\"",
+  "out": "__fc_builtin.res.log",
+  "err": "__fc_builtin.err.log",
+  "oracle_out": "../oracle/__fc_builtin.res.oracle",
+  "oracle_err": "../oracle/__fc_builtin.err.oracle"
+}

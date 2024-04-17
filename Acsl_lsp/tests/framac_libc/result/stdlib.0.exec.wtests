@@ -1,0 +1,9 @@
+{
+  "dir": "tests/framac_libc/result",
+  "info": "TEST #0 OF TEST FILE tests/framac_libc/stdlib.c",
+  "cmd": "frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     stdlib.c > \"stdlib.res.log\" 2> \"stdlib.err.log\"",
+  "out": "stdlib.res.log",
+  "err": "stdlib.err.log",
+  "oracle_out": "../oracle/stdlib.res.oracle",
+  "oracle_err": "../oracle/stdlib.err.oracle"
+}

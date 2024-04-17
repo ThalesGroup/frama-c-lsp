@@ -1,0 +1,9 @@
+{
+  "dir": "tests/framac_libc/result",
+  "info": "TEST #0 OF TEST FILE tests/framac_libc/fenv.c",
+  "cmd": "frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     fenv.c > \"fenv.res.log\" 2> \"fenv.err.log\"",
+  "out": "fenv.res.log",
+  "err": "fenv.err.log",
+  "oracle_out": "../oracle/fenv.res.oracle",
+  "oracle_err": "../oracle/fenv.err.oracle"
+}

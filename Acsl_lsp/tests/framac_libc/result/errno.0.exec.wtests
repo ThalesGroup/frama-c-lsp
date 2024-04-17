@@ -1,0 +1,9 @@
+{
+  "dir": "tests/framac_libc/result",
+  "info": "TEST #0 OF TEST FILE tests/framac_libc/errno.c",
+  "cmd": "frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     errno.c > \"errno.res.log\" 2> \"errno.err.log\"",
+  "out": "errno.res.log",
+  "err": "errno.err.log",
+  "oracle_out": "../oracle/errno.res.oracle",
+  "oracle_err": "../oracle/errno.err.oracle"
+}

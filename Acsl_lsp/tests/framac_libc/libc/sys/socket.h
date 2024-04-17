@@ -1,0 +1,588 @@
+/**************************************************************************/
+/*                                                                        */
+/*  This file is part of Frama-C.                                         */
+/*                                                                        */
+/*  Copyright (C) 2007-2023                                               */
+/*    CEA (Commissariat à l'énergie atomique et aux énergies              */
+/*         alternatives)                                                  */
+/*                                                                        */
+/*  you can redistribute it and/or modify it under the terms of the GNU   */
+/*  Lesser General Public License as published by the Free Software       */
+/*  Foundation, version 2.1.                                              */
+/*                                                                        */
+/*  It is distributed in the hope that it will be useful,                 */
+/*  but WITHOUT ANY WARRANTY; without even the implied warranty of        */
+/*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         */
+/*  GNU Lesser General Public License for more details.                   */
+/*                                                                        */
+/*  See the GNU Lesser General Public License version 2.1                 */
+/*  for more details (enclosed in the file licenses/LGPLv2.1).            */
+/*                                                                        */
+/**************************************************************************/
+
+#ifndef __FC_SOCKET_H__
+#define __FC_SOCKET_H__
+#include "../features.h"
+__PUSH_FC_STDLIB
+__BEGIN_DECLS
+#include "__fc_machdep.h"
+
+#include "../errno.h"
+
+// Note: most constants used here are based on Linux, independently of the
+// chosen machdep. If using other OSs (e.g. MacOS), consider redefining them.
+
+#ifndef __socklen_t_defined
+typedef __UINT_LEAST32_T socklen_t;
+#define __socklen_t_defined
+#endif
+#include "../__fc_define_sa_family_t.h"
+#include "../__fc_define_sockaddr.h"
+/* Not POSIX compliant but seems needed for some functions... */
+#include "../__fc_define_ssize_t.h"
+#include "../features.h"
+
+// Non-POSIX; value taken from Linux implementation
+#define _SS_MAXSIZE 128
+
+struct sockaddr_storage {
+  sa_family_t   ss_family;
+  char __sa_data[_SS_MAXSIZE - sizeof(sa_family_t)]; /* non-POSIX */
+};
+
+#include "./uio.h"
+
+struct cmsghdr {
+  socklen_t  cmsg_len;
+  int        cmsg_level;
+  int        cmsg_type;
+};
+
+#define SCM_RIGHTS 0
+
+struct msghdr {
+  void          *msg_name;
+  socklen_t      msg_namelen;
+  struct iovec  *msg_iov;
+  int            msg_iovlen;
+  void          *msg_control;
+  socklen_t      msg_controllen;
+  int            msg_flags;
+};
+
+// POSIX requires these as macros; early uses of these macros (e.g. when
+// computing the size of arrays) prevent us from leaving them undefined and
+// using a function prototype. The following definitions are based on the
+// Linux version of the GNU libc.
+#define CMSG_DATA(cmsg) ((unsigned char *) ((struct cmsghdr *) (cmsg) + 1))
+#define CMSG_ALIGN(len) (((len) + sizeof (size_t) - 1) \
+                     & (size_t) ~(sizeof (size_t) - 1))
+#define CMSG_SPACE(len) (CMSG_ALIGN (len) \
+                       + CMSG_ALIGN (sizeof (struct cmsghdr)))
+#define CMSG_LEN(len)   (CMSG_ALIGN (sizeof (struct cmsghdr)) + (len))
+
+// POSIX.1-2008 requires these to be defined as macros, but we have no body
+// for them, so we declare them as prototypes as well.
+#ifndef CMSG_FIRSTHDR
+extern struct cmsghdr *CMSG_FIRSTHDR(struct msghdr *msgh);
+# define CMSG_FIRSTHDR(h) CMSG_FIRSTHDR(h)
+#endif
+#ifndef CMSG_NXTHDR
+extern struct cmsghdr *CMSG_NXTHDR(struct msghdr *msgh, struct cmsghdr *cmsg);
+# define CMSG_NXTHDR(h, c) CMSG_NXTHDR(h, c)
+#endif
+
+/* Socket types. */
+#define SOCK_STREAM	1		/* stream (connection) socket	*/
+#define SOCK_DGRAM	2		/* datagram (conn.less) socket	*/
+#define SOCK_RAW	3		/* raw socket			*/
+#define SOCK_RDM	4		/* reliably-delivered message	*/
+#define SOCK_SEQPACKET	5		/* sequential packet socket	*/
+
+/* Protocol families (not described by POSIX) */
+#define PF_UNSPEC 0
+#define PF_LOCAL 1
+#define PF_UNIX PF_LOCAL
+#define PF_FILE PF_LOCAL
+#define PF_INET 2
+#define PF_AX25 3
+#define PF_IPX 4
+#define PF_APPLETALK 5
+#define PF_NETROM 6
+#define PF_BRIDGE 7
+#define PF_ATMPVC 8
+#define PF_X25 9
+#define PF_INET6 10
+#define PF_ROSE 11
+#define PF_DECnet 12
+#define PF_NETBEUI 13
+#define PF_SECURITY 14
+#define PF_KEY 15
+#define PF_NETLINK 16
+#define PF_ROUTE PF_NETLINK
+#define PF_PACKET 17
+#define PF_ASH 18
+#define PF_ECONET 19
+#define PF_ATMSVC 20
+#define PF_RDS 21
+#define PF_SNA 22
+#define PF_IRDA 23
+#define PF_PPPOX 24
+#define PF_WANPIPE 25
+#define PF_LLC 26
+#define PF_IB 27
+#define PF_MPLS 28
+#define PF_CAN 29
+#define PF_TIPC 30
+#define PF_BLUETOOTH 31
+#define PF_IUCV 32
+#define PF_RXRPC 33
+#define PF_ISDN 34
+#define PF_PHONET 35
+#define PF_IEEE802154 36
+#define PF_CAIF 37
+#define PF_ALG 38
+#define PF_NFC 39
+#define PF_VSOCK 40
+#define PF_KCM 41
+#define PF_QIPCRTR 42
+#define PF_MAX 43
+
+/* Address families (only AF_INET, AF_INET6, AF_UNIX and AF_UNSPEC are
+   described in POSIX; AF_INET6 is optional) */
+#define AF_UNSPEC 0
+#define AF_LOCAL PF_LOCAL
+#define AF_UNIX PF_UNIX
+#define AF_FILE PF_FILE
+#define AF_INET PF_INET
+#define AF_AX25 PF_AX25
+#define AF_IPX PF_IPX
+#define AF_APPLETALK PF_APPLETALK
+#define AF_NETROM PF_NETROM
+#define AF_BRIDGE PF_BRIDGE
+#define AF_ATMPVC PF_ATMPVC
+#define AF_X25 PF_X25
+#define AF_INET6 PF_INET6
+#define AF_ROSE PF_ROSE
+#define AF_DECnet PF_DECnet
+#define AF_NETBEUI PF_NETBEUI
+#define AF_SECURITY PF_SECURITY
+#define AF_KEY PF_KEY
+#define AF_NETLINK PF_NETLINK
+#define AF_ROUTE PF_ROUTE
+#define AF_PACKET PF_PACKET
+#define AF_ASH PF_ASH
+#define AF_ECONET PF_ECONET
+#define AF_ATMSVC PF_ATMSVC
+#define AF_RDS PF_RDS
+#define AF_SNA PF_SNA
+#define AF_IRDA PF_IRDA
+#define AF_PPPOX PF_PPPOX
+#define AF_WANPIPE PF_WANPIPE
+#define AF_LLC PF_LLC
+#define AF_IB PF_IB
+#define AF_MPLS PF_MPLS
+#define AF_CAN PF_CAN
+#define AF_TIPC PF_TIPC
+#define AF_BLUETOOTH PF_BLUETOOTH
+#define AF_IUCV PF_IUCV
+#define AF_RXRPC PF_RXRPC
+#define AF_ISDN PF_ISDN
+#define AF_PHONET PF_PHONET
+#define AF_IEEE802154 PF_IEEE802154
+#define AF_CAIF PF_CAIF
+#define AF_ALG PF_ALG
+#define AF_NFC PF_NFC
+#define AF_VSOCK PF_VSOCK
+#define AF_KCM PF_KCM
+#define AF_QIPCRTR PF_QIPCRTR
+#define AF_MAX PF_MAX
+
+#define SOL_SOCKET 1
+
+#define SO_DEBUG 1
+#define SO_REUSEADDR 2
+#define SO_TYPE 3
+#define SO_ERROR 4
+#define SO_DONTROUTE 5
+#define SO_BROADCAST 6
+#define SO_SNDBUF 7
+#define SO_RCVBUF 8
+#define SO_SNDBUFFORCE 32
+#define SO_RCVBUFFORCE 33
+#define SO_KEEPALIVE 9
+#define SO_OOBINLINE 10
+#define SO_NO_CHECK 11
+#define SO_PRIORITY 12
+#define SO_LINGER 13
+#define SO_BSDCOMPAT 14
+#define SO_REUSEPORT 15
+#define SO_PASSCRED 16
+#define SO_PEERCRED 17
+#define SO_RCVLOWAT 18
+#define SO_SNDLOWAT 19
+#define SO_RCVTIMEO 20
+#define SO_SNDTIMEO 21
+#define SO_SECURITY_AUTHENTICATION 22
+#define SO_SECURITY_ENCRYPTION_TRANSPORT 23
+#define SO_SECURITY_ENCRYPTION_NETWORK 24
+#define SO_BINDTODEVICE 25
+#define SO_ATTACH_FILTER 26
+#define SO_DETACH_FILTER 27
+#define SO_GET_FILTER SO_ATTACH_FILTER
+#define SO_PEERNAME 28
+#define SO_TIMESTAMP 29
+#define SCM_TIMESTAMP SO_TIMESTAMP
+#define SO_ACCEPTCONN 30
+#define SO_PEERSEC 31
+#define SO_PASSSEC 34
+#define SO_TIMESTAMPNS 35
+#define SCM_TIMESTAMPNS SO_TIMESTAMPNS
+#define SO_MARK 36
+#define SO_TIMESTAMPING 37
+#define SCM_TIMESTAMPING SO_TIMESTAMPING
+#define SO_PROTOCOL 38
+#define SO_DOMAIN 39
+#define SO_RXQ_OVFL             40
+#define SO_WIFI_STATUS 41
+#define SCM_WIFI_STATUS SO_WIFI_STATUS
+#define SO_PEEK_OFF 42
+#define SO_NOFCS 43
+#define SO_LOCK_FILTER 44
+#define SO_SELECT_ERR_QUEUE 45
+#define SO_BUSY_POLL 46
+#define SO_MAX_PACING_RATE 47
+#define SO_BPF_EXTENSIONS 48
+#define SO_INCOMING_CPU 49
+#define SO_ATTACH_BPF 50
+#define SO_DETACH_BPF SO_DETACH_FILTER
+#define SO_ATTACH_REUSEPORT_CBPF 51
+#define SO_ATTACH_REUSEPORT_EBPF 52
+#define SO_CNX_ADVICE 53
+#define SCM_TIMESTAMPING_OPT_STATS 54
+#define SO_MEMINFO 55
+#define SO_INCOMING_NAPI_ID 56
+#define SO_COOKIE 57
+#define SCM_TIMESTAMPING_PKTINFO 58
+#define SO_PEERGROUPS 59
+
+#define SOMAXCONN 128
+
+enum __fc_shutdown {
+  SHUT_RD,
+  SHUT_WR,
+  SHUT_RDWR
+};
+// POSIX requires these SHUT_* constants to be defined as macros
+#define SHUT_RD SHUT_RD
+#define SHUT_WR SHUT_WR
+#define SHUT_RDWR SHUT_RDWR
+
+#ifndef __FC_MAX_OPEN_SOCKETS
+// arbitrary number
+#define __FC_MAX_OPEN_SOCKETS 1024
+#endif
+
+// Allows different implementations for internal socket structures
+#ifndef __FC_INTERNAL_SOCKFDS_PROVIDED
+struct __fc_sockfds_type { int x; };
+#endif
+//@ ghost struct __fc_sockfds_type __fc_sockfds[__FC_MAX_OPEN_SOCKETS];
+
+/* Represents the creation of new file descriptors for sockets. */
+//@ ghost extern int __fc_socket_counter;
+
+// __fc_sockfds represents the state of open socket descriptors.
+//@ ghost volatile int __fc_open_sock_fds;
+
+struct linger {
+  int l_onoff;
+  int l_linger;
+};
+
+// TODO: Model the state of some functions more precisely.
+
+/*@
+  requires valid_sockfd: 0 <= sockfd < __FC_MAX_OPEN_SOCKETS;
+  assigns  \result, *(((char *)addr)+(0 .. *addrlen-1)), __fc_sockfds[sockfd]
+           \from *addr, *addrlen, __fc_sockfds[sockfd];
+  ensures result_error_or_valid_new_sockfd:
+    \result == -1 || 0 <= \result < __FC_MAX_OPEN_SOCKETS;
+  behavior addr_null:
+    assumes addr_is_null: addr == \null;
+    requires addrlen_should_be_null: addrlen == \null;
+    assigns \result, __fc_sockfds[sockfd] \from __fc_sockfds[sockfd];
+  behavior addr_not_null:
+    assumes addr_is_not_null: addr != \null;
+    requires valid_addrlen: \valid(addrlen);
+    requires addr_has_room: \valid(((char *)addr)+(0 .. *addrlen-1));
+    ensures initialization:addr: \initialized(((char *)addr)+(0..*addrlen-1));
+  disjoint behaviors;
+  // TODO: check what to do when the buffer addr is too small
+ */
+extern int     accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+
+/*@
+  requires valid_sockfd: sockfd: 0 <= sockfd < __FC_MAX_OPEN_SOCKETS;
+  requires valid_read_addr: \valid_read(((char*)addr)+(0..addrlen-1));
+  assigns __fc_sockfds[sockfd]
+          \from sockfd, *addr, addrlen, __fc_sockfds[sockfd];
+  assigns \result \from indirect:sockfd, indirect:*addr, indirect:addrlen,
+          indirect:__fc_sockfds[sockfd];
+  ensures result_ok_or_error: \result == 0 || \result == -1;
+ */
+extern int     bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+
+/*@
+  // ideally, we should check whether addrlen is compatible with the kind of
+  // socket of [sockfd] (created by calling socket()).
+  requires valid_sockfd: 0 <= sockfd < __FC_MAX_OPEN_SOCKETS;
+  requires valid_read_addr: \valid_read(((char*)addr)+(0 .. addrlen-1));
+  assigns __fc_sockfds[sockfd]
+          \from __fc_sockfds[sockfd], indirect:sockfd, indirect:addr,
+                indirect:*addr, indirect:addrlen;
+  assigns \result
+          \from indirect:__fc_sockfds[sockfd], indirect:sockfd, indirect:addr,
+                indirect:*addr, indirect:addrlen;
+  ensures result_ok_or_error: \result == 0 || \result == -1;
+ */
+extern int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+
+extern int     getpeername(int, struct sockaddr *, socklen_t *);
+
+/*@
+  // missing: may assign to errno: EBADF, ENOTSOCK, EOPNOTSUPP, EINVAL, ENOBUFS
+  requires valid_sockfd: 0 <= socket < __FC_MAX_OPEN_SOCKETS;
+  requires valid_address_len: \valid(address_len);
+  requires initialization:address_len: \initialized(address_len);
+  requires valid_address: \valid(((char*)address)+(0 .. *address_len-1));
+  assigns *address_len \from indirect:socket, __fc_sockfds[socket];
+  assigns \result \from indirect:__fc_sockfds[socket], indirect:socket;
+  assigns ((char*)address)[0 .. (*address_len)-1] \from
+          indirect:__fc_sockfds[socket], indirect:socket;
+  ensures new_address_len: *address_len <= \old(*address_len);
+  ensures result_ok_or_error: \result == 0 || \result == -1;
+*/
+extern int getsockname(int socket, struct sockaddr *restrict address,
+                       socklen_t *restrict address_len);
+
+// getsockopt is incrementally specified: options which are used more often
+// are gradually refined; the rest are handled by behavior "other_options".
+// Note: this specification may be more restrictive than what the manpage says,
+//       to allow for a more precise analysis. It should however correspond to
+//       expected usage.
+/*@
+  requires valid_sockfd: 0 <= sockfd < __FC_MAX_OPEN_SOCKETS;
+  requires valid_optlen: \valid(optlen);
+  assigns ((char*)optval)[0..], \result
+          \from indirect:sockfd, indirect:level, indirect:optname,
+                indirect:*optlen, indirect:optval,
+                indirect:__fc_sockfds[sockfd];
+  assigns *optlen
+          \from indirect:sockfd, indirect:level, indirect:optname,
+                *optlen, indirect:optval, indirect:__fc_sockfds[sockfd];
+  ensures result_ok_or_error: \result == 0 || \result == -1;
+  behavior so_error:
+    assumes optname_is_error: level == SOL_SOCKET && optname == SO_ERROR;
+    requires valid_optlen: \valid(optlen);
+    requires optlen_value: *optlen == sizeof(int);
+    requires valid_optval: \valid((int*)optval);
+    assigns *(int*)optval, \result \from indirect:sockfd, indirect:optlen,
+                                         indirect:__fc_sockfds[sockfd];
+  behavior other_options:
+    assumes optname_not_error: !(level == SOL_SOCKET && optname == SO_ERROR);
+    requires optval_null_or_valid:
+      optval == \null || \valid(((char*)optval)+(0..));
+    assigns ((char*)optval)[0..], \result
+            \from indirect:sockfd, indirect:level, indirect:optname,
+                  indirect:*optlen, indirect:optval,
+                  indirect:__fc_sockfds[sockfd];
+    assigns *optlen
+            \from indirect:sockfd, indirect:level, indirect:optname,
+                  *optlen, indirect:optval, indirect:__fc_sockfds[sockfd];
+  disjoint behaviors;
+  complete behaviors;
+*/
+extern int getsockopt(int sockfd, int level, int optname,
+                      void *optval, socklen_t *optlen);
+
+/*@
+  requires valid_sockfd: 0 <= sockfd < __FC_MAX_OPEN_SOCKETS;
+  assigns  \result \from sockfd, __fc_sockfds[sockfd];
+  assigns  __fc_sockfds[sockfd] \from sockfd, backlog, __fc_sockfds[sockfd];
+  ensures  result_ok_or_error: \result == 0 || \result == -1;
+ */
+extern int listen(int sockfd, int backlog);
+
+/* Flags for passing to recv() and others */
+#define MSG_OOB          0x1
+#define MSG_PEEK         0x2
+#define MSG_DONTROUTE    0x4
+#define MSG_CTRUNC       0x8
+#define MSG_PROXY        0x10
+#define MSG_TRUNC        0x20
+#define MSG_DONTWAIT     0x40
+#define MSG_EOR          0x80
+#define MSG_WAITALL      0x100
+#define MSG_FIN          0x200
+#define MSG_SYN          0x400
+#define MSG_CONFIRM      0x800
+#define MSG_RST          0x1000
+#define MSG_RSTERRQUEUE  0x2000
+#define MSG_NOSIGNAL     0x4000
+#define MSG_MORE         0x8000
+#define MSG_WAITFORONE   0x10000
+#define MSG_BATCH        0x40000
+#define MSG_FASTOPEN     0x20000000
+#define MSG_CMSG_CLOEXEC 0x40000000
+
+
+/*@ 
+  requires valid_sockfd: 0 <= sockfd < __FC_MAX_OPEN_SOCKETS;
+  requires valid_buffer_length: \valid((char *)buf+(0 .. len-1));
+  assigns  *((char *)buf+(0 .. len-1)), __fc_sockfds[sockfd], \result
+           \from sockfd, len, flags, __fc_sockfds[sockfd];
+  ensures  result_error_or_received_length:
+           \result == -1 || 0 <= \result <= len;
+  ensures  initialization: \initialized(((char *)buf+(0 .. \result-1)));
+ */
+extern ssize_t recv(int sockfd, void * buf, size_t len, int flags);
+
+/*@
+  requires valid_sockfd: 0 <= sockfd < __FC_MAX_OPEN_SOCKETS;
+  requires valid_buffer_length: \valid((char *)buf+(0 .. len-1));
+  requires valid_addrbuf_or_null:initialization: (\valid(addrbuf_len) &&
+                                   \initialized(addrbuf_len) &&
+                                   \valid((char *)addrbuf+(0 .. *addrbuf_len-1)))
+                                  || (addrbuf == \null && addrbuf_len == \null);
+  assigns *((char *)buf+(0 .. len-1)), __fc_sockfds[sockfd], \result
+          \from sockfd, len, flags, __fc_sockfds[sockfd];
+  assigns *addrbuf_len \from indirect:sockfd, indirect: len,
+                             indirect:flags, __fc_sockfds[sockfd];
+  assigns *((char *)addrbuf+(0 .. \old(*addrbuf_len)-1))
+          \from indirect:sockfd, indirect: len,
+                         indirect:flags, __fc_sockfds[sockfd];
+  ensures result_error_or_received_length: \result == -1 || 0 <= \result <= len;
+  ensures initialization:buf: \initialized(((char *)buf+(0 .. \result-1)));
+  ensures initialization:addrbuf:
+          addrbuf != \null ==>
+            \initialized(((char *)addrbuf+(0 .. \old(*addrbuf_len)-1)));
+*/
+extern ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags,
+                        struct sockaddr *addrbuf, socklen_t *addrbuf_len);
+
+/*@ requires valid_sockfd: 0 <= sockfd < __FC_MAX_OPEN_SOCKETS;
+  @ requires msg_control_has_room:
+  @   \valid(&((char *)hdr->msg_control)[0..hdr->msg_controllen-1]);
+  @ requires msg_iov_has_room: \valid(&(hdr->msg_iov[0..hdr->msg_iovlen-1]));
+  @ requires msg_name_null_or_has_room: hdr->msg_name == \null
+  @   || \valid(&((char *)hdr->msg_name)[0..hdr->msg_namelen-1]);
+  @ assigns ((char *)hdr->msg_name)[0..hdr->msg_namelen-1]
+  @   \from __fc_sockfds[sockfd];
+  @ assigns hdr->msg_namelen \from __fc_sockfds[sockfd];
+  @ assigns ((char *)hdr->msg_iov[0..hdr->msg_iovlen-1].iov_base)[0..]
+  @   \from __fc_sockfds[sockfd];
+  @ assigns ((char *)hdr->msg_control)[0..hdr->msg_controllen-1]
+  @   \from __fc_sockfds[sockfd];
+  @ assigns \result \from __fc_sockfds[sockfd];
+  @ assigns hdr->msg_controllen \from __fc_sockfds[sockfd];
+  @ assigns hdr->msg_flags \from __fc_sockfds[sockfd];
+  @ assigns __fc_sockfds[sockfd] \from __fc_sockfds[sockfd];
+  @ ensures result_error_or_received_length:
+  @   \result == -1 || 0 <= \result <= hdr->msg_iovlen;
+*/
+extern ssize_t recvmsg(int sockfd, struct msghdr *hdr, int flags);
+
+/*@
+  requires available_sockfd: 0 <= sockfd < __FC_MAX_OPEN_SOCKETS;
+  requires buf_len_ok: \valid_read(((char*)buf)+(0 .. len - 1));
+  assigns errno
+    \from indirect:sockfd, indirect:__fc_sockfds[sockfd],
+          indirect:((char *)buf)[0..len], flags;
+  assigns __fc_sockfds[sockfd]
+    \from __fc_sockfds[sockfd], ((char *)buf)[0..len], flags;
+  assigns \result
+    \from indirect:sockfd, indirect:__fc_sockfds[sockfd],
+          indirect:((char*)buf)[0..len], indirect:flags;
+  ensures error_or_chars_sent: \result == -1 || 0 <= \result <= len;
+ */
+extern ssize_t send(int sockfd, const void *buf, size_t len, int flags);
+
+/*@
+  requires available_sockfd: 0 <= sockfd < __FC_MAX_OPEN_SOCKETS;
+  requires valid_message: \valid_read(message);
+  requires valid_msg_iov:
+    \valid_read(message->msg_iov+(0 .. message->msg_iovlen - 1));
+  assigns __fc_sockfds[sockfd]
+    \from __fc_sockfds[sockfd],
+          indirect:*message,
+          indirect:message->msg_iov[0 .. message->msg_iovlen - 1],
+          indirect:flags;
+  assigns \result \from indirect:sockfd, indirect:__fc_sockfds[sockfd],
+          indirect:*message,
+          indirect:message->msg_iov[0 .. message->msg_iovlen - 1];
+  ensures error_or_chars_sent: \result == -1 || 0 <= \result;
+ */
+extern ssize_t sendmsg(int sockfd, const struct msghdr *message, int flags);
+
+/*@
+  requires available_sockfd: 0 <= sockfd < __FC_MAX_OPEN_SOCKETS;
+  requires buf_len_ok: \valid_read(((char*)buf)+(0 .. len - 1));
+  assigns errno
+    \from indirect:sockfd, indirect:__fc_sockfds[sockfd],
+          indirect:((char *)buf)[0..len], flags;
+  assigns __fc_sockfds[sockfd]
+    \from __fc_sockfds[sockfd], ((char *)buf)[0..len], flags;
+  assigns \result
+    \from indirect:sockfd, indirect:__fc_sockfds[sockfd],
+          indirect:((char*)buf)[0..len], indirect:flags;
+  ensures error_or_chars_sent: \result == -1 || 0 <= \result <= len;
+ */
+extern ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
+                      const struct sockaddr *address, socklen_t address_len);
+
+/*@
+  requires valid_sockfd: 0 <= sockfd < __FC_MAX_OPEN_SOCKETS;
+  requires optval_null_or_has_room:
+           optval == \null || \valid_read(((char *)optval)+(0..optlen-1));
+  assigns  \result, __fc_sockfds[sockfd] 
+           \from  __fc_sockfds[sockfd], level, optname,
+             ((char *)optval)[0..optlen-1], optlen;
+  ensures  result_error_or_ok: \result == 0 || \result == -1;
+ */
+extern int setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen);
+
+/*@
+  requires valid_sockfd: 0 <= sockfd < __FC_MAX_OPEN_SOCKETS;
+  assigns \result, __fc_sockfds[sockfd] \from how, __fc_sockfds[sockfd];
+  ensures result_error_or_ok: \result == 0 || \result == -1;
+ */
+extern int shutdown(int sockfd, int how);
+
+extern int sockatmark(int);
+
+/*@
+  assigns  \result \from indirect:domain, indirect:type, indirect:protocol,
+                         indirect:__fc_socket_counter;
+  assigns  __fc_socket_counter \from indirect:domain, indirect:type,
+                                     indirect:protocol, __fc_socket_counter;
+  ensures  result_error_or_valid_new_sockfd:
+           0 <= \result < __FC_MAX_OPEN_SOCKETS || \result == -1;
+*/
+extern int socket(int domain, int type, int protocol);
+
+extern int sockatmark(int);
+
+/*@ requires valid_socket_sector: \valid(&sv[0..1]);
+  @ assigns \result, __fc_socket_counter, sv[0..1] \from
+  @                  __fc_socket_counter;
+  @ ensures result_error_or_ok: \result == 0 || \result == -1;
+  @ ensures initialization:sv: \initialized(&sv[0..1]);
+  @ ensures valid_new_sockfd:sv0: 0 <= sv[0] < __FC_MAX_OPEN_SOCKETS;
+  @ ensures valid_new_sockfd:sv1: 0 <= sv[1] < __FC_MAX_OPEN_SOCKETS;
+  @*/
+extern int socketpair(int domain, int type, int protocol, int sv[2]);
+
+__END_DECLS
+__POP_FC_STDLIB
+#endif

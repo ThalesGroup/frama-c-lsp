@@ -1,0 +1,9 @@
+{
+  "dir": "tests/framac_libc/result",
+  "info": "TEST #0 OF TEST FILE tests/framac_libc/unistd.c",
+  "cmd": "frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     unistd.c > \"unistd.res.log\" 2> \"unistd.err.log\"",
+  "out": "unistd.res.log",
+  "err": "unistd.err.log",
+  "oracle_out": "../oracle/unistd.res.oracle",
+  "oracle_err": "../oracle/unistd.err.oracle"
+}
