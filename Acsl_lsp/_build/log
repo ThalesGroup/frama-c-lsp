@@ -1,4 +1,4 @@
-# dune build @ptests
+# dune exec -- frama-c tests/suite1/locale.h
 # OCAMLPARAM: unset
 # Shared cache: disabled
 # Shared cache location: /home/user/.cache/dune/db
@@ -20,16 +20,4 @@
 #        }
 #  ; instrument_with = []
 #  }
-$ /home/user/.opam/4.13.1_fc28/bin/ocamlc.opt -config > /tmp/dune_5a19a0_output
-$ (cd _build/default/tests/suite1/result && /home/user/.opam/4.13.1_fc28/bin/frama-c-wtests -brief acsl_first_example.0.exec.wtests 'frama-c -check -no-autoload-plugins -add-symbolic-path="/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:."     acsl_first_example.c > "acsl_first_example.res.log" 2> "acsl_first_example.err.log"')
-> Files ../oracle/acsl_first_example.res.oracle and acsl_first_example.res.log differ
-> % dune build @"tests/suite1/result/acsl_first_example.0.exec.wtests": diff failure on diff:
->  (cd _build/default/tests/suite1/result && diff --new-file "acsl_first_example.res.log" "../oracle/acsl_first_example.res.oracle")
-$ /usr/bin/git --no-pager diff --no-index --color=always -u _build/default/tests/suite1/oracle/acsl_first_example.res.oracle _build/default/tests/suite1/result/acsl_first_example.res.log
-> diff --git a/_build/default/tests/suite1/oracle/acsl_first_example.res.oracle b/_build/default/tests/suite1/result/acsl_first_example.res.log
-> index e69de29..a4b34c2 100644
-> --- a/_build/default/tests/suite1/oracle/acsl_first_example.res.oracle
-> +++ b/_build/default/tests/suite1/result/acsl_first_example.res.log
-> @@ -0,0 +1 @@
-> +[kernel] Parsing acsl_first_example.c (with preprocessing)
-[1]
+$ /home/user/.opam/4.13.1_fc28/bin/ocamlc.opt -config > /tmp/dune_28e962_output

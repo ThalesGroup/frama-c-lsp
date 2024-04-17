@@ -1,0 +1,28 @@
+
+
+other
+other
+other
+other
+other
+other
+other
+other
+other
+other
+other
+other
+var info : minimum, path : /home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/__fc_string_axiomatic.h, line : 273
+var info : maximum, path : /home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/__fc_string_axiomatic.h, line : 274
+var info : valid_string, path : /home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/__fc_string_axiomatic.h, line : 277
+var info : valid_read_string, path : /home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/__fc_string_axiomatic.h, line : 280
+var info : valid_read_nstring, path : /home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/__fc_string_axiomatic.h, line : 283
+var info : valid_string_or_null, path : /home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/__fc_string_axiomatic.h, line : 287
+var info : valid_wstring, path : /home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/__fc_string_axiomatic.h, line : 290
+var info : valid_read_wstring, path : /home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/__fc_string_axiomatic.h, line : 293
+var info : valid_read_nwstring, path : /home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/__fc_string_axiomatic.h, line : 296
+var info : valid_wstring_or_null, path : /home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/__fc_string_axiomatic.h, line : 300
+
+
+Function setlocale at line : 137
+Function localeconv at line : 146
