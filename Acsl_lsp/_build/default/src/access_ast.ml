@@ -1,9 +1,12 @@
 open Cil_types
+open Server.Data
 (*open Logic_const
 open Logic_utils
 open Logic_parse_string
 open Logic_to_c
 *)
+
+module J = Jany
 
 (* if the value has type "option" *)
 let extract_x x =
@@ -29,19 +32,68 @@ class print_annot out = object
         | GFunDecl (_, vf, (pos_start, _)) -> 
           Format.fprintf out "Function %s at line : %d\n" vf.vorig_name pos_start.pos_lnum ; Cil.DoChildren (* doesn't work *)
         | GAnnot (ga, _) -> match ga with 
-          | Dfun_or_pred (_, (pos_start,_)) -> 
-            Filepath.Normalized.pp_abs out pos_start.pos_path;
-            Format.fprintf out "\n";
+          | Dfun_or_pred (_, (pos_start,pos_end)) -> 
+            (*Filepath.Normalized.pp_abs out pos_start.pos_path;
+            Format.fprintf out "\nhere\n";*)
 
-            (*Filepath.pp_pos out pos_end;
-            Format.fprintf out "\n";*)
-            (*Format.fprintf out "var info : %s, path : %s, starts %d:%d ends %d:%d\n" 
-                li.l_var_info.lv_name 
-                (Filepath.normalize (Filepath.basename pos_start.pos_path))
-                pos_start.pos_lnum
-                (pos_start.pos_cnum - pos_start.pos_bol)
-                pos_end.pos_lnum
-                (pos_end.pos_cnum - pos_end.pos_bol); *)
+            let rpcversion = 2.0 in
+            let id = 1 in
+            (*let mth = "textDocument/definition" in*)
+            Filepath.reset_symbolic_dirs ();
+            let uri = Filepath.Normalized.to_pretty_string (Filepath.Normalized.of_string (Filepath.Normalized.to_pretty_string pos_start.pos_path)) in
+            let start_line = pos_start.pos_lnum in 
+            let end_line = pos_end.pos_lnum in 
+            let start_character = (pos_start.pos_cnum - pos_start.pos_bol) in 
+            let end_character = (pos_end.pos_cnum - pos_end.pos_bol) in 
+
+            (* Parsing data into json structure *)
+            let result = (`Assoc [
+              ("targetUri", `String uri);
+              ("targetRange", `Assoc [
+                ("start", `Assoc [
+                  ("line", `Int start_line);
+                  ("character", `Int start_character)
+                ]);
+                ("end", `Assoc [
+                  ("line", `Int end_line);
+                  ("character", `Int end_character)
+                ])
+              ]);
+              ("targetSelection", `Assoc [
+                ("start", `Assoc [
+                  ("line",`Int start_line);
+                  ("character",`Int start_character)
+                ]);
+                ("end", `Assoc [
+                  ("line",`Int end_line); 
+                  ("character", `Int end_character)
+                ])
+              ])
+            ]) in
+
+            let response = (`Assoc [ ("jsonrpc", `Float rpcversion);
+                              ("id", `Int id);
+                              ("result", result)
+                            ]) in 
+
+            let json_response = Yojson.Basic.to_string response in
+            Format.fprintf out "%s\n" json_response;
+
+            (* creating json with Server.Data lib *)
+            
+
+            (*let json_response = "" in 
+            let json_assoc_list = Json.assoc response in
+
+            List.iter (fun elt -> 
+              let json_response = json_response ^ (Json.string elt) in
+            ) json_assoc_list; Cil.DoChildren*) (* TODO :  find a way to print json without using yojson *)
+
+              
+            (* send request *)
+
+           
+
             Cil.DoChildren 
           | _ -> Format.fprintf out "other\n"; Cil.DoChildren
           
@@ -86,10 +138,39 @@ class print_annot out = object
 end
 
 let run () =
-  
+  (*
+  let ip = Unix.((gethostbyname "caml.inria.fr").h_addr_list.(0)) in
+  let addr = Unix.ADDR_INET (ip, 80) in
+
+  let sock = Unix.(socket PF_INET SOCK_STREAM 0) in
+  let _ = Unix.connect sock addr in
+
+  let in_ch = Unix.in_channel_of_descr sock in
+  let out_ch = Unix.out_channel_of_descr sock in
+
+  let _ =
+    output_string out_ch
+      "GET /pub/docs/manual-ocaml/index.html HTTP/1.1\r\n\
+      Host: caml.inria.fr\r\n\
+      User-Agent: OCaml\r\n\
+      Connection: close\r\n\
+      \r\n";
+    flush out_ch in
+
+  let _ =
+    try
+      while true do
+        print_string (input_line in_ch)
+      done
+    with End_of_file ->
+      Unix.close sock in
+*)
+
+
+
 let chan = open_out "funcs.out" in
 let fmt = Format.formatter_of_out_channel chan in
-Visitor.visitFramacFile (new print_annot fmt) (Ast.get());
+Visitor.visitFramacFileSameGlobals (new print_annot fmt) (Ast.get());
 
 
 close_out chan

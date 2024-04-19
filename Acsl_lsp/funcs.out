@@ -18,16 +18,26 @@ other
 other
 other
 other
-/home/user/.opam/4.13.1_fc28/share/frama-c/share/libc/__fc_string_axiomatic.h
-/home/user/.opam/4.13.1_fc28/share/frama-c/share/libc/__fc_string_axiomatic.h
-/home/user/.opam/4.13.1_fc28/share/frama-c/share/libc/__fc_string_axiomatic.h
-/home/user/.opam/4.13.1_fc28/share/frama-c/share/libc/__fc_string_axiomatic.h
-/home/user/.opam/4.13.1_fc28/share/frama-c/share/libc/__fc_string_axiomatic.h
-/home/user/.opam/4.13.1_fc28/share/frama-c/share/libc/__fc_string_axiomatic.h
-/home/user/.opam/4.13.1_fc28/share/frama-c/share/libc/__fc_string_axiomatic.h
-/home/user/.opam/4.13.1_fc28/share/frama-c/share/libc/__fc_string_axiomatic.h
-/home/user/.opam/4.13.1_fc28/share/frama-c/share/libc/__fc_string_axiomatic.h
-/home/user/.opam/4.13.1_fc28/share/frama-c/share/libc/__fc_string_axiomatic.h
+{"jsonrpc":2.0,"id":1,"result":{"targetUri":"FRAMAC_SHARE/libc/__fc_string_axiomatic.h","targetRange":{"start":{"line":273,"character":4},"end":{"line":273,"character":52}},"targetSelection":{"start":{"line":273,"character":4},"end":{"line":273,"character":52}}}}
+{}
+{"jsonrpc":2.0,"id":1,"result":{"targetUri":"FRAMAC_SHARE/libc/__fc_string_axiomatic.h","targetRange":{"start":{"line":274,"character":4},"end":{"line":274,"character":52}},"targetSelection":{"start":{"line":274,"character":4},"end":{"line":274,"character":52}}}}
+{}
+{"jsonrpc":2.0,"id":1,"result":{"targetUri":"FRAMAC_SHARE/libc/__fc_string_axiomatic.h","targetRange":{"start":{"line":277,"character":4},"end":{"line":278,"character":47}},"targetSelection":{"start":{"line":277,"character":4},"end":{"line":278,"character":47}}}}
+{}
+{"jsonrpc":2.0,"id":1,"result":{"targetUri":"FRAMAC_SHARE/libc/__fc_string_axiomatic.h","targetRange":{"start":{"line":280,"character":4},"end":{"line":281,"character":52}},"targetSelection":{"start":{"line":280,"character":4},"end":{"line":281,"character":52}}}}
+{}
+{"jsonrpc":2.0,"id":1,"result":{"targetUri":"FRAMAC_SHARE/libc/__fc_string_axiomatic.h","targetRange":{"start":{"line":283,"character":4},"end":{"line":285,"character":31}},"targetSelection":{"start":{"line":283,"character":4},"end":{"line":285,"character":31}}}}
+{}
+{"jsonrpc":2.0,"id":1,"result":{"targetUri":"FRAMAC_SHARE/libc/__fc_string_axiomatic.h","targetRange":{"start":{"line":287,"character":4},"end":{"line":288,"character":34}},"targetSelection":{"start":{"line":287,"character":4},"end":{"line":288,"character":34}}}}
+{}
+{"jsonrpc":2.0,"id":1,"result":{"targetUri":"FRAMAC_SHARE/libc/__fc_string_axiomatic.h","targetRange":{"start":{"line":290,"character":4},"end":{"line":291,"character":47}},"targetSelection":{"start":{"line":290,"character":4},"end":{"line":291,"character":47}}}}
+{}
+{"jsonrpc":2.0,"id":1,"result":{"targetUri":"FRAMAC_SHARE/libc/__fc_string_axiomatic.h","targetRange":{"start":{"line":293,"character":4},"end":{"line":294,"character":52}},"targetSelection":{"start":{"line":293,"character":4},"end":{"line":294,"character":52}}}}
+{}
+{"jsonrpc":2.0,"id":1,"result":{"targetUri":"FRAMAC_SHARE/libc/__fc_string_axiomatic.h","targetRange":{"start":{"line":296,"character":4},"end":{"line":298,"character":32}},"targetSelection":{"start":{"line":296,"character":4},"end":{"line":298,"character":32}}}}
+{}
+{"jsonrpc":2.0,"id":1,"result":{"targetUri":"FRAMAC_SHARE/libc/__fc_string_axiomatic.h","targetRange":{"start":{"line":300,"character":4},"end":{"line":301,"character":35}},"targetSelection":{"start":{"line":300,"character":4},"end":{"line":301,"character":35}}}}
+{}
 
 
 
