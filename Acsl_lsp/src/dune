@@ -14,7 +14,6 @@
 	(flags -open Frama_c_kernel :standard)
 	(libraries 
 		frama-c.kernel
-		frama-c-server.core
 	)
 )
 
@@ -23,4 +22,3 @@
 	(libraries frama-c-acsl_lsp.core)
 	(site (frama-c plugins))
 )
-

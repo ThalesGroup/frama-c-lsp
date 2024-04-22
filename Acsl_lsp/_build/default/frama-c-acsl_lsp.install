@@ -1,6 +1,5 @@
 lib: [
   "_build/install/default/lib/frama-c-acsl_lsp/META"
-  "_build/install/default/lib/frama-c-acsl_lsp/core/access_ast.ml" {"core/access_ast.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp.a" {"core/acsl_lsp.a"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp.cma" {"core/acsl_lsp.cma"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp.cmi" {"core/acsl_lsp.cmi"}
@@ -12,9 +11,14 @@ lib: [
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__.cmt" {"core/acsl_lsp__.cmt"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__.cmx" {"core/acsl_lsp__.cmx"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__.ml" {"core/acsl_lsp__.ml"}
-  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Access_ast.cmi" {"core/acsl_lsp__Access_ast.cmi"}
-  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Access_ast.cmt" {"core/acsl_lsp__Access_ast.cmt"}
-  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Access_ast.cmx" {"core/acsl_lsp__Access_ast.cmx"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Find_def.cmi" {"core/acsl_lsp__Find_def.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Find_def.cmt" {"core/acsl_lsp__Find_def.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Find_def.cmx" {"core/acsl_lsp__Find_def.cmx"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Start_server.cmi" {"core/acsl_lsp__Start_server.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Start_server.cmt" {"core/acsl_lsp__Start_server.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Start_server.cmx" {"core/acsl_lsp__Start_server.cmx"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/find_def.ml" {"core/find_def.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/start_server.ml" {"core/start_server.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/dune-package"
   "_build/install/default/lib/frama-c-acsl_lsp/opam"
 ]

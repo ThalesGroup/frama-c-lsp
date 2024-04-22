@@ -4,7 +4,6 @@
 (files
  (lib
   (META
-   core/access_ast.ml
    core/acsl_lsp.a
    core/acsl_lsp.cma
    core/acsl_lsp.cmi
@@ -16,12 +15,13 @@
    core/acsl_lsp__.cmt
    core/acsl_lsp__.cmx
    core/acsl_lsp__.ml
-   core/acsl_lsp__Access_ast.cmi
-   core/acsl_lsp__Access_ast.cmt
-   core/acsl_lsp__Access_ast.cmx
+   core/acsl_lsp__Find_def.cmi
+   core/acsl_lsp__Find_def.cmt
+   core/acsl_lsp__Find_def.cmx
    core/acsl_lsp__Start_server.cmi
    core/acsl_lsp__Start_server.cmt
    core/acsl_lsp__Start_server.cmx
+   core/find_def.ml
    core/start_server.ml
    dune-package
    opam))
@@ -33,7 +33,7 @@
  (archives (byte core/acsl_lsp.cma) (native core/acsl_lsp.cmxa))
  (plugins (byte core/acsl_lsp.cma) (native core/acsl_lsp.cmxs))
  (native_archives core/acsl_lsp.a)
- (requires frama-c.kernel frama-c-server.core)
+ (requires frama-c.kernel)
  (main_module_name Acsl_lsp)
  (modes byte native)
  (modules
@@ -47,13 +47,13 @@
     (name Acsl_lsp)
     (modules
      (module
-      (obj_name acsl_lsp__Access_ast)
-      (visibility public)
-      (source (path Access_ast) (impl (path core/access_ast.ml))))
-     (module
       (obj_name acsl_lsp)
       (visibility public)
       (source (path Acsl_lsp) (impl (path core/acsl_lsp.ml))))
+     (module
+      (obj_name acsl_lsp__Find_def)
+      (visibility public)
+      (source (path Find_def) (impl (path core/find_def.ml))))
      (module
       (obj_name acsl_lsp__Start_server)
       (visibility public)

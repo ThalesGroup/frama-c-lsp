@@ -1,48 +1,35 @@
-module StartServer = struct
+let server_port = 8001
 
-  let run (out : Format.formatter) = 
-    let pretty (fmt : Stdlib.Format.formatter) (x : 'a) : unit = 
-      Format.fprintf fmt "a" ;
-      x 
-    in
+let start_server out () =
+  let addr = Unix.ADDR_INET(Unix.inet_addr_any, server_port) in
+  let s = Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in
+  Unix.setsockopt s Unix.SO_REUSEADDR true;
+  Unix.bind s addr;
+  Unix.listen s 5;
+  Printf.printf "Server listening on port %d\n" server_port;
+  while true do
+    let (client_socket, _) = Unix.accept s in
+    (* Handling requests *)
+    let buffer = Bytes.create 1024 in
+    let bytes_read = Unix.recv client_socket buffer 0 (Bytes.length buffer) [] in
+    if bytes_read > 0 then begin
+      let request = Bytes.sub_string buffer 0 bytes_read in
+      Printf.printf "Received request: %s\n" request;
+      Format.fprintf out "Received request: %s\n" request;
+      Format.pp_print_flush out ();
+      (* Prepare a response *)
+      let response = "HTTP/1.1 200 OK\r\nContent-Length: 17\r\n\r\nHello, world! :DD" in
+      let _ = Unix.send client_socket (Bytes.of_string response) 0 (String.length response) [] in
+      ();
+    end;
+    Unix.close client_socket
+  done
 
-    let equal (x : 'a) (y : 'a) : bool = x = y in
 
-    let my_callback (responses : 'a Server.Main.response list) : unit =
-      List.iter (function
-        | `Error _ -> Printf.printf "abc"
-        | `Data _ -> Printf.printf "abc" 
-        | `Killed _ -> ()
-        | `Rejected _ -> ()
-        | `Signal _ -> ()
-        | `CmdLineOn -> ()
-        | `CmdLineOff -> ()
-      ) responses
-    in
-
-    (*let reqs = [
-      [`Request (1234)]
-    ] in*)
-
-    let fetch () : ('a Server.Main.message option) = Some {requests = []; callback = my_callback} in
-    let server = Server.Main.create ~equal:equal ~pretty:pretty ~fetch:fetch () in 
-    let () = Server.Main.start server in
-    let () = Server.Main.run server in
-
-    let my_exec_command (json : Json.t) : Json.t =
-      let temp1 = Json.string json in
-      Format.fprintf out "%s\n" temp1 ;
-      Json.of_string "Command executed successfully"
-    in
-
-    let () = Server.Main.register `EXEC "Execution : " my_exec_command in
-    let result = Server.Main.exec "Execution : " (Json.of_string 
-    "{
-      
-    }") in
-
-    let temp2 = Json.string result in 
-
-    Printf.printf "\t\t\tRESULT = %s\n" temp2;
-
-end
+let launch_server () =
+  let chan = open_out "server.out" in
+  let fmt = Format.formatter_of_out_channel chan in
+  start_server fmt ()
+  let () = Find_def.browse_ast ()
+  
+let () = Db.Main.extend launch_server
