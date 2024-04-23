@@ -1,4 +1,4 @@
-# dune exec -- frama-c tests/quick_test/acsl_first_example.c
+# dune exec -- frama-c /home/user/.opam/4.13.1_fc28/share/frama-c/share/libc/locale.h
 # OCAMLPARAM: unset
 # Shared cache: disabled
 # Shared cache location: /home/user/.cache/dune/db
@@ -20,4 +20,4 @@
 #        }
 #  ; instrument_with = []
 #  }
-$ /home/user/.opam/4.13.1_fc28/bin/ocamlc.opt -config > /tmp/dune_39e5a1_output
+$ /home/user/.opam/4.13.1_fc28/bin/ocamlc.opt -config > /tmp/dune_3feda8_output
