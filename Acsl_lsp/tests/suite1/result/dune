@@ -6,24 +6,24 @@
   (deps (alias "acsl_first_example.0.exec.wtests"))) ; to performs all sub-tests related to a file
 (alias (name "acsl_first_example.c")
   (deps (alias "acsl_first_example.0.exec"))) ; to reproduce and visualize the all sub-test outputs related to a file
-(rule ; TEST #0 OF TEST FILE tests/quick_test/acsl_first_example.c
+(rule ; TEST #0 OF TEST FILE tests/suite1/acsl_first_example.c
   (alias "acsl_first_example.0.exec.wtests")
   (targets "acsl_first_example.err.log" "acsl_first_example.res.log"  )
   (deps "acsl_first_example.0.exec.wtests" "../oracle/acsl_first_example.res.oracle" "../oracle/acsl_first_example.err.oracle"  "acsl_first_example.c"  (package frama-c)  )
   (enabled_if (and true))
-(action (run frama-c-wtests -brief "acsl_first_example.0.exec.wtests" "frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     acsl_first_example.c > \"acsl_first_example.res.log\" 2> \"acsl_first_example.err.log\"" ))
+(action (run frama-c-wtests -brief "acsl_first_example.0.exec.wtests" "echo LFDKSNFK acsl_first_example.c > \"acsl_first_example.res.log\" 2> \"acsl_first_example.err.log\"" ))
 )
 (rule ; REPRODUCE TEST #0 OF TEST FILE "acsl_first_example.c"
   (alias "acsl_first_example.0.exec")
   (deps  "acsl_first_example.c"  (package frama-c)   (universe))
   (enabled_if (and true))
-(action (with-accepted-exit-codes 0 (system "frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     acsl_first_example.c")))
+(action (with-accepted-exit-codes 0 (system "echo LFDKSNFK acsl_first_example.c")))
 )
 (rule ; SHOW TEST COMMAND #0 OF TEST FILE "acsl_first_example.c"
   (alias "acsl_first_example.0.exec.show")
   (deps  "acsl_first_example.c"  (package frama-c)   (universe))
   (enabled_if (and true))
-(action (system "echo 'frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     acsl_first_example.c > \"acsl_first_example.res.log\" 2> \"acsl_first_example.err.log\"'"))
+(action (system "echo 'echo LFDKSNFK acsl_first_example.c > \"acsl_first_example.res.log\" 2> \"acsl_first_example.err.log\"'"))
 )
 (rule
   (alias "acsl_first_example.0.exec.diff")

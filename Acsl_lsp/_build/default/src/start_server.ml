@@ -43,7 +43,7 @@ let launch_server () =
     let chan = open_out "json.out" in
     let fmt = Format.formatter_of_out_channel chan in
 
-    Find_def.browse_ast ();
+    Find_def.find_def ();
     start_server fmt ();
     close_out chan;
   with
@@ -51,3 +51,8 @@ let launch_server () =
     Printf.eprintf "Error opening output file: %s\n" e
   | _ ->
     Printf.eprintf "Unknown error occurred while opening output file.\n"
+
+
+let () = launch_server ()
+
+    let () = Db.Main.extend launch_server

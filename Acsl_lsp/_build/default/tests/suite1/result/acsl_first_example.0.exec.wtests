@@ -1,0 +1,9 @@
+{
+  "dir": "tests/suite1/result",
+  "info": "TEST #0 OF TEST FILE tests/suite1/acsl_first_example.c",
+  "cmd": "echo LFDKSNFK acsl_first_example.c > \"acsl_first_example.res.log\" 2> \"acsl_first_example.err.log\"",
+  "out": "acsl_first_example.res.log",
+  "err": "acsl_first_example.err.log",
+  "oracle_out": "../oracle/acsl_first_example.res.oracle",
+  "oracle_err": "../oracle/acsl_first_example.err.oracle"
+}

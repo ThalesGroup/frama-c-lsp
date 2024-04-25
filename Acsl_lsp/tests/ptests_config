@@ -1,1 +1,1 @@
-DEFAULT_SUITES= quick_test
+DEFAULT_SUITES= suite1

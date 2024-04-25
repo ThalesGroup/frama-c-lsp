@@ -1,5 +1,6 @@
 /* run.config
     DEPS: stddef.h, stdio.h
+    CMD: echo LFDKSNFK
 */
 
 #include <stddef.h>
