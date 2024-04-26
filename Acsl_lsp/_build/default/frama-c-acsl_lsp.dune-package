@@ -30,11 +30,15 @@
    core/acsl_lsp__Start_server.cmi
    core/acsl_lsp__Start_server.cmt
    core/acsl_lsp__Start_server.cmx
-   core/find_def.ml
+   core/acsl_lsp__Test_find_predicate_definition.cmi
+   core/acsl_lsp__Test_find_predicate_definition.cmt
+   core/acsl_lsp__Test_find_predicate_definition.cmx
+   core/common/settings.ml
+   core/features/find_def.ml
    core/parser.ml
    core/run.ml
-   core/settings.ml
-   core/start_server.ml
+   core/server/start_server.ml
+   core/testing/test_find_predicate_definition.ml
    dune-package
    opam))
  (lib_root (frama-c/plugins/acsl_lsp/META))
@@ -65,7 +69,7 @@
      (module
       (obj_name acsl_lsp__Find_def)
       (visibility public)
-      (source (path Find_def) (impl (path core/find_def.ml))))
+      (source (path Find_def) (impl (path core/features/find_def.ml))))
      (module
       (obj_name acsl_lsp__Parser)
       (visibility public)
@@ -77,9 +81,15 @@
      (module
       (obj_name acsl_lsp__Settings)
       (visibility public)
-      (source (path Settings) (impl (path core/settings.ml))))
+      (source (path Settings) (impl (path core/common/settings.ml))))
      (module
       (obj_name acsl_lsp__Start_server)
       (visibility public)
-      (source (path Start_server) (impl (path core/start_server.ml))))))
+      (source (path Start_server) (impl (path core/server/start_server.ml))))
+     (module
+      (obj_name acsl_lsp__Test_find_predicate_definition)
+      (visibility public)
+      (source
+       (path Test_find_predicate_definition)
+       (impl (path core/testing/test_find_predicate_definition.ml))))))
    (wrapped true))))

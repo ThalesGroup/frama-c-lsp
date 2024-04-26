@@ -57,6 +57,4 @@ let launch_server () =
     Printf.eprintf "Unknown error occurred while opening output file.\n"
 
 
-let () = launch_server ()
-
     

@@ -8,6 +8,8 @@
 	)
 )
 
+(include_subdirs unqualified)
+
 (library
 	(name acsl_lsp)
 	(public_name frama-c-acsl_lsp.core)

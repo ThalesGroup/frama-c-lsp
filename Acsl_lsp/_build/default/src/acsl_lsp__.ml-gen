@@ -15,5 +15,8 @@ module Settings = Acsl_lsp__Settings
 (** @canonical Acsl_lsp.Start_server *)
 module Start_server = Acsl_lsp__Start_server
 
+(** @canonical Acsl_lsp.Test_find_predicate_definition *)
+module Test_find_predicate_definition = Acsl_lsp__Test_find_predicate_definition
+
 module Acsl_lsp__ = struct end
 [@@deprecated "this module is shadowed"]
