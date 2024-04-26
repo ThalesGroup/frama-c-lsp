@@ -14,10 +14,22 @@ lib: [
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Find_def.cmi" {"core/acsl_lsp__Find_def.cmi"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Find_def.cmt" {"core/acsl_lsp__Find_def.cmt"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Find_def.cmx" {"core/acsl_lsp__Find_def.cmx"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Parser.cmi" {"core/acsl_lsp__Parser.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Parser.cmt" {"core/acsl_lsp__Parser.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Parser.cmx" {"core/acsl_lsp__Parser.cmx"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Run.cmi" {"core/acsl_lsp__Run.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Run.cmt" {"core/acsl_lsp__Run.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Run.cmx" {"core/acsl_lsp__Run.cmx"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Settings.cmi" {"core/acsl_lsp__Settings.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Settings.cmt" {"core/acsl_lsp__Settings.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Settings.cmx" {"core/acsl_lsp__Settings.cmx"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Start_server.cmi" {"core/acsl_lsp__Start_server.cmi"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Start_server.cmt" {"core/acsl_lsp__Start_server.cmt"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Start_server.cmx" {"core/acsl_lsp__Start_server.cmx"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/find_def.ml" {"core/find_def.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/parser.ml" {"core/parser.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/run.ml" {"core/run.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/settings.ml" {"core/settings.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/start_server.ml" {"core/start_server.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/dune-package"
   "_build/install/default/lib/frama-c-acsl_lsp/opam"

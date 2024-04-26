@@ -3,7 +3,7 @@
 
 (name frama-c-acsl_lsp)
 
-(generate_opam_files true)
+;(generate_opam_files true)
 
 ; (source
 ; (github username/reponame))
@@ -20,7 +20,7 @@
  (name frama-c-acsl_lsp)
  (synopsis "Language Server Protocol support for ACSL/C language.")
  ;(description "A longer description")
- (depends ocaml dune)
+ ;(depends ocaml dune)
  ;(tags
  ; (topics "to describe" your project)))
  ;)

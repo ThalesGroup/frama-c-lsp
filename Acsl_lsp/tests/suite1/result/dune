@@ -11,19 +11,19 @@
   (targets "acsl_first_example.err.log" "acsl_first_example.res.log"  )
   (deps "acsl_first_example.0.exec.wtests" "../oracle/acsl_first_example.res.oracle" "../oracle/acsl_first_example.err.oracle"  "acsl_first_example.c"  (package frama-c)  )
   (enabled_if (and true))
-(action (run frama-c-wtests -brief "acsl_first_example.0.exec.wtests" "echo LFDKSNFK acsl_first_example.c > \"acsl_first_example.res.log\" 2> \"acsl_first_example.err.log\"" ))
+(action (run frama-c-wtests -brief "acsl_first_example.0.exec.wtests" "cat acsl_first_example.c acsl_first_example.c > \"acsl_first_example.res.log\" 2> \"acsl_first_example.err.log\"" ))
 )
 (rule ; REPRODUCE TEST #0 OF TEST FILE "acsl_first_example.c"
   (alias "acsl_first_example.0.exec")
   (deps  "acsl_first_example.c"  (package frama-c)   (universe))
   (enabled_if (and true))
-(action (with-accepted-exit-codes 0 (system "echo LFDKSNFK acsl_first_example.c")))
+(action (with-accepted-exit-codes 0 (system "cat acsl_first_example.c acsl_first_example.c")))
 )
 (rule ; SHOW TEST COMMAND #0 OF TEST FILE "acsl_first_example.c"
   (alias "acsl_first_example.0.exec.show")
   (deps  "acsl_first_example.c"  (package frama-c)   (universe))
   (enabled_if (and true))
-(action (system "echo 'echo LFDKSNFK acsl_first_example.c > \"acsl_first_example.res.log\" 2> \"acsl_first_example.err.log\"'"))
+(action (system "echo 'cat acsl_first_example.c acsl_first_example.c > \"acsl_first_example.res.log\" 2> \"acsl_first_example.err.log\"'"))
 )
 (rule
   (alias "acsl_first_example.0.exec.diff")

@@ -1,4 +1,4 @@
-# dune build @tests/ptests
+# dune build
 # OCAMLPARAM: unset
 # Shared cache: disabled
 # Shared cache location: /home/user/.cache/dune/db
@@ -20,16 +20,9 @@
 #        }
 #  ; instrument_with = []
 #  }
-$ /home/user/.opam/4.13.1_fc28/bin/ocamlc.opt -config > /tmp/dune_585d58_output
-$ (cd _build/default/tests/suite1/result && /home/user/.opam/4.13.1_fc28/bin/frama-c-wtests -brief acsl_first_example.0.exec.wtests 'echo LFDKSNFK acsl_first_example.c > "acsl_first_example.res.log" 2> "acsl_first_example.err.log"')
-> Files ../oracle/acsl_first_example.res.oracle and acsl_first_example.res.log differ
-> % dune build @"tests/suite1/result/acsl_first_example.0.exec.wtests": diff failure on diff:
->  (cd _build/default/tests/suite1/result && diff --new-file "acsl_first_example.res.log" "../oracle/acsl_first_example.res.oracle")
-$ /usr/bin/git --no-pager diff --no-index --color=always -u _build/default/tests/suite1/oracle/acsl_first_example.res.oracle _build/default/tests/suite1/result/acsl_first_example.res.log
-> diff --git a/_build/default/tests/suite1/oracle/acsl_first_example.res.oracle b/_build/default/tests/suite1/result/acsl_first_example.res.log
-> index e69de29..8c30aac 100644
-> --- a/_build/default/tests/suite1/oracle/acsl_first_example.res.oracle
-> +++ b/_build/default/tests/suite1/result/acsl_first_example.res.log
-> @@ -0,0 +1 @@
-> +LFDKSNFK acsl_first_example.c
-[1]
+$ /home/user/.opam/4.13.1_fc28/bin/ocamlc.opt -config > /tmp/dune_752f7b_output
+$ (cd _build/default && /home/user/.opam/4.13.1_fc28/bin/ocamldep.opt -modules -impl src/run.ml) > _build/default/src/.acsl_lsp.objs/acsl_lsp__Run.impl.d
+$ (cd _build/default && /home/user/.opam/4.13.1_fc28/bin/ocamlc.opt -open Frama_c_kernel -w @1..3@5..28@30..39@43@46..47@49..57@61..62@67@69-40 -strict-sequence -strict-formats -short-paths -keep-locs -g -bin-annot -I src/.acsl_lsp.objs/byte -I /home/user/.opam/4.13.1_fc28/lib/astring -I /home/user/.opam/4.13.1_fc28/lib/bigarray-compat -I /home/user/.opam/4.13.1_fc28/lib/bos -I /home/user/.opam/4.13.1_fc28/lib/bytes -I /home/user/.opam/4.13.1_fc28/lib/ctypes -I /home/user/.opam/4.13.1_fc28/lib/ctypes/stubs -I /home/user/.opam/4.13.1_fc28/lib/dune-private-libs/dune-section -I /home/user/.opam/4.13.1_fc28/lib/dune-private-libs/meta_parser -I /home/user/.opam/4.13.1_fc28/lib/dune-site -I /home/user/.opam/4.13.1_fc28/lib/dune-site/linker -I /home/user/.opam/4.13.1_fc28/lib/dune-site/plugins -I /home/user/.opam/4.13.1_fc28/lib/dune-site/private -I /home/user/.opam/4.13.1_fc28/lib/fmt -I /home/user/.opam/4.13.1_fc28/lib/fpath -I /home/user/.opam/4.13.1_fc28/lib/frama-c/init -I /home/user/.opam/4.13.1_fc28/lib/frama-c/kernel -I /home/user/.opam/4.13.1_fc28/lib/integers -I /home/user/.opam/4.13.1_fc28/lib/logs -I /home/user/.opam/4.13.1_fc28/lib/menhirLib -I /home/user/.opam/4.13.1_fc28/lib/ocaml/threads -I /home/user/.opam/4.13.1_fc28/lib/ocamlgraph -I /home/user/.opam/4.13.1_fc28/lib/ppx_deriving/runtime -I /home/user/.opam/4.13.1_fc28/lib/result -I /home/user/.opam/4.13.1_fc28/lib/rresult -I /home/user/.opam/4.13.1_fc28/lib/seq -I /home/user/.opam/4.13.1_fc28/lib/stdlib-shims -I /home/user/.opam/4.13.1_fc28/lib/yaml -I /home/user/.opam/4.13.1_fc28/lib/yaml/bindings -I /home/user/.opam/4.13.1_fc28/lib/yaml/bindings/types -I /home/user/.opam/4.13.1_fc28/lib/yaml/c -I /home/user/.opam/4.13.1_fc28/lib/yaml/ffi -I /home/user/.opam/4.13.1_fc28/lib/yaml/types -I /home/user/.opam/4.13.1_fc28/lib/yaml/unix -I /home/user/.opam/4.13.1_fc28/lib/yojson -I /home/user/.opam/4.13.1_fc28/lib/zarith -no-alias-deps -opaque -open Acsl_lsp__ -o src/.acsl_lsp.objs/byte/acsl_lsp__Run.cmo -c -impl src/run.ml)
+$ (cd _build/default && /home/user/.opam/4.13.1_fc28/bin/ocamlc.opt -open Frama_c_kernel -w @1..3@5..28@30..39@43@46..47@49..57@61..62@67@69-40 -strict-sequence -strict-formats -short-paths -keep-locs -g -a -o src/acsl_lsp.cma src/.acsl_lsp.objs/byte/acsl_lsp__.cmo src/.acsl_lsp.objs/byte/acsl_lsp__Start_server.cmo src/.acsl_lsp.objs/byte/acsl_lsp__Settings.cmo src/.acsl_lsp.objs/byte/acsl_lsp__Run.cmo src/.acsl_lsp.objs/byte/acsl_lsp__Parser.cmo src/.acsl_lsp.objs/byte/acsl_lsp__Find_def.cmo src/.acsl_lsp.objs/byte/acsl_lsp.cmo)
+$ (cd _build/default && /home/user/.opam/4.13.1_fc28/bin/ocamlopt.opt -open Frama_c_kernel -w @1..3@5..28@30..39@43@46..47@49..57@61..62@67@69-40 -strict-sequence -strict-formats -short-paths -keep-locs -g -a -o src/acsl_lsp.cmxa src/.acsl_lsp.objs/native/acsl_lsp__.cmx src/.acsl_lsp.objs/native/acsl_lsp__Start_server.cmx src/.acsl_lsp.objs/native/acsl_lsp__Settings.cmx src/.acsl_lsp.objs/native/acsl_lsp__Run.cmx src/.acsl_lsp.objs/native/acsl_lsp__Parser.cmx src/.acsl_lsp.objs/native/acsl_lsp__Find_def.cmx src/.acsl_lsp.objs/native/acsl_lsp.cmx)
+$ (cd _build/default && /home/user/.opam/4.13.1_fc28/bin/ocamlopt.opt -open Frama_c_kernel -w @1..3@5..28@30..39@43@46..47@49..57@61..62@67@69-40 -strict-sequence -strict-formats -short-paths -keep-locs -g -shared -linkall -I src -o src/acsl_lsp.cmxs src/acsl_lsp.cmxa)

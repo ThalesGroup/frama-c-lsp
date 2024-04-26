@@ -18,10 +18,22 @@
    core/acsl_lsp__Find_def.cmi
    core/acsl_lsp__Find_def.cmt
    core/acsl_lsp__Find_def.cmx
+   core/acsl_lsp__Parser.cmi
+   core/acsl_lsp__Parser.cmt
+   core/acsl_lsp__Parser.cmx
+   core/acsl_lsp__Run.cmi
+   core/acsl_lsp__Run.cmt
+   core/acsl_lsp__Run.cmx
+   core/acsl_lsp__Settings.cmi
+   core/acsl_lsp__Settings.cmt
+   core/acsl_lsp__Settings.cmx
    core/acsl_lsp__Start_server.cmi
    core/acsl_lsp__Start_server.cmt
    core/acsl_lsp__Start_server.cmx
    core/find_def.ml
+   core/parser.ml
+   core/run.ml
+   core/settings.ml
    core/start_server.ml
    dune-package
    opam))
@@ -54,6 +66,18 @@
       (obj_name acsl_lsp__Find_def)
       (visibility public)
       (source (path Find_def) (impl (path core/find_def.ml))))
+     (module
+      (obj_name acsl_lsp__Parser)
+      (visibility public)
+      (source (path Parser) (impl (path core/parser.ml))))
+     (module
+      (obj_name acsl_lsp__Run)
+      (visibility public)
+      (source (path Run) (impl (path core/run.ml))))
+     (module
+      (obj_name acsl_lsp__Settings)
+      (visibility public)
+      (source (path Settings) (impl (path core/settings.ml))))
      (module
       (obj_name acsl_lsp__Start_server)
       (visibility public)

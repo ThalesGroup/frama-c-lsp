@@ -29,6 +29,10 @@ let start_server out () =
         let chan = open_out "json.out" in
         output_string chan json_part;
         close_out chan;
+
+        (* pseudo code :
+          method_switcher json_part; method that read the "method" field in the request and      
+        *)
       end;
       (* Send a response *)
       let response = "HTTP/1.1 200 OK\r\nContent-Length: 18\r\n\r\nHello, world! :DD\n" in
@@ -43,8 +47,8 @@ let launch_server () =
     let chan = open_out "json.out" in
     let fmt = Format.formatter_of_out_channel chan in
 
-    Find_def.find_def ();
     start_server fmt ();
+
     close_out chan;
   with
   | Sys_error e ->
@@ -55,4 +59,4 @@ let launch_server () =
 
 let () = launch_server ()
 
-    let () = Db.Main.extend launch_server
+    
