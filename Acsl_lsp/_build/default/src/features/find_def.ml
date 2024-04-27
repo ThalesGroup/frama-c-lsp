@@ -36,7 +36,7 @@ class find_def input output = object
 end
 
 
-let find_def () =
+let find_def () = (* input and output should be specified as parameters of the function *)
   try
     let input = open_in "json.out" in
     let output_channel = open_out "result.out" in

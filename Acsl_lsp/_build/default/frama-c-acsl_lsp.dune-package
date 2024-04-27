@@ -18,6 +18,9 @@
    core/acsl_lsp__Find_def.cmi
    core/acsl_lsp__Find_def.cmt
    core/acsl_lsp__Find_def.cmx
+   core/acsl_lsp__Jsonrpc.cmi
+   core/acsl_lsp__Jsonrpc.cmt
+   core/acsl_lsp__Jsonrpc.cmx
    core/acsl_lsp__Parser.cmi
    core/acsl_lsp__Parser.cmt
    core/acsl_lsp__Parser.cmx
@@ -30,6 +33,9 @@
    core/acsl_lsp__Start_server.cmi
    core/acsl_lsp__Start_server.cmt
    core/acsl_lsp__Start_server.cmx
+   core/acsl_lsp__Start_server_old.cmi
+   core/acsl_lsp__Start_server_old.cmt
+   core/acsl_lsp__Start_server_old.cmx
    core/acsl_lsp__Test_find_predicate_definition.cmi
    core/acsl_lsp__Test_find_predicate_definition.cmt
    core/acsl_lsp__Test_find_predicate_definition.cmx
@@ -37,7 +43,9 @@
    core/features/find_def.ml
    core/parser.ml
    core/run.ml
+   core/server/jsonrpc.ml
    core/server/start_server.ml
+   core/server/start_server_old.ml
    core/testing/test_find_predicate_definition.ml
    dune-package
    opam))
@@ -71,6 +79,10 @@
       (visibility public)
       (source (path Find_def) (impl (path core/features/find_def.ml))))
      (module
+      (obj_name acsl_lsp__Jsonrpc)
+      (visibility public)
+      (source (path Jsonrpc) (impl (path core/server/jsonrpc.ml))))
+     (module
       (obj_name acsl_lsp__Parser)
       (visibility public)
       (source (path Parser) (impl (path core/parser.ml))))
@@ -86,6 +98,12 @@
       (obj_name acsl_lsp__Start_server)
       (visibility public)
       (source (path Start_server) (impl (path core/server/start_server.ml))))
+     (module
+      (obj_name acsl_lsp__Start_server_old)
+      (visibility public)
+      (source
+       (path Start_server_old)
+       (impl (path core/server/start_server_old.ml))))
      (module
       (obj_name acsl_lsp__Test_find_predicate_definition)
       (visibility public)

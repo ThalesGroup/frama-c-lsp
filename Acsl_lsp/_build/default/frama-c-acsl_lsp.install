@@ -14,6 +14,9 @@ lib: [
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Find_def.cmi" {"core/acsl_lsp__Find_def.cmi"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Find_def.cmt" {"core/acsl_lsp__Find_def.cmt"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Find_def.cmx" {"core/acsl_lsp__Find_def.cmx"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Jsonrpc.cmi" {"core/acsl_lsp__Jsonrpc.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Jsonrpc.cmt" {"core/acsl_lsp__Jsonrpc.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Jsonrpc.cmx" {"core/acsl_lsp__Jsonrpc.cmx"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Parser.cmi" {"core/acsl_lsp__Parser.cmi"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Parser.cmt" {"core/acsl_lsp__Parser.cmt"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Parser.cmx" {"core/acsl_lsp__Parser.cmx"}
@@ -26,6 +29,9 @@ lib: [
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Start_server.cmi" {"core/acsl_lsp__Start_server.cmi"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Start_server.cmt" {"core/acsl_lsp__Start_server.cmt"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Start_server.cmx" {"core/acsl_lsp__Start_server.cmx"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Start_server_old.cmi" {"core/acsl_lsp__Start_server_old.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Start_server_old.cmt" {"core/acsl_lsp__Start_server_old.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Start_server_old.cmx" {"core/acsl_lsp__Start_server_old.cmx"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Test_find_predicate_definition.cmi" {"core/acsl_lsp__Test_find_predicate_definition.cmi"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Test_find_predicate_definition.cmt" {"core/acsl_lsp__Test_find_predicate_definition.cmt"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Test_find_predicate_definition.cmx" {"core/acsl_lsp__Test_find_predicate_definition.cmx"}
@@ -33,7 +39,9 @@ lib: [
   "_build/install/default/lib/frama-c-acsl_lsp/core/features/find_def.ml" {"core/features/find_def.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/parser.ml" {"core/parser.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/run.ml" {"core/run.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/server/jsonrpc.ml" {"core/server/jsonrpc.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/server/start_server.ml" {"core/server/start_server.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/server/start_server_old.ml" {"core/server/start_server_old.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/testing/test_find_predicate_definition.ml" {"core/testing/test_find_predicate_definition.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/dune-package"
   "_build/install/default/lib/frama-c-acsl_lsp/opam"
