@@ -6,8 +6,14 @@ module Find_def = Acsl_lsp__Find_def
 (** @canonical Acsl_lsp.Jsonrpc *)
 module Jsonrpc = Acsl_lsp__Jsonrpc
 
+(** @canonical Acsl_lsp.Lsp_types *)
+module Lsp_types = Acsl_lsp__Lsp_types
+
 (** @canonical Acsl_lsp.Parser *)
 module Parser = Acsl_lsp__Parser
+
+(** @canonical Acsl_lsp.Rq_handler *)
+module Rq_handler = Acsl_lsp__Rq_handler
 
 (** @canonical Acsl_lsp.Run *)
 module Run = Acsl_lsp__Run
@@ -23,6 +29,9 @@ module Start_server_old = Acsl_lsp__Start_server_old
 
 (** @canonical Acsl_lsp.Test_find_predicate_definition *)
 module Test_find_predicate_definition = Acsl_lsp__Test_find_predicate_definition
+
+(** @canonical Acsl_lsp.Utils *)
+module Utils = Acsl_lsp__Utils
 
 module Acsl_lsp__ = struct end
 [@@deprecated "this module is shadowed"]

@@ -31,7 +31,7 @@ let start_server () =
     match parsed_request with
     | Some request ->
         (* Handle the request and generate a response *)
-        let response = handle_request request in
+        let response = Rq_handler.handle_request request in
         let response_str = Json.save_string @@ `Assoc [
           "jsonrpc", response.jsonrpc;
           "result", (match response.result with Some res -> res | None -> `Null);
@@ -49,4 +49,4 @@ let start_server () =
     close client_sock
   done
 
-let () = start_server ()
+(* let () = start_server ()*)

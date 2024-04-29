@@ -1,9 +1,9 @@
 #include <stddef.h>
 
 /*@
-    requires myWorkIs(a);
-    requires toDevelopAn(b);
-    requires ACSL_language_server(c);
+    requires abra(a);
+    requires cada(b);
+    requires bra(c);
     requires a + b <= c;
 
     assigns \nothing;

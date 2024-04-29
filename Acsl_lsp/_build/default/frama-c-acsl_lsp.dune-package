@@ -21,9 +21,15 @@
    core/acsl_lsp__Jsonrpc.cmi
    core/acsl_lsp__Jsonrpc.cmt
    core/acsl_lsp__Jsonrpc.cmx
+   core/acsl_lsp__Lsp_types.cmi
+   core/acsl_lsp__Lsp_types.cmt
+   core/acsl_lsp__Lsp_types.cmx
    core/acsl_lsp__Parser.cmi
    core/acsl_lsp__Parser.cmt
    core/acsl_lsp__Parser.cmx
+   core/acsl_lsp__Rq_handler.cmi
+   core/acsl_lsp__Rq_handler.cmt
+   core/acsl_lsp__Rq_handler.cmx
    core/acsl_lsp__Run.cmi
    core/acsl_lsp__Run.cmt
    core/acsl_lsp__Run.cmx
@@ -39,11 +45,17 @@
    core/acsl_lsp__Test_find_predicate_definition.cmi
    core/acsl_lsp__Test_find_predicate_definition.cmt
    core/acsl_lsp__Test_find_predicate_definition.cmx
+   core/acsl_lsp__Utils.cmi
+   core/acsl_lsp__Utils.cmt
+   core/acsl_lsp__Utils.cmx
    core/common/settings.ml
+   core/common/utils.ml
    core/features/find_def.ml
    core/parser.ml
    core/run.ml
    core/server/jsonrpc.ml
+   core/server/lsp_types.ml
+   core/server/rq_handler.ml
    core/server/start_server.ml
    core/server/start_server_old.ml
    core/testing/test_find_predicate_definition.ml
@@ -83,9 +95,17 @@
       (visibility public)
       (source (path Jsonrpc) (impl (path core/server/jsonrpc.ml))))
      (module
+      (obj_name acsl_lsp__Lsp_types)
+      (visibility public)
+      (source (path Lsp_types) (impl (path core/server/lsp_types.ml))))
+     (module
       (obj_name acsl_lsp__Parser)
       (visibility public)
       (source (path Parser) (impl (path core/parser.ml))))
+     (module
+      (obj_name acsl_lsp__Rq_handler)
+      (visibility public)
+      (source (path Rq_handler) (impl (path core/server/rq_handler.ml))))
      (module
       (obj_name acsl_lsp__Run)
       (visibility public)
@@ -109,5 +129,9 @@
       (visibility public)
       (source
        (path Test_find_predicate_definition)
-       (impl (path core/testing/test_find_predicate_definition.ml))))))
+       (impl (path core/testing/test_find_predicate_definition.ml))))
+     (module
+      (obj_name acsl_lsp__Utils)
+      (visibility public)
+      (source (path Utils) (impl (path core/common/utils.ml))))))
    (wrapped true))))
