@@ -1,0 +1,66 @@
+lib: [
+  "_build/install/default/lib/frama-c-acsl_lsp/META"
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp.a" {"core/acsl_lsp.a"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp.cma" {"core/acsl_lsp.cma"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp.cmi" {"core/acsl_lsp.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp.cmt" {"core/acsl_lsp.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp.cmx" {"core/acsl_lsp.cmx"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp.cmxa" {"core/acsl_lsp.cmxa"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp.ml" {"core/acsl_lsp.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__.cmi" {"core/acsl_lsp__.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__.cmt" {"core/acsl_lsp__.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__.cmx" {"core/acsl_lsp__.cmx"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__.ml" {"core/acsl_lsp__.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Find_def.cmi" {"core/acsl_lsp__Find_def.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Find_def.cmt" {"core/acsl_lsp__Find_def.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Find_def.cmx" {"core/acsl_lsp__Find_def.cmx"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Jsonrpc.cmi" {"core/acsl_lsp__Jsonrpc.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Jsonrpc.cmt" {"core/acsl_lsp__Jsonrpc.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Jsonrpc.cmx" {"core/acsl_lsp__Jsonrpc.cmx"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Lsp_types.cmi" {"core/acsl_lsp__Lsp_types.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Lsp_types.cmt" {"core/acsl_lsp__Lsp_types.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Lsp_types.cmx" {"core/acsl_lsp__Lsp_types.cmx"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Parser.cmi" {"core/acsl_lsp__Parser.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Parser.cmt" {"core/acsl_lsp__Parser.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Parser.cmx" {"core/acsl_lsp__Parser.cmx"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Rq_handler.cmi" {"core/acsl_lsp__Rq_handler.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Rq_handler.cmt" {"core/acsl_lsp__Rq_handler.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Rq_handler.cmx" {"core/acsl_lsp__Rq_handler.cmx"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Run.cmi" {"core/acsl_lsp__Run.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Run.cmt" {"core/acsl_lsp__Run.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Run.cmx" {"core/acsl_lsp__Run.cmx"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Run_tests.cmi" {"core/acsl_lsp__Run_tests.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Run_tests.cmt" {"core/acsl_lsp__Run_tests.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Run_tests.cmx" {"core/acsl_lsp__Run_tests.cmx"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Settings.cmi" {"core/acsl_lsp__Settings.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Settings.cmt" {"core/acsl_lsp__Settings.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Settings.cmx" {"core/acsl_lsp__Settings.cmx"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Start_server.cmi" {"core/acsl_lsp__Start_server.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Start_server.cmt" {"core/acsl_lsp__Start_server.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Start_server.cmx" {"core/acsl_lsp__Start_server.cmx"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Test_find_definition.cmi" {"core/acsl_lsp__Test_find_definition.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Test_find_definition.cmt" {"core/acsl_lsp__Test_find_definition.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Test_find_definition.cmx" {"core/acsl_lsp__Test_find_definition.cmx"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Utils.cmi" {"core/acsl_lsp__Utils.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Utils.cmt" {"core/acsl_lsp__Utils.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Utils.cmx" {"core/acsl_lsp__Utils.cmx"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/common/settings.ml" {"core/common/settings.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/common/utils.ml" {"core/common/utils.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/features/find_def.ml" {"core/features/find_def.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/parser.ml" {"core/parser.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/run.ml" {"core/run.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/server/jsonrpc.ml" {"core/server/jsonrpc.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/server/lsp_types.ml" {"core/server/lsp_types.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/server/rq_handler.ml" {"core/server/rq_handler.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/server/start_server.ml" {"core/server/start_server.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/testing/run_tests.ml" {"core/testing/run_tests.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/testing/test_find_definition.ml" {"core/testing/test_find_definition.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/dune-package"
+  "_build/install/default/lib/frama-c-acsl_lsp/opam"
+]
+lib_root: [
+  "_build/install/default/lib/frama-c/plugins/acsl_lsp/META" {"frama-c/plugins/acsl_lsp/META"}
+]
+libexec: [
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp.cmxs" {"core/acsl_lsp.cmxs"}
+]

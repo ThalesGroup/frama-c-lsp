@@ -1,0 +1,7 @@
+(rule (target "standard_acsl_predicates.err.oracle") (mode fallback) (action (write-file "standard_acsl_predicates.err.oracle" "")))
+(rule (target "standard_acsl_predicates.res.oracle") (mode fallback) (action (write-file "standard_acsl_predicates.res.oracle" "")))
+(rule (target "user_defined_predicates_other_file.err.oracle") (mode fallback) (action (write-file "user_defined_predicates_other_file.err.oracle" "")))
+(rule (target "user_defined_predicates_other_file.res.oracle") (mode fallback) (action (write-file "user_defined_predicates_other_file.res.oracle" "")))
+(rule (target "unknown_predicates.err.oracle") (mode fallback) (action (write-file "unknown_predicates.err.oracle" "")))
+(rule (target "unknown_predicates.res.oracle") (mode fallback) (action (write-file "unknown_predicates.res.oracle" "")))
+

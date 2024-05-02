@@ -1,0 +1,9 @@
+package "core" (
+  directory = "core"
+  description = ""
+  requires = "frama-c.kernel"
+  archive(byte) = "acsl_lsp.cma"
+  archive(native) = "acsl_lsp.cmxa"
+  plugin(byte) = "acsl_lsp.cma"
+  plugin(native) = "acsl_lsp.cmxs"
+)

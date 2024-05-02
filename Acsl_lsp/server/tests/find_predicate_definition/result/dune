@@ -1,0 +1,130 @@
+(copy_files ../*.*)
+(alias (name ptests)
+  (deps (alias ptests_config)))
+; TEST FILE "standard_acsl_predicates.c"
+(alias (name "standard_acsl_predicates.wtests")
+  (deps (alias "standard_acsl_predicates.0.exec.wtests"))) ; to performs all sub-tests related to a file
+(alias (name "standard_acsl_predicates.c")
+  (deps (alias "standard_acsl_predicates.0.exec"))) ; to reproduce and visualize the all sub-test outputs related to a file
+(rule ; TEST #0 OF TEST FILE tests/find_predicate_definition/standard_acsl_predicates.c
+  (alias "standard_acsl_predicates.0.exec.wtests")
+  (targets "standard_acsl_predicates.err.log" "standard_acsl_predicates.res.log"  )
+  (deps "standard_acsl_predicates.0.exec.wtests" "../oracle/standard_acsl_predicates.res.oracle" "../oracle/standard_acsl_predicates.err.oracle"  "standard_acsl_predicates.c"  (package frama-c)  )
+  (enabled_if (and true))
+(action (run frama-c-wtests -brief "standard_acsl_predicates.0.exec.wtests" "frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     standard_acsl_predicates.c > \"standard_acsl_predicates.res.log\" 2> \"standard_acsl_predicates.err.log\"" ))
+)
+(rule ; REPRODUCE TEST #0 OF TEST FILE "standard_acsl_predicates.c"
+  (alias "standard_acsl_predicates.0.exec")
+  (deps  "standard_acsl_predicates.c"  (package frama-c)   (universe))
+  (enabled_if (and true))
+(action (with-accepted-exit-codes 0 (system "frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     standard_acsl_predicates.c")))
+)
+(rule ; SHOW TEST COMMAND #0 OF TEST FILE "standard_acsl_predicates.c"
+  (alias "standard_acsl_predicates.0.exec.show")
+  (deps  "standard_acsl_predicates.c"  (package frama-c)   (universe))
+  (enabled_if (and true))
+(action (system "echo 'frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     standard_acsl_predicates.c > \"standard_acsl_predicates.res.log\" 2> \"standard_acsl_predicates.err.log\"'"))
+)
+(rule
+  (alias "standard_acsl_predicates.0.exec.diff")
+  (enabled_if (and true))
+(action (diff "../oracle/standard_acsl_predicates.res.oracle" "standard_acsl_predicates.res.log"))
+)
+(rule
+  (alias "standard_acsl_predicates.0.exec.diff")
+  (enabled_if (and true))
+(action (diff "../oracle/standard_acsl_predicates.err.oracle" "standard_acsl_predicates.err.log"))
+)
+(alias (name "standard_acsl_predicates.diff")
+  (deps (alias "standard_acsl_predicates.0.exec.diff"))
+  (enabled_if (and true))
+)
+(alias (name "ptests_config")
+  (deps (alias "standard_acsl_predicates.diff"))
+  (enabled_if (and true))
+)
+; TEST FILE "user_defined_predicates_other_file.c"
+(alias (name "user_defined_predicates_other_file.wtests")
+  (deps (alias "user_defined_predicates_other_file.0.exec.wtests"))) ; to performs all sub-tests related to a file
+(alias (name "user_defined_predicates_other_file.c")
+  (deps (alias "user_defined_predicates_other_file.0.exec"))) ; to reproduce and visualize the all sub-test outputs related to a file
+(rule ; TEST #0 OF TEST FILE tests/find_predicate_definition/user_defined_predicates_other_file.c
+  (alias "user_defined_predicates_other_file.0.exec.wtests")
+  (targets "user_defined_predicates_other_file.err.log" "user_defined_predicates_other_file.res.log"  )
+  (deps "user_defined_predicates_other_file.0.exec.wtests" "../oracle/user_defined_predicates_other_file.res.oracle" "../oracle/user_defined_predicates_other_file.err.oracle"  "user_defined_predicates_other_file.c"  (package frama-c)  )
+  (enabled_if (and true))
+(action (run frama-c-wtests -brief "user_defined_predicates_other_file.0.exec.wtests" "frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     user_defined_predicates_other_file.c > \"user_defined_predicates_other_file.res.log\" 2> \"user_defined_predicates_other_file.err.log\"" ))
+)
+(rule ; REPRODUCE TEST #0 OF TEST FILE "user_defined_predicates_other_file.c"
+  (alias "user_defined_predicates_other_file.0.exec")
+  (deps  "user_defined_predicates_other_file.c"  (package frama-c)   (universe))
+  (enabled_if (and true))
+(action (with-accepted-exit-codes 0 (system "frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     user_defined_predicates_other_file.c")))
+)
+(rule ; SHOW TEST COMMAND #0 OF TEST FILE "user_defined_predicates_other_file.c"
+  (alias "user_defined_predicates_other_file.0.exec.show")
+  (deps  "user_defined_predicates_other_file.c"  (package frama-c)   (universe))
+  (enabled_if (and true))
+(action (system "echo 'frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     user_defined_predicates_other_file.c > \"user_defined_predicates_other_file.res.log\" 2> \"user_defined_predicates_other_file.err.log\"'"))
+)
+(rule
+  (alias "user_defined_predicates_other_file.0.exec.diff")
+  (enabled_if (and true))
+(action (diff "../oracle/user_defined_predicates_other_file.res.oracle" "user_defined_predicates_other_file.res.log"))
+)
+(rule
+  (alias "user_defined_predicates_other_file.0.exec.diff")
+  (enabled_if (and true))
+(action (diff "../oracle/user_defined_predicates_other_file.err.oracle" "user_defined_predicates_other_file.err.log"))
+)
+(alias (name "user_defined_predicates_other_file.diff")
+  (deps (alias "user_defined_predicates_other_file.0.exec.diff"))
+  (enabled_if (and true))
+)
+(alias (name "ptests_config")
+  (deps (alias "user_defined_predicates_other_file.diff"))
+  (enabled_if (and true))
+)
+; TEST FILE "unknown_predicates.c"
+(alias (name "unknown_predicates.wtests")
+  (deps (alias "unknown_predicates.0.exec.wtests"))) ; to performs all sub-tests related to a file
+(alias (name "unknown_predicates.c")
+  (deps (alias "unknown_predicates.0.exec"))) ; to reproduce and visualize the all sub-test outputs related to a file
+(rule ; TEST #0 OF TEST FILE tests/find_predicate_definition/unknown_predicates.c
+  (alias "unknown_predicates.0.exec.wtests")
+  (targets "unknown_predicates.err.log" "unknown_predicates.res.log"  )
+  (deps "unknown_predicates.0.exec.wtests" "../oracle/unknown_predicates.res.oracle" "../oracle/unknown_predicates.err.oracle"  "unknown_predicates.c"  (package frama-c)  )
+  (enabled_if (and true))
+(action (run frama-c-wtests -brief "unknown_predicates.0.exec.wtests" "frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     unknown_predicates.c > \"unknown_predicates.res.log\" 2> \"unknown_predicates.err.log\"" ))
+)
+(rule ; REPRODUCE TEST #0 OF TEST FILE "unknown_predicates.c"
+  (alias "unknown_predicates.0.exec")
+  (deps  "unknown_predicates.c"  (package frama-c)   (universe))
+  (enabled_if (and true))
+(action (with-accepted-exit-codes 0 (system "frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     unknown_predicates.c")))
+)
+(rule ; SHOW TEST COMMAND #0 OF TEST FILE "unknown_predicates.c"
+  (alias "unknown_predicates.0.exec.show")
+  (deps  "unknown_predicates.c"  (package frama-c)   (universe))
+  (enabled_if (and true))
+(action (system "echo 'frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     unknown_predicates.c > \"unknown_predicates.res.log\" 2> \"unknown_predicates.err.log\"'"))
+)
+(rule
+  (alias "unknown_predicates.0.exec.diff")
+  (enabled_if (and true))
+(action (diff "../oracle/unknown_predicates.res.oracle" "unknown_predicates.res.log"))
+)
+(rule
+  (alias "unknown_predicates.0.exec.diff")
+  (enabled_if (and true))
+(action (diff "../oracle/unknown_predicates.err.oracle" "unknown_predicates.err.log"))
+)
+(alias (name "unknown_predicates.diff")
+  (deps (alias "unknown_predicates.0.exec.diff"))
+  (enabled_if (and true))
+)
+(alias (name "ptests_config")
+  (deps (alias "unknown_predicates.diff"))
+  (enabled_if (and true))
+)
+

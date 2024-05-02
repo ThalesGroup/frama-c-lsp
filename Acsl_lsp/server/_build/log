@@ -1,0 +1,69 @@
+# dune build @ptests
+# OCAMLPARAM: unset
+# Shared cache: disabled
+# Shared cache location: /home/user/.cache/dune/db
+# Workspace root: /home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp
+# Auto-detected concurrency: 12
+# Dune context:
+#  { name = "default"
+#  ; kind = "default"
+#  ; profile = Dev
+#  ; merlin = true
+#  ; fdo_target_exe = None
+#  ; build_dir = In_build_dir "default"
+#  ; installed_env =
+#      map
+#        { "INSIDE_DUNE" :
+#            "/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default"
+#        ; "OCAML_COLOR" : "always"
+#        ; "OPAMCOLOR" : "always"
+#        }
+#  ; instrument_with = []
+#  }
+$ /home/user/.opam/4.13.1_fc28/bin/ocamlc.opt -config > /tmp/dune_405652_output
+$ /usr/bin/git --no-pager diff --no-index --color=always -u _build/default/tests/find_predicate_definition/oracle/standard_acsl_predicates.res.oracle _build/default/tests/find_predicate_definition/result/standard_acsl_predicates.res.log
+> diff --git a/_build/default/tests/find_predicate_definition/oracle/standard_acsl_predicates.res.oracle b/_build/default/tests/find_predicate_definition/result/standard_acsl_predicates.res.log
+> index e69de29..c7719ba 100644
+> --- a/_build/default/tests/find_predicate_definition/oracle/standard_acsl_predicates.res.oracle
+> +++ b/_build/default/tests/find_predicate_definition/result/standard_acsl_predicates.res.log
+> @@ -0,0 +1 @@
+> +[kernel] Parsing standard_acsl_predicates.c (with preprocessing)
+[1]
+$ (cd _build/default/tests/find_predicate_definition/result && /home/user/.opam/4.13.1_fc28/bin/frama-c-wtests -brief user_defined_predicates_other_file.0.exec.wtests 'frama-c -check -no-autoload-plugins -add-symbolic-path="/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:."     user_defined_predicates_other_file.c > "user_defined_predicates_other_file.res.log" 2> "user_defined_predicates_other_file.err.log"')
+> % Generated output file: tests/find_predicate_definition/result/user_defined_predicates_other_file.res.log
+> [kernel] Parsing user_defined_predicates_other_file.c (with preprocessing)
+> [kernel] User Error: failed to run: gcc -E -C -I. -I/tmp/build_370887_dune/__fc_machdepa64af9.dir -I/home/user/.opam/4.13.1_fc28/share/frama-c/share/libc -D__FRAMAC__ -dD -nostdinc -Wno-builtin-macro-redefined -Wno-unknown-warning-option '/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default/tests/find_predicate_definition/result/user_defined_predicates_other_file.c' -o '/tmp/build_370887_dune/user_defined_predicates_other_file.cef2699.i'
+>   (PWD: tests/find_predicate_definition/result)
+>   this is possibly due to missing preprocessor flags;
+>   consider options -cpp-extra-args, -json-compilation-database or -cpp-command.
+>   See chapter "Preparing the Sources" in the Frama-C user manual for more details.
+> [kernel] Frama-C aborted: invalid user input.
+> % Generated output file: tests/find_predicate_definition/result/user_defined_predicates_other_file.err.log
+> /home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default/tests/find_predicate_definition/result/user_defined_predicates_other_file.c:1:10: fatal error: ./user_defined_predicates_same_file.h: No such file or directory
+>     1 | #include "./user_defined_predicates_same_file.h"
+>       |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> compilation terminated.
+> % dune build @"tests/find_predicate_definition/result/user_defined_predicates_other_file.0.exec.wtests": return code (1) differs from the requested code (0) for the command:frama-c -check -no-autoload-plugins -add-symbolic-path="/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:."     user_defined_predicates_other_file.c > "user_defined_predicates_other_file.res.log" 2> "user_defined_predicates_other_file.err.log"
+> % dune build @"tests/find_predicate_definition/result/user_defined_predicates_other_file.0.exec.wtests": Error - Test failed
+> % Aborting: TEST #0 OF TEST FILE tests/find_predicate_definition/user_defined_predicates_other_file.c
+[2]
+$ /usr/bin/git --no-pager diff --no-index --color=always -u _build/default/tests/suite1/oracle/acsl_first_example.res.oracle _build/default/tests/suite1/result/acsl_first_example.res.log
+> diff --git a/_build/default/tests/suite1/oracle/acsl_first_example.res.oracle b/_build/default/tests/suite1/result/acsl_first_example.res.log
+> index e69de29..a4b34c2 100644
+> --- a/_build/default/tests/suite1/oracle/acsl_first_example.res.oracle
+> +++ b/_build/default/tests/suite1/result/acsl_first_example.res.log
+> @@ -0,0 +1 @@
+> +[kernel] Parsing acsl_first_example.c (with preprocessing)
+[1]
+$ (cd _build/default/tests/find_predicate_definition/result && /home/user/.opam/4.13.1_fc28/bin/frama-c-wtests -brief unknown_predicates.0.exec.wtests 'frama-c -check -no-autoload-plugins -add-symbolic-path="/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:."     unknown_predicates.c > "unknown_predicates.res.log" 2> "unknown_predicates.err.log"')
+> % Generated output file: tests/find_predicate_definition/result/unknown_predicates.res.log
+> [kernel] Parsing unknown_predicates.c (with preprocessing)
+> [kernel:annot-error] unknown_predicates.c:4: Warning: 
+>   unbound logic function abra. Ignoring logic specification of function add
+> [kernel] User Error: warning annot-error treated as fatal error.
+> [kernel] Frama-C aborted: invalid user input.
+> % Generated output file: tests/find_predicate_definition/result/unknown_predicates.err.log
+> % dune build @"tests/find_predicate_definition/result/unknown_predicates.0.exec.wtests": return code (1) differs from the requested code (0) for the command:frama-c -check -no-autoload-plugins -add-symbolic-path="/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:."     unknown_predicates.c > "unknown_predicates.res.log" 2> "unknown_predicates.err.log"
+> % dune build @"tests/find_predicate_definition/result/unknown_predicates.0.exec.wtests": Error - Test failed
+> % Aborting: TEST #0 OF TEST FILE tests/find_predicate_definition/unknown_predicates.c
+[2]

@@ -1,0 +1,169 @@
+(lang dune 3.13)
+(name frama-c-acsl_lsp)
+(sections (lib .) (lib_root ..) (libexec .))
+(files
+ (lib
+  (META
+   core/acsl_lsp.a
+   core/acsl_lsp.cma
+   core/acsl_lsp.cmi
+   core/acsl_lsp.cmt
+   core/acsl_lsp.cmx
+   core/acsl_lsp.cmxa
+   core/acsl_lsp.ml
+   core/acsl_lsp__.cmi
+   core/acsl_lsp__.cmt
+   core/acsl_lsp__.cmx
+   core/acsl_lsp__.ml
+   core/acsl_lsp__Find_def.cmi
+   core/acsl_lsp__Find_def.cmt
+   core/acsl_lsp__Find_def.cmx
+   core/acsl_lsp__Import.cmi
+   core/acsl_lsp__Import.cmt
+   core/acsl_lsp__Import.cmx
+   core/acsl_lsp__Jsonrpc.cmi
+   core/acsl_lsp__Jsonrpc.cmt
+   core/acsl_lsp__Jsonrpc.cmx
+   core/acsl_lsp__Lsp_types.cmi
+   core/acsl_lsp__Lsp_types.cmt
+   core/acsl_lsp__Lsp_types.cmx
+   core/acsl_lsp__Parser.cmi
+   core/acsl_lsp__Parser.cmt
+   core/acsl_lsp__Parser.cmx
+   core/acsl_lsp__Rq_handler.cmi
+   core/acsl_lsp__Rq_handler.cmt
+   core/acsl_lsp__Rq_handler.cmx
+   core/acsl_lsp__Run.cmi
+   core/acsl_lsp__Run.cmt
+   core/acsl_lsp__Run.cmx
+   core/acsl_lsp__Run_tests.cmi
+   core/acsl_lsp__Run_tests.cmt
+   core/acsl_lsp__Run_tests.cmx
+   core/acsl_lsp__Settings.cmi
+   core/acsl_lsp__Settings.cmt
+   core/acsl_lsp__Settings.cmx
+   core/acsl_lsp__Start_server.cmi
+   core/acsl_lsp__Start_server.cmt
+   core/acsl_lsp__Start_server.cmx
+   core/acsl_lsp__Test_find_definition.cmi
+   core/acsl_lsp__Test_find_definition.cmt
+   core/acsl_lsp__Test_find_definition.cmx
+   core/acsl_lsp__Types.cmi
+   core/acsl_lsp__Types.cmt
+   core/acsl_lsp__Types.cmti
+   core/acsl_lsp__Types.cmx
+   core/acsl_lsp__Uri0.cmi
+   core/acsl_lsp__Uri0.cmt
+   core/acsl_lsp__Uri0.cmti
+   core/acsl_lsp__Uri0.cmx
+   core/acsl_lsp__Utils.cmi
+   core/acsl_lsp__Utils.cmt
+   core/acsl_lsp__Utils.cmx
+   core/common/settings.ml
+   core/common/utils.ml
+   core/features/find_def.ml
+   core/parser.ml
+   core/run.ml
+   core/server/import.ml
+   core/server/jsonrpc.ml
+   core/server/lsp_types.ml
+   core/server/rq_handler.ml
+   core/server/start_server.ml
+   core/server/types.ml
+   core/server/types.mli
+   core/server/uri0.ml
+   core/server/uri0.mli
+   core/testing/run_tests.ml
+   core/testing/test_find_definition.ml
+   dune-package
+   opam))
+ (lib_root (frama-c/plugins/acsl_lsp/META))
+ (libexec (core/acsl_lsp.cmxs)))
+(library
+ (name frama-c-acsl_lsp.core)
+ (kind normal)
+ (archives (byte core/acsl_lsp.cma) (native core/acsl_lsp.cmxa))
+ (plugins (byte core/acsl_lsp.cma) (native core/acsl_lsp.cmxs))
+ (native_archives core/acsl_lsp.a)
+ (requires frama-c.kernel)
+ (main_module_name Acsl_lsp)
+ (modes byte native)
+ (modules
+  (wrapped
+   (group
+    (alias
+     (obj_name acsl_lsp__)
+     (visibility public)
+     (kind alias)
+     (source (path Acsl_lsp__) (impl (path core/acsl_lsp__.ml-gen))))
+    (name Acsl_lsp)
+    (modules
+     (module
+      (obj_name acsl_lsp)
+      (visibility public)
+      (source (path Acsl_lsp) (impl (path core/acsl_lsp.ml))))
+     (module
+      (obj_name acsl_lsp__Find_def)
+      (visibility public)
+      (source (path Find_def) (impl (path core/features/find_def.ml))))
+     (module
+      (obj_name acsl_lsp__Import)
+      (visibility public)
+      (source (path Import) (impl (path core/server/import.ml))))
+     (module
+      (obj_name acsl_lsp__Jsonrpc)
+      (visibility public)
+      (source (path Jsonrpc) (impl (path core/server/jsonrpc.ml))))
+     (module
+      (obj_name acsl_lsp__Lsp_types)
+      (visibility public)
+      (source (path Lsp_types) (impl (path core/server/lsp_types.ml))))
+     (module
+      (obj_name acsl_lsp__Parser)
+      (visibility public)
+      (source (path Parser) (impl (path core/parser.ml))))
+     (module
+      (obj_name acsl_lsp__Rq_handler)
+      (visibility public)
+      (source (path Rq_handler) (impl (path core/server/rq_handler.ml))))
+     (module
+      (obj_name acsl_lsp__Run)
+      (visibility public)
+      (source (path Run) (impl (path core/run.ml))))
+     (module
+      (obj_name acsl_lsp__Run_tests)
+      (visibility public)
+      (source (path Run_tests) (impl (path core/testing/run_tests.ml))))
+     (module
+      (obj_name acsl_lsp__Settings)
+      (visibility public)
+      (source (path Settings) (impl (path core/common/settings.ml))))
+     (module
+      (obj_name acsl_lsp__Start_server)
+      (visibility public)
+      (source (path Start_server) (impl (path core/server/start_server.ml))))
+     (module
+      (obj_name acsl_lsp__Test_find_definition)
+      (visibility public)
+      (source
+       (path Test_find_definition)
+       (impl (path core/testing/test_find_definition.ml))))
+     (module
+      (obj_name acsl_lsp__Types)
+      (visibility public)
+      (source
+       (path Types)
+       (intf (path core/server/types.mli))
+       (impl (path core/server/types.ml))))
+     (module
+      (obj_name acsl_lsp__Uri0)
+      (visibility public)
+      (source
+       (path Uri0)
+       (intf (path core/server/uri0.mli))
+       (impl (path core/server/uri0.ml))))
+     (module
+      (obj_name acsl_lsp__Utils)
+      (visibility public)
+      (source (path Utils) (impl (path core/common/utils.ml))))))
+   (wrapped true))))

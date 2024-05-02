@@ -1,0 +1,5 @@
+[kernel] Parsing unknown_predicates.c (with preprocessing)
+[kernel:annot-error] unknown_predicates.c:4: Warning: 
+  unbound logic function abra. Ignoring logic specification of function add
+[kernel] User Error: warning annot-error treated as fatal error.
+[kernel] Frama-C aborted: invalid user input.
