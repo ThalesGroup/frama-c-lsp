@@ -1,9 +1,0 @@
-{
-  "dir": "tests/find_predicate_definition/result",
-  "info": "TEST #0 OF TEST FILE tests/find_predicate_definition/unknown_predicates.c",
-  "cmd": "frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     unknown_predicates.c > \"unknown_predicates.res.log\" 2> \"unknown_predicates.err.log\"",
-  "out": "unknown_predicates.res.log",
-  "err": "unknown_predicates.err.log",
-  "oracle_out": "../oracle/unknown_predicates.res.oracle",
-  "oracle_err": "../oracle/unknown_predicates.err.oracle"
-}

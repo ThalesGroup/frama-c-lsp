@@ -30,6 +30,9 @@ module Start_server = Acsl_lsp__Start_server
 (** @canonical Acsl_lsp.Test_find_definition *)
 module Test_find_definition = Acsl_lsp__Test_find_definition
 
+(** @canonical Acsl_lsp.Types *)
+module Types = Acsl_lsp__Types
+
 (** @canonical Acsl_lsp.Utils *)
 module Utils = Acsl_lsp__Utils
 

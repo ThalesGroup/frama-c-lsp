@@ -1,9 +1,0 @@
-{
-  "dir": "tests/find_predicate_definition/result",
-  "info": "TEST #0 OF TEST FILE tests/find_predicate_definition/standard_acsl_predicates.c",
-  "cmd": "frama-c -check -no-autoload-plugins -add-symbolic-path=\"/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default:.\"     standard_acsl_predicates.c > \"standard_acsl_predicates.res.log\" 2> \"standard_acsl_predicates.err.log\"",
-  "out": "standard_acsl_predicates.res.log",
-  "err": "standard_acsl_predicates.err.log",
-  "oracle_out": "../oracle/standard_acsl_predicates.res.oracle",
-  "oracle_err": "../oracle/standard_acsl_predicates.err.oracle"
-}

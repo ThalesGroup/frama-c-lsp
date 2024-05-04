@@ -1,4 +1,0 @@
-/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/_build/default/tests/find_predicate_definition/result/user_defined_predicates_other_file.c:1:10: fatal error: ./user_defined_predicates_same_file.h: No such file or directory
-    1 | #include "./user_defined_predicates_same_file.h"
-      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-compilation terminated.

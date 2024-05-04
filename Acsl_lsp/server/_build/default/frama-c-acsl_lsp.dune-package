@@ -18,9 +18,6 @@
    core/acsl_lsp__Find_def.cmi
    core/acsl_lsp__Find_def.cmt
    core/acsl_lsp__Find_def.cmx
-   core/acsl_lsp__Import.cmi
-   core/acsl_lsp__Import.cmt
-   core/acsl_lsp__Import.cmx
    core/acsl_lsp__Jsonrpc.cmi
    core/acsl_lsp__Jsonrpc.cmt
    core/acsl_lsp__Jsonrpc.cmx
@@ -52,27 +49,20 @@
    core/acsl_lsp__Types.cmt
    core/acsl_lsp__Types.cmti
    core/acsl_lsp__Types.cmx
-   core/acsl_lsp__Uri0.cmi
-   core/acsl_lsp__Uri0.cmt
-   core/acsl_lsp__Uri0.cmti
-   core/acsl_lsp__Uri0.cmx
    core/acsl_lsp__Utils.cmi
    core/acsl_lsp__Utils.cmt
    core/acsl_lsp__Utils.cmx
    core/common/settings.ml
    core/common/utils.ml
    core/features/find_def.ml
+   core/lsp_spec/types.ml
+   core/lsp_spec/types.mli
    core/parser.ml
    core/run.ml
-   core/server/import.ml
    core/server/jsonrpc.ml
    core/server/lsp_types.ml
    core/server/rq_handler.ml
    core/server/start_server.ml
-   core/server/types.ml
-   core/server/types.mli
-   core/server/uri0.ml
-   core/server/uri0.mli
    core/testing/run_tests.ml
    core/testing/test_find_definition.ml
    dune-package
@@ -106,10 +96,6 @@
       (obj_name acsl_lsp__Find_def)
       (visibility public)
       (source (path Find_def) (impl (path core/features/find_def.ml))))
-     (module
-      (obj_name acsl_lsp__Import)
-      (visibility public)
-      (source (path Import) (impl (path core/server/import.ml))))
      (module
       (obj_name acsl_lsp__Jsonrpc)
       (visibility public)
@@ -153,15 +139,8 @@
       (visibility public)
       (source
        (path Types)
-       (intf (path core/server/types.mli))
-       (impl (path core/server/types.ml))))
-     (module
-      (obj_name acsl_lsp__Uri0)
-      (visibility public)
-      (source
-       (path Uri0)
-       (intf (path core/server/uri0.mli))
-       (impl (path core/server/uri0.ml))))
+       (intf (path core/lsp_spec/types.mli))
+       (impl (path core/lsp_spec/types.ml))))
      (module
       (obj_name acsl_lsp__Utils)
       (visibility public)

@@ -41,12 +41,18 @@ lib: [
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Test_find_definition.cmi" {"core/acsl_lsp__Test_find_definition.cmi"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Test_find_definition.cmt" {"core/acsl_lsp__Test_find_definition.cmt"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Test_find_definition.cmx" {"core/acsl_lsp__Test_find_definition.cmx"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Types.cmi" {"core/acsl_lsp__Types.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Types.cmt" {"core/acsl_lsp__Types.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Types.cmti" {"core/acsl_lsp__Types.cmti"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Types.cmx" {"core/acsl_lsp__Types.cmx"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Utils.cmi" {"core/acsl_lsp__Utils.cmi"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Utils.cmt" {"core/acsl_lsp__Utils.cmt"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Utils.cmx" {"core/acsl_lsp__Utils.cmx"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/common/settings.ml" {"core/common/settings.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/common/utils.ml" {"core/common/utils.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/features/find_def.ml" {"core/features/find_def.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/lsp_spec/types.ml" {"core/lsp_spec/types.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/lsp_spec/types.mli" {"core/lsp_spec/types.mli"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/parser.ml" {"core/parser.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/run.ml" {"core/run.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/server/jsonrpc.ml" {"core/server/jsonrpc.ml"}
