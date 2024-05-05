@@ -1,9 +1,0 @@
-{
-  "dir": "tests/suite1/result",
-  "info": "TEST #1 OF TEST FILE tests/suite1/acsl_first_example.c",
-  "cmd": "echo $PATH '\\n\\n' acsl_first_example.c -slicing-level 2 -slice-return main -slice-print > \"acsl_first_example.1.res.log\" 2> \"acsl_first_example.1.err.log\"",
-  "out": "acsl_first_example.1.res.log",
-  "err": "acsl_first_example.1.err.log",
-  "oracle_out": "../oracle/acsl_first_example.1.res.oracle",
-  "oracle_err": "../oracle/acsl_first_example.1.err.oracle"
-}

@@ -1,4 +1,4 @@
-let run_test_find_defintion () = 
+let test_find_defintion () = 
       Printf.printf "-- Tests : Find predicate definition --\n";
       Printf.printf "------------ Empty JSON query --\n";
       Find_def.find_def (Jsonrpc.parse_request "{}");

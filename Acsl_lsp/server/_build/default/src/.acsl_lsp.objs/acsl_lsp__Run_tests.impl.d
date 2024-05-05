@@ -1,1 +1,1 @@
-src/testing/run_tests.ml: Test_find_definition
+src/testing/run_tests.ml: Test_json

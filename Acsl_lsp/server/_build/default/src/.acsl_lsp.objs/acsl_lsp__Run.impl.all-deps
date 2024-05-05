@@ -1,5 +1,5 @@
-acsl_lsp__Find_def
-acsl_lsp__Jsonrpc
+acsl_lsp__Jsonable
 acsl_lsp__Run_tests
 acsl_lsp__Settings
-acsl_lsp__Test_find_definition
+acsl_lsp__Test_json
+acsl_lsp__Types

@@ -32,8 +32,8 @@ struct lconv
 {
   /* Numeric (non-monetary) information.  */
 
-  char *decimal_point;          /* Decimal point character.  */
-  char *thousands_sep;          /* Thousands separator.  */
+  char *decimal_point;		/* Decimal point character.  */
+  char *thousands_sep;		/* Thousands separator.  */
   /* Each element is the number of digits in each group;
      elements with higher indices are farther left.
      An element with value CHAR_MAX means that no further grouping is done.
@@ -46,14 +46,14 @@ struct lconv
   /* First three chars are a currency symbol from ISO 4217.
      Fourth char is the separator.  Fifth char is '\0'.  */
   char *int_curr_symbol;
-  char *currency_symbol;        /* Local currency symbol.  */
-  char *mon_decimal_point;      /* Decimal point character.  */
-  char *mon_thousands_sep;      /* Thousands separator.  */
-  char *mon_grouping;           /* Like `grouping' element (above).  */
-  char *positive_sign;          /* Sign for positive values.  */
-  char *negative_sign;          /* Sign for negative values.  */
-  char int_frac_digits;         /* Int'l fractional digits.  */
-  char frac_digits;             /* Local fractional digits.  */
+  char *currency_symbol;	/* Local currency symbol.  */
+  char *mon_decimal_point;	/* Decimal point character.  */
+  char *mon_thousands_sep;	/* Thousands separator.  */
+  char *mon_grouping;		/* Like `grouping' element (above).  */
+  char *positive_sign;		/* Sign for positive values.  */
+  char *negative_sign;		/* Sign for negative values.  */
+  char int_frac_digits;		/* Int'l fractional digits.  */
+  char frac_digits;		/* Local fractional digits.  */
   /* 1 if currency_symbol precedes a positive value, 0 if succeeds.  */
   char p_cs_precedes;
   /* 1 iff a space separates currency_symbol from a positive value.  */

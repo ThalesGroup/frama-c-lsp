@@ -18,6 +18,9 @@
    core/acsl_lsp__Find_def.cmi
    core/acsl_lsp__Find_def.cmt
    core/acsl_lsp__Find_def.cmx
+   core/acsl_lsp__Jsonable.cmi
+   core/acsl_lsp__Jsonable.cmt
+   core/acsl_lsp__Jsonable.cmx
    core/acsl_lsp__Jsonrpc.cmi
    core/acsl_lsp__Jsonrpc.cmt
    core/acsl_lsp__Jsonrpc.cmx
@@ -45,6 +48,9 @@
    core/acsl_lsp__Test_find_definition.cmi
    core/acsl_lsp__Test_find_definition.cmt
    core/acsl_lsp__Test_find_definition.cmx
+   core/acsl_lsp__Test_json.cmi
+   core/acsl_lsp__Test_json.cmt
+   core/acsl_lsp__Test_json.cmx
    core/acsl_lsp__Types.cmi
    core/acsl_lsp__Types.cmt
    core/acsl_lsp__Types.cmti
@@ -55,6 +61,7 @@
    core/common/settings.ml
    core/common/utils.ml
    core/features/find_def.ml
+   core/lsp_spec/jsonable.ml
    core/lsp_spec/types.ml
    core/lsp_spec/types.mli
    core/parser.ml
@@ -65,6 +72,7 @@
    core/server/start_server.ml
    core/testing/run_tests.ml
    core/testing/test_find_definition.ml
+   core/testing/test_json.ml
    dune-package
    opam))
  (lib_root (frama-c/plugins/acsl_lsp/META))
@@ -96,6 +104,10 @@
       (obj_name acsl_lsp__Find_def)
       (visibility public)
       (source (path Find_def) (impl (path core/features/find_def.ml))))
+     (module
+      (obj_name acsl_lsp__Jsonable)
+      (visibility public)
+      (source (path Jsonable) (impl (path core/lsp_spec/jsonable.ml))))
      (module
       (obj_name acsl_lsp__Jsonrpc)
       (visibility public)
@@ -134,6 +146,10 @@
       (source
        (path Test_find_definition)
        (impl (path core/testing/test_find_definition.ml))))
+     (module
+      (obj_name acsl_lsp__Test_json)
+      (visibility public)
+      (source (path Test_json) (impl (path core/testing/test_json.ml))))
      (module
       (obj_name acsl_lsp__Types)
       (visibility public)

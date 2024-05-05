@@ -3,6 +3,9 @@
 (** @canonical Acsl_lsp.Find_def *)
 module Find_def = Acsl_lsp__Find_def
 
+(** @canonical Acsl_lsp.Jsonable *)
+module Jsonable = Acsl_lsp__Jsonable
+
 (** @canonical Acsl_lsp.Jsonrpc *)
 module Jsonrpc = Acsl_lsp__Jsonrpc
 
@@ -29,6 +32,9 @@ module Start_server = Acsl_lsp__Start_server
 
 (** @canonical Acsl_lsp.Test_find_definition *)
 module Test_find_definition = Acsl_lsp__Test_find_definition
+
+(** @canonical Acsl_lsp.Test_json *)
+module Test_json = Acsl_lsp__Test_json
 
 (** @canonical Acsl_lsp.Types *)
 module Types = Acsl_lsp__Types
