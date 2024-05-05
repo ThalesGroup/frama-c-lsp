@@ -7,12 +7,22 @@ end
 module RequestMessage : sig
   type id_ = Int of int | Str of string
   type t = {
+    jsonrpc : string;
     id : id_;
     method_ : string;
     params : Json.t option (* array or object *)
   }
   include Jsonable.B with type t := t
 
+end
+
+module NotificationMessage : sig
+  type t = {
+    jsonrpc : string;
+    method_ : string;
+    params : Json.t array option
+  }
+  include Jsonable.B with type t := t
 end
 
 module ProgressToken : sig
@@ -97,7 +107,7 @@ module InitializeParams : sig
     initialization_options : Json.t option;
     capabilities : ClientCapabilities.t;
     trace : TraceValue.t option;
-    workspace_folders : WorkspaceFolder.t list option;
+    workspace_folders : WorkspaceFolder.t array option;
   }
   include Jsonable.B with type t := t
 
@@ -119,7 +129,7 @@ module Registration : sig
 end
 
 module RegistrationParams : sig
-  type t = {registrations : Registration.t list}
+  type t = {registrations : Registration.t array}
   include Jsonable.B with type t := t
 
 end
@@ -154,23 +164,101 @@ module LogTraceParams : sig
 
 end
 
-module UnegistrationParams : sig
-  type t = {unregistrations : Unregistration.t list}
+module UnregistrationParams : sig
+  type t = {unregistrations : Unregistration.t array}
   include Jsonable.B with type t := t
-
 end
 
 module TextDocumentSyncKind : sig
   type t = None | Full | Incremental
+  include Jsonable.B with type t := t
+end
 
+module TextDocumentSyncOptions : sig 
+  type t = {
+    openClose : bool option;
+    change : TextDocumentSyncKind.t option
+  }
+  include Jsonable.B with type t := t
+end
+
+module TextDocumentItem : sig
+  type t = {
+    uri : DocumentUri.t;
+    languageId : string;
+    version : int;
+    text : string;
+  }
+  include Jsonable.B with type t := t
+end
+
+module DidOpenTextDocumentParams : sig
+  type t = {
+    textDocument : TextDocumentItem.t
+  }  
+  include Jsonable.B with type t := t
+end
+
+module TextDocumentChangeRegistrationOptions : sig
+  type t = {syncKind : TextDocumentSyncKind.t}
+  include Jsonable.B with type t := t
+end
+
+module VersionedTextDocumentIdentifier : sig
+  type t = {
+    uri : DocumentUri.t;
+    version : int
+  }
+  include Jsonable.B with type t := t
+end
+
+module Position : sig
+  type t = {
+    line : int;
+    character : int
+  }
   include Jsonable.B with type t := t
 
 end
 
-module DefinitionOptions : sig
-  type t
+module Range : sig 
+  type t = {
+    start : Position.t;
+    end_ : Position.t
+  }
   include Jsonable.B with type t := t
 
+end
+
+module TextDocumentContentChangeEvent : sig
+  type t =
+  | RangeChange of { range: Range.t; rangeLength: int option; text: string }
+  | FullTextChange of { text: string }
+  include Jsonable.B with type t := t
+end
+
+module DidChangeTextDocumentParams : sig
+  type t = {
+    textDocument : VersionedTextDocumentIdentifier.t;
+    contentChanges : TextDocumentContentChangeEvent.t array
+  }
+  include Jsonable.B with type t := t
+end
+
+module TextDocumentIdentifier : sig 
+  type t = { uri : DocumentUri.t }
+  include Jsonable.B with type t := t
+
+end
+
+module DidCloseTextDocumentParams : sig
+  type t = {textDocument : TextDocumentIdentifier.t }
+  include Jsonable.B with type t := t
+end
+
+module DefinitionOptions : sig
+  type t = {workDoneProgress: bool option}
+  include Jsonable.B with type t := t
 end
 
 module ServerCapabilities : sig
@@ -234,21 +322,6 @@ module DefinitionRegistrationOptions : sig
 
 end
 
-module TextDocumentIdentifier : sig 
-  type t = { uri : DocumentUri.t }
-  include Jsonable.B with type t := t
-
-end
-
-module Position : sig
-  type t = {
-    line : int;
-    character : int
-  }
-  include Jsonable.B with type t := t
-
-end
-
 module TextDocumentPositionParams : sig
   type t = {
     textDocument : TextDocumentIdentifier.t;
@@ -275,15 +348,6 @@ module DefinitionParams : sig
 
 end
 
-module Range : sig 
-  type t = {
-    start : Position.t;
-    end_ : Position.t
-  }
-  include Jsonable.B with type t := t
-
-end
-
 module Location : sig 
   type t = {
     uri : DocumentUri.t;
@@ -293,3 +357,52 @@ module Location : sig
 
 end
  
+module DiagnosticSeverity : sig 
+  type t = Error | Warning | Information | Hint
+  include Jsonable.B with type t := t
+end
+
+module CodeDescription : sig 
+  type t = {
+    href : URI.t
+  }
+  include Jsonable.B with type t := t
+end
+
+module DiagnosticTag : sig
+  type t = Unnecessary | Deprecated
+  include Jsonable.B with type t := t
+end
+
+module DiagnosticRelatedInformation : sig
+  type t = {
+    location : Location.t;
+    message : string
+  }
+  include Jsonable.B with type t := t
+end
+
+module Diagnostic : sig
+  type code_ = Int of int | Str of string
+  type t = {
+    range : Range.t;
+	  severity : DiagnosticSeverity.t option;
+    code : code_ option ;
+	  codeDescription: CodeDescription.t option;
+  	source: string option;
+  	message: string;
+  	tags: DiagnosticTag.t array option;
+  	relatedInformation: DiagnosticRelatedInformation.t array option;
+  	data: Json.t option;
+  }
+  include Jsonable.B with type t := t
+end 
+
+module Command : sig
+  type t = {
+    title : string;
+    command : string;
+    arguments : Json.t list option
+  }
+  include Jsonable.B with type t := t
+end

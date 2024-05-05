@@ -39,7 +39,7 @@ module RequestMessage = struct
     `Assoc [
       "jsonrpc", `String msg.jsonrpc;
       "id", id_json;
-      "method_", `String msg.method_;
+      "method", `String msg.method_;
       "params", params_json;
     ]
 
@@ -58,9 +58,9 @@ module RequestMessage = struct
         | _ -> raise (Invalid_argument "Invalid JSON format for RequestMessage: id")
       in
       let method_ =
-        match List.assoc "method_" fields with
+        match List.assoc "method" fields with
         | `String s -> s
-        | _ -> raise (Invalid_argument "Invalid JSON format for RequestMessage: method_")
+        | _ -> raise (Invalid_argument "Invalid JSON format for RequestMessage: method")
       in
       let params =
         match List.assoc_opt "params" fields with
@@ -71,6 +71,41 @@ module RequestMessage = struct
     | _ -> raise (Invalid_argument "Invalid JSON format for RequestMessage")
 end
 
+module NotificationMessage = struct
+  type t = {
+    jsonrpc : string;
+    method_ : string;
+    params : Json.t array option
+  }
+
+  let json_of_t (msg : t) : Json.t =
+    match msg.params with
+    | Some params -> `Assoc [("method", `String msg.method_); ("params", `List (Array.to_list params))]
+    | None -> `Assoc [("method", `String msg.method_); ("params", `Null)]
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let jsonrpc =
+        match List.assoc "jsonrpc" fields with
+        | `String s -> s
+        | _ -> raise (Invalid_argument "Invalid JSON format for NotificationMessage: method")
+      in
+      let method_ =
+        match List.assoc "method" fields with
+        | `String s -> s
+        | _ -> raise (Invalid_argument "Invalid JSON format for NotificationMessage: method")
+      in
+      let params =
+        match List.assoc_opt "params" fields with
+        | Some (`List l) -> Some (Array.of_list l)
+        | Some `Null -> None
+        | None -> None
+        | _ -> raise (Invalid_argument "Invalid JSON format for NotificationMessage: params")
+      in
+      { jsonrpc; method_ ; params }
+    | _ -> raise (Invalid_argument "Invalid JSON format for NotificationMessage")
+end
 
 module ProgressToken = struct
   type t = Int of int | Str of string
@@ -413,7 +448,7 @@ module Registration = struct
       let method_ =
         match List.assoc "method" fields with
         | `String s -> s
-        | _ -> raise (Invalid_argument "Invalid JSON format for method_")
+        | _ -> raise (Invalid_argument "Invalid JSON format for method")
       in
       let registerOptions =
         match List.assoc_opt "registerOptions" fields with
@@ -577,26 +612,166 @@ module TextDocumentSyncKind = struct
     | _ -> None (* unsure *)
 end
 
-module DefinitionOptions = struct
-  type t = {work_done_token : ProgressToken.t option}
-
+module TextDocumentSyncOptions = struct 
+  type t = {
+    openClose : bool option;
+    change : TextDocumentSyncKind.t option
+  }
   let json_of_t (options : t) : Json.t =
     `Assoc [
-      "work_done_token", (match options.work_done_token with Some token -> ProgressToken.json_of_t token | None -> `Null)
+      "openClose", (match options.openClose with Some b -> `Bool b | None -> `Null);
+      "change", (match options.change with
+                 | Some kind -> TextDocumentSyncKind.json_of_t kind
+                 | None -> `Null)
+    ]
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let openClose =
+        match List.assoc_opt "openClose" fields with
+        | Some (`Bool b) -> Some b
+        | Some `Null -> None
+        | _ -> raise (Invalid_argument "Invalid JSON format for TextDocumentSyncOptions: openClose")
+      in
+      let change =
+        match List.assoc_opt "change" fields with
+        | Some json -> Some (TextDocumentSyncKind.t_of_json json)
+        | None -> None
+      in
+      { openClose; change }
+    | _ -> raise (Invalid_argument "Invalid JSON format for TextDocumentSyncOptions")
+end
+
+module TextDocumentItem = struct
+  type t = {
+    uri : DocumentUri.t;
+    languageId : string;
+    version : int;
+    text : string;
+  }
+  let json_of_t (item : t) : Json.t =
+    `Assoc [
+      "uri", `String item.uri;
+      "languageId", `String item.languageId;
+      "version", `Int item.version;
+      "text", `String item.text;
+    ]
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let uri =
+        match List.assoc "uri" fields with
+        | `String uri_str -> uri_str
+        | _ -> raise (Invalid_argument "Invalid JSON format for TextDocumentItem: uri")
+      in
+      let languageId =
+        match List.assoc "languageId" fields with
+        | `String lang_id -> lang_id
+        | _ -> raise (Invalid_argument "Invalid JSON format for TextDocumentItem: languageId")
+      in
+      let version =
+        match List.assoc "version" fields with
+        | `Int ver -> ver
+        | _ -> raise (Invalid_argument "Invalid JSON format for TextDocumentItem: version")
+      in
+      let text =
+        match List.assoc "text" fields with
+        | `String txt -> txt
+        | _ -> raise (Invalid_argument "Invalid JSON format for TextDocumentItem: text")
+      in
+      { uri; languageId; version; text }
+    | _ -> raise (Invalid_argument "Invalid JSON format for TextDocumentItem")
+end
+
+module DidOpenTextDocumentParams = struct
+  type t = {
+    textDocument : TextDocumentItem.t
+  }
+
+  let json_of_t (params : t) : Json.t =
+    `Assoc [
+      "textDocument", TextDocumentItem.json_of_t params.textDocument
     ]
 
   let t_of_json (json : Json.t) : t =
     match json with
     | `Assoc fields ->
-      let work_done_token =
-        match List.assoc_opt "work_done_token" fields with
-        | Some token_json -> Some (ProgressToken.t_of_json token_json)
-        | None -> None
-        | _ -> raise (Invalid_argument "Invalid JSON format for DefinitionOptions: work_done_token")
+      let textDocument =
+        match List.assoc "textDocument" fields with
+        | json -> TextDocumentItem.t_of_json json
       in
-      { work_done_token }
+      { textDocument }
+    | _ -> raise (Invalid_argument "Invalid JSON format for DidOpenTextDocumentParams")
+end
+
+module TextDocumentChangeRegistrationOptions = struct
+  type t = { syncKind : TextDocumentSyncKind.t }
+  let json_of_t (options : t) : Json.t =
+    `Assoc [
+      "syncKind", TextDocumentSyncKind.json_of_t options.syncKind
+    ]
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let syncKind =
+        match List.assoc_opt "syncKind" fields with
+        | Some syncKindJson -> TextDocumentSyncKind.t_of_json syncKindJson
+        | None -> raise (Invalid_argument "Invalid JSON format for TextDocumentChangeRegistrationOptions: syncKind")
+      in
+      { syncKind }
+    | _ -> raise (Invalid_argument "Invalid JSON format for TextDocumentChangeRegistrationOptions")
+end
+
+module VersionedTextDocumentIdentifier = struct
+  type t = {
+    uri : DocumentUri.t;
+    version : int
+  }
+
+  let json_of_t (identifier : t) : Json.t =
+    `Assoc [
+      "uri", `String identifier.uri;
+      "version", `Int identifier.version
+    ]
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let uri =
+        match List.assoc_opt "uri" fields with
+        | Some (`String uri) -> uri
+        | _ -> raise (Invalid_argument "Invalid JSON format for VersionedTextDocumentIdentifier: uri")
+      in
+      let version =
+        match List.assoc_opt "version" fields with
+        | Some (`Int version) -> version
+        | _ -> raise (Invalid_argument "Invalid JSON format for VersionedTextDocumentIdentifier: version")
+      in
+      { uri; version }
+    | _ -> raise (Invalid_argument "Invalid JSON format for VersionedTextDocumentIdentifier")
+end
+
+module DefinitionOptions = struct
+  type t = { workDoneProgress : bool option }
+
+  let json_of_t (options : t) : Json.t =
+    `Assoc [
+      "workDoneProgress", (match options.workDoneProgress with Some b -> `Bool b | None -> `Null)
+    ]
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let workDoneProgress =
+        match List.assoc_opt "workDoneProgress" fields with
+        | Some (`Bool b) -> Some b
+        | Some `Null -> None
+        | _ -> raise (Invalid_argument "Invalid JSON format for DefinitionOptions: workDoneProgress")
+      in
+      { workDoneProgress }
     | _ -> raise (Invalid_argument "Invalid JSON format for DefinitionOptions")
 end
+
 
 module ServerCapabilities = struct
   type definition_provider = Bool of bool | DefinitionOptions of DefinitionOptions.t
@@ -870,6 +1045,133 @@ module Position = struct
     | _ -> raise (Invalid_argument "Invalid JSON format for Position")
 end
 
+module Range = struct
+  type t = {
+    start : Position.t;
+    end_ : Position.t
+  }
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let start =
+        match List.assoc_opt "start" fields with
+        | Some start_json -> Position.t_of_json start_json
+        | None -> raise (Invalid_argument "Invalid JSON format for Range: start")
+      in
+      let end_ =
+        match List.assoc_opt "end" fields with
+        | Some end_json -> Position.t_of_json end_json
+        | None -> raise (Invalid_argument "Invalid JSON format for Range: end")
+      in
+      { start; end_ }
+    | _ -> raise (Invalid_argument "Invalid JSON format for Range")
+  
+  let json_of_t (range : t) : Json.t =
+    `Assoc [
+      "start", Position.json_of_t range.start;
+      "end", Position.json_of_t range.end_;
+    ]
+end
+
+module TextDocumentContentChangeEvent = struct
+  type t =
+  | RangeChange of { range: Range.t; rangeLength: int option; text: string }
+  | FullTextChange of { text: string }
+
+  let json_of_t (change : t) : Json.t =
+    match change with
+    | RangeChange { range; rangeLength; text } ->
+      `Assoc [
+        "range", Range.json_of_t range;
+        "rangeLength", (match rangeLength with Some len -> `Int len | None -> `Null);
+        "text", `String text
+      ]
+    | FullTextChange { text } ->
+      `Assoc [
+        "text", `String text
+      ]
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      if List.mem_assoc "range" fields && List.mem_assoc "text" fields then
+        let range = Range.t_of_json (List.assoc "range" fields) in
+        let rangeLength =
+          match List.assoc_opt "rangeLength" fields with
+          | Some (`Int len) -> Some len
+          | Some `Null -> None
+          | _ -> raise (Invalid_argument "Invalid JSON format for TextDocumentContentChangeEvent: rangeLength")
+        in
+        let text =
+          match List.assoc "text" fields with
+          | `String s -> s
+          | _ -> raise (Invalid_argument "Invalid JSON format for TextDocumentContentChangeEvent: text")
+        in
+        RangeChange { range; rangeLength; text }
+      else if List.mem_assoc "text" fields then
+        let text =
+          match List.assoc "text" fields with
+          | `String s -> s
+          | _ -> raise (Invalid_argument "Invalid JSON format for TextDocumentContentChangeEvent: text")
+        in
+        FullTextChange { text }
+      else
+        raise (Invalid_argument "Invalid JSON format for TextDocumentContentChangeEvent")
+    | _ -> raise (Invalid_argument "Invalid JSON format for TextDocumentContentChangeEvent")
+end
+
+
+module DidChangeTextDocumentParams = struct
+  type t = {
+    textDocument : VersionedTextDocumentIdentifier.t;
+    contentChanges : TextDocumentContentChangeEvent.t array;
+  }
+
+  let json_of_t (params : t) : Json.t =
+    `Assoc [
+      "textDocument", VersionedTextDocumentIdentifier.json_of_t params.textDocument;
+      "contentChanges", `List (Array.to_list (Array.map TextDocumentContentChangeEvent.json_of_t params.contentChanges))
+    ]
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let textDocument =
+        match List.assoc "textDocument" fields with
+        | doc_json -> VersionedTextDocumentIdentifier.t_of_json doc_json
+      in
+      let contentChanges =
+        match List.assoc "contentChanges" fields with
+        | `List change_list ->
+          Array.of_list (List.map (fun json -> TextDocumentContentChangeEvent.t_of_json json) change_list)
+        | _ -> raise (Invalid_argument "Invalid JSON format for DidChangeTextDocumentParams: contentChanges")
+      in
+      { textDocument; contentChanges }
+    | _ -> raise (Invalid_argument "Invalid JSON format for DidChangeTextDocumentParams")
+end
+
+module DidCloseTextDocumentParams = struct
+  type t = { textDocument : TextDocumentIdentifier.t }
+
+  let json_of_t (params : t) : Json.t =
+    `Assoc [
+      "textDocument", TextDocumentIdentifier.json_of_t params.textDocument
+    ]
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let textDocument =
+        match List.assoc "textDocument" fields with
+        | doc_json -> TextDocumentIdentifier.t_of_json doc_json
+      in
+      { textDocument }
+    | _ -> raise (Invalid_argument "Invalid JSON format for DidCloseTextDocumentParams")
+end
+
+
+
 module TextDocumentPositionParams = struct
   type t = {
     textDocument : TextDocumentIdentifier.t;
@@ -973,31 +1275,6 @@ module DefinitionParams = struct
     
 end
 
-
-module Range = struct
-  type t = {
-    start : Position.t;
-    end_ : Position.t
-  }
-
-  let t_of_json (json : Json.t) : t =
-    match json with
-    | `Assoc fields ->
-      let start =
-        match List.assoc_opt "start" fields with
-        | Some start_json -> Position.t_of_json start_json
-        | None -> raise (Invalid_argument "Invalid JSON format for Range: start")
-      in
-      let end_ =
-        match List.assoc_opt "end" fields with
-        | Some end_json -> Position.t_of_json end_json
-        | None -> raise (Invalid_argument "Invalid JSON format for Range: end")
-      in
-      { start; end_ }
-    | _ -> raise (Invalid_argument "Invalid JSON format for Range")
-end
-
-
 module Location = struct 
   type t = {
     uri : DocumentUri.t;
@@ -1019,5 +1296,210 @@ module Location = struct
       in
       { uri; range }
     | _ -> raise (Invalid_argument "Invalid JSON format for Location: expected an object")
+
+    let json_of_t (loc : t) : Json.t =
+      `Assoc [
+        "uri", DocumentUri.json_of_t loc.uri;
+        "range", Range.json_of_t loc.range;
+      ]
+end
+
+module DiagnosticSeverity = struct
+  type t = Error | Warning | Information | Hint
+
+  let json_of_t (severity : t) : Json.t =
+    match severity with
+    | Error -> `Int 1
+    | Warning -> `Int 2
+    | Information -> `Int 3
+    | Hint -> `Int 4
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Int 1 -> Error
+    | `Int 2 -> Warning
+    | `Int 3 -> Information
+    | `Int 4 -> Hint
+    | _ -> raise (Invalid_argument "Invalid JSON format for DiagnosticSeverity")
+end
+
+module CodeDescription = struct 
+  type t = {
+    href : URI.t
+  }
+
+  let json_of_t (code_desc : t) : Json.t =
+    `Assoc [
+      "href", URI.json_of_t code_desc.href
+    ]
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let href =
+        match List.assoc_opt "href" fields with
+        | Some json_uri -> URI.t_of_json json_uri
+        | _ -> raise (Invalid_argument "Invalid JSON format for CodeDescription: href")
+      in
+      { href }
+    | _ -> raise (Invalid_argument "Invalid JSON format for CodeDescription")
+end
+
+module DiagnosticTag = struct
+  type t = Unnecessary | Deprecated
+
+  let json_of_t (tag : t) : Json.t =
+    match tag with
+    | Unnecessary -> `String "unnecessary"
+    | Deprecated -> `String "deprecated"
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `String "unnecessary" -> Unnecessary
+    | `String "deprecated" -> Deprecated
+    | _ -> raise (Invalid_argument "Invalid JSON format for DiagnosticTag")
+end
+
+module DiagnosticRelatedInformation = struct
+  type t = {
+    location : Location.t;
+    message : string
+  }
+  let json_of_t (info : t) : Json.t =
+    `Assoc [
+      "location", Location.json_of_t info.location;
+      "message", Json.of_string info.message
+    ]
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let location =
+        match List.assoc "location" fields with
+        | loc_json -> Location.t_of_json loc_json
+      in
+      let message =
+        match List.assoc "message" fields with
+        | `String msg -> msg
+        | _ -> raise (Invalid_argument "Invalid JSON format for DiagnosticRelatedInformation: message")
+      in
+      { location; message }
+    | _ -> raise (Invalid_argument "Invalid JSON format for DiagnosticRelatedInformation")
+end
+
+module Diagnostic = struct
+  type code_ = Int of int | Str of string
+  type t = {
+    range : Range.t;
+    severity : DiagnosticSeverity.t option;
+    code : code_ option ;
+    codeDescription: CodeDescription.t option;
+    source: string option;
+    message: string;
+    tags: DiagnosticTag.t array option;
+    relatedInformation: DiagnosticRelatedInformation.t array option;
+    data: Json.t option;
+  }
+
+  let json_of_t (diag : t) : Json.t =
+    `Assoc [
+      "range", Range.json_of_t diag.range;
+      "severity", (match diag.severity with Some sev -> DiagnosticSeverity.json_of_t sev | None -> `Null);
+      "code", (match diag.code with Some (Int i) -> `Int i | Some (Str s) -> `String s | None -> `Null);
+      "codeDescription", (match diag.codeDescription with Some desc -> CodeDescription.json_of_t desc | None -> `Null);
+      "source", (match diag.source with Some src -> `String src | None -> `Null);
+      "message", `String diag.message;
+      "tags", (match diag.tags with Some tags -> `List (Array.to_list (Array.map DiagnosticTag.json_of_t tags)) | None -> `Null);
+      "relatedInformation", (match diag.relatedInformation with Some infos -> `List (Array.to_list (Array.map DiagnosticRelatedInformation.json_of_t infos)) | None -> `Null);
+      "data", (match diag.data with Some d -> d | None -> `Null);
+    ]
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let range = Range.t_of_json (List.assoc "range" fields) in
+      let severity =
+        match List.assoc_opt "severity" fields with
+        | Some json -> Some (DiagnosticSeverity.t_of_json json)
+        | None -> None
+      in
+      let code =
+        match List.assoc_opt "code" fields with
+        | Some (`Int i) -> Some (Int i)
+        | Some (`String s) -> Some (Str s)
+        | None -> None
+        | _ -> raise (Invalid_argument "Invalid JSON format for Diagnostic: code")
+      in
+      let codeDescription =
+        match List.assoc_opt "codeDescription" fields with
+        | Some json -> Some (CodeDescription.t_of_json json)
+        | None -> None
+      in
+      let source =
+        match List.assoc_opt "source" fields with
+        | Some (`String s) -> Some s
+        | None -> None
+        | _ -> raise (Invalid_argument "Invalid JSON format for Diagnostic: source")
+      in
+      let message =
+        match List.assoc "message" fields with
+        | `String s -> s
+        | _ -> raise (Invalid_argument "Invalid JSON format for Diagnostic: message")
+      in
+      let tags =
+        match List.assoc_opt "tags" fields with
+        | Some (`List tags_json) -> Some (Array.of_list (List.map DiagnosticTag.t_of_json tags_json))
+        | None -> None
+        | _ -> raise (Invalid_argument "Invalid JSON format for Diagnostic: tags")
+      in
+      let relatedInformation =
+        match List.assoc_opt "relatedInformation" fields with
+        | Some (`List infos_json) -> Some (Array.of_list (List.map DiagnosticRelatedInformation.t_of_json infos_json))
+        | None -> None
+        | _ -> raise (Invalid_argument "Invalid JSON format for Diagnostic: relatedInformation")
+      in
+      let data =
+        match List.assoc_opt "data" fields with
+        | Some json -> Some json
+        | None -> None
+      in
+      { range; severity; code; codeDescription; source; message; tags; relatedInformation; data }
+    | _ -> raise (Invalid_argument "Invalid JSON format for Diagnostic")
+end
+
+module Command = struct
+  type t = {
+    title : string;
+    command : string;
+    arguments : Json.t list option
+  }
+
+  let json_of_t (cmd : t) : Json.t =
+    `Assoc [
+      "title", `String cmd.title;
+      "command", `String cmd.command;
+      "arguments", (match cmd.arguments with Some args -> `List args | None -> `Null)
+    ]
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let title =
+        match List.assoc "title" fields with
+        | `String s -> s
+        | _ -> raise (Invalid_argument "Invalid JSON format for Command: title")
+      in
+      let command =
+        match List.assoc "command" fields with
+        | `String s -> s
+        | _ -> raise (Invalid_argument "Invalid JSON format for Command: command")
+      in
+      let arguments =
+        match List.assoc_opt "arguments" fields with
+        | Some (`List args) -> Some args
+        | Some `Null -> None
+        | _ -> raise (Invalid_argument "Invalid JSON format for Command: arguments")
+      in
+      { title; command; arguments }
+    | _ -> raise (Invalid_argument "Invalid JSON format for Command")
 end
 
