@@ -4,10 +4,10 @@
     "method": "textDocument/definition", 
     "params": {
         "textDocument": {
-            "uri": "/home/file.h"
+            "uri": "/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server/src/tests/test1.c"
         }, 
         "position": {
-            "line": 138, "character": 59
+            "line": 4, "character": 10
         }
     }
 }

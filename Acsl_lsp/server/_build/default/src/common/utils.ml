@@ -5,3 +5,8 @@ let pos_is_within_range pos (pos1, pos2 : (Filepath.position * Filepath.position
   curr_pos >= min && curr_pos <= max
 
 let get = function Some v -> v | None -> invalid_arg "option is None";
+
+(*
+(* transform json position to filepath position *)
+let to_filepath_position () = 
+*)

@@ -1,5 +1,4 @@
 open Unix
-open Jsonrpc
 
 let server_port = 8001
 let rec receive_all client_sock buffer =
@@ -26,26 +25,7 @@ let start_server () =
     Printf.printf "Request received: %s\n%!" request_str;
 
     (* Parse the request *)
-    let parsed_request = parse_request request_str in
-
-    match parsed_request with
-    | Some request ->
-        (* Handle the request and generate a response *)
-        let response = Rq_handler.handle_request request in
-        let response_str = Json.save_string @@ `Assoc [
-          "jsonrpc", response.jsonrpc;
-          "result", (match response.result with Some res -> res | None -> `Null);
-          "error", (match response.error with Some err -> err | None -> `Null);
-          "id", response.id
-        ] in
-        (* Send the response back to the client *)
-        let response = "HTTP/1.1 404 Not Found\r\nContent-Length: 26\r\n\r\nError: Resource not found\n" in
-        let _ = Unix.send client_sock (Bytes.of_string response) 0 (String.length response) [] in
-        Printf.printf "Response sent%s\n %!" response_str;
-    | None ->
-        Printf.eprintf "Invalid JSON-RPC request\n%!";
-
-    (* Close the client socket *)
+    
     close client_sock
   done
 

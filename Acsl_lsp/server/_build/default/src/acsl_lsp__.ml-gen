@@ -3,20 +3,14 @@
 (** @canonical Acsl_lsp.Find_def *)
 module Find_def = Acsl_lsp__Find_def
 
+(** @canonical Acsl_lsp.Handler *)
+module Handler = Acsl_lsp__Handler
+
 (** @canonical Acsl_lsp.Jsonable *)
 module Jsonable = Acsl_lsp__Jsonable
 
-(** @canonical Acsl_lsp.Jsonrpc *)
-module Jsonrpc = Acsl_lsp__Jsonrpc
-
-(** @canonical Acsl_lsp.Lsp_types *)
-module Lsp_types = Acsl_lsp__Lsp_types
-
 (** @canonical Acsl_lsp.Parser *)
 module Parser = Acsl_lsp__Parser
-
-(** @canonical Acsl_lsp.Rq_handler *)
-module Rq_handler = Acsl_lsp__Rq_handler
 
 (** @canonical Acsl_lsp.Run *)
 module Run = Acsl_lsp__Run
@@ -29,6 +23,9 @@ module Settings = Acsl_lsp__Settings
 
 (** @canonical Acsl_lsp.Start_server *)
 module Start_server = Acsl_lsp__Start_server
+
+(** @canonical Acsl_lsp.Start_server_old *)
+module Start_server_old = Acsl_lsp__Start_server_old
 
 (** @canonical Acsl_lsp.Test_find_definition *)
 module Test_find_definition = Acsl_lsp__Test_find_definition

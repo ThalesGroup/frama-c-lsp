@@ -77,8 +77,43 @@ let test5 () =
   let capabilities = DefinitionClientCapabilities.t_of_json capabilities_json in
 
   if (sample_capabilities = capabilities) then 
-    Printf.printf "DefinitionClientCapabilities test passed.\n"
+    Printf.printf "DefinitionClientCapabilities test passed.\n";
 
+  (* Json.save_string test *)
+  Printf.printf "save_string\n%s\n" (Json.save_string capabilities_json)
 
-(* RequestMessage test *)
-(* Successful test case *)
+let test6 () = 
+  let sample_definition_params = {
+    DefinitionParams.partialResultToken = Some (Int 42);
+    textDocument = {TextDocumentIdentifier.uri = "s/s/s/d"};
+    position = {Position.line = 45; character = 45};
+    work_done_token = None
+  } in 
+
+  let sample_def_params_json = DefinitionParams.json_of_t sample_definition_params in 
+  Printf.printf "save_string\n%s\n" (Json.save_string sample_def_params_json)
+
+(* Json.load_string test *)
+let test7 () = 
+  let json_string = "{
+      \"jsonrpc\": 2.0,
+      \"id\": 1, 
+      \"method\": \"textDocument/definition\", 
+      \"params\": {
+          \"textDocument\": {
+              \"uri\": \"/home/file.h\"
+          }, 
+          \"position\": {
+              \"line\": 138, \"character\": 59
+          }
+      }
+  }" in 
+
+  let json = Json.load_string json_string in 
+  (* put it into the right type : RequestMessage and DefinitionParams *)
+  let request = RequestMessage.t_of_json json in 
+  let curr_method = request.method_ in 
+  let request_json = Json.save_string json in
+  Printf.printf "test7\nsave_string\n%s\n" json_string;
+  Printf.printf "load string\n%s\n" request_json;
+  Printf.printf "method\n%s\n" curr_method

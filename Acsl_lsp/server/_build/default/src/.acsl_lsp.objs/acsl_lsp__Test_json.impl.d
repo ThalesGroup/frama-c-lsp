@@ -1,1 +1,1 @@
-src/testing/test_json.ml: DefinitionClientCapabilities DocumentUri Format Json Printf ProgressToken TraceValue Types WorkspaceFolder
+src/testing/test_json.ml: DefinitionClientCapabilities DefinitionParams DocumentUri Format Json Position Printf ProgressToken RequestMessage TextDocumentIdentifier TraceValue Types WorkspaceFolder

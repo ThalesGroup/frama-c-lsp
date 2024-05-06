@@ -1,16 +1,16 @@
 module Message = struct
-  type t = { jsonrpc : string }
+  type t = { jsonrpc : float }
 
   let json_of_t (t : t) : Json.t =
-    Json.of_fields ["jsonrpc", Json.of_string t.jsonrpc]
+    Json.of_fields ["jsonrpc", Json.of_float t.jsonrpc]
 
   let t_of_json (json : Json.t) : t =
     match json with
     | `Assoc fields ->
       let jsonrpc =
         match List.assoc "jsonrpc" fields with
-        | `String s -> s
-        | _ -> raise (Invalid_argument "Invalid JSON format: 'jsonrpc' field is not a string")
+        | `Float s -> s
+        | _ -> raise (Invalid_argument "Invalid JSON format: 'jsonrpc' field is not a float")
       in
       { jsonrpc }
     | _ -> raise (Invalid_argument "Invalid JSON format: expected an object")
@@ -19,7 +19,7 @@ end
 module RequestMessage = struct
   type id_ = Int of int | Str of string
   type t = {
-    jsonrpc : string;
+    jsonrpc : float;
     id : id_;
     method_ : string;
     params : Json.t option (* array or object *)
@@ -37,7 +37,7 @@ module RequestMessage = struct
       | None -> `Null
     in
     `Assoc [
-      "jsonrpc", `String msg.jsonrpc;
+      "jsonrpc", `Float msg.jsonrpc;
       "id", id_json;
       "method", `String msg.method_;
       "params", params_json;
@@ -48,7 +48,7 @@ module RequestMessage = struct
     | `Assoc fields ->
       let jsonrpc =
         match List.assoc "jsonrpc" fields with
-        | `String s -> s
+        | `Float s -> s
         | _ -> raise (Invalid_argument "Invalid JSON format for RequestMessage: jsonrpc")
       in
       let id =
@@ -73,7 +73,7 @@ end
 
 module NotificationMessage = struct
   type t = {
-    jsonrpc : string;
+    jsonrpc : float;
     method_ : string;
     params : Json.t array option
   }
@@ -88,7 +88,7 @@ module NotificationMessage = struct
     | `Assoc fields ->
       let jsonrpc =
         match List.assoc "jsonrpc" fields with
-        | `String s -> s
+        | `Float s -> s
         | _ -> raise (Invalid_argument "Invalid JSON format for NotificationMessage: method")
       in
       let method_ =
@@ -105,6 +105,7 @@ module NotificationMessage = struct
       in
       { jsonrpc; method_ ; params }
     | _ -> raise (Invalid_argument "Invalid JSON format for NotificationMessage")
+
 end
 
 module ProgressToken = struct

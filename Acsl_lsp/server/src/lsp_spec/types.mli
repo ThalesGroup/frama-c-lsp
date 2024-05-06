@@ -1,5 +1,5 @@
 module Message : sig
-  type t = {jsonrpc : string}
+  type t = {jsonrpc : float}
   include Jsonable.B with type t := t
 
 end
@@ -7,18 +7,17 @@ end
 module RequestMessage : sig
   type id_ = Int of int | Str of string
   type t = {
-    jsonrpc : string;
+    jsonrpc : float;
     id : id_;
     method_ : string;
     params : Json.t option (* array or object *)
   }
   include Jsonable.B with type t := t
-
 end
 
 module NotificationMessage : sig
   type t = {
-    jsonrpc : string;
+    jsonrpc : float;
     method_ : string;
     params : Json.t array option
   }

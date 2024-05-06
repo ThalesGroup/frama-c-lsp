@@ -4,6 +4,8 @@ let run_tests () =
   Test_json.test2 ();
   Test_json.test3 ();
   Test_json.test4 ();
-  Test_json.test5 ()
+  Test_json.test5 ();
+  Test_json.test6 ();
+  Test_json.test7 ();
   (* add other other features' tests *)
 
