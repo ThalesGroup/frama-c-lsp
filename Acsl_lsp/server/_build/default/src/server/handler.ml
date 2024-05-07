@@ -9,5 +9,7 @@ let rq_handler json_string () =
   let curr_method = request.method_ in 
 
   match curr_method with 
-  | "textDocument/definition" -> find_def (Json.save_string (get request.params));
-  | _ -> Printf.printf "Nope\n%!";
+  | "textDocument/definition" -> 
+      let params = DefinitionParams.t_of_json (get request.params) in
+      find_def params;
+  | _ -> Printf.printf "None\n%!";

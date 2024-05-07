@@ -1,3 +1,0 @@
-(rule (target "acsl_first_example.err.oracle") (mode fallback) (action (write-file "acsl_first_example.err.oracle" "")))
-(rule (target "acsl_first_example.res.oracle") (mode fallback) (action (write-file "acsl_first_example.res.oracle" "")))
-

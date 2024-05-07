@@ -21,8 +21,8 @@ let initialize_file (filename : string) : unit =
   let file = from_filename filepath in
   init_from_c_files [file]
 
-let get_ast_from_file file_content () =
+let get_ast_from_file filename () =
   (* Initialize the file representation *)
-  initialize_file file_content;
+  initialize_file filename;
   (* Obtain the AST *)
   Ast.get ()
