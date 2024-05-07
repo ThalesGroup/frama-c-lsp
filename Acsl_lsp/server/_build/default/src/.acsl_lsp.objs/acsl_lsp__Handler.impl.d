@@ -1,1 +1,1 @@
-src/server/handler.ml: Db Find_def Json Printf RequestMessage Types Utils
+src/server/handler.ml: Find_def Json Printf RequestMessage Types Utils

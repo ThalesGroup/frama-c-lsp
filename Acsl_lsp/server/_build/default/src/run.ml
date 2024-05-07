@@ -5,6 +5,8 @@ let run () =
       begin
         run_tests ();
       end
+    else 
+      Start_server.listen ();
   with Sys_error _ as exc ->
     let msg = Printexc.to_string exc in
     Printf.eprintf "There was an error: %s\n" msg

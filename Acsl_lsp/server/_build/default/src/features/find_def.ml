@@ -6,10 +6,9 @@ class def_visitor params = object
   method !vglob_aux g =
     match g with
     | GAnnot (Dfun_or_pred (li, (pos1, pos2)), _) -> 
-      ignore li;
       ignore pos1;
       ignore pos2;
-        Printf.printf "oops%s\n" params;
+        Printf.printf "oops li : %s, params : %s\n" li.l_var_info.lv_name params;
         (* Read json from input *)
         (*if pos_is_within_range (get (parse_request request)).params.position (pos1, pos2) then*)
         (* Replace the compared string by what we got from reading the file at the given position in the json data *)
@@ -22,7 +21,7 @@ class def_visitor params = object
           pos2.Filepath.pos_lnum
           (pos2.Filepath.pos_cnum - pos2.Filepath.pos_bol)
           (Filepath.Normalized.to_pretty_string pos1.Filepath.pos_path)
-        ;*)Cil.DoChildren
+        ;*) Cil.DoChildren
     | GAnnot (Dtype (lti, _), _) -> 
       Printf.printf "lti : %s\n" lti.lt_name
       ; Cil.DoChildren
@@ -30,7 +29,7 @@ class def_visitor params = object
 end
 
 
-let find_def params () = 
+let find_def params = 
     Printf.printf "find_def called\n";
     Visitor.visitFramacFileSameGlobals (new def_visitor params) (Ast.get())
 
