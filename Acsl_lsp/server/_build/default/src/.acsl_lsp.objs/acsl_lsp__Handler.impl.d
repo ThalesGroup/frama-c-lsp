@@ -1,1 +1,1 @@
-src/server_utilities/handler.ml: DefinitionParams Find_def Json Printf RequestMessage Types Utils
+src/server_utilities/handler.ml: Initialize InitializeParams Json Printf RequestMessage Types Utils

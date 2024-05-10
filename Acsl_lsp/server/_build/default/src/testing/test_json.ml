@@ -49,7 +49,7 @@ let test3 () =
 
 (* Testing TraceValue module *)
 let test4 () =
-  let sample_trace_value = TraceValue.Off in
+  let sample_trace_value = "off" in
 
   let trace_value_json = TraceValue.json_of_t sample_trace_value in
 

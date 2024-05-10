@@ -43,7 +43,7 @@ module URI : sig
 end
 
 module TraceValue : sig
-  type t = Off | Messages | Verbose
+  type t = string
   include Jsonable.B with type t := t
 
 end
@@ -101,12 +101,10 @@ module InitializeParams : sig
     process_id : int option;
     clientInfo : client_info option;
     locale : string option;
-    root_path : string option;
-    root_uri : DocumentUri.t option;
     initialization_options : Json.t option;
     capabilities : ClientCapabilities.t;
     trace : TraceValue.t option;
-    workspace_folders : WorkspaceFolder.t array option;
+    workspace_folders : (WorkspaceFolder.t array) option;
   }
   include Jsonable.B with type t := t
 

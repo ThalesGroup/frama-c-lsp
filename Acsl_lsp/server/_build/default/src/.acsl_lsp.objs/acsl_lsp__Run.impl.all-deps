@@ -1,5 +1,5 @@
-acsl_lsp__Find_def
 acsl_lsp__Handler
+acsl_lsp__Initialize
 acsl_lsp__Jsonable
 acsl_lsp__Run_tests
 acsl_lsp__Settings

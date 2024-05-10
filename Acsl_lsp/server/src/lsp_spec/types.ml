@@ -10,7 +10,7 @@ module Message = struct
       let jsonrpc =
         match List.assoc "jsonrpc" fields with
         | `Float s -> s
-        | _ -> raise (Invalid_argument "Invalid JSON format: 'jsonrpc' field is not a float")
+        | _ -> raise (Invalid_argument "Invalid JSON format: 'jsonrpc' field must be a float")
       in
       { jsonrpc }
     | _ -> raise (Invalid_argument "Invalid JSON format: expected an object")
@@ -144,17 +144,18 @@ module URI = struct
 end
 
 module TraceValue = struct
-  type t = Off | Messages | Verbose
+  type t = string
   let json_of_t (value : t) : Json.t =
     match value with
-    | Off -> `String "Off"
-    | Messages -> `String "Messages"
-    | Verbose -> `String "Verbose"
+    | "off" -> `String "off"
+    | "messages" -> `String "messages"
+    | "verbose" -> `String "verbose"
+    | _ -> `Null
   let t_of_json (json : Json.t) : t =
     match json with
-    | `String "Off" -> Off
-    | `String "Messages" -> Messages
-    | `String "Verbose" -> Verbose
+    | `String "off" -> "off"
+    | `String "messages" -> "messages"
+    | `String "verbose" -> "verbose"
     | _ -> raise (Invalid_argument "Invalid JSON format for TraceValue")
 end
 
@@ -164,7 +165,7 @@ module WorkspaceFolder = struct
     name : string
   }
   let json_of_t (folder : t) : Json.t =
-    `Assoc [
+  `Assoc [
       "uri", URI.json_of_t folder.uri;
       "name", Json.of_string folder.name
     ]
@@ -172,17 +173,17 @@ module WorkspaceFolder = struct
   match json with
   | `Assoc fields ->
     let uri_json =
-      match List.assoc_opt "uri" fields with
+  match List.assoc_opt "uri" fields with
       | Some uri_json -> uri_json
       | _ -> raise (Invalid_argument "Invalid JSON format for WorkspaceFolder: uri")
     in
     let name =
-      match List.assoc "name" fields with
+  match List.assoc "name" fields with
       | `String s -> s
       | _ -> raise (Invalid_argument "Invalid JSON format for WorkspaceFolder: name")
     in
     let uri = URI.t_of_json uri_json in
-    { uri; name }
+  { uri; name }
   | _ -> raise (Invalid_argument "Invalid JSON format for WorkspaceFolder")
 
 end
@@ -296,12 +297,10 @@ module InitializeParams = struct
     process_id : int option;
     clientInfo : client_info option;
     locale : string option;
-    root_path : string option;
-    root_uri : DocumentUri.t option;
     initialization_options : Json.t option;
     capabilities : ClientCapabilities.t;
     trace : TraceValue.t option;
-    workspace_folders : WorkspaceFolder.t array option;
+    workspace_folders : (WorkspaceFolder.t array) option;
   }
 
   let json_of_client_info (info : client_info) : Json.t =
@@ -309,17 +308,15 @@ module InitializeParams = struct
 
   let json_of_t (params : t) : Json.t =
     `Assoc ([
-      "work_done_token", (match params.work_done_token with Some token -> ProgressToken.json_of_t token | None -> `Null);
+      "workDoneToken", (match params.work_done_token with Some token -> ProgressToken.json_of_t token | None -> `Null);
       "process_id", (match params.process_id with Some id -> `Int id | None -> `Null);
       "clientInfo", (match params.clientInfo with Some info -> json_of_client_info info | None -> `Null);
       "locale", (match params.locale with Some loc -> `String loc | None -> `Null);
-      "root_path", (match params.root_path with Some path -> `String path | None -> `Null);
-      "root_uri", (match params.root_uri with Some uri -> DocumentUri.json_of_t uri | None -> `Null);
-      "initialization_options", (match params.initialization_options with Some options -> options | None -> `Null);
+      "initializationOptions", (match params.initialization_options with Some options -> options | None -> `Null);
       "capabilities", ClientCapabilities.json_of_t params.capabilities;
       "trace", (match params.trace with Some trace -> TraceValue.json_of_t trace | None -> `Null);
     ] @ match params.workspace_folders with
-        | Some folders -> ["workspace_folders", `List (List.map (fun folder -> WorkspaceFolder.json_of_t folder) (Array.to_list folders))]
+        | Some folders -> ["workspaceFolders", `List (List.map (fun folder -> WorkspaceFolder.json_of_t folder) (Array.to_list folders))]
         | None -> [])
   
   let client_info_of_json (json : Json.t) : client_info =
@@ -343,10 +340,10 @@ module InitializeParams = struct
     match json with
     | `Assoc fields ->
       let work_done_token =
-        match List.assoc_opt "work_done_token" fields with
+        match List.assoc_opt "workDoneToken" fields with
         | Some `Null -> None
         | Some token_json -> Some (ProgressToken.t_of_json token_json)
-        | _ -> raise (Invalid_argument "Invalid JSON format for InitializeParams: work_done_token")
+        | _ -> raise (Invalid_argument "Invalid JSON format for InitializeParams: workDoneToken")
       in
       let process_id =
         match List.assoc_opt "process_id" fields with
@@ -368,24 +365,11 @@ module InitializeParams = struct
         | None -> None
         | _ -> raise (Invalid_argument "Invalid JSON format for InitializeParams: locale")
       in
-      let root_path =
-        match List.assoc_opt "root_path" fields with
-        | Some `Null -> None
-        | Some (`String path) -> Some path
-        | None -> None
-        | _ -> raise (Invalid_argument "Invalid JSON format for InitializeParams: root_path")
-      in
-      let root_uri =
-        match List.assoc_opt "root_uri" fields with
-        | Some `Null -> None
-        | Some uri_json -> Some (DocumentUri.t_of_json uri_json)
-        | _ -> raise (Invalid_argument "Invalid JSON format for InitializeParams: root_uri")
-      in
       let initialization_options =
-        match List.assoc_opt "initialization_options" fields with
+        match List.assoc_opt "initializationOptions" fields with
         | Some `Null -> None
         | Some options -> Some options
-        | _ -> raise (Invalid_argument "Invalid JSON format for InitializeParams: initialization_options")
+        | _ -> raise (Invalid_argument "Invalid JSON format for InitializeParams: initializatiOptions")
       in
       let capabilities =
         match List.assoc_opt "capabilities" fields with
@@ -399,13 +383,13 @@ module InitializeParams = struct
         | _ -> raise (Invalid_argument "Invalid JSON format for InitializeParams: trace")
       in
       let workspace_folders =
-        match List.assoc_opt "workspace_folders" fields with
+        match List.assoc_opt "workspaceFolders" fields with
         | Some (`List folder_jsons) -> Some (Array.of_list (List.map (fun folder_json -> WorkspaceFolder.t_of_json folder_json) folder_jsons))
         | Some `Null -> None
         | None -> None
-        | _ -> raise (Invalid_argument "Invalid JSON format for InitializeParams: workspace_folders")
+        | _ -> raise (Invalid_argument "Invalid JSON format for InitializeParams: workspaceFolders")
       in
-      { work_done_token; process_id; clientInfo; locale; root_path; root_uri; initialization_options; capabilities; trace; workspace_folders }
+      { work_done_token; process_id; clientInfo; locale; initialization_options; capabilities; trace; workspace_folders }
     | _ -> raise (Invalid_argument "Invalid JSON format for InitializeParams")
 end
 

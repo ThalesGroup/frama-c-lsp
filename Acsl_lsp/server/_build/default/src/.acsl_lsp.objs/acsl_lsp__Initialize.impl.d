@@ -1,1 +1,1 @@
-src/features/initialize.ml: Cil DefinitionParams Printf Types Utils Visitor
+src/features/initialize.ml: Array Cil InitializeParams Printf Types Utils Visitor

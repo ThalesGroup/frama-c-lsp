@@ -1,10 +1,9 @@
 open Utils
 open Types
 
-class def_visitor (params : DefinitionParams.t) = object
+class init_visitor (params : InitializeParams.t) = object
   inherit Visitor.frama_c_inplace
   val mutable json_out = None 
-  (* We need to know if the character at given line in the json is located in the range of  *)
   method !vglob_aux g =
     match g with
     | GAnnot (Dfun_or_pred (li, (pos1, pos2)), _) -> 
@@ -20,9 +19,9 @@ class def_visitor (params : DefinitionParams.t) = object
 end
 
 
-let find_def params = 
-    Printf.printf "find_def called\n";
+let initialize (params : InitializeParams.t) = 
+    Printf.printf "initialize called\n";
     Visitor.visitFramacFileSameGlobals 
-      (new def_visitor params) 
-      (get_ast_from_file params.textDocument.uri ())
+      (new init_visitor params) 
+      (get_ast_from_file(Array.get (get params.workspace_folders) 0).uri ()) (* get uri of first and only path in workspaceFolders array *)
 
