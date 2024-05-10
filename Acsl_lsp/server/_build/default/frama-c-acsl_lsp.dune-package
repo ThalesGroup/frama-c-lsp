@@ -1,4 +1,4 @@
-(lang dune 3.15)
+(lang dune 3.13)
 (name frama-c-acsl_lsp)
 (sections (lib .) (lib_root ..) (libexec .))
 (files
@@ -21,6 +21,9 @@
    core/acsl_lsp__Handler.cmi
    core/acsl_lsp__Handler.cmt
    core/acsl_lsp__Handler.cmx
+   core/acsl_lsp__Initialize.cmi
+   core/acsl_lsp__Initialize.cmt
+   core/acsl_lsp__Initialize.cmx
    core/acsl_lsp__Jsonable.cmi
    core/acsl_lsp__Jsonable.cmt
    core/acsl_lsp__Jsonable.cmx
@@ -58,14 +61,15 @@
    core/common/settings.ml
    core/common/utils.ml
    core/features/find_def.ml
+   core/features/initialize.ml
    core/lsp_spec/jsonable.ml
    core/lsp_spec/types.ml
    core/lsp_spec/types.mli
    core/parser.ml
    core/run.ml
-   core/server/handler.ml
-   core/server/start_server.ml
-   core/server/start_server_old.ml
+   core/server_utilities/handler.ml
+   core/server_utilities/start_server.ml
+   core/server_utilities/start_server_old.ml
    core/testing/run_tests.ml
    core/testing/test_find_definition.ml
    core/testing/test_json.ml
@@ -79,7 +83,7 @@
  (archives (byte core/acsl_lsp.cma) (native core/acsl_lsp.cmxa))
  (plugins (byte core/acsl_lsp.cma) (native core/acsl_lsp.cmxs))
  (native_archives core/acsl_lsp.a)
- (requires frama-c.kernel)
+ (requires frama-c.kernel frama-c-server.core)
  (main_module_name Acsl_lsp)
  (modes byte native)
  (modules
@@ -103,7 +107,11 @@
      (module
       (obj_name acsl_lsp__Handler)
       (visibility public)
-      (source (path Handler) (impl (path core/server/handler.ml))))
+      (source (path Handler) (impl (path core/server_utilities/handler.ml))))
+     (module
+      (obj_name acsl_lsp__Initialize)
+      (visibility public)
+      (source (path Initialize) (impl (path core/features/initialize.ml))))
      (module
       (obj_name acsl_lsp__Jsonable)
       (visibility public)
@@ -127,13 +135,15 @@
      (module
       (obj_name acsl_lsp__Start_server)
       (visibility public)
-      (source (path Start_server) (impl (path core/server/start_server.ml))))
+      (source
+       (path Start_server)
+       (impl (path core/server_utilities/start_server.ml))))
      (module
       (obj_name acsl_lsp__Start_server_old)
       (visibility public)
       (source
        (path Start_server_old)
-       (impl (path core/server/start_server_old.ml))))
+       (impl (path core/server_utilities/start_server_old.ml))))
      (module
       (obj_name acsl_lsp__Test_find_definition)
       (visibility public)

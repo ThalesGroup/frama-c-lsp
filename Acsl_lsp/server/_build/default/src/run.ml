@@ -6,6 +6,7 @@ let run () =
         run_tests ();
       end
     else 
+      (*Start_server.start ();*)
       Start_server.listen ();
   with Sys_error _ as exc ->
     let msg = Printexc.to_string exc in

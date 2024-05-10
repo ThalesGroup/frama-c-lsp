@@ -10,19 +10,57 @@ let extract_json_from_request request =
   let end_index = String.rindex request '}' in
   String.sub request start_index (end_index - start_index + 1)
 
-let get = function Some v -> v | None -> invalid_arg "option is None";
+let get = function Some v -> v | None -> invalid_arg "option is None"
+
+(* Function to recursively get all files with specified extensions in a directory *)
+let rec get_files_with_extensions dir extensions =
+  let entries = Array.to_list (Sys.readdir dir) in
+  let full_paths = List.map (Filename.concat dir) entries in
+  let is_regular_file path =
+    try
+      let stats = Unix.stat path in
+      stats.Unix.st_kind = Unix.S_REG
+    with Unix.Unix_error _ -> false
+  in
+  let files, subdirs =
+    List.partition (fun path -> is_regular_file path && List.exists (Filename.check_suffix path) extensions) full_paths
+  in
+  let subdir_files =
+    List.map (fun subdir -> get_files_with_extensions subdir extensions) (List.filter (fun path -> try Unix.(stat path).Unix.st_kind = Unix.S_DIR with Unix.Unix_error _ -> false) subdirs)
+  in
+  List.concat (files :: subdir_files)
+
+(* Returns all .c and .h files located in a folder *)
+let get_all_source_files dir =
+  get_files_with_extensions dir [".c"; ".h"]
+
+(* Converts all filenames into t type *)
+let get_t_from_filename filename_list =
+  let open Datatype.Filepath in
+  let t_list = List.map (fun filename -> File.from_filename (of_string filename)) filename_list in
+  t_list
+
+(* Example usage
+let () =
+  let root_folder = "../server" in
+  let extensions = [".c"; ".h"] in
+  let source_files = get_files_with_extensions root_folder extensions in
+  List.iter print_endline source_files
+ *)
 
 open File
 
-(* Initialize the file representation *)
 let initialize_file (filename : string) : unit =
-  let filepath = Filepath.Normalized.of_string filename in
-  (* Now you have a normalized file path *)
-  let file = from_filename filepath in
-  init_from_c_files [file]
+  ignore filename;
+  (*let filepath = Filepath.Normalized.of_string filename in
+  let file = from_filename filepath in*)
+  let files = get_t_from_filename (get_all_source_files ".") in (* TODO : dir might not always be "." avoid hard coding *)
+  Printf.printf "List length = %d\n%!" (List.length files);
+  List.iter (fun file ->
+    Printf.printf "file : %s\n" (File.get_name file);
+  ) files;
+  init_from_c_files files
 
 let get_ast_from_file filename () =
-  (* Initialize the file representation *)
   initialize_file filename;
-  (* Obtain the AST *)
-  Ast.get ()
+  Ast.get ()  

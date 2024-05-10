@@ -1,4 +1,5 @@
 open Unix
+module Senv = Server.Server_parameters
 
 let server_port = 8001
 let rec receive_all client_sock buffer =
@@ -31,3 +32,30 @@ let listen () =
     close client_sock
   done
 
+open Server.Main
+
+(* Define a simple request handler *)
+let handle_get_request (json_data : json) : json =
+  (* Perform some processing based on the received JSON data *)
+  (* For demonstration, simply echo the received data *)
+  json_data
+
+(* Register the GET request handler *)
+let _ = register `GET "echo" handle_get_request
+
+(* Create a server *)
+let server : (unit) Server.Main.server =
+  create
+    ~pretty:(fun fmt _ -> Format.fprintf fmt "Frama-C Server")
+    ~fetch:(fun () ->
+      (* Mock fetching a message, replace with actual implementation *)
+      let request = { requests = [`Poll]; callback = (fun _ -> ()) } in
+      Some request
+    )
+    ()
+  
+(* Start the server *)
+let start () = 
+  Senv.log "LJGRK?";
+  run server
+  

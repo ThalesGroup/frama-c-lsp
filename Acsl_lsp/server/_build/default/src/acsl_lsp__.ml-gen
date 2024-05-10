@@ -6,6 +6,9 @@ module Find_def = Acsl_lsp__Find_def
 (** @canonical Acsl_lsp.Handler *)
 module Handler = Acsl_lsp__Handler
 
+(** @canonical Acsl_lsp.Initialize *)
+module Initialize = Acsl_lsp__Initialize
+
 (** @canonical Acsl_lsp.Jsonable *)
 module Jsonable = Acsl_lsp__Jsonable
 

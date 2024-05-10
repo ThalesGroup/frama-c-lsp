@@ -10,7 +10,7 @@ class def_visitor (params : DefinitionParams.t) = object
     | GAnnot (Dfun_or_pred (li, (pos1, pos2)), _) -> 
       ignore pos1;
       ignore pos2;
-        Printf.printf "oops li : %s, params : %s\n" li.l_var_info.lv_name params.textDocument.uri;
+        Printf.printf "li : %s, params : %s\n%!" li.l_var_info.lv_name params.textDocument.uri;
         (* Read json from input *)
         (*if pos_is_within_range (get (parse_request request)).params.position (pos1, pos2) then*)
         (* Replace the compared string by what we got from reading the file at the given position in the json data *)

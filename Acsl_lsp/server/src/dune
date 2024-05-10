@@ -16,6 +16,7 @@
 	(flags -open Frama_c_kernel :standard)
 	(libraries 
 		frama-c.kernel
+		frama-c-server.core
 	)
 )
 
