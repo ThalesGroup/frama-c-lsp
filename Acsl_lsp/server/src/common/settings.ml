@@ -1,6 +1,6 @@
 module Self = Plugin.Register 
   (struct
-    let name = "acsl lsp plugin"
+    let name = "ACSL LSP"
     let shortname = "acsl lsp"
     let help = "activates lsp support for acsl/c language"
   end)

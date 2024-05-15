@@ -1,26 +1,26 @@
-(lang dune 3.7)
+(lang dune 3.13)
 (using dune_site 0.1)
 
-(name frama-c-acsl_lsp)
+(name frama-c-my_plugin)
 
-;(generate_opam_files true)
+(generate_opam_files true)
 
-; (source
-; (github username/reponame))
+ (source
+ (github username/reponame))
 
-; (authors "auteurs")
+ (authors "auteurs")
 
-;(maintainers "Maintainer Name")
+(maintainers "Maintainer Name")
 
-;(license LICENSE)
+(license LICENSE)
 
-;(documentation https://url/to/documentation)
+(documentation https://url/to/documentation)
 
 (package
- (name frama-c-acsl_lsp)
+ (name frama-c-my_plugin)
  (synopsis "Language Server Protocol support for ACSL/C language.")
  ;(description "A longer description")
- ;(depends ocaml dune)
+ (depends ocaml dune)
  ;(tags
  ; (topics "to describe" your project)))
  ;)

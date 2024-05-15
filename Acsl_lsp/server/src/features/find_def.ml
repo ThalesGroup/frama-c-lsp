@@ -1,39 +1,44 @@
-open Utils
 open Types
+open Utils
 
-class def_visitor (params : DefinitionParams.t) = object
-  inherit Visitor.frama_c_inplace
-  val mutable json_out = None 
-  (* We need to know if the character at given line in the json is located in the range of  *)
-  method !vglob_aux g =
-    match g with
-    | GAnnot (Dfun_or_pred (li, (pos1, pos2)), _) -> 
-      ignore pos1;
-      ignore pos2;
-        Printf.printf "li : %s, params : %s\n%!" li.l_var_info.lv_name params.textDocument.uri;
-        (* Read json from input *)
-        (*if pos_is_within_range (get (parse_request request)).params.position (pos1, pos2) then*)
+let process_annotation (params : DefinitionParams.t) (ga : Cil_types.global_annotation) = 
+  match ga with 
+  | Dfun_or_pred (li, (pos1, pos2)) -> 
+      let uri = params.textDocument.uri in 
+      let curr_pos = position_t_to_filepath_position uri params.position in
+      let line = params.position.line in 
+      let ch = params.position.character in 
+      ignore line; ignore ch;
+      (* if the uri = global def uri and position is contained within definition range *)
+      Printf.printf "lv_name = %s\n%!" li.l_var_info.lv_name;
+      Printf.printf "line %d, ch %d\n%!" line ch;
+      (*Printf.printf "expr_name = %s\n%!" expr_name;*)
+      if (pos_is_within_range (curr_pos) (pos1, pos2)) = true 
+      then
         (* Replace the compared string by what we got from reading the file at the given position in the json data *)
         (*let comp_result = compare li.l_var_info.lv_name "valid" in
         if comp_result = 0 then *)
-        (*Printf.printf "comp result : %s, [%d:%d -> %d:%d] %s\n"
+        Printf.printf "comp result : %s, [%d:%d -> %d:%d] %s\n%!"
           li.l_var_info.lv_name
           pos1.Filepath.pos_lnum
           (pos1.Filepath.pos_cnum - pos1.Filepath.pos_bol)
           pos2.Filepath.pos_lnum
           (pos2.Filepath.pos_cnum - pos2.Filepath.pos_bol)
           (Filepath.Normalized.to_pretty_string pos1.Filepath.pos_path)
-        ;*) Cil.DoChildren
-    | GAnnot (Dtype (lti, _), _) -> 
-      Printf.printf "lti : %s\n" lti.lt_name
-      ; Cil.DoChildren
-    | _ -> Cil.DoChildren
-end
+  | _ -> Printf.printf ""
+  
+let process_global (params : DefinitionParams.t) (g : Cil_types.global) =
+  match g with
+  | GAnnot (ga, _) -> (process_annotation params ga);
+  | _  -> Printf.printf ""
 
+let print_stmt_fundec (file : Cil_types.file) = 
+    match file.globinit with 
+      | Some x ->  Printf.printf "%s\n%!" x.svar.vname
+      | None -> Printf.printf "No\n%!"
 
-let find_def params = 
-    Printf.printf "find_def called\n";
-    Visitor.visitFramacFileSameGlobals 
-      (new def_visitor params) 
-      (get_ast_from_file params.textDocument.uri ())
-
+let find_def (file : Cil_types.file)  (params : DefinitionParams.t) = 
+    print_predicates file;
+    Printf.printf "find_def called\n%!";
+    Cil.iterGlobals file (process_global params)
+    
