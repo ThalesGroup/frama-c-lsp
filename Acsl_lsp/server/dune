@@ -2,18 +2,18 @@
 	(alias frama-c-configure)
 	(deps (universe))
 	(action (progn
-			(echo "my_plugin:" %{lib-available:frama-my_plugin.core} "\n")
+			(echo "acsl_lsp:" %{lib-available:frama-acsl_lsp.core} "\n")
 			(echo " - Frama-C:" %{lib-available:frama-c.kernel} "\n")
 		)
 	)
 )
 
-(include_subdirs qualified)
+(include_subdirs unqualified)
 
 (library
-	(name my_plugin_lib)
-	(public_name frama-c-my_plugin.core)
-	(flags -open Frama_c_kernel :standard)
+	(name acsl_lsp_lib)
+	(public_name frama-c-acsl_lsp.core)
+	(flags -open Frama_c_kernel :standard -warn-error "-unused-value-declaration")
 	(libraries 
 		frama-c.kernel
 	)
@@ -21,7 +21,8 @@
 
 
 (plugin
-	(name my_plugin)
-	(libraries frama-c-my_plugin.core)
+	(name acsl_lsp)
+	(libraries frama-c-acsl_lsp.core)
 	(site (frama-c plugins))
 )
+
