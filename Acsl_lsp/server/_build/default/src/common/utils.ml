@@ -235,8 +235,7 @@ let retrieve_acsl_annotations (pos : Filepath.position) : location =
   match !start_position with
   | Some pos -> pos
   | None -> Printf.printf "Location not found\n%!";
-    ({pos_path=Filepath.Normalized.of_string "";pos_lnum=0;pos_bol=0;pos_cnum=0},
-    {pos_path=Filepath.Normalized.of_string "";pos_lnum=0;pos_bol=0;pos_cnum=0})
+    (pos,pos) (* todo : should return a json error instead of result *)
 
   (*let glob_visitor = object 
     inherit Visitor.frama_c_inplace

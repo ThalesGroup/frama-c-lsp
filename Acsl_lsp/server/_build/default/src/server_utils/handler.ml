@@ -1,7 +1,6 @@
 open Types
 open Initialize
 open Find_def
-open Utils
   
 let rq_handler json_string =
 
@@ -12,9 +11,7 @@ let rq_handler json_string =
 
   match curr_method with 
   | "initialize" -> 
-    let params = InitializeParams.t_of_json (get request.params) in
-    initialize params;
+    initialize request;
   | "textDocument/definition" -> 
-    let params = DefinitionParams.t_of_json (get request.params) in
-    find_def (Ast.get ()) params;
+    find_def (Ast.get ()) request;
   | _ -> `Null;

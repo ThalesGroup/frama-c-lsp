@@ -1,6 +1,6 @@
 open Unix
 
-let server_port = 8001
+let server_port = 8001 (* todo : maybe change port *)
 let rec receive_all client_sock buffer =
   let bytes_read = recv client_sock buffer 0 (Bytes.length buffer) [] in
   if bytes_read > 0 then
@@ -31,14 +31,23 @@ let listen () =
 
     (* Send response *)
     let response = Handler.rq_handler request_str in
-    let response_string = Json.save_string ?pretty:(Some true) response in
+    let response_string = (Json.save_string ?pretty:(Some true) response) in
+    (*let response_string_ = 
+      "HTTP/1.1 200 OK\r\n" ^
+      "Content-Type: application/json\r\n" ^
+      "Content-Length: " ^ (string_of_int (String.length response_string)) ^ "\r\n" ^
+      "Connection: close\r\n" ^
+      "\r\n" ^ response_string 
+    in*)
     Printf.printf "Response received: %s\n%!" (response_string);
 
     let response_len = String.length response_string in
     ignore (write client_sock (Bytes.of_string response_string) 0 response_len);
     
     close client_sock
-  done
+  done;
+
+  close server_sock
 
 (*
 open Server.Main

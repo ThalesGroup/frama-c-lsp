@@ -1,3 +1,6 @@
+type id_ = Int of int | Str of string | Null
+
+
 module Message = struct
   type t = { jsonrpc : float } (* todo : jsonrpc must not be a float, appears in ResponseMessage, RequestMessage and Message*)
 
@@ -17,7 +20,6 @@ module Message = struct
 end
 
 module RequestMessage = struct
-  type id_ = Int of int | Str of string
   type t = {
     jsonrpc : float;
     id : id_;
@@ -30,6 +32,7 @@ module RequestMessage = struct
       match msg.id with
       | Int i -> `Int i
       | Str s -> `String s
+      | Null -> `Null
     in
     let params_json =
       match msg.params with
@@ -114,6 +117,8 @@ module ResponseError = struct
     message: string;
     data: Json.t option
   }
+  let create ~code ~message ?data () = 
+    { code ; message ; data }
 
   let json_of_t (err : t) : Json.t = 
     `Assoc [
@@ -145,14 +150,15 @@ module ResponseError = struct
 end
 
 module ResponseMessage = struct
-  type id_ = Int of int | Str of string | Null
-  type result_ = Json.t
   type t = {
     jsonrpc : float; 
     id : id_ ;
-    result : result_ option;
+    result : Json.t option;
     error : ResponseError.t option
   }
+
+  let create ~jsonrpc ~id ?result ?error () = 
+  { jsonrpc; id; result; error }
 
   let json_of_t (resp : t) : Json.t =
     let id_json =

@@ -1,5 +1,8 @@
+type id_ = Int of int | Str of string | Null
+
+
 module Message = struct
-  type t = { jsonrpc : float }
+  type t = { jsonrpc : float } (* todo : jsonrpc must not be a float, appears in ResponseMessage, RequestMessage and Message*)
 
   let json_of_t (t : t) : Json.t =
     Json.of_fields ["jsonrpc", Json.of_float t.jsonrpc]
@@ -17,7 +20,6 @@ module Message = struct
 end
 
 module RequestMessage = struct
-  type id_ = Int of int | Str of string
   type t = {
     jsonrpc : float;
     id : id_;
@@ -30,6 +32,7 @@ module RequestMessage = struct
       match msg.id with
       | Int i -> `Int i
       | Str s -> `String s
+      | Null -> `Null
     in
     let params_json =
       match msg.params with
@@ -105,6 +108,99 @@ module NotificationMessage = struct
       in
       { jsonrpc; method_ ; params }
     | _ -> raise (Invalid_argument "Invalid JSON format for NotificationMessage")
+
+end
+
+module ResponseError = struct
+  type t = {
+    code: int;
+    message: string;
+    data: Json.t option
+  }
+  let create ~code ~message ?data () = 
+    { code ; message ; data }
+
+  let json_of_t (err : t) : Json.t = 
+    `Assoc [
+      "code", `Int err.code;
+      "message", `String err.message;
+      "data", (match err.data with Some x -> x | None -> `Null)
+    ]
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let code =
+        match List.assoc "code" fields with
+        | `Int s -> s
+        | _ -> raise (Invalid_argument "Invalid JSON format for code")
+      in
+      let message =
+        match List.assoc "message" fields with
+        | `String s -> s
+        | _ -> raise (Invalid_argument "Invalid JSON format for message")
+      in
+      let data =
+        match List.assoc_opt "data" fields with
+        | Some data -> Some data
+        | None -> None
+      in
+      { code; message; data }
+    | _ -> raise (Invalid_argument "Invalid JSON format for ResponseError")
+end
+
+module ResponseMessage = struct
+  type t = {
+    jsonrpc : float; 
+    id : id_ ;
+    result : Json.t option;
+    error : ResponseError.t option
+  }
+
+  let create ~jsonrpc ~id ?result ?error () = 
+  { jsonrpc; id; result; error }
+
+  let json_of_t (resp : t) : Json.t =
+    let id_json =
+      match resp.id with
+      | Int i -> `Int i
+      | Str s -> `String s
+      | Null -> `Null
+    in
+    `Assoc [
+      "jsonrpc", `Float resp.jsonrpc;
+      "id", id_json;
+      "result", (match resp.result with Some x -> x | None -> `Null);
+      "error", (match resp.error with Some x -> ResponseError.json_of_t x | None -> `Null);
+    ]
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let jsonrpc =
+        match List.assoc "jsonrpc" fields with
+        | `Float s -> s
+        | _ -> raise (Invalid_argument "Invalid JSON format for jsonrpc")
+      in
+      let id =
+        match List.assoc "id" fields with
+        | `Int i -> Int i
+        | `String s -> Str s
+        | `Null -> Null
+        | _ -> raise (Invalid_argument "Invalid JSON format for id")
+      in
+      let result =
+        match List.assoc_opt "result" fields with
+        | Some res -> Some res
+        | None -> None
+      in
+      let error =
+        match List.assoc_opt "error" fields with
+        | Some err -> Some (ResponseError.t_of_json err)
+        | None -> None
+      in
+      { jsonrpc; id; result; error }
+    | _ -> raise (Invalid_argument "Invalid JSON format for ResponseMessage")
 
 end
 
