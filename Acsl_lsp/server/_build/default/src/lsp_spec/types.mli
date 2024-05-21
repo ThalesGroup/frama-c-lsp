@@ -1,14 +1,14 @@
 type id_ = Int of int | Str of string | Null
 
 module Message : sig
-  type t = {jsonrpc : float}
+  type t = {jsonrpc : string}
   include Jsonable.B with type t := t
 
 end
 
 module RequestMessage : sig
   type t = {
-    jsonrpc : float;
+    jsonrpc : string;
     id : id_;
     method_ : string;
     params : Json.t option (* todo : array or object *)
@@ -28,18 +28,18 @@ end
 
 module ResponseMessage : sig
   type t = {
-    jsonrpc : float; (* todo : jsonrpc version is not a float *)
+    jsonrpc : string; (* todo : jsonrpc version is not a float *)
     id : id_;
     result : Json.t  option;
     error : ResponseError.t option
   }
   include Jsonable.B with type t := t
-  val create : jsonrpc:float -> id:id_ -> ?result:Json.t -> ?error:ResponseError.t -> unit -> t
+  val create : jsonrpc:string -> id:id_ -> ?result:Json.t -> ?error:ResponseError.t -> unit -> t
 end
 
 module NotificationMessage : sig
   type t = {
-    jsonrpc : float;
+    jsonrpc : string;
     method_ : string;
     params : Json.t array option
   }

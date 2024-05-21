@@ -1,7 +1,7 @@
 #!/bin/bash
 
 curl --http0.9 -v -H "Content-Type:application/json" -POST http://localhost:8001 -d '{
-  "jsonrpc": 2.0,
+  "jsonrpc": "2.0",
   "method": "initialize",
   "id" : 1,
   "params": {

@@ -2,17 +2,17 @@ type id_ = Int of int | Str of string | Null
 
 
 module Message = struct
-  type t = { jsonrpc : float } (* todo : jsonrpc must not be a float, appears in ResponseMessage, RequestMessage and Message*)
+  type t = { jsonrpc : string } (* note : jsonrpc must be a string *)
 
   let json_of_t (t : t) : Json.t =
-    Json.of_fields ["jsonrpc", Json.of_float t.jsonrpc]
+    Json.of_fields ["jsonrpc", Json.of_string t.jsonrpc]
 
   let t_of_json (json : Json.t) : t =
     match json with
     | `Assoc fields ->
       let jsonrpc =
         match List.assoc "jsonrpc" fields with
-        | `Float s -> s
+        | `String s -> s
         | _ -> raise (Invalid_argument "Invalid JSON format: 'jsonrpc' field must be a float")
       in
       { jsonrpc }
@@ -21,7 +21,7 @@ end
 
 module RequestMessage = struct
   type t = {
-    jsonrpc : float;
+    jsonrpc : string;
     id : id_;
     method_ : string;
     params : Json.t option (* array or object *)
@@ -40,7 +40,7 @@ module RequestMessage = struct
       | None -> `Null
     in
     `Assoc [
-      "jsonrpc", `Float msg.jsonrpc;
+      "jsonrpc", `String msg.jsonrpc;
       "id", id_json;
       "method", `String msg.method_;
       "params", params_json;
@@ -51,7 +51,7 @@ module RequestMessage = struct
     | `Assoc fields ->
       let jsonrpc =
         match List.assoc "jsonrpc" fields with
-        | `Float s -> s
+        | `String s -> s
         | _ -> raise (Invalid_argument "Invalid JSON format for RequestMessage: jsonrpc")
       in
       let id =
@@ -76,7 +76,7 @@ end
 
 module NotificationMessage = struct
   type t = {
-    jsonrpc : float;
+    jsonrpc : string;
     method_ : string;
     params : Json.t array option
   }
@@ -91,7 +91,7 @@ module NotificationMessage = struct
     | `Assoc fields ->
       let jsonrpc =
         match List.assoc "jsonrpc" fields with
-        | `Float s -> s
+        | `String s -> s
         | _ -> raise (Invalid_argument "Invalid JSON format for NotificationMessage: method")
       in
       let method_ =
@@ -151,7 +151,7 @@ end
 
 module ResponseMessage = struct
   type t = {
-    jsonrpc : float; 
+    jsonrpc : string; 
     id : id_ ;
     result : Json.t option;
     error : ResponseError.t option
@@ -168,7 +168,7 @@ module ResponseMessage = struct
       | Null -> `Null
     in
     `Assoc [
-      "jsonrpc", `Float resp.jsonrpc;
+      "jsonrpc", `String resp.jsonrpc;
       "id", id_json;
       "result", (match resp.result with Some x -> x | None -> `Null);
       "error", (match resp.error with Some x -> ResponseError.json_of_t x | None -> `Null);
@@ -179,7 +179,7 @@ module ResponseMessage = struct
     | `Assoc fields ->
       let jsonrpc =
         match List.assoc "jsonrpc" fields with
-        | `Float s -> s
+        | `String s -> s
         | _ -> raise (Invalid_argument "Invalid JSON format for jsonrpc")
       in
       let id =
