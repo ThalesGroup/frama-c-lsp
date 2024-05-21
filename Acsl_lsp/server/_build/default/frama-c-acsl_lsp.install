@@ -10,6 +10,9 @@ lib: [
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib__Find_def.cmi" {"core/acsl_lsp_lib__Find_def.cmi"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib__Find_def.cmt" {"core/acsl_lsp_lib__Find_def.cmt"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib__Find_def.cmx" {"core/acsl_lsp_lib__Find_def.cmx"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib__Find_def_old.cmi" {"core/acsl_lsp_lib__Find_def_old.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib__Find_def_old.cmt" {"core/acsl_lsp_lib__Find_def_old.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib__Find_def_old.cmx" {"core/acsl_lsp_lib__Find_def_old.cmx"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib__Handler.cmi" {"core/acsl_lsp_lib__Handler.cmi"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib__Handler.cmt" {"core/acsl_lsp_lib__Handler.cmt"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib__Handler.cmx" {"core/acsl_lsp_lib__Handler.cmx"}
@@ -50,6 +53,7 @@ lib: [
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/common/settings.ml" {"core/src/common/settings.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/common/utils.ml" {"core/src/common/utils.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/features/find_def.ml" {"core/src/features/find_def.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/src/features/find_def_old.ml" {"core/src/features/find_def_old.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/features/initialize.ml" {"core/src/features/initialize.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/lsp_spec/jsonable.ml" {"core/src/lsp_spec/jsonable.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/lsp_spec/lsp_state.ml" {"core/src/lsp_spec/lsp_state.ml"}

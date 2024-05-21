@@ -17,7 +17,7 @@ end
 
 
 (* cannot be called twice, must be called first *)
-let initialize (params : InitializeParams.t) (*: Json.json*) = 
+let initialize (params : InitializeParams.t) : Json.json = 
     (*let logic_list = Logic_env.find_all_logic_functions "__fc_nan" in 
     Printf.printf "logic_list len = %d\n%!" (List.length logic_list);
     List.iter (fun _ ->
@@ -26,11 +26,11 @@ let initialize (params : InitializeParams.t) (*: Json.json*) =
 
     Printf.printf "initialize called\n";
     let ast = get_ast_from_file (Array.get (get params.workspace_folders) 0).uri in 
-    let log_list = get_logic_vars_list ast in 
-    ignore log_list;
+    ignore ast;
     
-    (*let capabilities = ServerCapabilities.create ~definitionProvider:(ServerCapabilities.Bool true) () in
-    let serverInfo = InitializeResult.create_serverInfo ~name: "ACSL Language Server" ~version: (Some "1.0.0") () in
-    InitializeResult.json_of_t (InitializeResult.create ~capabilities: (Some capabilities) ~serverInfo: (Some serverInfo) ());*)
+    let capabilities = ServerCapabilities.create ~definitionProvider:(ServerCapabilities.Bool true) () in
+    let serverInfo = InitializeResult.create_serverInfo ~name: "ACSL Language Server" ~version:"1.0.0" () in
+
+    InitializeResult.json_of_t (InitializeResult.create ~capabilities: capabilities ~serverInfo: serverInfo ());
        (* get uri of first and only path in workspaceFolders array *)
 

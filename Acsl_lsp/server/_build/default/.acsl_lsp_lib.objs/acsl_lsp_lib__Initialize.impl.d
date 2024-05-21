@@ -1,1 +1,1 @@
-src/features/initialize.ml: Array InitializeParams Printf Types Utils
+src/features/initialize.ml: Array InitializeParams InitializeResult Json Printf ServerCapabilities Types Utils

@@ -227,7 +227,7 @@ module Range : sig
     end_ : Position.t
   }
 
-  val create : Position.t -> Position.t -> unit -> t
+  val create : Position.t -> Position.t -> t
   include Jsonable.B with type t := t
 
 end
@@ -285,8 +285,8 @@ module InitializeResult : sig
     serverInfo : server_info option
   }
 
-  (*val create_serverInfo : ?name: string -> ?version : string option -> unit -> server_info
-  val create : ?capabilities : ServerCapabilities.t option -> ?serverInfo : server_info option -> unit -> t*)
+  val create_serverInfo : name:string -> ?version:string -> unit -> server_info
+  val create : ?capabilities:ServerCapabilities.t -> ?serverInfo:server_info -> unit -> t
 
   include Jsonable.B with type t := t
 
@@ -363,7 +363,7 @@ module Location : sig
     range : Range.t
   }
 
-  val create : DocumentUri.t -> Range.t -> unit -> t
+  val create : DocumentUri.t -> Range.t -> t
 
   include Jsonable.B with type t := t
 

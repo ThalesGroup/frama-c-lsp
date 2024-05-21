@@ -1,7 +1,8 @@
 open Types
 open Cil_types 
 
-let get = Option.get
+let get = Option.get 
+let file_str = Filepath.Normalized.to_pretty_string
 
 let read_line_at_number (filename : string) (line_number : int) : string option =
   let file = open_in filename in
@@ -58,30 +59,25 @@ let is_same_uri (uri1 : string) (uri2 : Filepath.position) =
   Printf.printf "pos 2 = %s\n%!" (Filepath.Normalized.to_pretty_string uri2.Filepath.pos_path); *)
   uri1 = Filepath.Normalized.to_pretty_string uri2.Filepath.pos_path
 
-let pos_is_within_range pos (pos1, pos2 : (Filepath.position * Filepath.position)) = 
-  Printf.printf "curr_pos uri: %s\n%!" (Filepath.Normalized.to_pretty_string pos.Filepath.pos_path);
-  Printf.printf "curr_pos line : %d\n%!" pos.Filepath.pos_lnum;
-  Printf.printf "curr_pos char : %d\n\n%!" (pos.Filepath.pos_cnum - pos.Filepath.pos_bol);
+let is_same_line (pos : Filepath.position) (loc : location) = 
+  let start_pos, end_pos = loc in
+  pos.pos_lnum >= start_pos.pos_lnum && pos.pos_lnum <= end_pos.pos_lnum
 
-  Printf.printf "min_pos uri: %s\n%!" (Filepath.Normalized.to_pretty_string pos1.Filepath.pos_path);
-  Printf.printf "min_pos line : %d\n%!" pos1.Filepath.pos_lnum;
-  Printf.printf "min_pos char : %d\n\n%!" (pos1.Filepath.pos_cnum - pos1.Filepath.pos_bol);
-
-  Printf.printf "max_pos uri: %s\n%!" (Filepath.Normalized.to_pretty_string pos2.Filepath.pos_path);
-  Printf.printf "max_pos line : %d\n%!" pos2.Filepath.pos_lnum;
-  Printf.printf "max_pos char : %d\n\n%!" (pos2.Filepath.pos_cnum - pos2.Filepath.pos_bol);
-
-  let curr_pos = pos.Filepath.pos_lnum + (pos.Filepath.pos_cnum - pos.Filepath.pos_bol) in 
-  let min = pos1.Filepath.pos_lnum + (pos1.Filepath.pos_cnum - pos1.Filepath.pos_bol) in 
-  let max = pos2.Filepath.pos_lnum + (pos2.Filepath.pos_cnum - pos2.Filepath.pos_bol) in 
-  curr_pos >= min && curr_pos <= max
+let pos_is_within_range (pos : Filepath.position) (loc : location) : bool =
+  let start_pos, end_pos = loc in
+  let lines = is_same_line pos loc in 
+  let pos_char = pos.pos_cnum - pos.pos_bol in 
+  let start_char = start_pos.pos_cnum - start_pos.pos_bol in 
+  let end_char = end_pos.pos_cnum - end_pos.pos_bol in 
+  let chars = pos_char >= start_char && pos_char <= end_char in
+  Printf.printf "p:%d, %d, s:%d, %d, e:%d, %d\n%!" pos.pos_lnum pos_char start_pos.pos_lnum start_char end_pos.pos_lnum end_char;
+  lines && chars
 
 (* Extract the JSON part only from the request (removes the header part etc.) *)
 let extract_json_from_request request =
   let start_index = String.index request '{' in
   let end_index = String.rindex request '}' in
   String.sub request start_index (end_index - start_index + 1)
-
 
 (* Function to recursively get all files with specified extensions in a directory *)
 let rec get_files_with_extensions dir extensions =
@@ -130,7 +126,7 @@ let position_t_to_filepath_position (uri : DocumentUri.t) (pos : Position.t) : F
   let pos_path = Filepath.Normalized.of_string uri in
   let pos_lnum = pos.line in
   let pos_bol = 0 in
-  let pos_cnum = pos.character (* default value *) in
+  let pos_cnum = pos.character in
   { Filepath.pos_path; pos_lnum; pos_bol; pos_cnum }
 
 
@@ -146,10 +142,282 @@ let get_logic_vars_list (ast : Cil_types.file) : (logic_info * location) list =
     ) ast.globals;
   !res
 
-(* Retrieve ACSL annotations at a given position in a file *)
-let retrieve_acsl_annotations (pos : Filepath.position) =
+(* Function to find the substring starting with '\' and ending with '(' or ' ' *)
+let find_function_call str idx =
+  let rec find_start i =
+    if i < 0 || (String.get str i) = ' ' || (String.get str i) = '(' then i + 1
+    else find_start (i - 1)
+  in
+  let rec find_end i =
+    if i >= String.length str || (String.get str i) = ' ' || (String.get str i) = '(' then i
+    else find_end (i + 1)
+  in
+  let start_idx = find_start idx in
+  let end_idx = find_end idx in
+  String.sub str start_idx (end_idx - start_idx)
+
+(* Function to retrieve function call at given line and character index *)
+let retrieve_function_call line_number character_index file_name =
+    let chan = open_in file_name in
+    try
+      let rec read_lines current_line_number =
+        let line = input_line chan in
+        if current_line_number = line_number then (
+          let function_call = find_function_call line (character_index - 1) in
+          close_in chan;
+          Some function_call
+        )
+        else read_lines (current_line_number + 1)
+      in
+      read_lines 1
+    with End_of_file ->
+      close_in chan;
+      None 
+
+let process_annotation g = 
+  match g with 
+  | Dfun_or_pred (li,_) -> 
+    Printf.printf "_____Fun or pred at : %s\n%!" li.l_var_info.lv_name;
+  | Daxiomatic (str,_,_,_) -> 
+    Printf.printf "_____Axiomatic : %s\n%!" str;
+  | Dlemma (str,_,_,tp,_,_) -> 
+    Printf.printf "_____Lemma : %s\n%!" str; 
+    match tp.tp_statement.pred_content with 
+    | Papp (li,_,_) -> Printf.printf "__________pred : %s\n%!" li.l_var_info.lv_name;
+    | _ -> (); ;
+  | Dmodel_annot (mi,_) -> 
+    Printf.printf "_____Model Annot : %s\n%!" mi.mi_name; 
+  | Dextended (acsl,_,_) -> 
+    Printf.printf "_____ACSL Ext. : %d\n%!" acsl.ext_id; 
+  | Dinvariant (li,_) -> 
+    Printf.printf "_____Invariant : %s\n%!" li.l_var_info.lv_name; 
+  | Dvolatile (_,_,_,_,_) -> 
+    Printf.printf "_____Volatile :\n%!"; 
+  | Dtype_annot _-> 
+    Printf.printf "_____Type Annot. :\n%!"; 
+  | Dtype (lti,_) ->
+    Printf.printf "_____Type . :%s\n%!" lti.lt_name
+
+let compare_retrieved_function_name (pos : Filepath.position) fun_name = 
+  let retrieved_fx = get (retrieve_function_call pos.pos_lnum (pos.pos_cnum - pos.pos_bol) 
+  (Filepath.Normalized.to_pretty_string pos.pos_path)) in
+  String.compare (retrieved_fx) fun_name
+
+let retrieve_acsl_annotations (pos : Filepath.position) : location =
+  let framac_share = "/home/user/.opam/4.13.1_fc28/share/frama-c/share" in (* todo : find user's frama-c share path : ?register option in plugin and launch with $(frama-c -print-share-path)*)
+  Kernel.Share.set (Filepath.Normalized.of_string framac_share);
+  let share = Kernel.Share.get () in
+  Filepath.add_symbolic_dir framac_share share;
+  Printf.printf "Share path = %s\n%!" (file_str share);
+
+  let start_position = ref None in 
+  
+  let li_visitor = object 
+    inherit Visitor.frama_c_inplace
+    method !vlogic_info_use li = 
+      match li.l_body with 
+      | LBpred pred -> 
+        (*Cil_printer.pp_location Format.std_formatter pred.pred_loc;
+        Format.pp_print_flush Format.std_formatter ();
+        Printf.printf "\n%!"; *)
+        if (compare_retrieved_function_name pos li.l_var_info.lv_name) = 0 then
+          begin
+            start_position := Some pred.pred_loc; DoChildren
+          end
+        else 
+        DoChildren
+      | _ -> ();
+      DoChildren
+    end 
+  in
+  Visitor.visitFramacFileSameGlobals li_visitor (Ast.get ());
+  
+  match !start_position with
+  | Some pos -> pos
+  | None -> Printf.printf "Location not found\n%!";
+    ({pos_path=Filepath.Normalized.of_string "";pos_lnum=0;pos_bol=0;pos_cnum=0},
+    {pos_path=Filepath.Normalized.of_string "";pos_lnum=0;pos_bol=0;pos_cnum=0})
+
+  (*let glob_visitor = object 
+    inherit Visitor.frama_c_inplace
+      method !vglob_aux g =
+        match g with 
+        | GEnumTagDecl (ei,_) -> 
+          Printf.printf "Enum Tag Decl : %s\n%!" ei.eorig_name;
+          DoChildren
+        | GEnumTag (ei,_) -> 
+          Printf.printf "Enum Tag : %s\n%!" ei.eorig_name;
+          DoChildren
+        | GCompTagDecl (ci,_) -> 
+          Printf.printf "Comp Tag Decl : %s\n%!" ci.corig_name;
+          DoChildren
+        | GCompTag (ci,_) -> 
+          Printf.printf "Comp Tag : %s\n%!" ci.corig_name;
+          DoChildren
+        | GType (ti,_) -> 
+          Printf.printf "Type : %s\n%!" ti.torig_name;
+          DoChildren
+        | GVar (vi, _, _) -> 
+          Printf.printf "Var name : %s\n%!" vi.vname;
+          DoChildren
+        | GVarDecl (vi, _) -> 
+          Printf.printf "Var decl name : %s\n%!" vi.vname;
+          DoChildren
+        | GText s -> 
+          Printf.printf "Text : %s\n%!" s;
+          DoChildren
+        | GFun (fd,_) -> 
+          Printf.printf "Fun : %s\n%!" fd.svar.vname;
+          DoChildren
+        | GFunDecl (_,vi,_) -> 
+          Printf.printf "Fun Decl. : %s\n%!" vi.vname;
+          DoChildren
+        | GAsm (s,_) -> 
+          Printf.printf "Asm : %s\n%!" s;
+          DoChildren
+        | GPragma (_,loc) -> 
+          Printf.printf "Pragma at : \n%!";
+          Cil_printer.pp_location Format.std_formatter loc;
+          Format.pp_print_flush Format.std_formatter () ;
+          Printf.printf "\n%!";
+          DoChildren
+        | GAnnot (ga, loc) -> 
+          Printf.printf "Annot : \n%!";
+          process_annotation ga;
+          Cil_printer.pp_location Format.std_formatter loc;
+          Format.pp_print_flush Format.std_formatter () ;
+          Printf.printf "\n%!";
+          DoChildren
+      end
+    in
+    let framac_share = "/home/user/.opam/4.13.1_fc28/share/frama-c/share" in
+    Kernel.Share.set (Filepath.Normalized.of_string framac_share);
+    let share = Kernel.Share.get () in
+    Filepath.add_symbolic_dir framac_share share;
+    Printf.printf "Share path = %s\n%!" (file_str share);
+    Visitor.visitFramacFileSameGlobals glob_visitor (Ast.get ());*)
+
+  (*let llabel_visitor = object 
+    inherit Visitor.frama_c_inplace
+      method !vlogic_label ll =
+        match ll with 
+        | FormalLabel x -> Printf.printf "Logic label : %s\n%!" x; DoChildren
+        | _ -> DoChildren
+      end
+    in
+  Visitor.visitFramacFileSameGlobals llabel_visitor (Ast.get ());*)
+
+  (*let glob_visitor = object 
+    inherit Visitor.frama_c_inplace
+      method !vannotation g = 
+        match g with 
+        | Dfun_or_pred (li, (pos1, pos2)) -> 
+            (* if the uri = global def uri and position is contained within definition range *)
+            Printf.printf "Fun or pred = %s\n%!" li.l_var_info.lv_name;
+            (*Printf.printf "expr_name = %s\n%!" expr_name;*)
+            if (compare_retrieved_function_name pos li.l_var_info.lv_name) = 0
+            then
+              Printf.printf "comp result : %s, [%d:%d -> %d:%d] %s\n%!"
+                li.l_var_info.lv_name
+                pos1.Filepath.pos_lnum
+                (pos1.Filepath.pos_cnum - pos1.Filepath.pos_bol)
+                pos2.Filepath.pos_lnum
+                (pos2.Filepath.pos_cnum - pos2.Filepath.pos_bol)
+                (Filepath.Normalized.to_pretty_string pos1.Filepath.pos_path);
+            DoChildren
+        | Daxiomatic (str,_,_,_) -> 
+          Printf.printf "Axiomatic : %s\n" str;
+          DoChildren
+        | Dlemma (str,_,_,_,_,_) -> 
+          Printf.printf "Lemma : %s\n" str; 
+          DoChildren
+        | Dmodel_annot (mi,_) -> 
+          Printf.printf "Model Annot : %s\n" mi.mi_name; 
+          DoChildren
+        | Dextended (acsl,_,_) -> 
+          Printf.printf "ACSL Ext. : %s\n" acsl.ext_name; 
+          DoChildren
+        | Dinvariant (li,_) -> 
+          Printf.printf "Invariant : %s\n" li.l_var_info.lv_name; 
+          DoChildren
+        | Dvolatile (_,_,_,_,_) -> 
+          Printf.printf "Volatile :\n"; 
+          DoChildren
+        | Dtype_annot _-> 
+          Printf.printf "Type Annot. :\n"; 
+          DoChildren
+        | _ -> 
+          DoChildren
+    end 
+  in
+  Visitor.visitFramacFileSameGlobals glob_visitor (Ast.get ());*)
+
+  (*let pred_visitor = object 
+    inherit Visitor.frama_c_inplace
+    method! vpredicate pred = 
+        match pred.pred_content with 
+        | Papp (li,_,_) -> 
+          let loc = pred.pred_loc in
+          (*Cil_printer.pp_predicate_node Format.std_formatter pred.pred_content;
+          Format.pp_print_flush Format.std_formatter ();
+          Printf.printf "\n%!";
+          Cil_printer.pp_location Format.std_formatter loc;
+          Format.pp_print_flush Format.std_formatter ();
+          Printf.printf "\n%!";*)
+          if (compare_retrieved_function_name pos li.l_var_info.lv_name) = 0 then 
+            begin
+              Printf.printf "\nPRED retrieved : %s, original : %s \n%!" 
+              (get (retrieve_function_call pos.pos_lnum (pos.pos_cnum - pos.pos_bol) (file_str pos.pos_path))) 
+              li.l_var_info.lv_name; 
+              Cil_printer.pp_location Format.std_formatter loc;
+              Format.pp_print_flush Format.std_formatter ();
+              let target_loc = Globals.Syntactic_search.find_in_scope li.l_var_info.lv_name Global in
+              match target_loc with 
+              | Some x -> Cil_printer.pp_location Format.std_formatter x.vdecl; DoChildren
+              | None -> ();
+              Format.pp_print_flush Format.std_formatter ();
+              Printf.printf "\nEND OF TARGET LOC\n%!";
+              DoChildren
+            end
+          
+        else DoChildren
+      (*| Pnot pr -> 
+        Printf.printf "\n PRED NOT \n%!";
+        Cil_printer.pp_location Format.std_formatter pr.pred_loc;
+        Format.pp_print_flush Format.std_formatter ();
+        DoChildren*)
+      (*| Plet (li,pr) ->
+        Printf.printf "\nPLET: %s\n%!" li.l_var_info.lv_name;
+        Cil_printer.pp_location Format.std_formatter pr.pred_loc;
+        Format.pp_print_flush Format.std_formatter ();
+        DoChildren*)
+      | _ -> DoChildren
+    end 
+  in
+  Visitor.visitFramacFileSameGlobals pred_visitor (Ast.get ());*)
+
+
+  (*let term_visitor = object 
+    inherit Visitor.frama_c_inplace
+    method !vterm vt = 
+      match vt.term_node with 
+      | Tapp (li,_,_) -> 
+        let loc = vt.term_loc in
+        Printf.printf "\nTERM retrieved : %s, original : %s \n%!" (get (retrieve_function_call pos.pos_lnum (pos.pos_cnum - pos.pos_bol) (file_str pos.pos_path))) li.l_var_info.lv_name; 
+        Cil_printer.pp_location Format.std_formatter loc;
+        Format.pp_print_flush Format.std_formatter ();
+        if (compare_retrieved_function_name pos li.l_var_info.lv_name) = 0
+        then 
+          DoChildren
+        else
+          DoChildren
+      | _ -> 
+      DoChildren
+    end 
+  in 
+  Visitor.visitFramacFile term_visitor (Ast.get ());*)
   (* Locate the function containing the given position *)
-  let found = ref None in
+  (*let found = ref None in
   let annotations = ref [] in
   let do_annot (emitter : Emitter.t) (code_annot : code_annotation) : unit = 
     ignore emitter;
@@ -162,23 +430,67 @@ let retrieve_acsl_annotations (pos : Filepath.position) =
       if (pos_is_within_range pos (start, end_)) = true then
       Annotations.iter_code_annot do_annot stmt;
       DoChildren
-    method! vglob_aux g =
-      match g with
-      | GFun (fundec, _) ->
-        let (start,end_) = fundec.svar.vdecl in
-        if (pos_is_within_range pos (start, end_)) = true then
-          found :=  Some (Annotations.funspec (Globals.Functions.get fundec.svar));
-        SkipChildren
-      | _ -> DoChildren
   end
   in
-  Visitor.visitFramacFileSameGlobals visitor (Ast.get ());
-  match !found with
+  Visitor.visitFramacFileSameGlobals visitor (Ast.get ());*)
+  (* Example usage
+  let _ =
+    match retrieve_function_call 134 44 "tests/math.h" with
+    | Some function_call -> printf "Function call found: %s\n" function_call
+    | None -> printf "Function call not found\n"  *)
+  
+
+  (*let instr_visitor = object 
+    inherit Visitor.frama_c_inplace
+    method !vinst vi = 
+      match vi with 
+      | Code_annot (_, loc) -> 
+        Cil_printer.pp_location Format.std_formatter loc;
+        Printf.printf "\n%!";
+        DoChildren
+      | _ -> 
+      DoChildren
+    end 
+  in
+  Visitor.visitFramacFileSameGlobals instr_visitor (Ast.get ());*)
+
+
+  (*let lv_decl_visitor = object 
+    inherit Visitor.frama_c_inplace
+    method !vlogic_var_decl lv = 
+      Printf.printf "logic var decl = %s\n%!" lv.lv_name; DoChildren
+    end 
+  in
+  Visitor.visitFramacFileSameGlobals lv_decl_visitor (Ast.get ());*)
+
+  (*let lval_visitor = object 
+    inherit Visitor.frama_c_inplace
+    method !vlval lval = 
+      Cil_printer.pp_lval Format.std_formatter lval; Printf.printf "\n%!"; DoChildren
+    end 
+  in
+  Visitor.visitFramacFileSameGlobals lval_visitor (Ast.get ());*)
+
+  (*let var_visitor = object inherit 
+    Visitor.frama_c_inplace 
+    method !vvrbl var = 
+      match var with 
+      | _ -> 
+        (*let (start, end_) = var.vdecl in 
+        if (pos_is_within_range pos (start, end_)) = true then *)
+        if var.vdefined = true then
+          Printf.printf "var name : %s\n%!" var.vname;
+        DoChildren
+  end
+  in
+  Visitor.visitFramacFileSameGlobals var_visitor (Ast.get ());*)
+
+
+
+  (*match !found with
   | Some spec ->
     spec.spec_behavior
-  | None -> failwith "No function found at the given position"
-
-
+  | None -> failwith "No function found at the given position"*)
 
   
 

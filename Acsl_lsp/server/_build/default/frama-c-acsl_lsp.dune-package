@@ -14,6 +14,9 @@
    core/acsl_lsp_lib__Find_def.cmi
    core/acsl_lsp_lib__Find_def.cmt
    core/acsl_lsp_lib__Find_def.cmx
+   core/acsl_lsp_lib__Find_def_old.cmi
+   core/acsl_lsp_lib__Find_def_old.cmt
+   core/acsl_lsp_lib__Find_def_old.cmx
    core/acsl_lsp_lib__Handler.cmi
    core/acsl_lsp_lib__Handler.cmt
    core/acsl_lsp_lib__Handler.cmx
@@ -54,6 +57,7 @@
    core/src/common/settings.ml
    core/src/common/utils.ml
    core/src/features/find_def.ml
+   core/src/features/find_def_old.ml
    core/src/features/initialize.ml
    core/src/lsp_spec/jsonable.ml
    core/src/lsp_spec/lsp_state.ml
@@ -91,6 +95,12 @@
       (obj_name acsl_lsp_lib__Find_def)
       (visibility public)
       (source (path Find_def) (impl (path core/src/features/find_def.ml))))
+     (module
+      (obj_name acsl_lsp_lib__Find_def_old)
+      (visibility public)
+      (source
+       (path Find_def_old)
+       (impl (path core/src/features/find_def_old.ml))))
      (module
       (obj_name acsl_lsp_lib__Handler)
       (visibility public)

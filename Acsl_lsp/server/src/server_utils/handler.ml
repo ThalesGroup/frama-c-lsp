@@ -17,4 +17,4 @@ let rq_handler json_string =
   | "textDocument/definition" -> 
     let params = DefinitionParams.t_of_json (get request.params) in
     find_def (Ast.get ()) params;
-  | _ -> Printf.printf "Invalid method\n";
+  | _ -> `Null;

@@ -801,11 +801,11 @@ module InitializeResult = struct
     serverInfo : server_info option
   }
 
-  (*let create ?capabilities ?serverInfo () =
+  let create ?capabilities ?serverInfo () =
     { capabilities; serverInfo }
 
-  let create_serverInfo ~name ?(version : string option) () =
-    { name; version }*)
+  let create_serverInfo ~name ?version () =
+    { name; version }
 
   let json_of_server_info (info : server_info) : Json.t =
     match info.version with
@@ -1051,7 +1051,7 @@ module Range = struct
     end_ : Position.t
   }
 
-  let create start end_ () =
+  let create start end_ =
     { start; end_ }
 
   let t_of_json (json : Json.t) : t =
@@ -1284,7 +1284,7 @@ module Location = struct
     range : Range.t
   }
 
-  let create uri range () = 
+  let create uri range = 
     { uri; range }
 
   let t_of_json (json : Json.t) : t =

@@ -3,6 +3,9 @@
 (** @canonical Acsl_lsp_lib.Find_def *)
 module Find_def = Acsl_lsp_lib__Find_def
 
+(** @canonical Acsl_lsp_lib.Find_def_old *)
+module Find_def_old = Acsl_lsp_lib__Find_def_old
+
 (** @canonical Acsl_lsp_lib.Handler *)
 module Handler = Acsl_lsp_lib__Handler
 

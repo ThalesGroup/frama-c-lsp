@@ -15,6 +15,26 @@ module RequestMessage : sig
   include Jsonable.B with type t := t
 end
 
+module ResponseError : sig
+  type t = {
+    code: int; (* todo : implement errorcodes *)
+    message: string;
+    data: Json.t option
+  }
+  include Jsonable.B with type t := t
+end
+
+module ResponseMessage : sig
+  type id_ = Int of int | Str of string
+  type result_ = Json.t option
+  type t = {
+    id : id_;
+    result : result_;
+    error : ResponseError.t option
+  }
+  include Jsonable.B with type t := t
+end
+
 module NotificationMessage : sig
   type t = {
     jsonrpc : float;
@@ -227,7 +247,7 @@ module Range : sig
     end_ : Position.t
   }
 
-  val create : Position.t -> Position.t -> unit -> t
+  val create : Position.t -> Position.t -> t
   include Jsonable.B with type t := t
 
 end
@@ -285,8 +305,8 @@ module InitializeResult : sig
     serverInfo : server_info option
   }
 
-  (*val create_serverInfo : ?name: string -> ?version : string option -> unit -> server_info
-  val create : ?capabilities : ServerCapabilities.t option -> ?serverInfo : server_info option -> unit -> t*)
+  val create_serverInfo : name:string -> ?version:string -> unit -> server_info
+  val create : ?capabilities:ServerCapabilities.t -> ?serverInfo:server_info -> unit -> t
 
   include Jsonable.B with type t := t
 
@@ -363,7 +383,7 @@ module Location : sig
     range : Range.t
   }
 
-  val create : DocumentUri.t -> Range.t -> unit -> t
+  val create : DocumentUri.t -> Range.t -> t
 
   include Jsonable.B with type t := t
 

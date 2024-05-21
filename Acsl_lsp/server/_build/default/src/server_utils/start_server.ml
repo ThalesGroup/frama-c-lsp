@@ -18,17 +18,24 @@ let listen () =
 
   while true do
     let (client_sock, _) = accept server_sock in
+
     let buffer = Bytes.create 1024 in
     let request_data = receive_all client_sock buffer in
+
+    (*let raw_req = Bytes.to_string request_data in
+    Printf.printf "Raw request : %s\n%!" raw_req;*)
 
     (* Process the received request data *)
     let request_str = Utils.extract_json_from_request (Bytes.to_string request_data) in
     Printf.printf "Request received: %s\n%!" request_str;
 
-    Handler.rq_handler request_str;
     (* Send response *)
-    (*let response = Handler.rq_handler request_str in
-    Printf.printf "Response received: %s\n%!" response*);
+    let response = Handler.rq_handler request_str in
+    let response_string = Json.save_string ?pretty:(Some true) response in
+    Printf.printf "Response received: %s\n%!" (response_string);
+
+    let response_len = String.length response_string in
+    ignore (write client_sock (Bytes.of_string response_string) 0 response_len);
     
     close client_sock
   done
