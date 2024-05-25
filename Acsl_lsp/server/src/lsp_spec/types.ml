@@ -2,7 +2,7 @@ type id_ = Int of int | Str of string | Null
 
 
 module Message = struct
-  type t = { jsonrpc : string } (* note : jsonrpc must be a string *)
+  type t = { jsonrpc : string }
 
   let json_of_t (t : t) : Json.t =
     Json.of_fields ["jsonrpc", Json.of_string t.jsonrpc]
@@ -677,7 +677,7 @@ module UnregistrationParams = struct
     | _ -> raise (Invalid_argument "Invalid JSON format for UnregistrationParams")
 end
 
-(* to review *)
+(* todo : review this *)
 module TextDocumentSyncKind = struct
   type t = None | Full | Incremental
   let json_of_t (t : t) : Json.t =
@@ -691,7 +691,7 @@ module TextDocumentSyncKind = struct
     | `Int 0 -> None
     | `Int 1 -> Full
     | `Int 2 -> Incremental
-    | _ -> None (* unsure *)
+    | _ -> None
 end
 
 module TextDocumentSyncOptions = struct 

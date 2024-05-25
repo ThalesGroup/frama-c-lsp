@@ -6,7 +6,7 @@ let run () =
       end
     else 
       (*Start_server.start ();*)
-      Start_server.listen ();
+      try Start_server.listen () with Unix.Unix_error(err, _, _) -> Printf.printf "%s\n%!" (Unix.error_message err);
   with Sys_error _ as exc ->
     let msg = Printexc.to_string exc in
     Printf.eprintf "There was an error: %s\n" msg

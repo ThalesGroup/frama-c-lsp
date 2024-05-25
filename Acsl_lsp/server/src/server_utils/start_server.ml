@@ -1,5 +1,16 @@
 open Unix
 
+let send_jsonrpc_response client_sock response =
+  let response_str = Printf.sprintf "Content-Length: %d\r\n\r\n%s" (String.length response) response in
+  let response_bytes = Bytes.of_string response_str in
+  let bytes_sent = ref 0 in
+  while !bytes_sent < Bytes.length response_bytes do
+    let sent = send client_sock response_bytes !bytes_sent (Bytes.length response_bytes - !bytes_sent) [] in
+    if sent <= 0 then
+      failwith "Failed to send response";
+    bytes_sent := !bytes_sent + sent
+  done
+  
 let server_port = 8001 (* todo : maybe change port *)
 let rec receive_all client_sock buffer =
   let bytes_read = recv client_sock buffer 0 (Bytes.length buffer) [] in
@@ -11,70 +22,31 @@ let rec receive_all client_sock buffer =
 let listen () =
   let addr = ADDR_INET(inet_addr_any, server_port) in
   let server_sock = socket PF_INET SOCK_STREAM 0 in
+  
   setsockopt server_sock SO_REUSEADDR true;
+
   bind server_sock addr;
-  listen server_sock 5;
+  listen server_sock 50;
   Printf.printf "Server listening on port %d\n%!" server_port;
 
   while true do
     let (client_sock, _) = accept server_sock in
+    let buffer = Bytes.create 50000 in
+    let request_data = ref (receive_all client_sock buffer) in (* receives first content length *)
+    request_data := receive_all client_sock buffer; (* receives content body afterwards *)
 
-    let buffer = Bytes.create 1024 in
-    let request_data = receive_all client_sock buffer in
-
-    (*let raw_req = Bytes.to_string request_data in
-    Printf.printf "Raw request : %s\n%!" raw_req;*)
-
-    (* Process the received request data *)
-    let request_str = Utils.extract_json_from_request (Bytes.to_string request_data) in
-    Printf.printf "Request received: %s\n%!" request_str;
+  (* Process the received request data *)
+    Printf.printf "Received from client: %s\n%!" (Bytes.to_string !request_data);
+    (*let server_response = "{\"jsonrpc\": \"2.0\", \"result\": \"OK\", \"id\": 0}" in
+    send_jsonrpc_response client_sock server_response;*)
+    
+    let request_str = Utils.extract_json_from_request (Bytes.to_string !request_data) in
 
     (* Send response *)
     let response = Handler.rq_handler request_str in
-    let response_string = (Json.save_string ?pretty:(Some true) response) in
-    (*let response_string_ = 
-      "HTTP/1.1 200 OK\r\n" ^
-      "Content-Type: application/json\r\n" ^
-      "Content-Length: " ^ (string_of_int (String.length response_string)) ^ "\r\n" ^
-      "Connection: close\r\n" ^
-      "\r\n" ^ response_string 
-    in*)
-    Printf.printf "Response received: %s\n%!" (response_string);
-
-    let response_len = String.length response_string in
-    ignore (write client_sock (Bytes.of_string response_string) 0 response_len);
+    send_jsonrpc_response client_sock (Json.save_string response);
     
-    close client_sock
+    (*close client_sock*)
   done;
 
   close server_sock
-
-(*
-open Server.Main
-module Senv = Server.Server_parameters
-
-(* Define a simple request handler *)
-let handle_get_request (json_data : json) : json =
-  (* Perform some processing based on the received JSON data *)
-  (* For demonstration, simply echo the received data *)
-  json_data
-
-(* Register the GET request handler *)
-let _ = register `GET "echo" handle_get_request
-
-(* Create a server *)
-let server : (unit) Server.Main.server =
-  create
-    ~pretty:(fun fmt _ -> Format.fprintf fmt "Frama-C Server")
-    ~fetch:(fun () ->
-      (* Mock fetching a message, replace with actual implementation *)
-      let request = { requests = [`Poll]; callback = (fun _ -> ()) } in
-      Some request
-    )
-    ()
-  
-(* Start the server *)
-let start () = 
-  Senv.log "LJGRK?";
-  run server
-  *)

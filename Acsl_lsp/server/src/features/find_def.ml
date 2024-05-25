@@ -2,6 +2,16 @@ open Types
 open Utils
 open Printer_tag
   
+(** 
+    Description : 
+    Module for Go To Definition feature of the Language Server Protocol.
+    The main function here is retrieve_acsl_annotations defined in Utils.
+
+    Version : 1.0
+    - Finds the definition of an ACSL logic function (called in the source code).
+    - Only finds frama_c builtin predicates (valid_read_string, valid_string, minimum, maximum, ...)
+
+*)
 let process_global (params : DefinitionParams.t) (g : Cil_types.global) =
   ignore g;
   let uri = params.textDocument.uri in 

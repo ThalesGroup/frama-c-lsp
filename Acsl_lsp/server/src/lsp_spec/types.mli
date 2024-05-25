@@ -28,7 +28,7 @@ end
 
 module ResponseMessage : sig
   type t = {
-    jsonrpc : string; (* todo : jsonrpc version is not a float *)
+    jsonrpc : string;
     id : id_;
     result : Json.t  option;
     error : ResponseError.t option
@@ -81,7 +81,7 @@ end
 
 module WorkDoneProgressParams : sig
   type t = {
-    work_done_token : ProgressToken.t option;  (* Optional token for reporting work done progress *)
+    work_done_token : ProgressToken.t option; 
   }
   include Jsonable.B with type t := t
 

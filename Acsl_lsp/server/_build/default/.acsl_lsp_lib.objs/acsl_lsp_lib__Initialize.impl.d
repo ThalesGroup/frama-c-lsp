@@ -1,1 +1,1 @@
-src/features/initialize.ml: Array InitializeParams InitializeResult Json Printf RequestMessage ResponseMessage ServerCapabilities Types Utils
+src/features/initialize.ml: Json RequestMessage Types

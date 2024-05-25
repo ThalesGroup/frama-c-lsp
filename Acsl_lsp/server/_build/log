@@ -1,4 +1,4 @@
-# dune exec -- frama-c
+# dune build
 # OCAMLPARAM: unset
 # Shared cache: disabled
 # Shared cache location: /home/user/.cache/dune/db
@@ -20,4 +20,4 @@
 #        }
 #  ; instrument_with = []
 #  }
-$ /home/user/.opam/4.13.1_fc28/bin/ocamlc.opt -config > /tmp/dune_1b5854_output
+$ /home/user/.opam/4.13.1_fc28/bin/ocamlc.opt -config > /tmp/dune_e31d82_output

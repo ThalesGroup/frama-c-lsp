@@ -203,6 +203,7 @@ let compare_retrieved_function_name (pos : Filepath.position) fun_name =
   (Filepath.Normalized.to_pretty_string pos.pos_path)) in
   String.compare (retrieved_fx) fun_name
 
+(* todo : change the name of retrieve_acsl_annotations function *)
 let retrieve_acsl_annotations (pos : Filepath.position) : location =
   let framac_share = "/home/user/.opam/4.13.1_fc28/share/frama-c/share" in (* todo : find user's frama-c share path : ?register option in plugin and launch with $(frama-c -print-share-path)*)
   Kernel.Share.set (Filepath.Normalized.of_string framac_share);
