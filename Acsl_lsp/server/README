@@ -1,0 +1,5 @@
+Remaining features to implement : 
+- add debug option instead of using "Printf.printf" everywhere, implement(or find) a logging function to log error messages only when log option enabled
+- Enhance find_def (limited to only built in predicates for the moment)
+- Enhance/fix ACSL syntax coloration
+- Start implementing Find References feature

@@ -218,7 +218,6 @@ let process_annotation g =
     Printf.printf "_____Type . :%s\n%!" lti.lt_name
 
 let compare_retrieved_function_name (pos : Filepath.position) fun_name = 
-  Printf.printf "FX NAME: %s\n%!" fun_name;
   let retrieved_fx = retrieve_function_call pos.pos_lnum (pos.pos_cnum - pos.pos_bol) 
   (Filepath.Normalized.to_pretty_string pos.pos_path) in
   String.compare (retrieved_fx) fun_name

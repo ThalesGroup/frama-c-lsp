@@ -31,6 +31,9 @@ let find_def (file : Cil_types.file) (req : RequestMessage.t) : Json.json =
     let file = remove_file_scheme uri in
     let pos = position_t_to_filepath_position file params.position in
     let (pos1, pos2) = retrieve_acsl_annotations pos in 
+    (* todo : is it necessary to display an error if a definition can't be found for the clicked position 
+       a simple 'ctrl' shouldn't raise an error, error should be raised only if ...?
+      ?*)
     if pos1 = pos2 then 
       ResponseMessage.json_of_t (ResponseMessage.create ~jsonrpc:"2.0" ~id:req.id ~error:(ResponseError.create ~code:(-32803) ~message:"Definition not found." ()) ())
     else  
