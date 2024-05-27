@@ -6,9 +6,8 @@ import {
     LanguageClient,
     LanguageClientOptions,
     ServerOptions,
-    Definition,
-    LocationLink,
-    Middleware
+    Middleware,
+    URI
 } from 'vscode-languageclient/node';
 
 let client: LanguageClient | undefined;
@@ -45,7 +44,7 @@ export function activate(context: ExtensionContext) {
             });
 
             socket.on('data', (data?) => {
-                console.log(`Received data: ${data.toString()}`);
+                console.log(`Received from server: ${data.toString()}`);
             });
 
             socket.on('close', (hadError?) => {
@@ -58,32 +57,25 @@ export function activate(context: ExtensionContext) {
             });
         });
 
+        connectionPromise.then(() => {
+            console.log('Socket connection promise resolved');
+        }).catch((err) => {
+            console.error(`Socket connection promise rejected: ${err}`);
+        });
+
         let serverOptions: ServerOptions = () => connectionPromise!.then((socket) => ({
             reader: socket,
             writer: socket
         }));
 
         const middleware: Middleware = {
-            provideDefinition: (document, position, token, next) => {
-                console.log(`provideDefinition called: ${document.uri.toString()} at ${position.line}:${position.character}`);
-                const result = next(document, position, token);
-                if (result) {
-                    if (result instanceof Promise) {
-                        return result.then((resolvedResult) => {
-                            console.log(`Definition result: ${JSON.stringify(resolvedResult)}`);
-                            return resolvedResult;
-                        }).catch((error) => {
-                            console.error(`Error in provideDefinition: ${error}`);
-                            throw error; // Rethrow error for further debugging
-                        });
-                    } else {
-                        console.log(`Definition result: ${JSON.stringify(result)}`);
-                        return result;
-                    }
-                } else {
-                    console.log('No definition result');
-                    return null;
-                }
+            sendRequest: async (type, params, token, next) => {
+                console.log('Sending request:', type, params);
+                return next(type, params, token);
+            },
+            sendNotification: (type, next, params) => {
+                console.log('Sending notification:', type, params);
+                return next(type, params);
             }
         };
 
@@ -102,7 +94,7 @@ export function activate(context: ExtensionContext) {
 
         client.start().then(() => {
             context.subscriptions.push(client);
-            console.log('Client started successfully');
+            console.log('Client started successfully and is ready');
         }).catch(error => {
             console.error(`Failed to start the language client: ${error}`);
         });
@@ -110,18 +102,5 @@ export function activate(context: ExtensionContext) {
 }
 
 export function deactivate(): Thenable<void> | undefined {
-    if (client) {
-        return client.stop().then(() => {
-            if (serverProcess) {
-                console.log("Killing server process");
-                serverProcess.kill('SIGTERM');
-                serverProcess = undefined;
-            }
-        });
-    } else if (serverProcess) {
-        console.log("Killing server process");
-        serverProcess.kill('SIGTERM');
-        serverProcess = undefined;
-    }
     return undefined;
 }

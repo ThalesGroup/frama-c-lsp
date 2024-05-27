@@ -30,6 +30,7 @@
 				],
 				"extensions": [
 					".c",
+					".h",
 					".cpp"
 				],
 				"configuration": "./language-configuration.json"

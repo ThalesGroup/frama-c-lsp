@@ -29,10 +29,6 @@
    core/acsl_lsp_lib__Jsonable.cmi
    core/acsl_lsp_lib__Jsonable.cmt
    core/acsl_lsp_lib__Jsonable.cmx
-   core/acsl_lsp_lib__Lsp_queue.cmi
-   core/acsl_lsp_lib__Lsp_queue.cmt
-   core/acsl_lsp_lib__Lsp_queue.cmti
-   core/acsl_lsp_lib__Lsp_queue.cmx
    core/acsl_lsp_lib__Lsp_state.cmi
    core/acsl_lsp_lib__Lsp_state.cmt
    core/acsl_lsp_lib__Lsp_state.cmx
@@ -73,8 +69,6 @@
    core/src/lsp_spec/types.mli
    core/src/run.ml
    core/src/server_utils/handler.ml
-   core/src/server_utils/lsp_queue.ml
-   core/src/server_utils/lsp_queue.mli
    core/src/server_utils/start_server.ml
    core/src/testing/run_tests.ml
    core/src/testing/test_find_definition.ml
@@ -127,13 +121,6 @@
       (obj_name acsl_lsp_lib__Jsonable)
       (visibility public)
       (source (path Jsonable) (impl (path core/src/lsp_spec/jsonable.ml))))
-     (module
-      (obj_name acsl_lsp_lib__Lsp_queue)
-      (visibility public)
-      (source
-       (path Lsp_queue)
-       (intf (path core/src/server_utils/lsp_queue.mli))
-       (impl (path core/src/server_utils/lsp_queue.ml))))
      (module
       (obj_name acsl_lsp_lib__Lsp_state)
       (visibility public)

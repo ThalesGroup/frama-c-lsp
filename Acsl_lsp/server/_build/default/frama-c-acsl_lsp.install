@@ -25,10 +25,6 @@ lib: [
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib__Jsonable.cmi" {"core/acsl_lsp_lib__Jsonable.cmi"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib__Jsonable.cmt" {"core/acsl_lsp_lib__Jsonable.cmt"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib__Jsonable.cmx" {"core/acsl_lsp_lib__Jsonable.cmx"}
-  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib__Lsp_queue.cmi" {"core/acsl_lsp_lib__Lsp_queue.cmi"}
-  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib__Lsp_queue.cmt" {"core/acsl_lsp_lib__Lsp_queue.cmt"}
-  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib__Lsp_queue.cmti" {"core/acsl_lsp_lib__Lsp_queue.cmti"}
-  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib__Lsp_queue.cmx" {"core/acsl_lsp_lib__Lsp_queue.cmx"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib__Lsp_state.cmi" {"core/acsl_lsp_lib__Lsp_state.cmi"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib__Lsp_state.cmt" {"core/acsl_lsp_lib__Lsp_state.cmt"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib__Lsp_state.cmx" {"core/acsl_lsp_lib__Lsp_state.cmx"}
@@ -69,8 +65,6 @@ lib: [
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/lsp_spec/types.mli" {"core/src/lsp_spec/types.mli"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/run.ml" {"core/src/run.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/server_utils/handler.ml" {"core/src/server_utils/handler.ml"}
-  "_build/install/default/lib/frama-c-acsl_lsp/core/src/server_utils/lsp_queue.ml" {"core/src/server_utils/lsp_queue.ml"}
-  "_build/install/default/lib/frama-c-acsl_lsp/core/src/server_utils/lsp_queue.mli" {"core/src/server_utils/lsp_queue.mli"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/server_utils/start_server.ml" {"core/src/server_utils/start_server.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/testing/run_tests.ml" {"core/src/testing/run_tests.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/testing/test_find_definition.ml" {"core/src/testing/test_find_definition.ml"}

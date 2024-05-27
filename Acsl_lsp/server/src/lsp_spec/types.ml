@@ -163,12 +163,20 @@ module ResponseMessage = struct
       | Str s -> `String s
       | Null -> `Null
     in
-    `Assoc [
-      "jsonrpc", `String resp.jsonrpc;
-      "id", id_json;
-      "result", (match resp.result with Some x -> x | None -> `Null);
-      "error", (match resp.error with Some x -> ResponseError.json_of_t x | None -> `Null);
-    ]
+    match resp.error with 
+    Some x -> 
+      `Assoc [
+        "jsonrpc", `String resp.jsonrpc;
+        "id", id_json;
+        "error", ResponseError.json_of_t x;
+      ]
+    | None ->
+      `Assoc [
+        "jsonrpc", `String resp.jsonrpc;
+        "id", id_json;
+        "result", (match resp.result with Some x -> x | None -> `Null);
+      ]
+
 
   let t_of_json (json : Json.t) : t =
     match json with

@@ -30,7 +30,7 @@ module ResponseMessage : sig
   type t = {
     jsonrpc : string;
     id : id_;
-    result : Json.t  option;
+    result : Json.t option;
     error : ResponseError.t option
   }
   include Jsonable.B with type t := t

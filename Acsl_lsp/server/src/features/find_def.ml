@@ -26,17 +26,25 @@ let process_global (params : DefinitionParams.t) (g : Cil_types.global) =
 let find_def (file : Cil_types.file) (req : RequestMessage.t) : Json.json = 
     print_predicates file;
     Printf.printf "find_def called\n%!";
-
     let params = DefinitionParams.t_of_json (get req.params) in
     let uri = params.textDocument.uri in 
     let file = remove_file_scheme uri in
     let pos = position_t_to_filepath_position file params.position in
-    let (pos1,pos2) = retrieve_acsl_annotations pos in
-    let start = Position.create pos1.pos_lnum (pos1.pos_cnum - pos1.pos_bol) in
-    let end_ = Position.create pos2.pos_lnum (pos2.pos_cnum - pos2.pos_bol) in
-    let range = Range.create start end_ in
-    let result_loc = Location.create (file_str pos1.pos_path) range in
-    ResponseMessage.json_of_t (ResponseMessage.create ~jsonrpc:req.jsonrpc ~id:req.id ?result:(Some (Location.json_of_t result_loc)) ());
+    let (pos1, pos2) = retrieve_acsl_annotations pos in 
+    if pos1 = pos2 then 
+      ResponseMessage.json_of_t (ResponseMessage.create ~jsonrpc:"2.0" ~id:req.id ~error:(ResponseError.create ~code:(-32803) ~message:"Definition not found." ()) ())
+    else  
+      ResponseMessage.json_of_t (ResponseMessage.create ~jsonrpc:"2.0" ~id:req.id ~result:
+        (Location.json_of_t
+          (Location.create 
+            (Filepath.Normalized.to_pretty_string pos1.pos_path)
+            (Range.create (Position.create pos1.pos_lnum (pos1.pos_cnum - pos1.pos_bol))
+              (Position.create pos2.pos_lnum (pos2.pos_cnum - pos2.pos_bol))
+            )
+          )
+        )
+        ()
+      )
     
 
     

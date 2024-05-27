@@ -155,7 +155,7 @@ let get_logic_vars_list (ast : Cil_types.file) : (logic_info * location) list =
   !res
 
 (* Function to find the substring starting with '\' or ' ' and ending with '(' or ' ' *)
-let find_function_call str idx =
+let find_word str idx =
   let is_boundary_char c = c = '\\' || c = ' ' || c = '(' || c = ')' in
   let rec find_start i =
     if i < 0 || is_boundary_char (String.get str i) then i + 1
@@ -189,7 +189,7 @@ let read_line_from_file filename line_number =
 (* Function to retrieve function call at given line and character index *)
 let retrieve_function_call line_number character_index file_name =
   match read_line_from_file file_name line_number with 
-    | Some line -> find_function_call line character_index 
+    | Some line -> find_word line character_index 
     | None -> failwith "Line not found" 
   
 
@@ -224,7 +224,7 @@ let compare_retrieved_function_name (pos : Filepath.position) fun_name =
   String.compare (retrieved_fx) fun_name
 
 (* todo : change the name of retrieve_acsl_annotations function *)
-let retrieve_acsl_annotations (pos : Filepath.position) : location =
+let retrieve_acsl_annotations (pos : Filepath.position) =
   let framac_share = "/home/user/.opam/4.13.1_fc28/share/frama-c/share" in (* todo : find user's frama-c share path : ?register option in plugin and launch with $(frama-c -print-share-path)*)
   Kernel.Share.set (Filepath.Normalized.of_string framac_share);
   let share = Kernel.Share.get () in
@@ -255,8 +255,7 @@ let retrieve_acsl_annotations (pos : Filepath.position) : location =
   
   match !loca with
   | Some loc -> loc
-  | None -> Printf.printf "Location not found\n%!";
-    (pos,pos) (* todo : should return a json error instead of result *)
+  | None -> (pos,pos) (* todo : should return a json error instead of result *)
 
   (*let glob_visitor = object 
     inherit Visitor.frama_c_inplace

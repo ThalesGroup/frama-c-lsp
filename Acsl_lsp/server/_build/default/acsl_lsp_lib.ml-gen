@@ -18,9 +18,6 @@ module Initialize = Acsl_lsp_lib__Initialize
 (** @canonical Acsl_lsp_lib.Jsonable *)
 module Jsonable = Acsl_lsp_lib__Jsonable
 
-(** @canonical Acsl_lsp_lib.Lsp_queue *)
-module Lsp_queue = Acsl_lsp_lib__Lsp_queue
-
 (** @canonical Acsl_lsp_lib.Lsp_state *)
 module Lsp_state = Acsl_lsp_lib__Lsp_state
 
