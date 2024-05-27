@@ -41,7 +41,7 @@ module NotificationMessage : sig
   type t = {
     jsonrpc : string;
     method_ : string;
-    params : Json.t array option
+    params : Json.t
   }
   include Jsonable.B with type t := t
 end

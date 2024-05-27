@@ -11,6 +11,9 @@
    core/acsl_lsp_lib.cmx
    core/acsl_lsp_lib.cmxa
    core/acsl_lsp_lib.ml
+   core/acsl_lsp_lib__Exit.cmi
+   core/acsl_lsp_lib__Exit.cmt
+   core/acsl_lsp_lib__Exit.cmx
    core/acsl_lsp_lib__Find_def.cmi
    core/acsl_lsp_lib__Find_def.cmt
    core/acsl_lsp_lib__Find_def.cmx
@@ -56,6 +59,7 @@
    core/acsl_lsp_lib__Utils.cmx
    core/src/common/settings.ml
    core/src/common/utils.ml
+   core/src/features/exit.ml
    core/src/features/find_def.ml
    core/src/features/find_def_old.ml
    core/src/features/initialize.ml
@@ -91,6 +95,10 @@
      (source (path Acsl_lsp_lib) (impl (path core/acsl_lsp_lib.ml-gen))))
     (name Acsl_lsp_lib)
     (modules
+     (module
+      (obj_name acsl_lsp_lib__Exit)
+      (visibility public)
+      (source (path Exit) (impl (path core/src/features/exit.ml))))
      (module
       (obj_name acsl_lsp_lib__Find_def)
       (visibility public)

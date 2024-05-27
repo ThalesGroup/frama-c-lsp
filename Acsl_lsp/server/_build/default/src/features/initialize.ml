@@ -25,10 +25,10 @@ let initialize (req : RequestMessage.t): Json.json =
     ) logic_list;*)
 
     (*Printf.printf "initialize called\n";
-    let (params : InitializeParams.t) = InitializeParams.t_of_json (get req.params) in
-    let ast = get_ast_from_file (Array.get (get params.workspace_folders) 0).uri in 
-    ignore ast;*)
-    
+    let (params : InitializeParams.t) = InitializeParams.t_of_json (get req.params) in*)
+    let ast = Utils.get_ast_from_file "/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server/tests/" in 
+    ignore ast;
+
     (*let capabilities = ServerCapabilities.create ~definitionProvider:(ServerCapabilities.Bool true) () in
     let serverInfo = InitializeResult.create_serverInfo ~name: "ACSL Language Server" ~version:"1.0.0" () in
     let result = InitializeResult.create ~capabilities:capabilities ~serverInfo:serverInfo () in
@@ -41,12 +41,12 @@ let initialize (req : RequestMessage.t): Json.json =
       \"result\": {
         \"capabilities\": {
           \"textDocumentSync\": {
-            \"openClose\": true,
+            \"openClose\": false,
             \"change\": 2,
-            \"willSave\": true,
-            \"willSaveWaitUntil\": true,
+            \"willSave\": false,
+            \"willSaveWaitUntil\": false,
             \"save\": {
-              \"includeText\": true
+              \"includeText\": false
             }
           },
           \"completionProvider\": {
@@ -57,10 +57,7 @@ let initialize (req : RequestMessage.t): Json.json =
           \"signatureHelpProvider\": {
             \"triggerCharacters\": [\"(\", \",\"]
           },
-          \"definitionProvider\": {
-            \"dynamicRegistration\": false,
-            \"linkSupport\": false
-          },
+          \"definitionProvider\": true,
           \"typeDefinitionProvider\": false,
           \"implementationProvider\": false,
           \"referencesProvider\": false,
@@ -137,20 +134,20 @@ let initialize (req : RequestMessage.t): Json.json =
                 \"defaultLibrary\"
               ]
             },
-            \"range\": true,
+            \"range\": false,
             \"full\": {
-              \"delta\": true
+              \"delta\": false
             }
           },
           \"monikerProvider\": false,
           \"callHierarchyProvider\": false,
           \"workspace\": {
             \"workspaceFolders\": {
-              \"supported\": true,
-              \"changeNotifications\": true
+              \"supported\": false,
+              \"changeNotifications\": false
             }
           },
-          \"experimental\": {}
+          \"experimental\": null
         },
         \"serverInfo\": {
           \"name\": \"ACSL LSP\",

@@ -78,13 +78,11 @@ module NotificationMessage = struct
   type t = {
     jsonrpc : string;
     method_ : string;
-    params : Json.t array option
+    params : Json.t
   }
 
   let json_of_t (msg : t) : Json.t =
-    match msg.params with
-    | Some params -> `Assoc [("method", `String msg.method_); ("params", `List (Array.to_list params))]
-    | None -> `Assoc [("method", `String msg.method_); ("params", `Null)]
+    `Assoc [("jsonrpc", `String msg.jsonrpc); ("method", `String msg.method_); ("params", msg.params)]
 
   let t_of_json (json : Json.t) : t =
     match json with
@@ -92,7 +90,7 @@ module NotificationMessage = struct
       let jsonrpc =
         match List.assoc "jsonrpc" fields with
         | `String s -> s
-        | _ -> raise (Invalid_argument "Invalid JSON format for NotificationMessage: method")
+        | _ -> raise (Invalid_argument "Invalid JSON format for NotificationMessage: jsonrpc")
       in
       let method_ =
         match List.assoc "method" fields with
@@ -101,15 +99,13 @@ module NotificationMessage = struct
       in
       let params =
         match List.assoc_opt "params" fields with
-        | Some (`List l) -> Some (Array.of_list l)
-        | Some `Null -> None
-        | None -> None
-        | _ -> raise (Invalid_argument "Invalid JSON format for NotificationMessage: params")
+        | Some p -> p
+        | None -> `Assoc []
       in
-      { jsonrpc; method_ ; params }
+      { jsonrpc; method_; params }
     | _ -> raise (Invalid_argument "Invalid JSON format for NotificationMessage")
-
 end
+
 
 module ResponseError = struct
   type t = {

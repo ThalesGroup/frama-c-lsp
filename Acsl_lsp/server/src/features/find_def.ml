@@ -14,7 +14,8 @@ open Printer_tag
 *)
 let process_global (params : DefinitionParams.t) (g : Cil_types.global) =
   ignore g;
-  let uri = params.textDocument.uri in 
+  let temp_uri = params.textDocument.uri in 
+  let uri = remove_file_scheme temp_uri in
   let curr_pos = position_t_to_filepath_position uri params.position in
   let target_loc = Printer_tag.loc_to_localizable ?precise_col:(Some true) curr_pos in
   (*let vinfo =  Printer_tag.varinfo_of_localizable target_loc in *)

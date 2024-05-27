@@ -7,6 +7,9 @@ lib: [
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib.cmx" {"core/acsl_lsp_lib.cmx"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib.cmxa" {"core/acsl_lsp_lib.cmxa"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib.ml" {"core/acsl_lsp_lib.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib__Exit.cmi" {"core/acsl_lsp_lib__Exit.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib__Exit.cmt" {"core/acsl_lsp_lib__Exit.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib__Exit.cmx" {"core/acsl_lsp_lib__Exit.cmx"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib__Find_def.cmi" {"core/acsl_lsp_lib__Find_def.cmi"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib__Find_def.cmt" {"core/acsl_lsp_lib__Find_def.cmt"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib__Find_def.cmx" {"core/acsl_lsp_lib__Find_def.cmx"}
@@ -52,6 +55,7 @@ lib: [
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp_lib__Utils.cmx" {"core/acsl_lsp_lib__Utils.cmx"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/common/settings.ml" {"core/src/common/settings.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/common/utils.ml" {"core/src/common/utils.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/src/features/exit.ml" {"core/src/features/exit.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/features/find_def.ml" {"core/src/features/find_def.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/features/find_def_old.ml" {"core/src/features/find_def_old.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/features/initialize.ml" {"core/src/features/initialize.ml"}

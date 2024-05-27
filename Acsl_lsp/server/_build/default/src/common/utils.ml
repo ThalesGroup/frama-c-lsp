@@ -59,6 +59,19 @@ let is_same_uri (uri1 : string) (uri2 : Filepath.position) =
   Printf.printf "pos 2 = %s\n%!" (Filepath.Normalized.to_pretty_string uri2.Filepath.pos_path); *)
   uri1 = Filepath.Normalized.to_pretty_string uri2.Filepath.pos_path
 
+let remove_file_scheme uri =
+  let prefix = "file://" in
+  if String.length uri >= String.length prefix && String.sub uri 0 (String.length prefix) = prefix then
+    String.sub uri (String.length prefix) (String.length uri - String.length prefix)
+  else
+    uri
+  
+let contains s1 s2 =
+  let re = Str.regexp_string s2
+  in
+      try ignore (Str.search_forward re s1 0); true
+      with Not_found -> false
+
 let is_same_line (pos : Filepath.position) (loc : location) = 
   let start_pos, end_pos = loc in
   pos.pos_lnum >= start_pos.pos_lnum && pos.pos_lnum <= end_pos.pos_lnum
@@ -110,8 +123,7 @@ let get_t_from_filename filename_list =
 open File
 
 let initialize_file (filename : string) : unit =
-  ignore filename;
-  let files = get_t_from_filename (get_all_source_files ".") in (* TODO : dir might not always be "." *)
+  let files = get_t_from_filename (get_all_source_files filename) in (* TODO : dir might not always be "." *)
   Printf.printf "List length = %d\n%!" (List.length files);
   List.iter (fun file ->
     Printf.printf "file : %s\n" (File.get_name file);
