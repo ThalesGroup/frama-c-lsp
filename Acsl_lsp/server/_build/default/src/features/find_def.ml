@@ -27,8 +27,9 @@ let find_def (file : Cil_types.file) (req : RequestMessage.t) : Json.json =
     print_predicates file;
     Printf.printf "find_def called\n%!";
 
-    let (params : DefinitionParams.t) = DefinitionParams.t_of_json (get req.params) in
-    let file = params.textDocument.uri in
+    let params = DefinitionParams.t_of_json (get req.params) in
+    let uri = params.textDocument.uri in 
+    let file = remove_file_scheme uri in
     let pos = position_t_to_filepath_position file params.position in
     let (pos1,pos2) = retrieve_acsl_annotations pos in
     let start = Position.create pos1.pos_lnum (pos1.pos_cnum - pos1.pos_bol) in

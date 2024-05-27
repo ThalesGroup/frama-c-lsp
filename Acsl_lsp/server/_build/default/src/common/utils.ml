@@ -154,37 +154,44 @@ let get_logic_vars_list (ast : Cil_types.file) : (logic_info * location) list =
     ) ast.globals;
   !res
 
-(* Function to find the substring starting with '\' and ending with '(' or ' ' *)
+(* Function to find the substring starting with '\' or ' ' and ending with '(' or ' ' *)
 let find_function_call str idx =
+  let is_boundary_char c = c = '\\' || c = ' ' || c = '(' || c = ')' in
   let rec find_start i =
-    if i < 0 || (String.get str i) = ' ' || (String.get str i) = '(' then i + 1
+    if i < 0 || is_boundary_char (String.get str i) then i + 1
     else find_start (i - 1)
   in
   let rec find_end i =
-    if i >= String.length str || (String.get str i) = ' ' || (String.get str i) = '(' then i
+    if i >= String.length str || is_boundary_char (String.get str i) then i
     else find_end (i + 1)
   in
   let start_idx = find_start idx in
   let end_idx = find_end idx in
-  String.sub str start_idx (end_idx - start_idx)
+  let res = String.sub str start_idx (end_idx - start_idx) in 
+  res
+
+let read_line_from_file filename line_number =
+  let ic = open_in filename in
+  let rec read_lines ic current_line =
+    try
+      let line = input_line ic in
+      if current_line = line_number then
+        Some line
+      else
+        read_lines ic (current_line + 1)
+    with
+    | End_of_file ->
+        close_in ic;
+        None
+  in
+  read_lines ic 0
 
 (* Function to retrieve function call at given line and character index *)
 let retrieve_function_call line_number character_index file_name =
-    let chan = open_in file_name in
-    try
-      let rec read_lines current_line_number =
-        let line = input_line chan in
-        if current_line_number = line_number then (
-          let function_call = find_function_call line (character_index - 1) in
-          close_in chan;
-          Some function_call
-        )
-        else read_lines (current_line_number + 1)
-      in
-      read_lines 1
-    with End_of_file ->
-      close_in chan;
-      None 
+  match read_line_from_file file_name line_number with 
+    | Some line -> find_function_call line character_index 
+    | None -> failwith "Line not found" 
+  
 
 let process_annotation g = 
   match g with 
@@ -211,8 +218,9 @@ let process_annotation g =
     Printf.printf "_____Type . :%s\n%!" lti.lt_name
 
 let compare_retrieved_function_name (pos : Filepath.position) fun_name = 
-  let retrieved_fx = get (retrieve_function_call pos.pos_lnum (pos.pos_cnum - pos.pos_bol) 
-  (Filepath.Normalized.to_pretty_string pos.pos_path)) in
+  Printf.printf "FX NAME: %s\n%!" fun_name;
+  let retrieved_fx = retrieve_function_call pos.pos_lnum (pos.pos_cnum - pos.pos_bol) 
+  (Filepath.Normalized.to_pretty_string pos.pos_path) in
   String.compare (retrieved_fx) fun_name
 
 (* todo : change the name of retrieve_acsl_annotations function *)
@@ -223,7 +231,7 @@ let retrieve_acsl_annotations (pos : Filepath.position) : location =
   Filepath.add_symbolic_dir framac_share share;
   Printf.printf "Share path = %s\n%!" (file_str share);
 
-  let start_position = ref None in 
+  let loca = ref None in 
   
   let li_visitor = object 
     inherit Visitor.frama_c_inplace
@@ -235,7 +243,7 @@ let retrieve_acsl_annotations (pos : Filepath.position) : location =
         Printf.printf "\n%!"; *)
         if (compare_retrieved_function_name pos li.l_var_info.lv_name) = 0 then
           begin
-            start_position := Some pred.pred_loc; DoChildren
+            loca := Some pred.pred_loc; DoChildren
           end
         else 
         DoChildren
@@ -245,8 +253,8 @@ let retrieve_acsl_annotations (pos : Filepath.position) : location =
   in
   Visitor.visitFramacFileSameGlobals li_visitor (Ast.get ());
   
-  match !start_position with
-  | Some pos -> pos
+  match !loca with
+  | Some loc -> loc
   | None -> Printf.printf "Location not found\n%!";
     (pos,pos) (* todo : should return a json error instead of result *)
 

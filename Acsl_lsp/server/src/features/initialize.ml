@@ -64,19 +64,8 @@ let initialize (req : RequestMessage.t): Json.json =
           \"documentHighlightProvider\": false,
           \"documentSymbolProvider\": false,
           \"workspaceSymbolProvider\": false,
-          \"codeActionProvider\": {
-            \"codeActionKinds\": [
-              \"quickfix\",
-              \"refactor\",
-              \"refactor.extract\",
-              \"refactor.inline\",
-              \"refactor.rewrite\",
-              \"source.organizeImports\"
-            ]
-          },
-          \"codeLensProvider\": {
-            \"resolveProvider\": false
-          },
+          \"codeActionProvider\": false,
+          \"codeLensProvider\": false,
           \"documentFormattingProvider\": false,
           \"documentRangeFormattingProvider\": false,
           \"documentOnTypeFormattingProvider\": {
@@ -95,50 +84,7 @@ let initialize (req : RequestMessage.t): Json.json =
           },
           \"selectionRangeProvider\": false,
           \"linkedEditingRangeProvider\": false,
-          \"semanticTokensProvider\": {
-            \"legend\": {
-              \"tokenTypes\": [
-                \"namespace\",
-                \"type\",
-                \"class\",
-                \"enum\",
-                \"interface\",
-                \"struct\",
-                \"typeParameter\",
-                \"parameter\",
-                \"variable\",
-                \"property\",
-                \"enumMember\",
-                \"event\",
-                \"function\",
-                \"method\",
-                \"macro\",
-                \"keyword\",
-                \"modifier\",
-                \"comment\",
-                \"string\",
-                \"number\",
-                \"regexp\",
-                \"operator\"
-              ],
-              \"tokenModifiers\": [
-                \"declaration\",
-                \"definition\",
-                \"readonly\",
-                \"static\",
-                \"deprecated\",
-                \"abstract\",
-                \"async\",
-                \"modification\",
-                \"documentation\",
-                \"defaultLibrary\"
-              ]
-            },
-            \"range\": false,
-            \"full\": {
-              \"delta\": false
-            }
-          },
+          \"semanticTokensProvider\": false,
           \"monikerProvider\": false,
           \"callHierarchyProvider\": false,
           \"workspace\": {

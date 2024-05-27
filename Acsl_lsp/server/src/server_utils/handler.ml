@@ -34,7 +34,7 @@ let curr_method = notif.method_ in
 Printf.printf "notification handler\n%!";
 match curr_method with 
 | "initialized" -> 
-  `String "Received initialized notification";
+  `Assoc [("jsonrpc", `String "2.0"); ("method", `String "none"); ("params", `Assoc [])]
 | "exit" -> 
   exit;
 | _ -> `Null
