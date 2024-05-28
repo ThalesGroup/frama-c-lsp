@@ -1,6 +1,6 @@
 (lang dune 3.13)
 (name frama-c-acsl_lsp)
-(sections (lib .) (lib_root ..) (libexec .))
+(sections (lib .) (lib_root ..) (libexec .) (doc ../../doc/frama-c-acsl_lsp))
 (files
  (lib
   (META
@@ -73,9 +73,11 @@
    core/src/testing/run_tests.ml
    core/src/testing/test_find_definition.ml
    core/src/testing/test_json.ml
-   dune-package))
+   dune-package
+   opam))
  (lib_root (frama-c/plugins/acsl_lsp/META))
- (libexec (core/acsl_lsp_lib.cmxs)))
+ (libexec (core/acsl_lsp_lib.cmxs))
+ (doc (README)))
 (library
  (name frama-c-acsl_lsp.core)
  (kind normal)

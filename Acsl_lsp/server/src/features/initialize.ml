@@ -34,7 +34,7 @@ let initialize (req : RequestMessage.t): Json.json =
     let result = InitializeResult.create ~capabilities:capabilities ~serverInfo:serverInfo () in
     ResponseMessage.json_of_t (ResponseMessage.create ~jsonrpc:req.jsonrpc ~id:req.id ?result:(Some (InitializeResult.json_of_t result)) ());*)
 
-    (* todo : default initialize reqult for the moment *)
+    (* todo : default initialize result for the moment *)
     let result = "{
       \"jsonrpc\": \"2.0\",
       \"id\": 0,

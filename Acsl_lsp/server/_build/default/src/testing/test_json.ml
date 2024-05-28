@@ -99,7 +99,7 @@ let test7 () =
       \"jsonrpc\": 2.0,
       \"id\": 1, 
       \"method\": \"textDocument/definition\", 
-      \"params\": {
+      \"result\": {
           \"textDocument\": {
               \"uri\": \"/home/file.h\"
           }, 
