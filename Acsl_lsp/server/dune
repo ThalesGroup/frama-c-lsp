@@ -12,7 +12,7 @@
 
 (library
 	(name acsl_lsp_lib)
-	(public_name frama-c-acsl_lsp.core)
+	(public_name acsl-lsp.core)
 	(flags -open Frama_c_kernel :standard -warn-error "-unused-value-declaration")
 	(libraries 
 		frama-c.kernel
@@ -22,7 +22,7 @@
 
 (plugin
 	(name acsl_lsp)
-	(libraries frama-c-acsl_lsp.core)
+	(libraries acsl-lsp.core)
 	(site (frama-c plugins))
 )
 

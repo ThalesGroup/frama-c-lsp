@@ -1,0 +1,4 @@
+{0 acsl-lsp index}
+{1 Library acsl-lsp.core}
+The entry point of this library is the module:
+{!module-Acsl_lsp_lib}.

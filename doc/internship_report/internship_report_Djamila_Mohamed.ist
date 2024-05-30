@@ -1,5 +1,5 @@
 % makeindex style file created by the glossaries package
-% for document 'internship_report_Djamila_Mohamed' on 2024-4-4
+% for document 'internship_report_Djamila_Mohamed' on 2024-5-28
 actual '?'
 encap '|'
 level '!'
@@ -27,3 +27,5 @@ heading_suffix "\}\\relax \\glsresetentrylist "
 symhead_positive "glssymbols"
 numhead_positive "glsnumbers"
 page_compositor "."
+suffix_2p ""
+suffix_3p ""

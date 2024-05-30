@@ -11,3 +11,9 @@ module Testing = Self.False
     let help = "This option generates the test results file 'test_results.txt'."
 end)
 
+(*
+module FramacSharePath = Self.False 
+(struct
+
+)
+*)

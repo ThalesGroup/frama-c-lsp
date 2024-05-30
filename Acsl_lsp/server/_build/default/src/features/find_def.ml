@@ -44,45 +44,36 @@ let retrieve_location (pos : Filepath.position) =
       method !vglob_aux g =
         match g with 
         | GEnumTagDecl (ei,loc) -> 
-          Printf.printf "Enum Tag Decl : %s\n%!" ei.eorig_name;
           if (compare_retrieved_function_name pos ei.eorig_name) = 0 then
             loca := Some loc;
           DoChildren
         | GEnumTag (ei,loc) -> 
-          Printf.printf "Enum Tag : %s\n%!" ei.eorig_name;
           if (compare_retrieved_function_name pos ei.eorig_name) = 0 then
             loca := Some loc;
           DoChildren
         | GCompTagDecl (ci,loc) -> 
-          Printf.printf "Comp Tag Decl : %s\n%!" ci.corig_name;
           if (compare_retrieved_function_name pos ci.corig_name) = 0 then
             loca := Some loc;
           DoChildren
         | GCompTag (ci,loc) -> 
-          Printf.printf "Comp Tag : %s\n%!" ci.corig_name;
           if (compare_retrieved_function_name pos ci.corig_name) = 0 then
             loca := Some loc;
           DoChildren
         | GType (ti,loc) -> 
-          Printf.printf "Type : %s\n%!" ti.torig_name;
           if (compare_retrieved_function_name pos ti.torig_name) = 0 then
             loca := Some loc;
           DoChildren
         | GVar (vi, _, loc) -> 
-          Printf.printf "Var name : %s\n%!" vi.vname;
           if (compare_retrieved_function_name pos vi.vname) = 0 then
             loca := Some loc;
           DoChildren
         | GVarDecl (vi, loc) -> 
-          Printf.printf "Var decl name : %s\n%!" vi.vname;
           if (compare_retrieved_function_name pos vi.vname) = 0 then
             loca := Some loc;
           DoChildren
-        | GText (s) -> 
-          Printf.printf "Text : %s\n%!" s;
+        | GText _ -> 
           DoChildren
         | GFun (fd,loc) -> 
-          Printf.printf "Fun : %s\n%!" fd.svar.vname;
           if (compare_retrieved_function_name pos fd.svar.vname;) = 0 then
             loca := Some loc;
           DoChildren
@@ -92,23 +83,16 @@ let retrieve_location (pos : Filepath.position) =
             loca := Some loc;
           DoChildren
         | GAsm (s,loc) -> 
-          Printf.printf "Asm : %s\n%!" s;
           if (compare_retrieved_function_name pos s) = 0 then
             loca := Some loc;
           DoChildren
         | GPragma (_,_) -> 
-          Printf.printf "Pragma at : \n%!";
           DoChildren
         | GAnnot (_, _) -> 
           Printf.printf "Annot : \n%!";
           DoChildren
       end
     in
-    let framac_share = "/home/user/.opam/4.13.1_fc28/share/frama-c/share" in
-    Kernel.Share.set (Filepath.Normalized.of_string framac_share);
-    let share = Kernel.Share.get () in
-    Filepath.add_symbolic_dir framac_share share;
-    Printf.printf "Share path = %s\n%!" (file_str share);
     Visitor.visitFramacFileSameGlobals glob_visitor (Ast.get ());
 
   (*let llabel_visitor = object 
@@ -131,10 +115,9 @@ let retrieve_location (pos : Filepath.position) =
             begin
               let target_loc = Globals.Syntactic_search.find_in_scope li.l_var_info.lv_name Global in
               match target_loc with 
-              | Some x -> Cil_printer.pp_location Format.std_formatter x.vdecl; DoChildren
+              | Some x -> Cil_printer.pp_location Format.std_formatter x.vdecl; let loc = x.vdecl in loca := Some loc ; DoChildren
               | None -> ();
               Format.pp_print_flush Format.std_formatter ();
-              Printf.printf "\nEND OF TARGET LOC\n%!";
               DoChildren
             end
           

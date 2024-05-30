@@ -1,9 +1,10 @@
 (lang dune 3.13)
 (using dune_site 0.1)
 
-(name frama-c-acsl_lsp)
+(name acsl-lsp)
 
-(generate_opam_files true)
+; 
+(generate_opam_files false)
 
  (source
  (github username/reponame))
@@ -17,7 +18,7 @@
 (documentation https://url/to/documentation)
 
 (package
- (name frama-c-acsl_lsp)
+ (name acsl-lsp)
  (synopsis "Language Server Protocol support for ACSL/C language.")
  ;(description "A longer description")
  (depends ocaml dune)

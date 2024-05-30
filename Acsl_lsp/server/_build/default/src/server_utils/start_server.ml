@@ -1,5 +1,4 @@
 open Unix
-open Queue
 
 let send_jsonrpc_response client_sock response =
   let response_str = Printf.sprintf "Content-Length: %d\r\n\r\n%s" (String.length response) response in
@@ -27,10 +26,8 @@ let listen () =
   setsockopt server_sock SO_REUSEADDR true;
 
   bind server_sock addr;
-  listen server_sock 50;
+  listen server_sock 3;
   Printf.printf "Server listening on port %d\n%!" server_port;
-
-  let rq_queue = create () in 
 
   let (client_sock, _) = accept server_sock in
   while true do
@@ -41,11 +38,8 @@ let listen () =
 
     (* Process the received request data *)
     Printf.printf "Received from client: %s\n%!" (Bytes.to_string !request_data);
-    (*let server_response = "{\"jsonrpc\": \"2.0\", \"result\": \"OK\", \"id\": 0}" in
-    send_jsonrpc_response client_sock server_response;*)
     
     let request_str = (Bytes.to_string !request_data) in
-    add request_data rq_queue;
 
     (* Send response *)
     let response = Handler.handle request_str in

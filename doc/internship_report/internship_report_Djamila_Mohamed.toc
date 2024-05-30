@@ -1,15 +1,15 @@
 \contentsline {chapter}{\chapternumberline {1}The company}{2}{chapter.1}%
-\contentsline {section}{\numberline {1.1}DIS\_IBS branch}{2}{section.1.1}%
+\contentsline {section}{\numberline {1.1}DIS-IBS branch}{2}{section.1.1}%
 \contentsline {section}{\numberline {1.2}Organization chart}{2}{section.1.2}%
 \contentsline {chapter}{\chapternumberline {2}Topic of the internship}{2}{chapter.2}%
 \contentsline {chapter}{\chapternumberline {3}Study of a solution for code editor users}{3}{chapter.3}%
 \contentsline {section}{\numberline {3.1}Background}{3}{section.3.1}%
 \contentsline {section}{\numberline {3.2}Language Servers}{4}{section.3.2}%
-\contentsline {subsection}{\numberline {3.2.1}Improved Performance}{4}{subsection.3.2.1}%
-\contentsline {subsection}{\numberline {3.2.2}Language Agnostic}{4}{subsection.3.2.2}%
+\contentsline {subsection}{\numberline {3.2.1}Enhanced Performance}{4}{subsection.3.2.1}%
+\contentsline {subsection}{\numberline {3.2.2}Language Agnosticism}{4}{subsection.3.2.2}%
 \contentsline {subsection}{\numberline {3.2.3}Centralized Maintenance}{4}{subsection.3.2.3}%
 \contentsline {subsection}{\numberline {3.2.4}Extensibility}{5}{subsection.3.2.4}%
-\contentsline {subsection}{\numberline {3.2.5}Examples of language servers}{5}{subsection.3.2.5}%
+\contentsline {subsection}{\numberline {3.2.5}Examples of Language Servers}{5}{subsection.3.2.5}%
 \contentsline {chapter}{\chapternumberline {4}Frama-C plugin development}{5}{chapter.4}%
 \contentsline {chapter}{\chapternumberline {5}Future work}{5}{chapter.5}%
 \contentsline {chapter}{\chapternumberline {6}Bibliography}{5}{chapter.6}%

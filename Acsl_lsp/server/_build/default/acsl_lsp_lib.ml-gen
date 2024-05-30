@@ -6,9 +6,6 @@ module Exit = Acsl_lsp_lib__Exit
 (** @canonical Acsl_lsp_lib.Find_def *)
 module Find_def = Acsl_lsp_lib__Find_def
 
-(** @canonical Acsl_lsp_lib.Find_def_old *)
-module Find_def_old = Acsl_lsp_lib__Find_def_old
-
 (** @canonical Acsl_lsp_lib.Handler *)
 module Handler = Acsl_lsp_lib__Handler
 
@@ -17,9 +14,6 @@ module Initialize = Acsl_lsp_lib__Initialize
 
 (** @canonical Acsl_lsp_lib.Jsonable *)
 module Jsonable = Acsl_lsp_lib__Jsonable
-
-(** @canonical Acsl_lsp_lib.Lsp_state *)
-module Lsp_state = Acsl_lsp_lib__Lsp_state
 
 (** @canonical Acsl_lsp_lib.Run *)
 module Run = Acsl_lsp_lib__Run

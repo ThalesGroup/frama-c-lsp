@@ -9,8 +9,7 @@
 			"runtimeExecutable": "${execPath}",
 			"args": ["--extensionDevelopmentPath=${workspaceRoot}"],
 			"outFiles": [
-				"${workspaceRoot}/client/out/**/*.js",
-				"${workspaceRoot}/server/out/**/*.js"
+				"${workspaceRoot}/out/**/*.js"
 			],
 			"autoAttachChildProcesses": true,
 			"preLaunchTask": {
@@ -25,10 +24,10 @@
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"--extensionDevelopmentPath=${workspaceRoot}",
-				"--extensionTestsPath=${workspaceRoot}/client/out/test/index",
-				"${workspaceRoot}/client/testFixture"
+				"--extensionTestsPath=${workspaceRoot}/out/test/index",
+				"${workspaceRoot}/testFixture"
 			],
-			"outFiles": ["${workspaceRoot}/client/out/test/**/*.js"]
+			"outFiles": ["${workspaceRoot}/out/test/**/*.js"]
 		}
 	]
 }
