@@ -2,7 +2,10 @@ open Types
 open Cil_types 
 
 let get = Option.get 
-let file_str = Filepath.Normalized.to_pretty_string
+let file_str f = 
+  let dir_list = [f] in 
+  let dir_string = Filepath.Normalized.to_string_list dir_list in 
+  List.nth dir_string 0
 
 let read_line_at_number (filename : string) (line_number : int) : string option =
   let file = open_in filename in
@@ -169,6 +172,13 @@ let find_word str idx =
   let res = String.sub str start_idx (end_idx - start_idx) in 
   res
 
+let find_word2 str ch =
+  let r = Re.Str.regexp {|\b[_A-Za-z0-9]+\b|} in
+  (* searches backward to find first character index of matched string *)
+  ignore (Re.Str.search_backward r str ch); 
+  ignore (Re.Str.match_end ());
+  Re.Str.matched_string str
+
 let read_line_from_file filename line_number =
   let ic = open_in filename in
   let rec read_lines ic current_line =
@@ -188,9 +198,13 @@ let read_line_from_file filename line_number =
 (* Function to retrieve function call at given line and character index *)
 let retrieve_function_call line_number character_index file_name =
   match read_line_from_file file_name line_number with 
-    | Some line -> find_word line character_index 
+    | Some line -> find_word2 line character_index 
     | None -> failwith "Line not found" 
   
+let retrieve_function_call2 line_number file_name =
+  match read_line_from_file file_name line_number with 
+    | Some line -> find_word2 line 
+    | None -> failwith "Line not found" 
 
 let get_annot_type g = 
   match g with 

@@ -32,6 +32,9 @@
    core/acsl_lsp_lib__Run_tests.cmi
    core/acsl_lsp_lib__Run_tests.cmt
    core/acsl_lsp_lib__Run_tests.cmx
+   core/acsl_lsp_lib__Sel_server.cmi
+   core/acsl_lsp_lib__Sel_server.cmt
+   core/acsl_lsp_lib__Sel_server.cmx
    core/acsl_lsp_lib__Settings.cmi
    core/acsl_lsp_lib__Settings.cmt
    core/acsl_lsp_lib__Settings.cmx
@@ -61,6 +64,7 @@
    core/src/lsp_spec/types.mli
    core/src/run.ml
    core/src/server_utils/handler.ml
+   core/src/server_utils/sel_server.ml
    core/src/server_utils/start_server.ml
    core/src/testing/run_tests.ml
    core/src/testing/test_find_definition.ml
@@ -75,7 +79,7 @@
  (archives (byte core/acsl_lsp_lib.cma) (native core/acsl_lsp_lib.cmxa))
  (plugins (byte core/acsl_lsp_lib.cma) (native core/acsl_lsp_lib.cmxs))
  (native_archives core/acsl_lsp_lib.a)
- (requires frama-c.kernel)
+ (requires frama-c.kernel re sel)
  (main_module_name Acsl_lsp_lib)
  (modes byte native)
  (modules
@@ -116,6 +120,12 @@
       (obj_name acsl_lsp_lib__Run_tests)
       (visibility public)
       (source (path Run_tests) (impl (path core/src/testing/run_tests.ml))))
+     (module
+      (obj_name acsl_lsp_lib__Sel_server)
+      (visibility public)
+      (source
+       (path Sel_server)
+       (impl (path core/src/server_utils/sel_server.ml))))
      (module
       (obj_name acsl_lsp_lib__Settings)
       (visibility public)

@@ -1,6 +1,5 @@
 open Types
 open Utils
-open Printer_tag
   
 (** 
     Description : 
@@ -14,14 +13,12 @@ open Printer_tag
 *)
 
 let retrieve_location (pos : Filepath.position) =
-  let framac_share = "/home/user/.opam/4.13.1_fc28/share/frama-c/share" in (* todo : find user's frama-c share path : ?register option in plugin and launch with $(frama-c -print-share-path)*)
-  Kernel.Share.set (Filepath.Normalized.of_string framac_share);
-  let share = Kernel.Share.get () in
-  Filepath.add_symbolic_dir framac_share share;
-  Printf.printf "Share path = %s\n%!" (file_str share);
-
   let loca = ref None in 
-  
+
+  let fx = retrieve_function_call pos.pos_lnum (pos.pos_cnum - pos.pos_bol) (file_str pos.pos_path) in  
+  if (Logic_lexer.is_acsl_keyword fx) = true then Printf.printf "IS ACSL KEYWORD %s\n%!" fx else 
+    Printf.printf "IS NOT ACSL KEYWORD %s\n%!" fx;
+
   let li_visitor = object 
     inherit Visitor.frama_c_inplace
     method !vlogic_info_use li = 
@@ -78,7 +75,6 @@ let retrieve_location (pos : Filepath.position) =
             loca := Some loc;
           DoChildren
         | GFunDecl (_,vi,loc) -> 
-          Printf.printf "Fun Decl. : %s\n%!" vi.vname;
           if (compare_retrieved_function_name pos vi.vname) = 0 then
             loca := Some loc;
           DoChildren
@@ -89,22 +85,10 @@ let retrieve_location (pos : Filepath.position) =
         | GPragma (_,_) -> 
           DoChildren
         | GAnnot (_, _) -> 
-          Printf.printf "Annot : \n%!";
           DoChildren
       end
     in
     Visitor.visitFramacFileSameGlobals glob_visitor (Ast.get ());
-
-  (*let llabel_visitor = object 
-    inherit Visitor.frama_c_inplace
-      method !vlogic_label ll =
-        match ll with 
-        | FormalLabel x -> Printf.printf "Logic label : %s\n%!" x; DoChildren
-        | _ -> DoChildren
-      end
-    in
-  Visitor.visitFramacFileSameGlobals llabel_visitor (Ast.get ());*)
-
 
   let pred_visitor = object 
     inherit Visitor.frama_c_inplace
@@ -126,109 +110,27 @@ let retrieve_location (pos : Filepath.position) =
     end 
   in
   Visitor.visitFramacFileSameGlobals pred_visitor (Ast.get ());
+
+  let vrbl_visitor = object 
+    inherit Visitor.frama_c_inplace
+    method! vvdec v = 
+      if (String.equal fx v.vname) = true then 
+        begin
+          loca := Some v.vdecl; DoChildren
+        end
+      else
+      SkipChildren;
+    end 
+  in
+  Visitor.visitFramacFileSameGlobals vrbl_visitor (Ast.get ());
+
+  if (Logic_lexer.is_acsl_keyword fx) = true then Printf.printf "IS ACSL KEYWORD %s\n%!" fx else 
+    Printf.printf "IS NOT ACSL KEYWORD %s\n%!" fx;
+    
   match !loca with
   | Some loc -> loc
   | None -> (pos,pos) 
 
-  (*let term_visitor = object 
-    inherit Visitor.frama_c_inplace
-    method !vterm vt = 
-      match vt.term_node with 
-      | Tapp (li,_,_) -> 
-        let loc = vt.term_loc in
-        Printf.printf "\nTERM retrieved : %s, original : %s \n%!" (get (retrieve_function_call pos.pos_lnum (pos.pos_cnum - pos.pos_bol) (file_str pos.pos_path))) li.l_var_info.lv_name; 
-        Cil_printer.pp_location Format.std_formatter loc;
-        Format.pp_print_flush Format.std_formatter ();
-        if (compare_retrieved_function_name pos li.l_var_info.lv_name) = 0
-        then 
-          DoChildren
-        else
-          DoChildren
-      | _ -> 
-      DoChildren
-    end 
-  in 
-  Visitor.visitFramacFile term_visitor (Ast.get ());*)
-  (* Locate the function containing the given position *)
-  (*let found = ref None in
-  let annotations = ref [] in
-  let do_annot (emitter : Emitter.t) (code_annot : code_annotation) : unit = 
-    ignore emitter;
-    annotations := !annotations@[code_annot];
-  in
-  let visitor = object
-    inherit Visitor.frama_c_inplace
-    method! vstmt_aux stmt =
-      let (start,end_) = Cil_datatype.Stmt.loc stmt in
-      if (pos_is_within_range pos (start, end_)) = true then
-      Annotations.iter_code_annot do_annot stmt;
-      DoChildren
-  end
-  in
-  Visitor.visitFramacFileSameGlobals visitor (Ast.get ());*)
-  (* Example usage
-  let _ =
-    match retrieve_function_call 134 44 "tests/math.h" with
-    | Some function_call -> printf "Function call found: %s\n" function_call
-    | None -> printf "Function call not found\n"  *)
-  
-
-  (*let instr_visitor = object 
-    inherit Visitor.frama_c_inplace
-    method !vinst vi = 
-      match vi with 
-      | Code_annot (_, loc) -> 
-        Cil_printer.pp_location Format.std_formatter loc;
-        Printf.printf "\n%!";
-        DoChildren
-      | _ -> 
-      DoChildren
-    end 
-  in
-  Visitor.visitFramacFileSameGlobals instr_visitor (Ast.get ());*)
-
-
-  (*let lv_decl_visitor = object 
-    inherit Visitor.frama_c_inplace
-    method !vlogic_var_decl lv = 
-      Printf.printf "logic var decl = %s\n%!" lv.lv_name; DoChildren
-    end 
-  in
-  Visitor.visitFramacFileSameGlobals lv_decl_visitor (Ast.get ());*)
-
-  (*let lval_visitor = object 
-    inherit Visitor.frama_c_inplace
-    method !vlval lval = 
-      Cil_printer.pp_lval Format.std_formatter lval; Printf.printf "\n%!"; DoChildren
-    end 
-  in
-  Visitor.visitFramacFileSameGlobals lval_visitor (Ast.get ());*)
-
-  (*let var_visitor = object inherit 
-    Visitor.frama_c_inplace 
-    method !vvrbl var = 
-      match var with 
-      | _ -> 
-        (*let (start, end_) = var.vdecl in 
-        if (pos_is_within_range pos (start, end_)) = true then *)
-        if var.vdefined = true then
-          Printf.printf "var name : %s\n%!" var.vname;
-        DoChildren
-  end
-  in
-  Visitor.visitFramacFileSameGlobals var_visitor (Ast.get ());*)
-  
-
-let process_global (params : DefinitionParams.t) (g : Cil_types.global) =
-  ignore g;
-  let temp_uri = params.textDocument.uri in 
-  let uri = remove_file_scheme temp_uri in
-  let curr_pos = position_t_to_filepath_position uri params.position in
-  let target_loc = Printer_tag.loc_to_localizable ?precise_col:(Some true) curr_pos in
-  (*let vinfo =  Printer_tag.varinfo_of_localizable target_loc in *)
-  match target_loc with 
-  | Some loc -> Printf.printf "%s\n%!" (label loc)
-  | None -> Printf.printf "No decl\n%!"
 
 let find_def (file : Cil_types.file) (req : RequestMessage.t) : Json.json = 
     print_predicates file;
@@ -237,17 +139,17 @@ let find_def (file : Cil_types.file) (req : RequestMessage.t) : Json.json =
     let uri = params.textDocument.uri in 
     let file = remove_file_scheme uri in
     let pos = position_t_to_filepath_position file params.position in
-    let (pos1, pos2) = retrieve_location pos in 
-    (* todo : is it necessary to display an error if a definition can't be found for the clicked position 
-       a simple 'ctrl' shouldn't raise an error, error should be raised only if ...?
-      ?*)
+
+    let (pos1, pos2) = retrieve_location pos in
+
+    (* todo : should send little "No definition found for x" popup *)
     if pos1 = pos2 then 
-      ResponseMessage.json_of_t (ResponseMessage.create ~jsonrpc:"2.0" ~id:req.id ~error:(ResponseError.create ~code:(-32803) ~message:"Definition not found." ()) ())
-    else  
+      ResponseMessage.json_of_t (ResponseMessage.create ~jsonrpc:"2.0" ~id:req.id ~result:`Null ())
+    else
       ResponseMessage.json_of_t (ResponseMessage.create ~jsonrpc:"2.0" ~id:req.id ~result:
         (Location.json_of_t
           (Location.create 
-            (Filepath.Normalized.to_pretty_string pos1.pos_path)
+            ((file_str pos1.pos_path) |> Filepath.normalize)
             (Range.create (Position.create pos1.pos_lnum (pos1.pos_cnum - pos1.pos_bol))
               (Position.create pos2.pos_lnum (pos2.pos_cnum - pos2.pos_bol))
             )

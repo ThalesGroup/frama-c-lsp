@@ -1,1 +1,1 @@
-src/features/initialize.ml: Json RequestMessage Types Utils
+src/features/initialize.ml: Fc_config Filepath Json Kernel Printf RequestMessage ResponseError ResponseMessage Types Utils

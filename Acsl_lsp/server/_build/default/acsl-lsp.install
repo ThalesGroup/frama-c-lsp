@@ -28,6 +28,9 @@ lib: [
   "_build/install/default/lib/acsl-lsp/core/acsl_lsp_lib__Run_tests.cmi" {"core/acsl_lsp_lib__Run_tests.cmi"}
   "_build/install/default/lib/acsl-lsp/core/acsl_lsp_lib__Run_tests.cmt" {"core/acsl_lsp_lib__Run_tests.cmt"}
   "_build/install/default/lib/acsl-lsp/core/acsl_lsp_lib__Run_tests.cmx" {"core/acsl_lsp_lib__Run_tests.cmx"}
+  "_build/install/default/lib/acsl-lsp/core/acsl_lsp_lib__Sel_server.cmi" {"core/acsl_lsp_lib__Sel_server.cmi"}
+  "_build/install/default/lib/acsl-lsp/core/acsl_lsp_lib__Sel_server.cmt" {"core/acsl_lsp_lib__Sel_server.cmt"}
+  "_build/install/default/lib/acsl-lsp/core/acsl_lsp_lib__Sel_server.cmx" {"core/acsl_lsp_lib__Sel_server.cmx"}
   "_build/install/default/lib/acsl-lsp/core/acsl_lsp_lib__Settings.cmi" {"core/acsl_lsp_lib__Settings.cmi"}
   "_build/install/default/lib/acsl-lsp/core/acsl_lsp_lib__Settings.cmt" {"core/acsl_lsp_lib__Settings.cmt"}
   "_build/install/default/lib/acsl-lsp/core/acsl_lsp_lib__Settings.cmx" {"core/acsl_lsp_lib__Settings.cmx"}
@@ -57,6 +60,7 @@ lib: [
   "_build/install/default/lib/acsl-lsp/core/src/lsp_spec/types.mli" {"core/src/lsp_spec/types.mli"}
   "_build/install/default/lib/acsl-lsp/core/src/run.ml" {"core/src/run.ml"}
   "_build/install/default/lib/acsl-lsp/core/src/server_utils/handler.ml" {"core/src/server_utils/handler.ml"}
+  "_build/install/default/lib/acsl-lsp/core/src/server_utils/sel_server.ml" {"core/src/server_utils/sel_server.ml"}
   "_build/install/default/lib/acsl-lsp/core/src/server_utils/start_server.ml" {"core/src/server_utils/start_server.ml"}
   "_build/install/default/lib/acsl-lsp/core/src/testing/run_tests.ml" {"core/src/testing/run_tests.ml"}
   "_build/install/default/lib/acsl-lsp/core/src/testing/test_find_definition.ml" {"core/src/testing/test_find_definition.ml"}

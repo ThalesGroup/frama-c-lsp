@@ -1,7 +1,7 @@
 package "core" (
   directory = "core"
   description = ""
-  requires = "frama-c.kernel"
+  requires = "frama-c.kernel re sel"
   archive(byte) = "acsl_lsp_lib.cma"
   archive(native) = "acsl_lsp_lib.cmxa"
   plugin(byte) = "acsl_lsp_lib.cma"

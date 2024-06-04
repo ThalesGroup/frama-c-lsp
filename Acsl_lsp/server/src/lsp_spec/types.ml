@@ -1609,3 +1609,74 @@ module Command = struct
     | _ -> raise (Invalid_argument "Invalid JSON format for Command")
 end
 
+module LinkedEditingRangeParams = struct
+  type t = {
+    textDocument : TextDocumentIdentifier.t;
+    position : Position.t;
+    work_done_token : ProgressToken.t option
+  }
+
+  let json_of_t (params : t) : Json.t =
+    `Assoc [
+      "textDocument", TextDocumentIdentifier.json_of_t params.textDocument;
+      "position", Position.json_of_t params.position;
+      "workDoneToken", (match params.work_done_token with
+                        | Some token -> ProgressToken.json_of_t token
+                        | None -> `Null)
+    ]
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let textDocument =
+        match List.assoc_opt "textDocument" fields with
+        | Some json_doc -> TextDocumentIdentifier.t_of_json json_doc
+        | _ -> raise (Invalid_argument "Invalid JSON format for LinkedEditingRangeParams: textDocument")
+      in
+      let position =
+        match List.assoc_opt "position" fields with
+        | Some json_pos -> Position.t_of_json json_pos
+        | _ -> raise (Invalid_argument "Invalid JSON format for LinkedEditingRangeParams: position")
+      in
+      let work_done_token =
+        match List.assoc_opt "workDoneToken" fields with
+        | Some `Null -> None
+        | Some json_token -> Some (ProgressToken.t_of_json json_token)
+        | None -> None
+      in
+      { textDocument; position; work_done_token }
+    | _ -> raise (Invalid_argument "Invalid JSON format for LinkedEditingRangeParams")
+end
+
+module LinkedEditingRanges = struct
+  type t = {
+    ranges: Range.t list;
+    wordPattern: string option
+  }
+
+  let json_of_t (ranges : t) : Json.t =
+    `Assoc [
+      "ranges", `List (List.map Range.json_of_t ranges.ranges);
+      "wordPattern", (match ranges.wordPattern with
+                      | Some pattern -> `String pattern
+                      | None -> `Null)
+    ]
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let ranges =
+        match List.assoc_opt "ranges" fields with
+        | Some `List json_ranges -> List.map Range.t_of_json json_ranges
+        | _ -> raise (Invalid_argument "Invalid JSON format for LinkedEditingRanges: ranges")
+      in
+      let wordPattern =
+        match List.assoc_opt "wordPattern" fields with
+        | Some `Null -> None
+        | Some `String pattern -> Some pattern
+        | None -> None
+        | _ -> raise (Invalid_argument "Invalid JSON format for LinkedEditingRanges: wordPattern")
+      in
+      { ranges; wordPattern }
+    | _ -> raise (Invalid_argument "Invalid JSON format for LinkedEditingRanges")
+end

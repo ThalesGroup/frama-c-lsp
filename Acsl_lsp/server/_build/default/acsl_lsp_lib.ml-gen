@@ -21,6 +21,9 @@ module Run = Acsl_lsp_lib__Run
 (** @canonical Acsl_lsp_lib.Run_tests *)
 module Run_tests = Acsl_lsp_lib__Run_tests
 
+(** @canonical Acsl_lsp_lib.Sel_server *)
+module Sel_server = Acsl_lsp_lib__Sel_server
+
 (** @canonical Acsl_lsp_lib.Settings *)
 module Settings = Acsl_lsp_lib__Settings
 

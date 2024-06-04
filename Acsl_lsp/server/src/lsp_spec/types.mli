@@ -440,3 +440,22 @@ module Command : sig
   }
   include Jsonable.B with type t := t
 end
+
+module LinkedEditingRangeParams : sig
+  type t = {
+    textDocument : TextDocumentIdentifier.t;
+    position : Position.t;
+    work_done_token : ProgressToken.t option
+  }
+  include Jsonable.B with type t := t
+
+end
+
+module LinkedEditingRanges : sig
+  type t = {
+    ranges: Range.t list;
+    wordPattern: string option
+  }
+  include Jsonable.B with type t := t
+
+end

@@ -6,3 +6,4 @@ if [[ "$(pwd)" != "$HOME/git/L1/T0304764/acsl_lsp/Acsl_lsp/server" ]]; then
 fi
 echo "run.sh : Frama-c plug-in launched"
 dune exec -- frama-c
+
