@@ -16,8 +16,6 @@
 	(flags -open Frama_c_kernel :standard -warn-error "-unused-value-declaration")
 	(libraries 
 		frama-c.kernel
-		re
-		sel
 	)
 )
 

@@ -5,15 +5,14 @@ module Self = Plugin.Register
   let help = "activates lsp support for acsl/c language"
 end)
 
+module Enabled = Self.False
+    (struct
+      let option_name = "-acsl"
+      let help = ""
+    end)
+
 module Testing = Self.False
 (struct
     let option_name = "-enable_tests"
-    let help = "This option generates the test results file 'test_results.txt'."
+    let help = "Runs tests."
 end)
-
-(*
-module FramacSharePath = Self.False 
-(struct
-
-)
-*)

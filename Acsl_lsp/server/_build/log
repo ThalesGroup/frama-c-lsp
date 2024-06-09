@@ -1,4 +1,4 @@
-# dune exec -- frama-c
+# dune build
 # OCAMLPARAM: unset
 # Shared cache: disabled
 # Shared cache location: /home/user/.cache/dune/db
@@ -15,7 +15,9 @@
 #      map
 #        { "INSIDE_DUNE" :
 #            "/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server/_build/default"
+#        ; "OCAML_COLOR" : "always"
+#        ; "OPAMCOLOR" : "always"
 #        }
 #  ; instrument_with = []
 #  }
-$ /home/user/.opam/4.13.1_fc28/bin/ocamlc.opt -config > /tmp/dune_0101b3_output
+$ /home/user/.opam/4.13.1_fc28/bin/ocamlc.opt -config > /tmp/dune_dc47fa_output

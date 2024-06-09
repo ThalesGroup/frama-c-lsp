@@ -11,9 +11,6 @@
    core/acsl_lsp_lib.cmx
    core/acsl_lsp_lib.cmxa
    core/acsl_lsp_lib.ml
-   core/acsl_lsp_lib__Exit.cmi
-   core/acsl_lsp_lib__Exit.cmt
-   core/acsl_lsp_lib__Exit.cmx
    core/acsl_lsp_lib__Find_def.cmi
    core/acsl_lsp_lib__Find_def.cmt
    core/acsl_lsp_lib__Find_def.cmx
@@ -32,21 +29,18 @@
    core/acsl_lsp_lib__Run_tests.cmi
    core/acsl_lsp_lib__Run_tests.cmt
    core/acsl_lsp_lib__Run_tests.cmx
-   core/acsl_lsp_lib__Sel_server.cmi
-   core/acsl_lsp_lib__Sel_server.cmt
-   core/acsl_lsp_lib__Sel_server.cmx
    core/acsl_lsp_lib__Settings.cmi
    core/acsl_lsp_lib__Settings.cmt
    core/acsl_lsp_lib__Settings.cmx
    core/acsl_lsp_lib__Start_server.cmi
    core/acsl_lsp_lib__Start_server.cmt
    core/acsl_lsp_lib__Start_server.cmx
+   core/acsl_lsp_lib__Temp.cmi
+   core/acsl_lsp_lib__Temp.cmt
+   core/acsl_lsp_lib__Temp.cmx
    core/acsl_lsp_lib__Test_find_definition.cmi
    core/acsl_lsp_lib__Test_find_definition.cmt
    core/acsl_lsp_lib__Test_find_definition.cmx
-   core/acsl_lsp_lib__Test_json.cmi
-   core/acsl_lsp_lib__Test_json.cmt
-   core/acsl_lsp_lib__Test_json.cmx
    core/acsl_lsp_lib__Types.cmi
    core/acsl_lsp_lib__Types.cmt
    core/acsl_lsp_lib__Types.cmti
@@ -56,7 +50,6 @@
    core/acsl_lsp_lib__Utils.cmx
    core/src/common/settings.ml
    core/src/common/utils.ml
-   core/src/features/exit.ml
    core/src/features/find_def.ml
    core/src/features/initialize.ml
    core/src/lsp_spec/jsonable.ml
@@ -64,12 +57,12 @@
    core/src/lsp_spec/types.mli
    core/src/run.ml
    core/src/server_utils/handler.ml
-   core/src/server_utils/sel_server.ml
    core/src/server_utils/start_server.ml
+   core/src/server_utils/temp.ml
    core/src/testing/run_tests.ml
    core/src/testing/test_find_definition.ml
-   core/src/testing/test_json.ml
-   dune-package))
+   dune-package
+   opam))
  (lib_root (frama-c/plugins/acsl_lsp/META))
  (libexec (core/acsl_lsp_lib.cmxs))
  (doc (README)))
@@ -79,7 +72,7 @@
  (archives (byte core/acsl_lsp_lib.cma) (native core/acsl_lsp_lib.cmxa))
  (plugins (byte core/acsl_lsp_lib.cma) (native core/acsl_lsp_lib.cmxs))
  (native_archives core/acsl_lsp_lib.a)
- (requires frama-c.kernel re sel)
+ (requires frama-c.kernel)
  (main_module_name Acsl_lsp_lib)
  (modes byte native)
  (modules
@@ -92,10 +85,6 @@
      (source (path Acsl_lsp_lib) (impl (path core/acsl_lsp_lib.ml-gen))))
     (name Acsl_lsp_lib)
     (modules
-     (module
-      (obj_name acsl_lsp_lib__Exit)
-      (visibility public)
-      (source (path Exit) (impl (path core/src/features/exit.ml))))
      (module
       (obj_name acsl_lsp_lib__Find_def)
       (visibility public)
@@ -121,12 +110,6 @@
       (visibility public)
       (source (path Run_tests) (impl (path core/src/testing/run_tests.ml))))
      (module
-      (obj_name acsl_lsp_lib__Sel_server)
-      (visibility public)
-      (source
-       (path Sel_server)
-       (impl (path core/src/server_utils/sel_server.ml))))
-     (module
       (obj_name acsl_lsp_lib__Settings)
       (visibility public)
       (source (path Settings) (impl (path core/src/common/settings.ml))))
@@ -137,15 +120,15 @@
        (path Start_server)
        (impl (path core/src/server_utils/start_server.ml))))
      (module
+      (obj_name acsl_lsp_lib__Temp)
+      (visibility public)
+      (source (path Temp) (impl (path core/src/server_utils/temp.ml))))
+     (module
       (obj_name acsl_lsp_lib__Test_find_definition)
       (visibility public)
       (source
        (path Test_find_definition)
        (impl (path core/src/testing/test_find_definition.ml))))
-     (module
-      (obj_name acsl_lsp_lib__Test_json)
-      (visibility public)
-      (source (path Test_json) (impl (path core/src/testing/test_json.ml))))
      (module
       (obj_name acsl_lsp_lib__Types)
       (visibility public)

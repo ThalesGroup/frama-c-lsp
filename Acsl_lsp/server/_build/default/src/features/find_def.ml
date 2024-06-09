@@ -1,30 +1,25 @@
-open Types
-open Utils
-  
 (** 
     Description : 
     Module for Go To Definition feature of the Language Server Protocol.
-    The main function here is find_def defined in Utils.
 
     Version : 1.0
-    - Finds the definition of an ACSL logic function (called in the source code).
-    - Only finds frama_c builtin(?) predicates (valid_read_string, valid_string, minimum, maximum, ...)
+    - Finds frama_c builtin(?) predicates (valid_read_string, valid_string, minimum, maximum, ...)
+    - Finds C function, type definitions and variable declarations
 
 *)
 
+(* todo : should send *)
 let retrieve_location (pos : Filepath.position) =
   let loca = ref None in 
 
-  let fx = retrieve_function_call pos.pos_lnum (pos.pos_cnum - pos.pos_bol) (file_str pos.pos_path) in  
-  if (Logic_lexer.is_acsl_keyword fx) = true then Printf.printf "IS ACSL KEYWORD %s\n%!" fx else 
-    Printf.printf "IS NOT ACSL KEYWORD %s\n%!" fx;
+  let fx = Utils.retrieve_function_call pos.pos_lnum (pos.pos_cnum - pos.pos_bol) (Utils.file_str pos.pos_path) in  
 
   let li_visitor = object 
     inherit Visitor.frama_c_inplace
     method !vlogic_info_use li = 
       match li.l_body with 
       | LBpred pred -> 
-        if (compare_retrieved_function_name pos li.l_var_info.lv_name) = 0 then
+        if (Utils.compare_retrieved_function_name pos li.l_var_info.lv_name) = 0 then
           begin
             loca := Some pred.pred_loc; DoChildren
           end
@@ -41,45 +36,45 @@ let retrieve_location (pos : Filepath.position) =
       method !vglob_aux g =
         match g with 
         | GEnumTagDecl (ei,loc) -> 
-          if (compare_retrieved_function_name pos ei.eorig_name) = 0 then
+          if (Utils.compare_retrieved_function_name pos ei.eorig_name) = 0 then
             loca := Some loc;
           DoChildren
         | GEnumTag (ei,loc) -> 
-          if (compare_retrieved_function_name pos ei.eorig_name) = 0 then
+          if (Utils.compare_retrieved_function_name pos ei.eorig_name) = 0 then
             loca := Some loc;
           DoChildren
         | GCompTagDecl (ci,loc) -> 
-          if (compare_retrieved_function_name pos ci.corig_name) = 0 then
+          if (Utils.compare_retrieved_function_name pos ci.corig_name) = 0 then
             loca := Some loc;
           DoChildren
         | GCompTag (ci,loc) -> 
-          if (compare_retrieved_function_name pos ci.corig_name) = 0 then
+          if (Utils.compare_retrieved_function_name pos ci.corig_name) = 0 then
             loca := Some loc;
           DoChildren
         | GType (ti,loc) -> 
-          if (compare_retrieved_function_name pos ti.torig_name) = 0 then
+          if (Utils.compare_retrieved_function_name pos ti.torig_name) = 0 then
             loca := Some loc;
           DoChildren
         | GVar (vi, _, loc) -> 
-          if (compare_retrieved_function_name pos vi.vname) = 0 then
+          if (Utils.compare_retrieved_function_name pos vi.vname) = 0 then
             loca := Some loc;
           DoChildren
         | GVarDecl (vi, loc) -> 
-          if (compare_retrieved_function_name pos vi.vname) = 0 then
+          if (Utils.compare_retrieved_function_name pos vi.vname) = 0 then
             loca := Some loc;
           DoChildren
         | GText _ -> 
           DoChildren
         | GFun (fd,loc) -> 
-          if (compare_retrieved_function_name pos fd.svar.vname;) = 0 then
+          if (Utils.compare_retrieved_function_name pos fd.svar.vname;) = 0 then
             loca := Some loc;
           DoChildren
         | GFunDecl (_,vi,loc) -> 
-          if (compare_retrieved_function_name pos vi.vname) = 0 then
+          if (Utils.compare_retrieved_function_name pos vi.vname) = 0 then
             loca := Some loc;
           DoChildren
         | GAsm (s,loc) -> 
-          if (compare_retrieved_function_name pos s) = 0 then
+          if (Utils.compare_retrieved_function_name pos s) = 0 then
             loca := Some loc;
           DoChildren
         | GPragma (_,_) -> 
@@ -95,7 +90,7 @@ let retrieve_location (pos : Filepath.position) =
     method! vpredicate pred = 
         match pred.pred_content with 
         | Papp (li,_,_) -> 
-          if (compare_retrieved_function_name pos li.l_var_info.lv_name) = 0 then 
+          if (Utils.compare_retrieved_function_name pos li.l_var_info.lv_name) = 0 then 
             begin
               let target_loc = Globals.Syntactic_search.find_in_scope li.l_var_info.lv_name Global in
               match target_loc with 
@@ -124,34 +119,28 @@ let retrieve_location (pos : Filepath.position) =
   in
   Visitor.visitFramacFileSameGlobals vrbl_visitor (Ast.get ());
 
-  if (Logic_lexer.is_acsl_keyword fx) = true then Printf.printf "IS ACSL KEYWORD %s\n%!" fx else 
-    Printf.printf "IS NOT ACSL KEYWORD %s\n%!" fx;
-    
   match !loca with
   | Some loc -> loc
   | None -> (pos,pos) 
 
 
-let find_def (file : Cil_types.file) (req : RequestMessage.t) : Json.json = 
-    print_predicates file;
-    Printf.printf "find_def called\n%!";
-    let params = DefinitionParams.t_of_json (get req.params) in
+let find_def (req : Types.RequestMessage.t) : Json.json = 
+    let params = Types.DefinitionParams.t_of_json (Utils.get req.params) in
     let uri = params.textDocument.uri in 
-    let file = remove_file_scheme uri in
-    let pos = position_t_to_filepath_position file params.position in
+    let file = Utils.remove_file_scheme uri in
+    let pos = Utils.position_t_to_filepath_position file params.position in
 
     let (pos1, pos2) = retrieve_location pos in
 
-    (* todo : should send little "No definition found for x" popup *)
     if pos1 = pos2 then 
-      ResponseMessage.json_of_t (ResponseMessage.create ~jsonrpc:"2.0" ~id:req.id ~result:`Null ())
+      Types.ResponseMessage.json_of_t (Types.ResponseMessage.create ~jsonrpc:"2.0" ~id:req.id ~result:`Null ())
     else
-      ResponseMessage.json_of_t (ResponseMessage.create ~jsonrpc:"2.0" ~id:req.id ~result:
-        (Location.json_of_t
-          (Location.create 
-            ((file_str pos1.pos_path) |> Filepath.normalize)
-            (Range.create (Position.create pos1.pos_lnum (pos1.pos_cnum - pos1.pos_bol))
-              (Position.create pos2.pos_lnum (pos2.pos_cnum - pos2.pos_bol))
+      Types.ResponseMessage.json_of_t (Types.ResponseMessage.create ~jsonrpc:"2.0" ~id:req.id ~result:
+        (Types.Location.json_of_t
+          (Types.Location.create 
+            (Utils.file_str pos1.pos_path |> Filepath.normalize)
+            (Types.Range.create (Types.Position.create (pos1.pos_lnum - 1) (pos1.pos_cnum - pos1.pos_bol))
+              (Types.Position.create (pos2.pos_lnum - 1) (pos2.pos_cnum - pos2.pos_bol))
             )
           )
         )

@@ -1,7 +1,3 @@
-open Types
-open Initialize
-open Find_def
-open Exit
 
 let is_notif json_string =
   try
@@ -17,30 +13,27 @@ let is_notif json_string =
   
 let rq_handler json_string =
   let json = Json.load_string json_string in 
-  let request = RequestMessage.t_of_json json in 
+  let request = Types.RequestMessage.t_of_json json in 
   let curr_method = request.method_ in 
-  Printf.printf "request handler\n%!";
   match curr_method with 
   | "initialize" -> 
-    initialize request;
+    Types.RQ_RESULT (Initialize.initialize request);
   | "textDocument/definition" -> 
-    find_def (Ast.get ()) request;
-  | _ -> `Null
+    Types.RQ_RESULT (Find_def.find_def request);
+  | _ -> Types.RQ_RESULT (`Null)
 
 let notif_handler json_string = 
 let json = Json.load_string json_string in 
-let notif = NotificationMessage.t_of_json json in 
+let notif = Types.NotificationMessage.t_of_json json in 
 let curr_method = notif.method_ in 
-Printf.printf "notification handler\n%!";
 match curr_method with 
 | "initialized" -> 
-  `Assoc [("jsonrpc", `String "2.0"); ("method", `String "none"); ("params", `Assoc [])]
+  Types.NTF_RESULT ()
 | "exit" -> 
-  exit;
-| _ -> `Null
+  Types.NTF_RESULT ()
+| _ ->  Types.NTF_RESULT ()
 
-
-let handle json_string = 
+let handle json_string : Types.lsp_result = 
   if (is_notif json_string) then 
     notif_handler json_string
   else 

@@ -4,7 +4,7 @@
 (name acsl-lsp)
 
 ; 
-(generate_opam_files false)
+(generate_opam_files true)
 
  (source
  (github username/reponame))

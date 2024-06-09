@@ -1,1 +1,1 @@
-src/server_utils/handler.ml: Ast Exit Find_def Initialize Json List NotificationMessage Printf RequestMessage Types
+src/server_utils/handler.ml: Find_def Initialize Json List Types

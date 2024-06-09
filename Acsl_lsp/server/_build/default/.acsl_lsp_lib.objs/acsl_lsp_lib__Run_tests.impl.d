@@ -1,1 +1,1 @@
-src/testing/run_tests.ml: Test_json
+src/testing/run_tests.ml:

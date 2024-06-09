@@ -1,18 +1,17 @@
-open Types
-
 (* cannot be called twice, must be called first *)
-let initialize (req : RequestMessage.t): Json.json = 
+let initialize (req : Types.RequestMessage.t): Json.json = 
     (* todo : remove file scheme from root uri *)
     (*let req_json = (RequestMessage.json_of_t req) in 
     let rootUri = Json.field "params" req_json |> Json.field "rootUri" in*)
     try 
-      ignore (Utils.get_ast_from_file "/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server/tests") ;
+      let file = File.from_filename (Filepath.Normalized.of_string "/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server/tests/test1.c") in
+      ignore (File.init_from_c_files [file]) ; (* todo :*)
+      ignore (Ast.get ()) ;
       (* todo : take dir from request (rootUri) *)
       let framac_share = Utils.file_str Fc_config.datadir in 
       Kernel.Share.set (Fc_config.datadir);
       let share = Kernel.Share.get () in
       Filepath.add_symbolic_dir framac_share share;
-      Printf.printf "share path : %s\n%!" framac_share;
 
       (* todo : default initialize result for the moment *)
       let result = {|{
@@ -20,19 +19,8 @@ let initialize (req : RequestMessage.t): Json.json =
         "id": 0,
         "result": {
           "capabilities": {
-            "textDocumentSync": {
-              "openClose": false,
-              "change": 2,
-              "willSave": false,
-              "willSaveWaitUntil": false,
-              "save": {
-                "includeText": false
-              }
-            },
-            "completionProvider": {
-              "resolveProvider": false,
-              "triggerCharacters": ["", ":"]
-            },
+            "textDocumentSync": "None",
+            "completionProvider": false,
             "hoverProvider": false,
             "signatureHelpProvider": {
               "triggerCharacters": ["(", ","]
@@ -48,10 +36,7 @@ let initialize (req : RequestMessage.t): Json.json =
             "codeLensProvider": false,
             "documentFormattingProvider": false,
             "documentRangeFormattingProvider": false,
-            "documentOnTypeFormattingProvider": {
-              "firstTriggerCharacter": "\\n",
-              "moreTriggerCharacter": [";", "}"]
-            },
+            "documentOnTypeFormattingProvider": false,
             "renameProvider": {
               "prepareProvider": false
             },
@@ -92,6 +77,6 @@ let initialize (req : RequestMessage.t): Json.json =
       Json.load_string result;
       (* get uri of first and only path in workspaceFolders array *)
     with Failure _ -> 
-      ResponseMessage.json_of_t (ResponseMessage.create ~jsonrpc:"2.0" ~id:req.id ~error:(ResponseError.create ~code:(-32803) ~message:"No folders with c files are open." ()) ());
+      Types.ResponseMessage.json_of_t (Types.ResponseMessage.create ~jsonrpc:"2.0" ~id:req.id ~error:(Types.ResponseError.create ~code:(-32803) ~message:"No folders with c files are open." ()) ());
 
 

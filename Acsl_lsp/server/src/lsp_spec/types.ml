@@ -1,5 +1,6 @@
+(* lsp types module *)
 type id_ = Int of int | Str of string | Null
-
+type lsp_result = RQ_RESULT of Json.json | NTF_RESULT of unit
 
 module Message = struct
   type t = { jsonrpc : string }
