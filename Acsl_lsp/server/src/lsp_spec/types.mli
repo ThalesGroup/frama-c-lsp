@@ -428,11 +428,22 @@ module Diagnostic : sig
 	  codeDescription: CodeDescription.t option;
   	source: string option;
   	message: string;
-  	tags: DiagnosticTag.t array option;
-  	relatedInformation: DiagnosticRelatedInformation.t array option;
+  	tags: DiagnosticTag.t list option;
+  	relatedInformation: DiagnosticRelatedInformation.t list option;
   	data: Json.t option;
   }
   include Jsonable.B with type t := t
+ (* val create : 
+    Range.t 
+    -> ?severity:DiagnosticSeverity.t 
+    -> ?code:code_ 
+    -> ?codeDescription:CodeDescription.t 
+    -> ?source:string 
+    -> string 
+    -> ?tags:DiagnosticTag.t list
+    -> ?relatedInformation:DiagnosticRelatedInformation.t
+    -> ?data:Json.t 
+    -> t*)
 end 
 
 module Command : sig
@@ -462,3 +473,4 @@ module LinkedEditingRanges : sig
   include Jsonable.B with type t := t
 
 end
+
