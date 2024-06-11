@@ -8,7 +8,6 @@
 
 *)
 
-(* todo : should send *)
 let retrieve_location (pos : Filepath.position) =
   let loca = ref None in 
 
@@ -131,6 +130,10 @@ let find_def (req : Types.RequestMessage.t) : Json.json =
     let pos = Utils.position_t_to_filepath_position file params.position in
 
     let (pos1, pos2) = retrieve_location pos in
+
+    (* dummy position below for debugging purposes *)
+    (*let pos1 : Filepath.position = {pos_path=(Filepath.Normalized.of_string "/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server/tests/test1.c"); pos_lnum=1;  pos_bol=2; pos_cnum=1} in
+    let pos2 : Filepath.position = {pos_path=(Filepath.Normalized.of_string "/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server/tests/test1.c"); pos_lnum=1;  pos_bol=2; pos_cnum=1} in*)
 
     if pos1 = pos2 then 
       Types.ResponseMessage.json_of_t (Types.ResponseMessage.create ~jsonrpc:"2.0" ~id:req.id ~result:`Null ())
