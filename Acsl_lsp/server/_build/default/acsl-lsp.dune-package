@@ -32,6 +32,9 @@
    core/acsl_lsp_lib__Settings.cmi
    core/acsl_lsp_lib__Settings.cmt
    core/acsl_lsp_lib__Settings.cmx
+   core/acsl_lsp_lib__Shutdown.cmi
+   core/acsl_lsp_lib__Shutdown.cmt
+   core/acsl_lsp_lib__Shutdown.cmx
    core/acsl_lsp_lib__Start_server.cmi
    core/acsl_lsp_lib__Start_server.cmt
    core/acsl_lsp_lib__Start_server.cmx
@@ -52,6 +55,7 @@
    core/src/common/utils.ml
    core/src/features/find_def.ml
    core/src/features/initialize.ml
+   core/src/features/shutdown.ml
    core/src/lsp_spec/jsonable.ml
    core/src/lsp_spec/types.ml
    core/src/lsp_spec/types.mli
@@ -113,6 +117,10 @@
       (obj_name acsl_lsp_lib__Settings)
       (visibility public)
       (source (path Settings) (impl (path core/src/common/settings.ml))))
+     (module
+      (obj_name acsl_lsp_lib__Shutdown)
+      (visibility public)
+      (source (path Shutdown) (impl (path core/src/features/shutdown.ml))))
      (module
       (obj_name acsl_lsp_lib__Start_server)
       (visibility public)

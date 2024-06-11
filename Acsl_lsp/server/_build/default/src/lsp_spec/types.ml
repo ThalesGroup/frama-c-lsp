@@ -1502,10 +1502,33 @@ module Diagnostic = struct
     codeDescription: CodeDescription.t option;
     source: string option;
     message: string;
-    tags: DiagnosticTag.t array option;
-    relatedInformation: DiagnosticRelatedInformation.t array option;
+    tags: DiagnosticTag.t list option;
+    relatedInformation: DiagnosticRelatedInformation.t list option;
     data: Json.t option;
   }
+(*
+  let create
+    (range : Range.t)
+    ?(severity : DiagnosticSeverity.t option)
+    ?(code : code_ option)
+    ?(codeDescription : CodeDescription.t option)
+    ?(source : string option)
+    (message : string)
+    ?(tags : DiagnosticTag.t list option)
+    ?(relatedInformation : DiagnosticRelatedInformation.t list option)
+    ?(data : Json.t option)
+    () : t =
+  {
+    range;
+    severity;
+    code;
+    codeDescription;
+    source;
+    message;
+    tags;
+    relatedInformation;
+    data;
+  }*)
 
   let json_of_t (diag : t) : Json.t =
     `Assoc [
@@ -1515,8 +1538,8 @@ module Diagnostic = struct
       "codeDescription", (match diag.codeDescription with Some desc -> CodeDescription.json_of_t desc | None -> `Null);
       "source", (match diag.source with Some src -> `String src | None -> `Null);
       "message", `String diag.message;
-      "tags", (match diag.tags with Some tags -> `List (Array.to_list (Array.map DiagnosticTag.json_of_t tags)) | None -> `Null);
-      "relatedInformation", (match diag.relatedInformation with Some infos -> `List (Array.to_list (Array.map DiagnosticRelatedInformation.json_of_t infos)) | None -> `Null);
+      "tags", (match diag.tags with Some tags -> `List (List.map DiagnosticTag.json_of_t tags) | None -> `Null);
+      "relatedInformation", (match diag.relatedInformation with Some infos -> `List (List.map DiagnosticRelatedInformation.json_of_t infos) | None -> `Null);
       "data", (match diag.data with Some d -> d | None -> `Null);
     ]
 
@@ -1554,13 +1577,13 @@ module Diagnostic = struct
       in
       let tags =
         match List.assoc_opt "tags" fields with
-        | Some (`List tags_json) -> Some (Array.of_list (List.map DiagnosticTag.t_of_json tags_json))
+        | Some (`List tags_json) -> Some (List.map DiagnosticTag.t_of_json tags_json)
         | None -> None
         | _ -> raise (Invalid_argument "Invalid JSON format for Diagnostic: tags")
       in
       let relatedInformation =
         match List.assoc_opt "relatedInformation" fields with
-        | Some (`List infos_json) -> Some (Array.of_list (List.map DiagnosticRelatedInformation.t_of_json infos_json))
+        | Some (`List infos_json) -> Some (List.map DiagnosticRelatedInformation.t_of_json infos_json)
         | None -> None
         | _ -> raise (Invalid_argument "Invalid JSON format for Diagnostic: relatedInformation")
       in

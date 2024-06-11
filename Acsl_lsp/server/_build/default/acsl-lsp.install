@@ -28,6 +28,9 @@ lib: [
   "_build/install/default/lib/acsl-lsp/core/acsl_lsp_lib__Settings.cmi" {"core/acsl_lsp_lib__Settings.cmi"}
   "_build/install/default/lib/acsl-lsp/core/acsl_lsp_lib__Settings.cmt" {"core/acsl_lsp_lib__Settings.cmt"}
   "_build/install/default/lib/acsl-lsp/core/acsl_lsp_lib__Settings.cmx" {"core/acsl_lsp_lib__Settings.cmx"}
+  "_build/install/default/lib/acsl-lsp/core/acsl_lsp_lib__Shutdown.cmi" {"core/acsl_lsp_lib__Shutdown.cmi"}
+  "_build/install/default/lib/acsl-lsp/core/acsl_lsp_lib__Shutdown.cmt" {"core/acsl_lsp_lib__Shutdown.cmt"}
+  "_build/install/default/lib/acsl-lsp/core/acsl_lsp_lib__Shutdown.cmx" {"core/acsl_lsp_lib__Shutdown.cmx"}
   "_build/install/default/lib/acsl-lsp/core/acsl_lsp_lib__Start_server.cmi" {"core/acsl_lsp_lib__Start_server.cmi"}
   "_build/install/default/lib/acsl-lsp/core/acsl_lsp_lib__Start_server.cmt" {"core/acsl_lsp_lib__Start_server.cmt"}
   "_build/install/default/lib/acsl-lsp/core/acsl_lsp_lib__Start_server.cmx" {"core/acsl_lsp_lib__Start_server.cmx"}
@@ -48,6 +51,7 @@ lib: [
   "_build/install/default/lib/acsl-lsp/core/src/common/utils.ml" {"core/src/common/utils.ml"}
   "_build/install/default/lib/acsl-lsp/core/src/features/find_def.ml" {"core/src/features/find_def.ml"}
   "_build/install/default/lib/acsl-lsp/core/src/features/initialize.ml" {"core/src/features/initialize.ml"}
+  "_build/install/default/lib/acsl-lsp/core/src/features/shutdown.ml" {"core/src/features/shutdown.ml"}
   "_build/install/default/lib/acsl-lsp/core/src/lsp_spec/jsonable.ml" {"core/src/lsp_spec/jsonable.ml"}
   "_build/install/default/lib/acsl-lsp/core/src/lsp_spec/types.ml" {"core/src/lsp_spec/types.ml"}
   "_build/install/default/lib/acsl-lsp/core/src/lsp_spec/types.mli" {"core/src/lsp_spec/types.mli"}

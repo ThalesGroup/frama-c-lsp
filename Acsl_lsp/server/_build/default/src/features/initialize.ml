@@ -6,7 +6,6 @@ let initialize (req : Types.RequestMessage.t): Json.json =
     try 
       let file = File.from_filename (Filepath.Normalized.of_string "/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server/tests/test1.c") in
       ignore (File.init_from_c_files [file]) ; (* todo :*)
-      ignore (Ast.get ()) ;
       (* todo : take dir from request (rootUri) *)
       let framac_share = Utils.file_str Fc_config.datadir in 
       Kernel.Share.set (Fc_config.datadir);
@@ -76,7 +75,7 @@ let initialize (req : Types.RequestMessage.t): Json.json =
       in
       Json.load_string result;
       (* get uri of first and only path in workspaceFolders array *)
-    with Failure _ -> 
+    with _ -> 
       Types.ResponseMessage.json_of_t (Types.ResponseMessage.create ~jsonrpc:"2.0" ~id:req.id ~error:(Types.ResponseError.create ~code:(-32803) ~message:"No folders with c files are open." ()) ());
 
 
