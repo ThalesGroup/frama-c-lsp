@@ -32,12 +32,27 @@ let position_t_to_filepath_position (uri : Types.DocumentUri.t) (pos : Types.Pos
   { Filepath.pos_path; pos_lnum; pos_bol; pos_cnum }
 
 let find_word str ch =
+  if (String.equal str "") then "" else
   let r = Str.regexp {|\b[_A-Za-z0-9]+\b|} in
-  ignore (Str.search_backward r str ch); 
-  ignore (Str.match_end ());
-  Str.matched_string str
+  try 
+    ignore(Str.search_backward r str ch);
+    Str.matched_string str
+  with Not_found -> ""
 
 let read_line_from_file filename line_number =
+let ic = open_in filename in
+let cnt = ref 0 in
+let line = ref "" in
+while (!cnt <= line_number) do
+  (*Printf.printf "curr_line_numb %d, given line_num %d \n%!"!cnt line_number;*)
+  line := Stdlib.input_line ic;
+  cnt := !cnt + 1;
+done;
+Stdlib.close_in ic;
+(*Printf.printf "line = %s\n%!" !line;*)
+!line
+
+(*let read_line_from_file filename line_number =
   let ic = open_in filename in
   let rec read_lines ic current_line =
     try
@@ -51,13 +66,11 @@ let read_line_from_file filename line_number =
         close_in ic;
         None
   in
-  read_lines ic 0
+  read_lines ic 0*)
 
 (* Function to retrieve function call at given line and character index *)
 let retrieve_function_call line_number character_index file_name =
-  match read_line_from_file file_name line_number with 
-    | Some line -> find_word line character_index 
-    | None -> failwith "Line not found" 
+  find_word (read_line_from_file file_name line_number) character_index 
   
 
 let compare_retrieved_function_name (pos : Filepath.position) fun_name = 
