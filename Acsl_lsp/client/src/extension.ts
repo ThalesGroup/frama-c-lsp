@@ -1,106 +1,65 @@
+/* --------------------------------------------------------------------------------------------
+ * Copyright (c) Microsoft Corporation. All rights reserved.
+ * Licensed under the MIT License. See License.txt in the project root for license information.
+ * ------------------------------------------------------------------------------------------ */
+
 import * as path from 'path';
-import * as cp from 'child_process';
-import * as net from 'net';
 import { workspace, ExtensionContext } from 'vscode';
+
 import {
-    LanguageClient,
-    LanguageClientOptions,
-    ServerOptions,
-    Middleware,
-    URI
+	LanguageClient,
+	LanguageClientOptions,
+	ServerOptions,
+	TransportKind
 } from 'vscode-languageclient/node';
 
-let client: LanguageClient | undefined;
-let serverProcess: cp.ChildProcess | undefined;
-let connectionPromise: Promise<net.Socket> | undefined;
+let client: LanguageClient;
 
 export function activate(context: ExtensionContext) {
-    const serverScript = context.asAbsolutePath(path.join('..', 'server', 'run.sh'));
+	// The server is implemented in node
+	const serverModule = context.asAbsolutePath(
+		path.join('..', 'server', 'run.sh')
+	);
 
-    console.log(`Server script path: ${serverScript}`);
+	// If the extension is launched in debug mode then the debug server options are used
+	// Otherwise the run options are used
+	const serverOptions: ServerOptions = {
+		run: { 
+			command: serverModule, 
+			transport: {kind: TransportKind.socket, port: 8001}, options:{shell: true}
+		},
+		debug: {
+			command: serverModule,
+			transport: {kind: TransportKind.socket, port: 8001}, options:{shell: true}
+		}
+	};
 
-    serverProcess = cp.spawn(serverScript, []);
-    serverProcess.on('error', (err?) => {
-        console.error(`Failed to start server process: ${err}`);
-    });
+	// Options to control the language client
+	const clientOptions: LanguageClientOptions = {
+		// Register the server for plain text documents
+		documentSelector: [{ scheme: 'file', language: 'acsl' }
+		],
+		synchronize: {
+			// Notify the server about file changes to '.clientrc files contained in the workspace
+			fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
+		}
+	};
 
-    serverProcess.stderr.on('data', (data?) => {
-        console.error(`Server stderr: ${data.toString()}`);
-    });
+	// Create the language client and start the client.
+	client = new LanguageClient(
+		'vscodeacsl',
+		'ACSL Language Server',
+		serverOptions,
+		clientOptions
+	);
 
-    serverProcess.stdout.on('data', (data?) => {
-        console.log(`[acsl-lsp]: ${data.toString()}`);
-        if (data.toString().includes('Server listening on port 8001')) {
-            console.log('Server started successfully. Initializing client...');
-            initializeClient(); 
-        }
-    });
-
-    function initializeClient() {
-        connectionPromise = new Promise<net.Socket>((resolve, reject) => {
-            const socket = net.connect(8001, '127.0.0.1', () => {
-                console.log('Socket connected');
-                resolve(socket);
-            });
-
-            socket.on('data', (data?) => {
-                console.log(`Received from server: ${data.toString()}`);
-            });
-
-            socket.on('close', (hadError?) => {
-                console.log(`Socket closed, hadError: ${hadError}`);
-            });
-
-            socket.on('error', (err?) => {
-                console.error(`Socket error: ${err}`);
-                reject(err);
-            });
-        });
-
-        connectionPromise.then(() => {
-            console.log('Socket connection promise resolved');
-        }).catch((err) => {
-            console.error(`Socket connection promise rejected: ${err}`);
-        });
-
-        const serverOptions: ServerOptions = () => connectionPromise!.then((socket) => ({
-            reader: socket,
-            writer: socket
-        }));
-
-        const middleware: Middleware = {
-            sendRequest: async (type, params, token, next) => {
-                console.log('Sending request:', type, params);
-                return next(type, params, token);
-            },
-            sendNotification: (type, next, params) => {
-                console.log('Sending notification:', type, params);
-                return next(type, params);
-            }
-        };
-
-        const clientOptions: LanguageClientOptions = {
-            documentSelector: [
-                { scheme: 'file', language: 'c' },
-                { scheme: 'file', language: 'acsl' }
-            ],
-            synchronize: {
-                fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
-            },
-            middleware
-        };
-
-        client = new LanguageClient('ACSLClient','ACSL Language Server VS Code Extension', serverOptions, clientOptions);
-
-        client.start().then(() => {
-            context.subscriptions.push(client);
-            console.log('Client started successfully and is ready');
-        }).catch(error => {
-            console.error(`Failed to start the language client: ${error}`);
-        });
-    }
+	// Start the client. This will also launch the server
+	client.start();
 }
 
 export function deactivate(): Thenable<void> | undefined {
-    return undefined;
+	if (!client) {
+		return undefined;
+	}
+	return client.stop();
 }

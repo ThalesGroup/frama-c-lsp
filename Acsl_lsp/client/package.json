@@ -20,7 +20,10 @@
     "engines": {
         "vscode": "^1.75.0"
     },
-    "activationEvents": [],
+    "activationEvents": [
+        "onLanguage:c",
+        "onLanguage:cpp"
+    ],
     "main": "./out/extension",
     "contributes": {
         "languages": [
@@ -68,11 +71,10 @@
             }
         },
         "commands": [
-        {
-            "command": "vscodeacsl.definition",
-            "title": "[ACSL] Go To Definition"
-        }
-
+            {
+                "command": "vscodeacsl.definition",
+                "title": "ACSL: Go To Definition"
+            }
         ]
     },
     "scripts": {
