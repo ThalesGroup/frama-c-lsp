@@ -19,20 +19,22 @@ let readcontlen sock : string =
   let contlenbuf = Bytes.create 1 in
   let res = ref "" in 
   let curr_char = ref "" in 
-  while (String.equal !curr_char "\n") = false do 
+  while not (String.equal !curr_char "\n") do 
   let data_len = Unix.read sock contlenbuf 0 1 in 
     ignore data_len;
     curr_char := (Bytes.to_string contlenbuf) ;
     res := !res ^ !curr_char;
   done;
-  ignore (Unix.read sock contlenbuf 0 1); (* consume remaining "\r\n" from reaquest header *)
+  ignore (Unix.read sock contlenbuf 0 1); (* consume remaining "\r\n" from request header *)
   ignore (Unix.read sock contlenbuf 0 1);
   !res
 
 let handle_data sock = 
   let data_size = getnumber (readcontlen sock) in 
-  let data_buf = Bytes.create data_size in
+  let data_buf = Bytes.make data_size '0' in
+  Printf.printf "read before\n%!";
   let req_data_len = Unix.read sock data_buf 0 data_size in
+  Printf.printf "read\n%!";
   ignore req_data_len;
   Printf.printf "Received from client: %s bytes\n%!" (Bytes.to_string data_buf);
   
@@ -43,17 +45,20 @@ let handle_data sock =
   | RQ_RESULT json -> send_response sock (Json.save_string json);
   | NTF_RESULT () -> ()
 
+
 let listen () =
   Printf.printf "Connecting on port %d\n" server_port;
   let (ic, oc) = Unix.open_connection (Unix.ADDR_INET (addr, server_port)) in 
   Printf.printf "Connected on port %d\n" server_port;
   let client_sock = Unix.descr_of_in_channel ic in
-  Unix.set_close_on_exec client_sock;
 
+  let cnt = ref 0 in
   while true do
-    handle_data client_sock
+    Printf.printf "cnt =  %d\n" !cnt;
+    handle_data client_sock;
+    flush oc;
+    cnt := !cnt + 1;
   done;
-  close_out oc
 
 
   (*
