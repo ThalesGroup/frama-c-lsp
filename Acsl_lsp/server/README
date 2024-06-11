@@ -1,10 +1,9 @@
 Remaining features to implement : 
-- Add debug option instead of using "Printf.printf" everywhere, implement(or find) a logging function to log error messages only when log option enabled
-- Enhance find_def (limited to only built in predicates for the moment)
+- Enhance find_def 
+- Diagnostics feature
+- Display CIL representation of C source file
 - Enhance/fix ACSL syntax coloration
-- Start implementing Find References feature
-- Start writing documentation for server code
-- Take into account different OS for the LSP to work
+- Documentation for server code
 
 Installation : 
 - 
