@@ -1,1 +1,1 @@
-src/lsp_spec/jsonable.ml: Json
+src/lsp_types/jsonable.ml: Json

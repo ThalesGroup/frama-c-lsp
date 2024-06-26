@@ -1,136 +1,158 @@
+
+
+
 (** 
     Description : 
     Module for Go To Definition feature of the Language Server Protocol.
 
     Version : 1.0
-    - Finds frama_c builtin(?) predicates (valid_read_string, valid_string, minimum, maximum, ...)
-    - Finds C function, type definitions and variable declarations
+    - Finds frama_c terms and predicates (valid_read_string, valid_string, minimum, maximum, ...)
+    - Finds user defined terms and predicates
+    - Finds C function and type definitions
+    - For the moment : includes Go To Declaration feature (but should not) : finds variable and function declarations
 
 *)
 
-(* todo : should send *)
+let glob_visitor loca symbol = object 
+  inherit Visitor.frama_c_inplace
+    method !vglob_aux g =
+      match g with 
+      | GEnumTagDecl (ei,loc) -> 
+        if (String.equal symbol ei.eorig_name) then
+          loca := Some loc;
+        SkipChildren
+      | GEnumTag (ei,loc) -> 
+        if (String.equal symbol ei.eorig_name) then
+          loca := Some loc;
+        SkipChildren
+      | GCompTagDecl (ci,loc) -> 
+        if (String.equal symbol ci.corig_name) then
+          loca := Some loc;
+        SkipChildren
+      | GCompTag (ci,loc) -> 
+        if (String.equal symbol ci.corig_name) then
+          loca := Some loc;
+        SkipChildren
+      | GType (ti,loc) -> 
+        if (String.equal symbol ti.torig_name) then
+          loca := Some loc;
+        SkipChildren
+      | GVar (vi, _, loc) -> 
+          Printf.printf "var : %s, symbol : %s \n%!" vi.vname symbol;
+          if (String.equal symbol vi.vname) then
+          begin
+            loca := Some loc;
+          end;
+        SkipChildren
+      | GVarDecl (vi, loc) -> 
+          Printf.printf "var decl : %s, symbol : %s \n%!" vi.vname symbol;
+          if (String.equal symbol vi.vname) then
+          begin
+            loca := Some loc;
+          end;
+        SkipChildren
+      | GText _ -> 
+        SkipChildren
+      | GFun (fd,loc) -> 
+        if (String.equal symbol fd.svar.vname;) then
+          begin
+            Printf.printf "fun : %s\n%!" fd.svar.vname;
+            loca := Some loc;
+          end;
+        SkipChildren
+      | GFunDecl (_,vi,loc) -> 
+        if (String.equal symbol vi.vname) then
+          begin
+            Printf.printf "fun decl : %s\n%!" vi.vname;
+            loca := Some loc;
+          end;
+        SkipChildren
+      | GAsm (s,loc) -> 
+        if (String.equal symbol s) then
+          loca := Some loc;
+        SkipChildren
+      | GPragma (_,_) -> 
+        SkipChildren
+      | GAnnot (ga, _) -> 
+        (match ga with 
+        | Dinvariant (li, loc) -> 
+          if (String.equal symbol li.l_var_info.lv_name) then
+            begin
+              Printf.printf "invariant : %s\n%!" li.l_var_info.lv_name;
+              loca := Some loc;
+            end;
+          SkipChildren;
+        | Dtype (lti, loc) -> 
+          if (String.equal symbol lti.lt_name) then
+            begin
+              Printf.printf "logic type : %s\n%!" lti.lt_name;
+              loca := Some loc;
+            end;
+          SkipChildren
+        | Dtype_annot (li, loc) -> 
+          if (String.equal symbol li.l_var_info.lv_name) then
+            begin
+              Printf.printf "type annot : %s\n%!" li.l_var_info.lv_name;
+              loca := Some loc;
+            end;
+          SkipChildren
+        | Dfun_or_pred (li,loc) ->
+          if (String.equal symbol li.l_var_info.lv_name) then
+            begin
+              Printf.printf "fun or pred : %s\n%!" li.l_var_info.lv_name;
+              loca := Some loc;
+            end;
+          SkipChildren
+        | Dlemma (str,_,_,_,_,loc) ->
+          Printf.printf "lemma : %s\n%!" str;
+          if (String.equal symbol str) then
+            begin
+              loca := Some loc;
+            end;
+          SkipChildren
+        | _ -> ();
+        SkipChildren)
+      (*| _ -> SkipChildren*)
+  end
+
+let vrbl_visitor loca symbol = object 
+  inherit Visitor.frama_c_inplace
+  method! vvdec v = 
+    if (String.equal symbol v.vname) = true then 
+      begin
+        loca := Some v.vdecl; SkipChildren
+      end
+    else
+    SkipChildren;
+  end 
+
 let retrieve_location (pos : Filepath.position) =
   let loca = ref None in 
+  let symbol = Utils.retrieve_symbol pos.pos_lnum (pos.pos_cnum - pos.pos_bol) (Utils.file_str pos.pos_path) in  
 
-  let fx = Utils.retrieve_function_call pos.pos_lnum (pos.pos_cnum - pos.pos_bol) (Utils.file_str pos.pos_path) in  
+  (*
+  let project = Project.create (Utils.file_str pos.pos_path) in 
+  if not (Project.is_current project) then Project.set_current project;
+  File.init_project_from_cil_file project (Ast.get ());
+  *)
 
-  let li_visitor = object 
-    inherit Visitor.frama_c_inplace
-    method !vlogic_info_use li = 
-      match li.l_body with 
-      | LBpred pred -> 
-        if (Utils.compare_retrieved_function_name pos li.l_var_info.lv_name) = 0 then
-          begin
-            loca := Some pred.pred_loc; DoChildren
-          end
-        else 
-        DoChildren
-      | _ -> ();
-      DoChildren
-    end 
-  in
-  Visitor.visitFramacFileSameGlobals li_visitor (Ast.get ());
-
-  let glob_visitor = object 
-    inherit Visitor.frama_c_inplace
-      method !vglob_aux g =
-        match g with 
-        | GEnumTagDecl (ei,loc) -> 
-          if (Utils.compare_retrieved_function_name pos ei.eorig_name) = 0 then
-            loca := Some loc;
-          DoChildren
-        | GEnumTag (ei,loc) -> 
-          if (Utils.compare_retrieved_function_name pos ei.eorig_name) = 0 then
-            loca := Some loc;
-          DoChildren
-        | GCompTagDecl (ci,loc) -> 
-          if (Utils.compare_retrieved_function_name pos ci.corig_name) = 0 then
-            loca := Some loc;
-          DoChildren
-        | GCompTag (ci,loc) -> 
-          if (Utils.compare_retrieved_function_name pos ci.corig_name) = 0 then
-            loca := Some loc;
-          DoChildren
-        | GType (ti,loc) -> 
-          if (Utils.compare_retrieved_function_name pos ti.torig_name) = 0 then
-            loca := Some loc;
-          DoChildren
-        | GVar (vi, _, loc) -> 
-          if (Utils.compare_retrieved_function_name pos vi.vname) = 0 then
-            loca := Some loc;
-          DoChildren
-        | GVarDecl (vi, loc) -> 
-          if (Utils.compare_retrieved_function_name pos vi.vname) = 0 then
-            loca := Some loc;
-          DoChildren
-        | GText _ -> 
-          DoChildren
-        | GFun (fd,loc) -> 
-          if (Utils.compare_retrieved_function_name pos fd.svar.vname;) = 0 then
-            loca := Some loc;
-          DoChildren
-        | GFunDecl (_,vi,loc) -> 
-          if (Utils.compare_retrieved_function_name pos vi.vname) = 0 then
-            loca := Some loc;
-          DoChildren
-        | GAsm (s,loc) -> 
-          if (Utils.compare_retrieved_function_name pos s) = 0 then
-            loca := Some loc;
-          DoChildren
-        | GPragma (_,_) -> 
-          DoChildren
-        | GAnnot (_, _) -> 
-          DoChildren
-      end
-    in
-    Visitor.visitFramacFileSameGlobals glob_visitor (Ast.get ());
-
-  let pred_visitor = object 
-    inherit Visitor.frama_c_inplace
-    method! vpredicate pred = 
-        match pred.pred_content with 
-        | Papp (li,_,_) -> 
-          if (Utils.compare_retrieved_function_name pos li.l_var_info.lv_name) = 0 then 
-            begin
-              let target_loc = Globals.Syntactic_search.find_in_scope li.l_var_info.lv_name Global in
-              match target_loc with 
-              | Some x -> Cil_printer.pp_location Format.std_formatter x.vdecl; let loc = x.vdecl in loca := Some loc ; DoChildren
-              | None -> ();
-              Format.pp_print_flush Format.std_formatter ();
-              DoChildren
-            end
-          
-        else DoChildren
-      | _ -> DoChildren
-    end 
-  in
-  Visitor.visitFramacFileSameGlobals pred_visitor (Ast.get ());
-
-  let vrbl_visitor = object 
-    inherit Visitor.frama_c_inplace
-    method! vvdec v = 
-      if (String.equal fx v.vname) = true then 
-        begin
-          loca := Some v.vdecl; DoChildren
-        end
-      else
-      SkipChildren;
-    end 
-  in
-  Visitor.visitFramacFileSameGlobals vrbl_visitor (Ast.get ());
-
+  (* todo : check and change project if needed before accessing ast*)
+  Visitor.visitFramacFileSameGlobals (glob_visitor loca symbol) (Ast.get ()); 
+  (*Visitor.visitFramacFileSameGlobals (vrbl_visitor loca symbol) (Ast.get ()); *)
+  
   match !loca with
   | Some loc -> loc
   | None -> (pos,pos) 
 
-
 let find_def (req : Types.RequestMessage.t) : Json.json = 
-    let params = Types.DefinitionParams.t_of_json (Utils.get req.params) in
+    let params = Types.DefinitionParams.t_of_json (Option.get req.params) in
     let uri = params.textDocument.uri in 
     let file = Utils.remove_file_scheme uri in
     let pos = Utils.position_t_to_filepath_position file params.position in
 
     let (pos1, pos2) = retrieve_location pos in
+
+    (* dummy position below for debugging purposes *)
     (*let pos1 : Filepath.position = {pos_path=(Filepath.Normalized.of_string "/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server/tests/test1.c"); pos_lnum=1;  pos_bol=2; pos_cnum=1} in
     let pos2 : Filepath.position = {pos_path=(Filepath.Normalized.of_string "/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server/tests/test1.c"); pos_lnum=1;  pos_bol=2; pos_cnum=1} in*)
 
@@ -150,5 +172,4 @@ let find_def (req : Types.RequestMessage.t) : Json.json =
       )
     
 
-    
     

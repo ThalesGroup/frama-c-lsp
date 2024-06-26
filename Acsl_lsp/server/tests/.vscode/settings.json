@@ -1,0 +1,6 @@
+{
+    "editor.wordWrap": "on",
+    "vscodeacsl.includePaths": [
+        "./tests/include_folder2",
+        "./tests/include_folder"]
+}

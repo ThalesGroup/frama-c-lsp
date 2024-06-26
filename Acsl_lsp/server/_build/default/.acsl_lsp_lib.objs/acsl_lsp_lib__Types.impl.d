@@ -1,1 +1,1 @@
-src/lsp_spec/types.ml: Array Json List Option
+src/lsp_types/types.ml: Array Json List Option

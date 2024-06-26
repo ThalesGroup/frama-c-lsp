@@ -1,1 +1,1 @@
-src/lsp_spec/types.mli: Json Jsonable
+src/lsp_types/types.mli: Json Jsonable

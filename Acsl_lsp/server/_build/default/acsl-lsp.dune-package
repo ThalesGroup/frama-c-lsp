@@ -11,6 +11,18 @@
    core/acsl_lsp_lib.cmx
    core/acsl_lsp_lib.cmxa
    core/acsl_lsp_lib.ml
+   core/acsl_lsp_lib__Configuration.cmi
+   core/acsl_lsp_lib__Configuration.cmt
+   core/acsl_lsp_lib__Configuration.cmx
+   core/acsl_lsp_lib__DidChange.cmi
+   core/acsl_lsp_lib__DidChange.cmt
+   core/acsl_lsp_lib__DidChange.cmx
+   core/acsl_lsp_lib__DidOpen.cmi
+   core/acsl_lsp_lib__DidOpen.cmt
+   core/acsl_lsp_lib__DidOpen.cmx
+   core/acsl_lsp_lib__DidSave.cmi
+   core/acsl_lsp_lib__DidSave.cmt
+   core/acsl_lsp_lib__DidSave.cmx
    core/acsl_lsp_lib__Find_def.cmi
    core/acsl_lsp_lib__Find_def.cmt
    core/acsl_lsp_lib__Find_def.cmx
@@ -20,6 +32,9 @@
    core/acsl_lsp_lib__Initialize.cmi
    core/acsl_lsp_lib__Initialize.cmt
    core/acsl_lsp_lib__Initialize.cmx
+   core/acsl_lsp_lib__Initialized.cmi
+   core/acsl_lsp_lib__Initialized.cmt
+   core/acsl_lsp_lib__Initialized.cmx
    core/acsl_lsp_lib__Jsonable.cmi
    core/acsl_lsp_lib__Jsonable.cmt
    core/acsl_lsp_lib__Jsonable.cmx
@@ -38,9 +53,6 @@
    core/acsl_lsp_lib__Start_server.cmi
    core/acsl_lsp_lib__Start_server.cmt
    core/acsl_lsp_lib__Start_server.cmx
-   core/acsl_lsp_lib__Temp.cmi
-   core/acsl_lsp_lib__Temp.cmt
-   core/acsl_lsp_lib__Temp.cmx
    core/acsl_lsp_lib__Test_find_definition.cmi
    core/acsl_lsp_lib__Test_find_definition.cmt
    core/acsl_lsp_lib__Test_find_definition.cmx
@@ -51,20 +63,24 @@
    core/acsl_lsp_lib__Utils.cmi
    core/acsl_lsp_lib__Utils.cmt
    core/acsl_lsp_lib__Utils.cmx
-   core/src/common/settings.ml
-   core/src/common/utils.ml
+   core/src/connection/handler.ml
+   core/src/connection/start_server.ml
+   core/src/features/configuration.ml
+   core/src/features/didChange.ml
+   core/src/features/didOpen.ml
+   core/src/features/didSave.ml
    core/src/features/find_def.ml
    core/src/features/initialize.ml
+   core/src/features/initialized.ml
    core/src/features/shutdown.ml
-   core/src/lsp_spec/jsonable.ml
-   core/src/lsp_spec/types.ml
-   core/src/lsp_spec/types.mli
+   core/src/lsp_types/jsonable.ml
+   core/src/lsp_types/types.ml
+   core/src/lsp_types/types.mli
    core/src/run.ml
-   core/src/server_utils/handler.ml
-   core/src/server_utils/start_server.ml
-   core/src/server_utils/temp.ml
+   core/src/settings.ml
    core/src/testing/run_tests.ml
    core/src/testing/test_find_definition.ml
+   core/src/utils.ml
    dune-package
    opam))
  (lib_root (frama-c/plugins/acsl_lsp/META))
@@ -90,21 +106,45 @@
     (name Acsl_lsp_lib)
     (modules
      (module
+      (obj_name acsl_lsp_lib__Configuration)
+      (visibility public)
+      (source
+       (path Configuration)
+       (impl (path core/src/features/configuration.ml))))
+     (module
+      (obj_name acsl_lsp_lib__DidChange)
+      (visibility public)
+      (source (path DidChange) (impl (path core/src/features/didChange.ml))))
+     (module
+      (obj_name acsl_lsp_lib__DidOpen)
+      (visibility public)
+      (source (path DidOpen) (impl (path core/src/features/didOpen.ml))))
+     (module
+      (obj_name acsl_lsp_lib__DidSave)
+      (visibility public)
+      (source (path DidSave) (impl (path core/src/features/didSave.ml))))
+     (module
       (obj_name acsl_lsp_lib__Find_def)
       (visibility public)
       (source (path Find_def) (impl (path core/src/features/find_def.ml))))
      (module
       (obj_name acsl_lsp_lib__Handler)
       (visibility public)
-      (source (path Handler) (impl (path core/src/server_utils/handler.ml))))
+      (source (path Handler) (impl (path core/src/connection/handler.ml))))
      (module
       (obj_name acsl_lsp_lib__Initialize)
       (visibility public)
       (source (path Initialize) (impl (path core/src/features/initialize.ml))))
      (module
+      (obj_name acsl_lsp_lib__Initialized)
+      (visibility public)
+      (source
+       (path Initialized)
+       (impl (path core/src/features/initialized.ml))))
+     (module
       (obj_name acsl_lsp_lib__Jsonable)
       (visibility public)
-      (source (path Jsonable) (impl (path core/src/lsp_spec/jsonable.ml))))
+      (source (path Jsonable) (impl (path core/src/lsp_types/jsonable.ml))))
      (module
       (obj_name acsl_lsp_lib__Run)
       (visibility public)
@@ -116,7 +156,7 @@
      (module
       (obj_name acsl_lsp_lib__Settings)
       (visibility public)
-      (source (path Settings) (impl (path core/src/common/settings.ml))))
+      (source (path Settings) (impl (path core/src/settings.ml))))
      (module
       (obj_name acsl_lsp_lib__Shutdown)
       (visibility public)
@@ -126,11 +166,7 @@
       (visibility public)
       (source
        (path Start_server)
-       (impl (path core/src/server_utils/start_server.ml))))
-     (module
-      (obj_name acsl_lsp_lib__Temp)
-      (visibility public)
-      (source (path Temp) (impl (path core/src/server_utils/temp.ml))))
+       (impl (path core/src/connection/start_server.ml))))
      (module
       (obj_name acsl_lsp_lib__Test_find_definition)
       (visibility public)
@@ -142,10 +178,10 @@
       (visibility public)
       (source
        (path Types)
-       (intf (path core/src/lsp_spec/types.mli))
-       (impl (path core/src/lsp_spec/types.ml))))
+       (intf (path core/src/lsp_types/types.mli))
+       (impl (path core/src/lsp_types/types.ml))))
      (module
       (obj_name acsl_lsp_lib__Utils)
       (visibility public)
-      (source (path Utils) (impl (path core/src/common/utils.ml))))))
+      (source (path Utils) (impl (path core/src/utils.ml))))))
    (wrapped true))))

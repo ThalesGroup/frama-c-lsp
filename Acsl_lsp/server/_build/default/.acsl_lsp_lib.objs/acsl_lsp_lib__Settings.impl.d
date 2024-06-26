@@ -1,1 +1,1 @@
-src/common/settings.ml: Plugin
+src/settings.ml: Plugin
