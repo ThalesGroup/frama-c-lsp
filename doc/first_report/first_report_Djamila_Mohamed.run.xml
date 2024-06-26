@@ -44,14 +44,16 @@
   <internal package="biblatex" priority="9" active="0">
     <generic>latex</generic>
     <provides type="dynamic">
-      <file>internship_report_Djamila_Mohamed.bcf</file>
+      <file>first_report_Djamila_Mohamed.aux</file>
+      <file>first_report_Djamila_Mohamed-blx.bib</file>
     </provides>
     <requires type="dynamic">
-      <file>internship_report_Djamila_Mohamed.bbl</file>
+      <file>first_report_Djamila_Mohamed.bbl</file>
     </requires>
     <requires type="static">
       <file>blx-dm.def</file>
       <file>blx-compat.def</file>
+      <file>blx-bibtex.def</file>
       <file>biblatex.def</file>
       <file>standard.bbx</file>
       <file>numeric.bbx</file>
@@ -61,25 +63,30 @@
     </requires>
   </internal>
   <external package="biblatex" priority="5" active="0">
-    <generic>biber</generic>
+    <generic>bibtex</generic>
     <cmdline>
-      <binary>biber</binary>
-      <infile>internship_report_Djamila_Mohamed</infile>
+      <binary>bibtex</binary>
+      <option>-min-crossrefs 2</option>
+      <infile>first_report_Djamila_Mohamed</infile>
     </cmdline>
     <input>
-      <file>internship_report_Djamila_Mohamed.bcf</file>
+      <file>first_report_Djamila_Mohamed.aux</file>
     </input>
     <output>
-      <file>internship_report_Djamila_Mohamed.bbl</file>
+      <file>first_report_Djamila_Mohamed.bbl</file>
     </output>
     <provides type="dynamic">
-      <file>internship_report_Djamila_Mohamed.bbl</file>
+      <file>first_report_Djamila_Mohamed.bbl</file>
     </provides>
     <requires type="dynamic">
-      <file>internship_report_Djamila_Mohamed.bcf</file>
+      <file>first_report_Djamila_Mohamed.aux</file>
+      <file>first_report_Djamila_Mohamed-blx.bib</file>
     </requires>
     <requires type="editable">
-      <file>Bibliography.bib</file>
+      <file>bibliography.bib</file>
+    </requires>
+    <requires type="static">
+      <file>biblatex.bst</file>
     </requires>
   </external>
 </requests>

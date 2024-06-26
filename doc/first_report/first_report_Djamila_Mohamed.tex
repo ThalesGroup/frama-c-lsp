@@ -69,7 +69,7 @@
 \fancyhead[R]{Djamila Mohamed}
 \fancyhead[C]{\today}
 \fancyfoot[R]{\thepage}
- \setlength {\marginparwidth }{2cm}
+ \setlength{\marginparwidth}{2cm}
 
 
 \newcolumntype{P}[1]{>{\centering\arraybackslash}p{#1}}
@@ -89,7 +89,7 @@
             \includegraphics[scale=0.60]{Thales-logo-1.png}\\
             
 		\HRule{2pt} \\
-		\LARGE \textbf{Implementation of a Frama-C plugin and a language server for ACSL/C code assistance} %para que quede encerrado en las lineas
+		\LARGE \textbf{Implementation of a Frama-C plug-in and a language server for ACSL/C code assistance} %para que quede encerrado en las lineas
 		\HRule{2pt} \\ [0.5cm]
 		\normalsize \today}
 		
@@ -98,7 +98,7 @@
 \author{
           Internship report \\[1cm]
 		 Djamila Mohamed      \\
-          2023-2024 \\ [1cm]
+          2023--2024 \\ [1cm]
 		 Supervisor:      \\
 	   Adel Djoudi, Formal Methods Expert
 		 }
@@ -120,31 +120,30 @@
 %\textit{\textbf{Keywords}: lorem, ipsum, dolor}
 \section{Introduction}
 \subsection{Thales DIS, IBS}
-Thales Digital Identity and Security is the global business unit (GBU) of Thales which operates in the field of secure software, providing biometrics and encryption solutions. Within the DIS GBU is the Identity and Biometric Solutions business line (BL) which is in charge of digital identity in a government scale and operate on cards and passports. the IBS BL is divided in three subunits : ID Documents Solutions (IDDS), Digital ID \& Verification Solutions and Public Security. I am assigned to the IDDS subunit as an intern software developer, under the supervision of Adel Djoudi, formal methods expert at Thales. 
+Thales Digital Identity and Security is the global business unit (GBU) of Thales which operates in the field of secure software, providing biometric and encryption solutions. Within the DIS GBU is the Identity and Biometric Solutions business line (BL) which is in charge of digital identity (e.g.:\ cards and passports). The IBS BL is divided in three subunits: ID Documents Solutions (IDDS), Digital ID \& Verification Solutions and Public Security. I am assigned to the IDDS subunit as an intern software developer, under the supervision of Adel Djoudi, formal methods expert at Thales DIS.\@
 
 \subsection{Background}
-In the IDDS subunit, developers work using program analyzers such as Frama-C, a C code analyzer developed by CEA and Inria. This software provides a precise analysis of their code and potential rifts in it by manipulating functional specification in ACSL language. But Frama-C currently does not provide code comprehension and coding features for C and ACSL, some VS Code extensions exist but they are not able to fully satisfy the needs of developers (whyy???).
-The goal of this project is to provide a code assistance tool (reecrire sujet dans la convention de stage)
+In IDDS, developers use program analyzers such as Frama-C\footnote{https://frama-c.com/html/overview.html}, a C source file analyzer developed by CEA and Inria. This
+software provides a precise analysis of their code and potential security flaws in it by expressing functional specifications through ANSI/ISO C Specification Language (ACSL)\footnote{https://frama-c.com/html/acsl.html} annotations. But Frama-C currently does not provide a convenient integrated development environment (IDE) to edit and browse C and ACSL code.
 
-\section{Integration into the company}
-During my first day at Thales, I was welcomed at the reception and they instantly made me a [badge] with authorizations specific to my role, there are places in can access and others that i can't. M. Djoudi accompanied me through the whole process and introduced me to the IDDS team. 
-Thales DIS gives a lot of attention to any security threats that could occur physically or virtually. 
+The goal of this project is to contribute to the development of a software solution in OCaml for a high-level support of C/ACSL languages in IDEs including code navigation, completion suggestions, and interaction with Frama-C code analysis.
 
-\section{Documentation}
+\section{Research Work}
+In this part, we will discuss the main topics covered in the research work I have done so far.
 \subsection{The Language Server Protocol}
-Developers working in large scale projects often need a code editing environment with the adequate tooling for the specific languages they use in their workspace. Multiple solutions such as Eclipse or IntelliJ IDEA exist for Java projects, as well as other popular programming languages. But the complexity of developing one tool for one language and one specific editor is unreasonable as it forces developers to repeat the same document analysis logic for every code editor or Integrated Development Environement (IDE) with each programming language. 
-%To overcome these, a recent solution was developed : the Language Servers.
-%Language Servers are servers providing methods that can be called remotely via a client, in our case the editor, execute them and send back the results to the client. Ex : we want to go to the definition of a function by using `Ctrl+Click` on its name, this means the editor will send a request to the language server ordering it to execute the function ``Go to defintion'' and will send back a result in form of a text that will be interpreted by the code editor and then display the definition of the function to the user.
+Developers working on large scale projects often need a code editing environment with the adequate tooling for the languages they use in their workspace. Multiple solutions such as Eclipse or IntelliJ IDEA exist for Java projects, as well as other popular programming languages. But the complexity of developing one tool for one language and one specific editor is tedious as it forces developers to repeat the same logic for every code editor with each programming language. To overcome these, a recent solution was developed: the Language Server Protocol (LSP)\footnote{https://microsoft.github.io/language-server-protocol/overviews/lsp/overview/}. My first task was to do bibliographic research about its background, use cases and some of its implementations to prepare the implementation of the project and understand its challenges.
 
 \subsection{Frama-C plugin development}
-- how is frama c strucutured
-- what is a plugin and why do we need one in our case
+We choose to implement the ACSL language server as Frama-C plugin to leverage the parsing features of Frama-C for ACSL code. It was therefore necessary to read and follow the Frama-C (Nickel 28.0) plug-in development guide. The Frama-C plug-in will act as the server for the LSP and the VS Code extension as the client. Most of my tasks revolve around the plug-in development as it is the key part of the project. VS Code was chosen as the default editor since it is used by most developers especially in Thales DIS.\@ As long as we have the server part, any editor can provide an extension to connect to the Frama-C server.
 
-\cite{frama_c_user_manual}
-\cite{developer_manual}
-\cite{cil}
+\section{Remaining Tasks}
+\begin{itemize}
+	\item Initiate tests for the server side
+	\item Create the project's proof of concept
+	\item Implement the server and add JSON request parsing
+	\item Implement VS Code extension
+\end{itemize}
 
-\printbibliography
 \end{singlespace}
 \end{document}
 

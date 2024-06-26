@@ -1,0 +1,13 @@
+\babel@toc {english}{}\relax 
+\contentsline {section}{\numberline {1}Introduction}{1}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Thales DIS, IBS}{1}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Context}{1}{subsection.1.2}%
+\contentsline {section}{\numberline {2}Background}{1}{section.2}%
+\contentsline {subsection}{\numberline {2.1}The Language Server Protocol}{1}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Frama-C plugin development}{1}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}VS Code Extensions}{1}{subsection.2.3}%
+\contentsline {section}{\numberline {3}Development}{1}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Server implementation}{1}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Initializing the editor's workspace folder}{2}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}`Go To Definition' feature}{2}{subsection.3.3}%
+\contentsline {section}{\numberline {4}Ongoing tasks}{3}{section.4}%

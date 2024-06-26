@@ -1,0 +1,189 @@
+\documentclass[10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[myheadings]{fullpage}
+\DeclareUnicodeCharacter{0301}{\hspace{-1ex}\'{ }}
+% Package for headers 
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{listings}
+
+% For figures and stuff
+\usepackage{graphicx, wrapfig, subcaption, setspace, booktabs}
+\usepackage[T1]{fontenc}
+\usepackage{array}
+
+% Change for different font sizes and families
+\usepackage[font=small, labelfont=bf]{caption}
+\usepackage{fourier}
+\usepackage[protrusion=true, expansion=true]{microtype}
+
+% Maths
+\usepackage{amsmath,amssymb}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage[super]{nth}
+
+%Grammar expression
+\usepackage[altpo]{backnaur}
+
+% Bibliography
+\usepackage[
+    sorting=none,
+	backend=bibtex
+]{biblatex} 
+\addbibresource{bibliography.bib}
+
+%% Language and font encodings
+\usepackage[english]{babel}
+\usepackage{csquotes}
+\usepackage{titlesec}
+
+\usepackage{appendix}
+\renewcommand{\appendixpagename}{Annexes}
+\renewcommand{\appendixtocname}{Annexes}
+\setcounter{secnumdepth}{4}
+
+\titleformat{\paragraph}
+{\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}
+\titlespacing*{\paragraph}
+{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
+
+
+\newcommand{\HRule}[1]{\rule{\linewidth}{#1}}
+\onehalfspacing
+\setcounter{tocdepth}{5}
+\setcounter{secnumdepth}{5}
+
+%% Sets page size and margins
+\usepackage[a4paper,top=2cm,bottom=1.5cm,left=2cm,right=2cm,marginparwidth=1.5cm]{geometry}
+
+\pagestyle{fancy}
+\fancyhf{}
+
+% Header and footer information
+\setlength\headheight{15pt}
+\fancyhead[L]{Thales DIS / EIDD} 
+\fancyhead[R]{Djamila Mohamed}
+\fancyhead[C]{\today}
+\fancyfoot[R]{\thepage}
+ \setlength{\marginparwidth}{2cm}
+
+
+\newcolumntype{P}[1]{>{\centering\arraybackslash}p{#1}}
+
+ 
+\begin{document}
+\begin{singlespace}
+\pagenumbering{gobble}
+
+\date{}
+
+% Do not change anything here except in \LARGE \textbf{This is the title of the essay} 
+% /hline before and after the title makes those horoziontal lines appear, you can change the appearance by changing the 2pt to different sizees
+\title{
+		% Change to your faculty if needed
+            \includegraphics[scale=0.75]{UniversiteParisCite\_EIDD\_WEB.png}\\   		
+            \includegraphics[scale=0.60]{Thales-logo-1.png}\\
+            
+		\HRule{2pt} \\
+		\LARGE \textbf{Implementation of the language server protocol and a Visual Studio Code extension for C/ACSL programming language features.} %para que quede encerrado en las lineas
+		\HRule{2pt} \\ [0.5cm]
+		\normalsize \today}
+		
+\date{}
+
+\author{
+          Internship report \\[1cm]
+		 Djamila Mohamed      \\
+          2023--2024 \\ [1cm]
+		 Supervisor:      \\
+	   Adel Djoudi, Formal Methods Expert
+		 }
+		 
+\maketitle
+
+\newpage
+
+\tableofcontents
+\newpage
+
+\newpage
+% Add your own abstract here
+
+
+
+\pagenumbering{arabic}
+% Uncomment the next line if you want keywords/index terms after the abstract. 
+%\textit{\textbf{Keywords}: lorem, ipsum, dolor}
+\section{Introduction}
+\subsection{Thales DIS, IBS}
+Thales Digital Identity and Security is the global business unit (GBU) of Thales which operates in the field of secure software, providing biometric and encryption solutions. Within the DIS GBU is the Identity and Biometric Solutions business line (BL) which is in charge of digital identity (e.g.:\ cards and passports). The IBS BL is divided in three subunits: ID Documents Solutions (IDDS), Digital ID \& Verification Solutions and Public Security. I am assigned to the IDDS subunit as an intern software developer, under the supervision of Adel Djoudi, formal methods expert at Thales DIS.\@
+
+\subsection{Context}
+In IDDS, developers use program analyzers such as Frama-C\footnote{https://frama-c.com/html/overview.html}, a C source file analyzer developed by CEA and Inria. This
+software provides a precise analysis of code and potential security flaws by expressing functional specifications through ANSI/ISO C Specification Language (ACSL)\footnote{https://frama-c.com/html/acsl.html} annotations. But Frama-C currently does not provide a convenient integrated development environment (IDE) to edit and browse C and ACSL code.
+
+The goal of this project is to develop a software solution to offer language programming features for C/ACSL in IDEs including code navigation, completion suggestions, and interaction with Frama-C code analysis.
+
+\section{Background}
+\subsection{The Language Server Protocol}
+Developers working on large scale projects often need a code editing environment with the adequate tooling for the languages they use in their workspace. Multiple solutions such as Eclipse or IntelliJ IDEA exist for Java projects, as well as other popular programming languages. But the complexity of developing one tool for one language and one specific editor is tedious as it forces developers to implement the same language programming features for every code editor with each programming language. To overcome these, a recent solution was developed: the Language Server Protocol (LSP)\footnote{https://microsoft.github.io/language-server-protocol/overviews/lsp/overview/}. My first task was to do bibliographic research about its use cases and some of its implementations to prepare the implementation of the project and understand its challenges.
+
+The language Server Protocol (LSP) is built on top of JSON-RPC protocol\footnote{https://www.jsonrpc.org/specification}, a remote procedure call protocol that uses JSON as data format.
+
+
+\subsection{Frama-C plugin development}
+We choose to implement the ACSL language server as a Frama-C plugin to leverage the parsing features of Frama-C for ACSL code. It was therefore necessary to read and follow the Frama-C (Nickel 28.0) plug-in development guide. The Frama-C plug-in will act as the server for the LSP and the VS Code extension as the client. The plug-in development is the main task of the project. VS Code was chosen since it is used by most developers especially in Thales DIS.\@ As long as we have the server part, any editor can provide an extension to connect to the Frama-C server.
+
+\subsection{VS Code Extensions}
+The architecture of VS Code extensions is based on a client-server model, which aligns perfectly with the Language Server Protocol. VS Code provides an API with TypeScript libraries for developing different types of extensions, particularly, language extensions. 
+A Language extension offers declarative (e.g.: syntax highlighting, bracket autoclosing) and programmatic (e.g.: hover information, jump to definition) language features. 
+
+\section{Development}
+\subsection{Server implementation}
+One of the primary tasks is to select the appropriate method for communicating between the VS Code client and the Language Server. In this case, the implementation requires leveraging the OCaml Unix module and using the TCP socket transport method to establish a connection between the two components. This communication channel enables the exchange of requests and responses.
+
+To facilitate the communication between client and server, the extension needs to handle both receiving and sending requests using the Unix module in OCaml.
+The VS Code client creates a server process listening on `localhost:8001', the Frama-C plug-in will connect to that address and receive requests from it. Port 8001 was chosen arbitrarily for development purposes.
+
+When client and server are connected, they must agree on which features both can provide through the `initialize' handshake, where the client first sends the features it can support and the server responds with its capabilities.
+The VS Code process is executed in a Node.js runtime environment. 
+
+Below is a sequence diagram representing the lifecycle of the VS Code application.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.5]{lifecycle.png}
+	\caption{Lifecycle of the VS Code language extension for ACSL}
+\end{figure}
+
+\subsection{Initializing the editor's workspace folder}
+When the user opens a folder with C source files, the language server initializes the workspace folder: in order to use the Frama-C module's functions, the plug-in converts the source code files into their C Intermediate Language (CIL) representation, which provides a detailed hierarchical structure of the source code. It captures the syntactic elements and relationships within the code, for deeper analysis and processing. This representation allows the server to efficiently navigate and manipulate the code, supporting features like `Go To Definition' and other code navigation tools.
+
+\subsection{`Go To Definition' feature}
+The `Go To Definition' feature of Visual Studio Code allows developers to easily navigate to the definition of symbols within their code. In this context, the challenges involve implementing a VS Code extension that supports this feature for two languages associated with the same file extension (`.c' and `.h'). 
+
+When a user requests to find the definition of a symbol at a specific position in the code, the server first identifies the name of the symbol located at that position. This involves parsing, analyzing the file and extracting the relevant word based on the provided line and column numbers.
+The code then initiates a search through various sections of the code to find where the symbol is defined. This search involves visiting different parts of the source file's Abstract Syntax Tree (AST) and concerns both ACSL and C code:
+\begin{itemize}
+\item ACSL Definitions: The code checks if the symbol matches any logical predicates or terms, which are specific to tools like Frama-C used for static analysis of C programs.
+\item C Definitions: It examines global entities, such as enums, structures, functions, and variables, to see if the symbol matches any of these.
+\end{itemize}
+Each of these searches uses visitor patterns, which traverse and inspect nodes in the AST, comparing each node's name to the symbol's name.
+
+If a definition is located, the exact file path and the range of lines and columns where the symbol is defined are packaged into a JSON response. If no definition is found, a response indicating a null result is returned. This response allows the LSP client (the user's text editor or IDE) to navigate directly to the symbol's definition or handle the case where no definition exists.
+
+\section{Ongoing tasks}
+\begin{itemize}
+	\item Create end-to-end tests for VS Code extension 
+	\item Create tests for Frama-C plug-in
+	\item Implement `Diagnostics' feature of LSP (compilation errors, warnings, etc.)
+	\item Implement the display of CIL of source code on demand
+\end{itemize}
+
+\end{singlespace}
+\end{document}
+
