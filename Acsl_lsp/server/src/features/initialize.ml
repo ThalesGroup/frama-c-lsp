@@ -1,30 +1,28 @@
-(* cannot be called twice, must be called first *)
+let rootPath = ref ""
 let initialize (req : Types.RequestMessage.t): Json.json = 
-    (* todo : remove file scheme from root uri *)
-    (*let req_json = (RequestMessage.json_of_t req) in 
-    let rootUri = Json.field "params" req_json |> Json.field "rootUri" in*)
-    try 
-      let file = File.from_filename (Filepath.Normalized.of_string "/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server/tests/test1.c") in
-      ignore (File.init_from_c_files [file]) ; (* todo :*)
-      (* todo : take dir from request (rootUri) *)
-      let framac_share = Utils.file_str Fc_config.datadir in 
-      Kernel.Share.set (Fc_config.datadir);
-      let share = Kernel.Share.get () in
-      Filepath.add_symbolic_dir framac_share share;
+    let req_json = (Types.RequestMessage.json_of_t req) in
+    let temp =  Utils.remove_newline (Utils.remove_quotes (Json.save_string (Json.field "rootPath" (Json.field "params" req_json)))) in
+    rootPath := !rootPath ^ temp ^ "/";
+    Printf.printf "rootPath = %s\n%!" !rootPath;
 
-      (* todo : default initialize result for the moment *)
       let result = {|{
         "jsonrpc": "2.0",
         "id": 0,
         "result": {
           "capabilities": {
-            "textDocumentSync": "None",
+            "textDocumentSync": {
+              "change": 2,
+              "save": {
+                "includeText": false
+              }
+            },
             "completionProvider": false,
             "hoverProvider": false,
             "signatureHelpProvider": {
               "triggerCharacters": ["(", ","]
             },
             "definitionProvider": true,
+            "declarationProvider": false,
             "typeDefinitionProvider": false,
             "implementationProvider": false,
             "referencesProvider": false,
@@ -46,23 +44,21 @@ let initialize (req : Types.RequestMessage.t): Json.json =
                 "editor.action.formatDocument"
               ]
             },
-            "selectionRangeProvider": {
-              "legend": {
-                "tokenTypes": [],
-                "tokenModifiers": []
-              },
-              "range": false,
-              "full": { "delta": true }
-            },
+            "selectionRangeProvider": false,
             "linkedEditingRangeProvider": {"workDoneProgress": false},
             "semanticTokensProvider": false,
             "monikerProvider": false,
+            "diagnosticProvider": {
+              "interFileDependencies": false,
+              "workspaceDiagnostics": true
+            },
             "callHierarchyProvider": false,
             "workspace": {
               "workspaceFolders": {
-                "supported": false,
-                "changeNotifications": false
-              }
+                "supported": true,
+                "changeNotifications": true
+              },
+              "configuration": true
             },
             "experimental": null
           },
@@ -73,9 +69,32 @@ let initialize (req : Types.RequestMessage.t): Json.json =
         }
       }|}
       in
-      Json.load_string result;
-      (* get uri of first and only path in workspaceFolders array *)
-    with _ -> 
-      Types.ResponseMessage.json_of_t (Types.ResponseMessage.create ~jsonrpc:"2.0" ~id:req.id ~error:(Types.ResponseError.create ~code:(-32803) ~message:"No folders with c files are open." ()) ());
+      Json.load_string result
+      (* todo : get uri of first and only path in workspaceFolders array *)
 
+let init_files sock = 
+  try
+    let filenames = Filepath.readdir (Filepath.Normalized.of_string !rootPath) in
+    (* remove non source files *)
+    let filtered_files = List.filter (fun x -> String.ends_with ~suffix:".c" x || String.ends_with ~suffix:".h" x) (Array.to_list filenames) in
+    Printf.printf "file list size = %d\n%!" (List.length filtered_files);
+    let files = 
+      List.map (fun x -> 
+        File.from_filename (
+          Filepath.Normalized.of_string (Filepath.normalize x)
+        )
+      ) (List.map (fun y -> 
+        !rootPath ^ y) 
+      (filtered_files)
+      ) in
+    Printf.printf "Got files list : \n%!";
+    List.iter (fun x ->
+      Printf.printf "file : %s\n%!" (File.get_name x);
+    ) files;
+    try
+      ignore (File.init_from_c_files files);
+    with Log.AbortError msg ->
+      Printf.printf "retrieved string : %s\n%!" msg
 
+  with Stdlib.Sys_error err -> 
+    Utils.send_error_request err sock
