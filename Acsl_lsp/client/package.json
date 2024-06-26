@@ -22,7 +22,8 @@
     },
     "activationEvents": [
         "onLanguage:c",
-        "onLanguage:cpp"
+        "onLanguage:cpp",
+        "workspaceContains:/.vscode/c_cpp_properties.json"
     ],
     "main": "./out/extension",
     "contributes": {
@@ -40,24 +41,17 @@
                 "configuration": "./language-configuration.json"
             }
         ],
-        "grammars": [
-            {
-                "language": "acsl",
-                "scopeName": "source.acsl",
-                "path": "./syntaxes/acsl.tmLanguage.json"
-            }
-        ],
         "configuration": {
             "type": "object",
-            "title": "Server configuration",
+            "title": "ACSL/C",
             "properties": {
-                "acslClient.maxNumberOfProblems": {
+                "vscodeacsl.maxNumberOfProblems": {
                     "scope": "resource",
                     "type": "number",
                     "default": 1000,
                     "description": "Controls the maximum number of problems produced by the server."
                 },
-                "acslClient.trace.server": {
+                "vscodeacsl.trace.server": {
                     "scope": "window",
                     "type": "string",
                     "enum": [
@@ -67,15 +61,19 @@
                     ],
                     "default": "off",
                     "description": "Traces the communication between VS Code and the language server."
+                },
+                "vscodeacsl.includePaths": {
+                    "scope": "workspace",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": "",
+                    "description": "Adds C/C++ include paths for the project"
                 }
+                
             }
-        },
-        "commands": [
-            {
-                "command": "vscodeacsl.definition",
-                "title": "ACSL: Go To Definition"
-            }
-        ]
+        }
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
