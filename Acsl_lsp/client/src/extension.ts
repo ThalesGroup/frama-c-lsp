@@ -1,36 +1,45 @@
-/* --------------------------------------------------------------------------------------------
- * Copyright (c) Microsoft Corporation. All rights reserved.
- * Licensed under the MIT License. See License.txt in the project root for license information.
- * ------------------------------------------------------------------------------------------ */
-
 import * as path from 'path';
-import { workspace, ExtensionContext } from 'vscode';
+import { workspace, ExtensionContext, commands, extensions, window } from 'vscode';
+import { DefinitionFeature } from 'vscode-languageclient/lib/common/definition';
 
 import {
 	LanguageClient,
 	LanguageClientOptions,
 	ServerOptions,
-	TransportKind
+	TransportKind,
+	VersionedTextDocumentIdentifier
 } from 'vscode-languageclient/node';
 
 let client: LanguageClient;
 
 export function activate(context: ExtensionContext) {
-	// The server is implemented in node
-	const serverModule = context.asAbsolutePath(
-		path.join('..', 'server', 'run.sh')
+	// The server is implemented in OCaml
+	const extension = context.extension.packageJSON.publisher 
+		+ "." 
+		+ context.extension.packageJSON.name
+		+ "-"
+		+ context.extension.packageJSON.version;
+
+	const serverModuleRun = context.asAbsolutePath(
+		path.join('run.sh')
+	);
+
+	const serverModuleDebug = context.asAbsolutePath(
+		path.join('run.sh')
 	);
 
 	// If the extension is launched in debug mode then the debug server options are used
 	// Otherwise the run options are used
 	const serverOptions: ServerOptions = {
 		run: { 
-			command: serverModule, 
-			transport: {kind: TransportKind.socket, port: 8001}, options:{shell: true}
+			command: serverModuleRun, 
+			transport: {kind: TransportKind.socket, port: 8001},
+			options: {shell: true}
 		},
 		debug: {
-			command: serverModule,
-			transport: {kind: TransportKind.socket, port: 8001}, options:{shell: true}
+			command: serverModuleDebug,
+			transport: {kind: TransportKind.socket, port: 8001},
+			options: {shell: true}
 		}
 	};
 

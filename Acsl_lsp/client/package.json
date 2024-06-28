@@ -2,7 +2,6 @@
     "name": "vscodeacsl",
     "description": "Visual Studio Code Client for ACSL Language Server",
     "author": "Your Name",
-    "license": "MIT",
     "version": "1.0.0",
     "repository": {
         "type": "git",
@@ -13,9 +12,7 @@
         "Programming Languages"
     ],
     "keywords": [
-        "multi-root ready",
-        "acsl",
-        "c"
+        "acsl"
     ],
     "engines": {
         "vscode": "^1.75.0"
@@ -39,6 +36,13 @@
                     ".h"
                 ],
                 "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "acsl",
+                "scopeName": "source.acsl",
+                "path": "./syntaxes/acsl.tmLanguage.json"
             }
         ],
         "configuration": {
@@ -85,7 +89,7 @@
     "devDependencies": {
         "@types/mocha": "^10.0.6",
         "@types/node": "^18.19.33",
-        "@types/vscode": "^1.89.0",
+        "@types/vscode": "^1.75.0",
         "@typescript-eslint/eslint-plugin": "^7.11.0",
         "@typescript-eslint/parser": "^7.11.0",
         "eslint": "^8.57.0",
