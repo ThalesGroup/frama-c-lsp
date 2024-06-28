@@ -1,0 +1,6 @@
+{
+    "vscodeacsl.includePaths": [
+        "/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server/test_files/include_folder2",
+        "/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server/test_files/include_folder"
+    ]
+}
