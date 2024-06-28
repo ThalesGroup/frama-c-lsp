@@ -20,7 +20,6 @@ let request_includePaths id client_sock : unit =
   Utils.send_request client_sock (Json.save_string req)
 
 let set_includePaths confs : unit = 
-  Printf.printf "Setting include paths...\n%!";
   let formatted_paths = 
     List.map (fun config -> 
       ("-I"^(Utils.remove_newline (Utils.remove_quotes config)))
@@ -35,6 +34,5 @@ let save_config (result: Json.json) =
     configs := List.map(fun c ->
       Json.save_string(c)
     ) s;
-    if !gotConfiguration then set_includePaths !configs;
-  | _ -> failwith "Invalid configuration"
+  | _ -> failwith "Invalid include paths"
 
