@@ -142,6 +142,30 @@ We choose to implement the ACSL language server as a Frama-C plugin to leverage 
 The architecture of VS Code extensions is based on a client-server model, which aligns perfectly with the Language Server Protocol. VS Code provides an API with TypeScript libraries for developing different types of extensions, particularly, language extensions. 
 A Language extension offers declarative (e.g.: syntax highlighting, bracket autoclosing) and programmatic (e.g.: hover information, jump to definition) language features. 
 
+\section{Installation}
+\subsection{Frama-C plug-in}
+To install the plug-in you will need the following: frama-c 28.0
+\begin{enumerate}
+	\item Open terminal and clone git project `Acsl\_lsp'
+	\item In the `server' folder, execute `dune build' then `dune install'
+\end{enumerate}
+
+\subsection{VS Code extension}
+Since the extension is not published, you can install it locally on your VS Code only.
+You will need the following: nvm (node) >= 18.18.0, npm >= 9.8.0, vsce
+If you need to recompile the client, perform these additional steps before:
+\begin{enumerate}
+	\item In the project cloned previously, go to `client'
+	\item Run `nvm use 18.18.0', `npm install', `npm run compile' 
+	\item Run `vsce package' in the same folder, this will generate a \.vsix file
+\end{enumerate}
+Else: 
+\begin{enumerate}
+	\item Go to the `Extensions' view and click on the three dots `Views and more actions\ldots'
+	\item Select `Install from VSIX\ldots'
+	\item Give the path to the .vsix file located in the `client' folder
+\end{enumerate}
+
 \section{Development}
 \subsection{Server implementation}
 One of the primary tasks is to select the appropriate method for communicating between the VS Code client and the Language Server. In this case, the implementation requires leveraging the OCaml Unix module and using the TCP socket transport method to establish a connection between the two components. This communication channel enables the exchange of requests and responses.
