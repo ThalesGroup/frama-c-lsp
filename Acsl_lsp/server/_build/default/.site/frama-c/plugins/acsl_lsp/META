@@ -1,1 +1,1 @@
-requires = "acsl-lsp.core"
+requires = "frama-c-acsl_lsp.core"

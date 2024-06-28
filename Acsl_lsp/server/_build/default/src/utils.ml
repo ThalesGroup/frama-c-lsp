@@ -1,4 +1,10 @@
 let max_int = (-1) lsr 1 (* stdlib function *)
+
+let dummyLoc filename : Cil_types.location = 
+  (
+    {pos_path=(Filepath.Normalized.of_string filename); pos_lnum=0;  pos_bol=1; pos_cnum=1},
+    {pos_path=(Filepath.Normalized.of_string filename); pos_lnum=0;  pos_bol=1; pos_cnum=1}
+  )
 let config_id = 123456789
 let file_str f = 
   let dir_list = [f] in 

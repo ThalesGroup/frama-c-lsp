@@ -1,9 +1,8 @@
-let rootPath = ref ""
 let initialize (req : Types.RequestMessage.t): Json.json = 
     let req_json = (Types.RequestMessage.json_of_t req) in
     let temp =  Utils.remove_newline (Utils.remove_quotes (Json.save_string (Json.field "rootPath" (Json.field "params" req_json)))) in
-    rootPath := !rootPath ^ temp ^ "/";
-    Printf.printf "rootPath = %s\n%!" !rootPath;
+    States.rootPath := States.(!rootPath) ^ temp ^ "/";
+    Printf.printf "rootPath = %s\n%!" States.(!rootPath);
 
       let result = {|{
         "jsonrpc": "2.0",
@@ -74,27 +73,21 @@ let initialize (req : Types.RequestMessage.t): Json.json =
 
 let init_files sock = 
   try
-    let filenames = Filepath.readdir (Filepath.Normalized.of_string !rootPath) in
+    Configuration.set_includePaths (Configuration.(!configs));
+    let filenames = Filepath.readdir (Filepath.Normalized.of_string States.(!rootPath)) in
     (* remove non source files *)
     let filtered_files = List.filter (fun x -> String.ends_with ~suffix:".c" x || String.ends_with ~suffix:".h" x) (Array.to_list filenames) in
     Printf.printf "file list size = %d\n%!" (List.length filtered_files);
     let files = 
-      List.map (fun x -> 
-        File.from_filename (
-          Filepath.Normalized.of_string (Filepath.normalize x)
-        )
-      ) (List.map (fun y -> 
-        !rootPath ^ y) 
+      List.map (fun y -> 
+        States.(!rootPath) ^ y) 
       (filtered_files)
-      ) in
-    Printf.printf "Got files list : \n%!";
-    List.iter (fun x ->
-      Printf.printf "file : %s\n%!" (File.get_name x);
+      in
+
+    (* initialize all files *)
+    List.iter (fun file ->
+      Load.load_file file sock
     ) files;
-    try
-      ignore (File.init_from_c_files files);
-    with Log.AbortError msg ->
-      Printf.printf "retrieved string : %s\n%!" msg
 
   with Stdlib.Sys_error err -> 
     Utils.send_error_request err sock
