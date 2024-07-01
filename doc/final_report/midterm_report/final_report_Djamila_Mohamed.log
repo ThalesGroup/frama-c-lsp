@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2023.6.19)  1 JUL 2024 09:54
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2023.6.19)  1 JUL 2024 11:19
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -283,7 +283,22 @@ LaTeX Info: Redefining \lslig on input line 897.
 Package microtype Info: Loading configuration file microtype.cfg.
  (/usr/share/texlive/texmf-dist/tex/latex/microtype/microtype.cfg
 File: microtype.cfg 2021/12/10 v3.0b microtype main configuration file (RS)
-)) (/usr/share/texlive/texmf-dist/tex/latex/amsmath/amsmath.sty
+)) (/usr/share/texlive/texmf-dist/tex/latex/xcolor/xcolor.sty
+Package: xcolor 2021/10/31 v2.13 LaTeX color extensions (UK)
+ (/usr/share/texlive/texmf-dist/tex/latex/graphics-cfg/color.cfg
+File: color.cfg 2016/01/02 v1.6 sample color configuration
+)
+Package xcolor Info: Driver file: pdftex.def on input line 227.
+Package xcolor Info: Model `cmy' substituted by `cmy0' on input line 1352.
+Package xcolor Info: Model `hsb' substituted by `rgb' on input line 1356.
+Package xcolor Info: Model `RGB' extended on input line 1368.
+Package xcolor Info: Model `HTML' substituted by `rgb' on input line 1370.
+Package xcolor Info: Model `Hsb' substituted by `hsb' on input line 1371.
+Package xcolor Info: Model `tHsb' substituted by `hsb' on input line 1372.
+Package xcolor Info: Model `HSB' substituted by `hsb' on input line 1373.
+Package xcolor Info: Model `Gray' substituted by `gray' on input line 1374.
+Package xcolor Info: Model `wave' substituted by `hsb' on input line 1375.
+) (/usr/share/texlive/texmf-dist/tex/latex/amsmath/amsmath.sty
 Package: amsmath 2021/10/15 v2.17l AMS math features
 \@mathmargin=\skip62
 
@@ -389,22 +404,7 @@ Package: xkeyval 2020/11/20 v2.8 package option processing (HA)
 )
 \XKV@depth=\count292
 File: xkeyval.tex 2014/12/03 v2.7a key=value parser (HA)
-)) (/usr/share/texlive/texmf-dist/tex/latex/xcolor/xcolor.sty
-Package: xcolor 2021/10/31 v2.13 LaTeX color extensions (UK)
- (/usr/share/texlive/texmf-dist/tex/latex/graphics-cfg/color.cfg
-File: color.cfg 2016/01/02 v1.6 sample color configuration
-)
-Package xcolor Info: Driver file: pdftex.def on input line 227.
-Package xcolor Info: Model `cmy' substituted by `cmy0' on input line 1352.
-Package xcolor Info: Model `hsb' substituted by `rgb' on input line 1356.
-Package xcolor Info: Model `RGB' extended on input line 1368.
-Package xcolor Info: Model `HTML' substituted by `rgb' on input line 1370.
-Package xcolor Info: Model `Hsb' substituted by `hsb' on input line 1371.
-Package xcolor Info: Model `tHsb' substituted by `hsb' on input line 1372.
-Package xcolor Info: Model `HSB' substituted by `hsb' on input line 1373.
-Package xcolor Info: Model `Gray' substituted by `gray' on input line 1374.
-Package xcolor Info: Model `wave' substituted by `hsb' on input line 1375.
-) (/usr/share/texlive/texmf-dist/tex/latex/pgf/frontendlayer/tikz.sty (/usr/share/texlive/texmf-dist/tex/latex/pgf/basiclayer/pgf.sty (/usr/share/texlive/texmf-dist/tex/latex/pgf/utilities/pgfrcs.sty (/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgfutil-common.tex
+)) (/usr/share/texlive/texmf-dist/tex/latex/pgf/frontendlayer/tikz.sty (/usr/share/texlive/texmf-dist/tex/latex/pgf/basiclayer/pgf.sty (/usr/share/texlive/texmf-dist/tex/latex/pgf/utilities/pgfrcs.sty (/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgfutil-common.tex
 \pgfutil@everybye=\toks32
 \pgfutil@tempdima=\dimen179
 \pgfutil@tempdimb=\dimen180
@@ -1014,45 +1014,45 @@ Package csquotes Info: Redefining alias 'default' -> 'english'.
  (./final_report_Djamila_Mohamed.aux)
 \openout1 = `final_report_Djamila_Mohamed.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 78.
-LaTeX Font Info:    ... okay on input line 78.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 78.
-LaTeX Font Info:    ... okay on input line 78.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 78.
-LaTeX Font Info:    ... okay on input line 78.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 78.
-LaTeX Font Info:    ... okay on input line 78.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 78.
-LaTeX Font Info:    ... okay on input line 78.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 78.
-LaTeX Font Info:    ... okay on input line 78.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 78.
-LaTeX Font Info:    ... okay on input line 78.
-LaTeX Font Info:    Checking defaults for FML/futm/m/it on input line 78.
-LaTeX Font Info:    Trying to load font information for FML+futm on input line 78.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 79.
+LaTeX Font Info:    ... okay on input line 79.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 79.
+LaTeX Font Info:    ... okay on input line 79.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 79.
+LaTeX Font Info:    ... okay on input line 79.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 79.
+LaTeX Font Info:    ... okay on input line 79.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 79.
+LaTeX Font Info:    ... okay on input line 79.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 79.
+LaTeX Font Info:    ... okay on input line 79.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 79.
+LaTeX Font Info:    ... okay on input line 79.
+LaTeX Font Info:    Checking defaults for FML/futm/m/it on input line 79.
+LaTeX Font Info:    Trying to load font information for FML+futm on input line 79.
  (/usr/share/texlive/texmf-dist/tex/latex/fourier/fmlfutm.fd
 File: fmlfutm.fd 2004/10/30 Fontinst v1.926 font definitions for FML/futm.
 )
-LaTeX Font Info:    ... okay on input line 78.
-LaTeX Font Info:    Checking defaults for FMS/futm/m/n on input line 78.
-LaTeX Font Info:    Trying to load font information for FMS+futm on input line 78.
+LaTeX Font Info:    ... okay on input line 79.
+LaTeX Font Info:    Checking defaults for FMS/futm/m/n on input line 79.
+LaTeX Font Info:    Trying to load font information for FMS+futm on input line 79.
  (/usr/share/texlive/texmf-dist/tex/latex/fourier/fmsfutm.fd
 File: fmsfutm.fd 2004/10/30 Fontinst v1.926 font definitions for FMS/futm.
 )
-LaTeX Font Info:    ... okay on input line 78.
-LaTeX Font Info:    Checking defaults for FMX/futm/m/n on input line 78.
-LaTeX Font Info:    Trying to load font information for FMX+futm on input line 78.
+LaTeX Font Info:    ... okay on input line 79.
+LaTeX Font Info:    Checking defaults for FMX/futm/m/n on input line 79.
+LaTeX Font Info:    Trying to load font information for FMX+futm on input line 79.
  (/usr/share/texlive/texmf-dist/tex/latex/fourier/fmxfutm.fd
 File: fmxfutm.fd futm-extension
 )
-LaTeX Font Info:    ... okay on input line 78.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 78.
-LaTeX Font Info:    ... okay on input line 78.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 78.
-LaTeX Font Info:    ... okay on input line 78.
+LaTeX Font Info:    ... okay on input line 79.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 79.
+LaTeX Font Info:    ... okay on input line 79.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 79.
+LaTeX Font Info:    ... okay on input line 79.
 Package lastpage Info: Please have a look at the pageslts package at
 (lastpage)             https://www.ctan.org/pkg/pageslts
-(lastpage)             ! on input line 78.
+(lastpage)             ! on input line 79.
 \c@lstlisting=\count468
  (/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
@@ -1077,20 +1077,20 @@ Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: float package is loaded.
 Package caption Info: hyperref package is loaded.
 Package caption Info: End \AtBeginDocument code.
-LaTeX Font Info:    Redeclaring math accent \widehat on input line 78.
-LaTeX Font Info:    Redeclaring math accent \widetilde on input line 78.
-LaTeX Info: Redefining \microtypecontext on input line 78.
-Package microtype Info: Applying patch `item' on input line 78.
-Package microtype Info: Applying patch `toc' on input line 78.
-Package microtype Info: Applying patch `eqnum' on input line 78.
-Package microtype Info: Applying patch `footnote' on input line 78.
+LaTeX Font Info:    Redeclaring math accent \widehat on input line 79.
+LaTeX Font Info:    Redeclaring math accent \widetilde on input line 79.
+LaTeX Info: Redefining \microtypecontext on input line 79.
+Package microtype Info: Applying patch `item' on input line 79.
+Package microtype Info: Applying patch `toc' on input line 79.
+Package microtype Info: Applying patch `eqnum' on input line 79.
+Package microtype Info: Applying patch `footnote' on input line 79.
 Package microtype Info: Generating PDF output.
 Package microtype Info: Character protrusion enabled (level 2).
 Package microtype Info: Using default protrusion set `alltext'.
 Package microtype Info: Automatic font expansion enabled (level 2),
 (microtype)             stretch: 20, shrink: 20, step: 1, non-selected.
 Package microtype Info: Using default expansion set `alltext-nott'.
-LaTeX Info: Redefining \showhyphens on input line 78.
+LaTeX Info: Redefining \showhyphens on input line 79.
 Package microtype Info: No adjustment of tracking.
 Package microtype Info: No adjustment of interword spacing.
 Package microtype Info: No adjustment of character kerning.
@@ -1098,7 +1098,7 @@ Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `futs' (encoding: T1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
-Package hyperref Info: Link coloring ON on input line 78.
+Package hyperref Info: Link coloring ON on input line 79.
  (/usr/share/texlive/texmf-dist/tex/latex/hyperref/nameref.sty
 Package: nameref 2021-04-02 v2.47 Cross-referencing by name of section
  (/usr/share/texlive/texmf-dist/tex/latex/refcount/refcount.sty
@@ -1108,9 +1108,9 @@ Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 )
 \c@section@level=\count475
 )
-LaTeX Info: Redefining \ref on input line 78.
-LaTeX Info: Redefining \pageref on input line 78.
-LaTeX Info: Redefining \nameref on input line 78.
+LaTeX Info: Redefining \ref on input line 79.
+LaTeX Info: Redefining \pageref on input line 79.
+LaTeX Info: Redefining \nameref on input line 79.
  (./final_report_Djamila_Mohamed.out) (./final_report_Djamila_Mohamed.out)
 \@outlinefile=\write5
 \openout5 = `final_report_Djamila_Mohamed.out'.
@@ -1131,8 +1131,8 @@ Package biblatex Info: Data encoding 'utf8' specified.
 Package biblatex Info: Trying to load bibliographic data...
 Package biblatex Info: ... file 'final_report_Djamila_Mohamed.bbl' found.
  (./final_report_Djamila_Mohamed.bbl)
-Package biblatex Info: Reference section=0 on input line 78.
-Package biblatex Info: Reference segment=0 on input line 78.
+Package biblatex Info: Reference section=0 on input line 79.
+Package biblatex Info: Reference segment=0 on input line 79.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -1168,39 +1168,39 @@ Package biblatex Info: Reference segment=0 on input line 78.
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-<UniversiteParisCite_EIDD_WEB.png, id=67, 537.00626pt x 100.375pt>
+<UniversiteParisCite_EIDD_WEB.png, id=79, 537.00626pt x 100.375pt>
 File: UniversiteParisCite_EIDD_WEB.png Graphic file (type png)
 <use UniversiteParisCite_EIDD_WEB.png>
-Package pdftex.def Info: UniversiteParisCite_EIDD_WEB.png  used on input line 107.
+Package pdftex.def Info: UniversiteParisCite_EIDD_WEB.png  used on input line 108.
 (pdftex.def)             Requested size: 402.75371pt x 75.28105pt.
-<Thales-logo-1.png, id=69, 451.6875pt x 150.5625pt>
+<Thales-logo-1.png, id=81, 451.6875pt x 150.5625pt>
 File: Thales-logo-1.png Graphic file (type png)
 <use Thales-logo-1.png>
-Package pdftex.def Info: Thales-logo-1.png  used on input line 107.
+Package pdftex.def Info: Thales-logo-1.png  used on input line 108.
 (pdftex.def)             Requested size: 271.01459pt x 90.33818pt.
-LaTeX Font Info:    Trying to load font information for FML+futmi on input line 107.
+LaTeX Font Info:    Trying to load font information for FML+futmi on input line 108.
 (/usr/share/texlive/texmf-dist/tex/latex/fourier/fmlfutmi.fd
 File: fmlfutmi.fd 2004/10/30 Fontinst v1.926 font definitions for FML/futmi.
 )
 LaTeX Font Info:    Font shape `FMX/futm/m/n' will be
-(Font)              scaled to size 11.03998pt on input line 107.
+(Font)              scaled to size 11.03998pt on input line 108.
 LaTeX Font Info:    Font shape `FMX/futm/m/n' will be
-(Font)              scaled to size 8.27998pt on input line 107.
+(Font)              scaled to size 8.27998pt on input line 108.
 LaTeX Font Info:    Font shape `FMX/futm/m/n' will be
-(Font)              scaled to size 6.43999pt on input line 107.
+(Font)              scaled to size 6.43999pt on input line 108.
 LaTeX Font Info:    Font shape `U/futm/m/n' will be
-(Font)              scaled to size 11.03998pt on input line 107.
+(Font)              scaled to size 11.03998pt on input line 108.
 LaTeX Font Info:    Font shape `U/futm/m/n' will be
-(Font)              scaled to size 8.27998pt on input line 107.
+(Font)              scaled to size 8.27998pt on input line 108.
 LaTeX Font Info:    Font shape `U/futm/m/n' will be
-(Font)              scaled to size 6.43999pt on input line 107.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 107.
+(Font)              scaled to size 6.43999pt on input line 108.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 108.
  (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 ) (/usr/share/texlive/texmf-dist/tex/latex/microtype/mt-msa.cfg
 File: mt-msa.cfg 2006/02/04 v1.1 microtype config. file: AMS symbols (a) (RS)
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 107.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 108.
  (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 ) (/usr/share/texlive/texmf-dist/tex/latex/microtype/mt-msb.cfg
@@ -1209,17 +1209,17 @@ File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map} <./UniversiteParisCite_EIDD_WEB.png> <./Thales-Logo-1.png>] (./final_report_Djamila_Mohamed.toc
 LaTeX Font Info:    Font shape `FMX/futm/m/n' will be
-(Font)              scaled to size 9.19998pt on input line 3.
+(Font)              scaled to size 9.19998pt on input line 7.
 LaTeX Font Info:    Font shape `FMX/futm/m/n' will be
-(Font)              scaled to size 6.99199pt on input line 3.
+(Font)              scaled to size 6.99199pt on input line 7.
 LaTeX Font Info:    Font shape `FMX/futm/m/n' will be
-(Font)              scaled to size 5.51999pt on input line 3.
+(Font)              scaled to size 5.51999pt on input line 7.
 LaTeX Font Info:    Font shape `U/futm/m/n' will be
-(Font)              scaled to size 9.19998pt on input line 3.
+(Font)              scaled to size 9.19998pt on input line 7.
 LaTeX Font Info:    Font shape `U/futm/m/n' will be
-(Font)              scaled to size 6.99199pt on input line 3.
+(Font)              scaled to size 6.99199pt on input line 7.
 LaTeX Font Info:    Font shape `U/futm/m/n' will be
-(Font)              scaled to size 5.51999pt on input line 3.
+(Font)              scaled to size 5.51999pt on input line 7.
 )
 \tf@toc=\write6
 \openout6 = `final_report_Djamila_Mohamed.toc'.
@@ -1227,18 +1227,18 @@ LaTeX Font Info:    Font shape `U/futm/m/n' will be
 pdfTeX warning (ext4): destination with the same identifier (name{page.}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.111 \newpage
+l.112 \newpage
                [2]
 LaTeX Font Info:    Font shape `FMX/futm/m/n' will be
-(Font)              scaled to size 7.35999pt on input line 126.
+(Font)              scaled to size 7.35999pt on input line 127.
 LaTeX Font Info:    Font shape `FMX/futm/m/n' will be
-(Font)              scaled to size 6.25598pt on input line 126.
+(Font)              scaled to size 6.25598pt on input line 127.
 LaTeX Font Info:    Font shape `U/futm/m/n' will be
-(Font)              scaled to size 7.35999pt on input line 126.
+(Font)              scaled to size 7.35999pt on input line 127.
 LaTeX Font Info:    Font shape `U/futm/m/n' will be
-(Font)              scaled to size 6.25598pt on input line 126.
+(Font)              scaled to size 6.25598pt on input line 127.
  [1]
-LaTeX Font Info:    Trying to load font information for TS1+futs on input line 157.
+LaTeX Font Info:    Trying to load font information for TS1+futs on input line 179.
  (/usr/share/texlive/texmf-dist/tex/latex/fourier/ts1futs.fd
 File: ts1futs.fd 2003/09/14 Fontinst v1.801 font definitions for TS1/futs.
 )
@@ -1246,38 +1246,39 @@ Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `futs' (encoding: TS1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
-<lifecycle.png, id=112, 1002.74625pt x 545.78906pt>
+ [2]
+<lifecycle.png, id=140, 1002.74625pt x 545.78906pt>
 File: lifecycle.png Graphic file (type png)
 <use lifecycle.png>
-Package pdftex.def Info: lifecycle.png  used on input line 188.
+Package pdftex.def Info: lifecycle.png  used on input line 213.
 (pdftex.def)             Requested size: 501.3719pt x 272.89386pt.
 
-Overfull \hbox (17.67503pt too wide) in paragraph at lines 188--189
+Overfull \hbox (17.67503pt too wide) in paragraph at lines 213--214
  [][] 
  []
 
-[2 <./lifecycle.png>] 
+[3 <./lifecycle.png>] 
 AED: lastpage setting LastPage
-[3] (./final_report_Djamila_Mohamed.aux)
+[4] (./final_report_Djamila_Mohamed.aux)
 Package rerunfilecheck Info: File `final_report_Djamila_Mohamed.out' has not changed.
-(rerunfilecheck)             Checksum: 8ABF75BAD30DFDE627BF3C1A954468FE;2219.
+(rerunfilecheck)             Checksum: 3867848FBC5CB76F156DBE0DA4F5E9EF;2707.
 Package logreq Info: Writing requests to 'final_report_Djamila_Mohamed.run.xml'.
 \openout1 = `final_report_Djamila_Mohamed.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 36000 strings out of 478287
- 667488 string characters out of 5849289
- 1350724 words of memory out of 5000000
- 53352 multiletter control sequences out of 15000+600000
- 577574 words of font info for 260 fonts, out of 8000000 for 9000
+ 36037 strings out of 478287
+ 667810 string characters out of 5849289
+ 1350728 words of memory out of 5000000
+ 53358 multiletter control sequences out of 15000+600000
+ 583462 words of font info for 278 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 99i,11n,94p,1943b,1894s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 99i,12n,94p,1943b,1918s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/share/texlive/texmf-dist/fonts/type1/adobe/utopia/putb8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/adobe/utopia/putr8a.pfb>
-Output written on final_report_Djamila_Mohamed.pdf (5 pages, 122875 bytes).
+Output written on final_report_Djamila_Mohamed.pdf (6 pages, 126540 bytes).
 PDF statistics:
- 150 PDF objects out of 1000 (max. 8388607)
- 131 compressed objects within 2 object streams
- 33 named destinations out of 1000 (max. 500000)
- 80020 words of extra memory for PDF output out of 89155 (max. 10000000)
+ 174 PDF objects out of 1000 (max. 8388607)
+ 154 compressed objects within 2 object streams
+ 38 named destinations out of 1000 (max. 500000)
+ 86188 words of extra memory for PDF output out of 89155 (max. 10000000)
 
