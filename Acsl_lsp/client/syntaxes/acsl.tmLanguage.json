@@ -26,8 +26,8 @@
 			]
 		},
 		"inline-annotation" : {
-			"begin": "(\\/\\/\\s*@)\\s*.*",
-    		"end": "\\n",
+			"begin": "\\s*(\\/\\/\\s*@)\\s",
+    		"end": ";",
 			"beginCaptures": {
 				"0": { "name": "entity.section.acsl" }
 			},
@@ -35,7 +35,6 @@
 				"0": { "name": "entity.section.acsl" }
 			},
 			"patterns": [
-				{ "include": "#comment" },
 				{ "include": "#keyword" },
 				{ "include": "#supported-function" },
 				{ "include": "#operators" },
