@@ -1,16 +1,19 @@
 #include <stddef.h>
 #include <stdio.h>
 #include "test1.h"
+#include "math.h"
+#include "test2.h"
 
-// @ logic Z test_logic(Z i) = i; // comment
+#define STRING_CONSTANT "ABCD"
 
 /*@
   requires \valid(a+(0..n-1));
   assigns  a[0..n-1];
 
-  ensures \forall integer i;
+  ensures L : l2: \forall integer i;
     0 <= i < n ==> a[i] == 0;
 */
+
 void set_to_0(int *a, size_t n)
 {
   size_t i;
@@ -27,8 +30,13 @@ void set_to_0(int *a, size_t n)
     a[i] = 0;
 }
 
-int test(int x){
+int test(double x){
+  float y = __finite(x);
   return x + 1231;
+}
+
+void print_string_const(){
+  printf("string constant : %s\n", STRING_CONSTANT);
 }
 
 void print_ints(int *a, size_t n)
@@ -42,12 +50,15 @@ void print_ints(int *a, size_t n)
 
 int main()
 {
-  size_t n = 8;
+  size_t n;
+  n = 8;
   int a[8] = {0, 1, 2, 5, 87, 41, -9, -1};
 
   print_ints(a, n);
   set_to_0(a, n);
   print_ints(a, n);
+
+  int z = fx(2);
 
   return 0;
 }

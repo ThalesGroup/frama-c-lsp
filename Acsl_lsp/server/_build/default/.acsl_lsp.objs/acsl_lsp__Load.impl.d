@@ -1,1 +1,1 @@
-src/parsing_features/load.ml: Configuration Errorloc File Filepath Log Printf Project PublishDiagnostics States Utils
+src/parsing_features/load.ml: Array Configuration Errorloc File Filepath List Log Printf Project PublishDiagnostics States String Sys Utils

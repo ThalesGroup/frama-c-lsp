@@ -4,3 +4,4 @@ acsl_lsp__PublishDiagnostics
 acsl_lsp__States
 acsl_lsp__Types
 acsl_lsp__Utils
+acsl_lsp__Vtypes

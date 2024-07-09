@@ -1,1 +1,1 @@
-src/features/didOpen.ml: Configuration File Filepath Json List Log Printf Project Types Utils
+src/features/didOpen.ml: Json Load Types Utils

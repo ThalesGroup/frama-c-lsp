@@ -23,9 +23,7 @@ let readcontlen sock : string =
 let handle_data sock = 
   let data_size = Utils.getnumber (readcontlen sock) in 
   let data_buf = Bytes.make data_size '0' in
-  let req_data_len = Unix.read sock data_buf 0 data_size in
-  ignore req_data_len;
-  Printf.printf "Received from client: %s bytes\n%!" (Bytes.to_string data_buf);
+  let _req_data_len = Unix.read sock data_buf 0 data_size in
 
   let request_str = (Bytes.to_string data_buf) in
   let response : Types.lsp_result = Handler.handle request_str sock in
@@ -33,7 +31,7 @@ let handle_data sock =
   | RQ_RESULT json -> 
     Utils.send_request sock (Json.save_string json); 
   | NTF_RESULT () -> ()
-  | SEND_NONE () -> ()
+  | EMPTY () -> ()
 
   
 let listen () =

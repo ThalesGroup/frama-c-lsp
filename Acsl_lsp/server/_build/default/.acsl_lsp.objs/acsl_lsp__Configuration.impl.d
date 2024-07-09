@@ -1,1 +1,1 @@
-src/features/configuration.ml: Json Kernel List Printf Types Utils
+src/features/configuration.ml: Filepath Json Kernel List Printf PublishDiagnostics String Types Utils Vtypes

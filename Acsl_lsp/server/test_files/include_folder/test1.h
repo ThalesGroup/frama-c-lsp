@@ -1,6 +1,6 @@
 #ifndef TEST_1_   
 #define TEST_1_
 
-int test(int x);  
+int test(double x);  
 
-#endif // TEST_1_s
+#endif // TEST_1_

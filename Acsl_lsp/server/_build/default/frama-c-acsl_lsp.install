@@ -7,6 +7,9 @@ lib: [
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp.cmx" {"core/acsl_lsp.cmx"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp.cmxa" {"core/acsl_lsp.cmxa"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp.ml" {"core/acsl_lsp.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Command.cmi" {"core/acsl_lsp__Command.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Command.cmt" {"core/acsl_lsp__Command.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Command.cmx" {"core/acsl_lsp__Command.cmx"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Configuration.cmi" {"core/acsl_lsp__Configuration.cmi"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Configuration.cmt" {"core/acsl_lsp__Configuration.cmt"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Configuration.cmx" {"core/acsl_lsp__Configuration.cmx"}
@@ -19,6 +22,9 @@ lib: [
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__DidSave.cmi" {"core/acsl_lsp__DidSave.cmi"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__DidSave.cmt" {"core/acsl_lsp__DidSave.cmt"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__DidSave.cmx" {"core/acsl_lsp__DidSave.cmx"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Find_decl.cmi" {"core/acsl_lsp__Find_decl.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Find_decl.cmt" {"core/acsl_lsp__Find_decl.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Find_decl.cmx" {"core/acsl_lsp__Find_decl.cmx"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Find_def.cmi" {"core/acsl_lsp__Find_def.cmi"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Find_def.cmt" {"core/acsl_lsp__Find_def.cmt"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Find_def.cmx" {"core/acsl_lsp__Find_def.cmx"}
@@ -40,6 +46,9 @@ lib: [
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__PublishDiagnostics.cmi" {"core/acsl_lsp__PublishDiagnostics.cmi"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__PublishDiagnostics.cmt" {"core/acsl_lsp__PublishDiagnostics.cmt"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__PublishDiagnostics.cmx" {"core/acsl_lsp__PublishDiagnostics.cmx"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__RegisterCapability.cmi" {"core/acsl_lsp__RegisterCapability.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__RegisterCapability.cmt" {"core/acsl_lsp__RegisterCapability.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__RegisterCapability.cmx" {"core/acsl_lsp__RegisterCapability.cmx"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Run.cmi" {"core/acsl_lsp__Run.cmi"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Run.cmt" {"core/acsl_lsp__Run.cmt"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Run.cmx" {"core/acsl_lsp__Run.cmx"}
@@ -68,16 +77,23 @@ lib: [
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Utils.cmi" {"core/acsl_lsp__Utils.cmi"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Utils.cmt" {"core/acsl_lsp__Utils.cmt"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Utils.cmx" {"core/acsl_lsp__Utils.cmx"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Vtypes.cmi" {"core/acsl_lsp__Vtypes.cmi"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Vtypes.cmt" {"core/acsl_lsp__Vtypes.cmt"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Vtypes.cmti" {"core/acsl_lsp__Vtypes.cmti"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/acsl_lsp__Vtypes.cmx" {"core/acsl_lsp__Vtypes.cmx"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/connection/handler.ml" {"core/src/connection/handler.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/connection/start_server.ml" {"core/src/connection/start_server.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/src/features/command.ml" {"core/src/features/command.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/features/configuration.ml" {"core/src/features/configuration.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/features/didChange.ml" {"core/src/features/didChange.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/features/didOpen.ml" {"core/src/features/didOpen.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/features/didSave.ml" {"core/src/features/didSave.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/src/features/find_decl.ml" {"core/src/features/find_decl.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/features/find_def.ml" {"core/src/features/find_def.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/features/initialize.ml" {"core/src/features/initialize.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/features/initialized.ml" {"core/src/features/initialized.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/features/publishDiagnostics.ml" {"core/src/features/publishDiagnostics.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/src/features/registerCapability.ml" {"core/src/features/registerCapability.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/features/shutdown.ml" {"core/src/features/shutdown.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/lsp_types/jsonable.ml" {"core/src/lsp_types/jsonable.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/lsp_types/types.ml" {"core/src/lsp_types/types.ml"}
@@ -89,6 +105,8 @@ lib: [
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/testing/run_tests.ml" {"core/src/testing/run_tests.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/testing/test_find_definition.ml" {"core/src/testing/test_find_definition.ml"}
   "_build/install/default/lib/frama-c-acsl_lsp/core/src/utils.ml" {"core/src/utils.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/src/vscode_types/vtypes.ml" {"core/src/vscode_types/vtypes.ml"}
+  "_build/install/default/lib/frama-c-acsl_lsp/core/src/vscode_types/vtypes.mli" {"core/src/vscode_types/vtypes.mli"}
   "_build/install/default/lib/frama-c-acsl_lsp/dune-package"
 ]
 lib_root: [
