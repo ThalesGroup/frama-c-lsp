@@ -1,7 +1,7 @@
 
 
 type id_ = Int of int | Str of string | Null
-type lsp_result = RQ_RESULT of Json.json | NTF_RESULT of unit | SEND_NONE of unit
+type lsp_result = RQ_RESULT of Json.json | NTF_RESULT of unit | EMPTY of unit
 
 module Message : sig
   type t = {jsonrpc : string}
@@ -150,13 +150,13 @@ module Registration : sig
     registerOptions : Json.t option
   }
   include Jsonable.B with type t := t
-
+  val create : id:string -> method_:string -> ?registerOptions:Json.t -> unit -> t
 end
 
 module RegistrationParams : sig
-  type t = {registrations : Registration.t array}
+  type t = {registrations : Registration.t list}
   include Jsonable.B with type t := t
-
+  val create : registrations:Registration.t list -> unit -> t
 end
  
 module StaticRegistrationOptions : sig 
@@ -385,6 +385,18 @@ module DefinitionParams : sig
 
 end
 
+module DeclarationParams : sig
+  type t = {
+    partialResultToken : ProgressToken.t option;
+    textDocument : TextDocumentIdentifier.t;
+    position : Position.t;
+    work_done_token : ProgressToken.t option
+  }
+  include Jsonable.B with type t := t
+
+end
+
+
 module Location : sig 
   type t = {
     uri : DocumentUri.t;
@@ -457,6 +469,7 @@ module Command : sig
     arguments : Json.t list option
   }
   include Jsonable.B with type t := t
+  val create : title:string -> command:string -> ?arguments:Json.t list -> unit -> t
 end
 
 module LinkedEditingRangeParams : sig
@@ -486,5 +499,14 @@ module PublishDiagnosticsParams : sig
   }
   include Jsonable.B with type t := t
   val create : uri: DocumentUri.t -> ?version:int -> diagnostics:Diagnostic.t list -> unit -> t
+
+end
+
+module ExecuteCommandParams : sig
+  type t = {
+    command: string;
+    arguments: Json.t option
+  }
+  include Jsonable.B with type t := t
 
 end

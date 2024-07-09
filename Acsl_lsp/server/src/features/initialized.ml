@@ -7,7 +7,12 @@ let init_folders sock =
     let share = Kernel.Share.get () in
     Filepath.add_symbolic_dir framac_share share; 
 
-    Configuration.request_includePaths Utils.config_id sock; 
+    Configuration.request_configurations sock; 
+
+    RegisterCapability.registerCapability 
+      (RegisterCapability.registrationParams 
+        ([RegisterCapability.registration "workspace/didChangeConfiguration"])
+      ) sock
     (* todo : give proper id *)
 
   with Stdlib.Sys_error err -> 

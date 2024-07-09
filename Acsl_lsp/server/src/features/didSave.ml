@@ -7,6 +7,6 @@ let handle (req : Types.NotificationMessage.t) sock : unit =
           (Json.field "textDocument" 
           (Json.field "params" req_json)))))) in
   
-  Load.load_file filename sock;
+      Load.init_file filename sock;
 
   

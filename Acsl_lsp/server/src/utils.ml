@@ -1,15 +1,16 @@
 let max_int = (-1) lsr 1 (* stdlib function *)
+let config_id = 123456789
+
+let file_str f = 
+  let dir_list = [f] in 
+  let dir_string = Filepath.Normalized.to_string_list dir_list in 
+  List.nth dir_string 0
 
 let dummyLoc filename : Cil_types.location = 
   (
     {pos_path=(Filepath.Normalized.of_string filename); pos_lnum=0;  pos_bol=1; pos_cnum=1},
     {pos_path=(Filepath.Normalized.of_string filename); pos_lnum=0;  pos_bol=1; pos_cnum=1}
   )
-let config_id = 123456789
-let file_str f = 
-  let dir_list = [f] in 
-  let dir_string = Filepath.Normalized.to_string_list dir_list in 
-  List.nth dir_string 0
 
 let get_lsp_range ((pos1, pos2) : Cil_types.location) : Types.Range.t =
   Types.Range.create
@@ -79,5 +80,13 @@ let send_request client_sock response =
   let sent = Unix.send client_sock response_bytes 0 (Bytes.length response_bytes) [] in
   ignore sent
 
+let make_error err  = 
+  Types.ResponseMessage.json_of_t (Types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Types.Int 465841231564) ~error:(Types.ResponseError.create ~code:(-32803) ~message:err ()) ())
+
 let send_error_request err sock = 
-  send_request sock (Json.save_string (Types.ResponseMessage.json_of_t (Types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Types.Int 465841231564) ~error:(Types.ResponseError.create ~code:(-32803) ~message:err ()) ());)) (* todo : give proper id *)
+  send_request sock (Json.save_string (make_error err)) (* todo : give proper id *)
+
+let apply_escapes (s : string) : string = 
+  let regex = Str.regexp "\\\n" in 
+  let _ = Str.match_beginning () in
+  Str.global_replace regex "\n" s

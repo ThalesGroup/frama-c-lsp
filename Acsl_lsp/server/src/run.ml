@@ -1,5 +1,6 @@
 let run () =
   try
+    (* Printf.printf "CWD: %s\n%!" (Utils.file_str (Filepath.pwd ())); *)
     if Settings.Enabled.get() then 
       (*if Settings.Testing.get () = true then 
           Run_tests.run_tests ()

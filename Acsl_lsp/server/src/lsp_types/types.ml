@@ -1,6 +1,6 @@
 (* lsp types module *)
 type id_ = Int of int | Str of string | Null
-type lsp_result = RQ_RESULT of Json.json | NTF_RESULT of unit | SEND_NONE of unit
+type lsp_result = RQ_RESULT of Json.json | NTF_RESULT of unit | EMPTY of unit
 
 module Message = struct
   type t = { jsonrpc : string }
@@ -518,6 +518,9 @@ module Registration = struct
     registerOptions : Json.t option
   }
 
+  let create ~id ~method_ ?registerOptions () =
+    { id ; method_ ; registerOptions }
+
   let json_of_t (reg : t) : Json.t =
     let options_json =
       match reg.registerOptions with
@@ -553,11 +556,12 @@ module Registration = struct
 end
 
 module RegistrationParams = struct
-  type t = {registrations : Registration.t array}
+  type t = {registrations : Registration.t list}
 
+  let create ~registrations () = { registrations }
   let json_of_t (params : t) : Json.t =
     `Assoc [
-      "registrations", `List (Array.to_list (Array.map Registration.json_of_t params.registrations))
+      "registrations", `List (List.map Registration.json_of_t params.registrations)
     ]
 
   let t_of_json (json : Json.t) : t =
@@ -565,7 +569,7 @@ module RegistrationParams = struct
     | `Assoc fields ->
       let registrations =
         match List.assoc_opt "registrations" fields with
-        | Some (`List reg_jsons) -> Array.of_list (List.map Registration.t_of_json reg_jsons)
+        | Some (`List reg_jsons) -> (List.map Registration.t_of_json reg_jsons)
         | _ -> raise (Invalid_argument "Invalid JSON format for RegistrationParams: registrations")
       in
       { registrations }
@@ -1384,6 +1388,62 @@ module DefinitionParams = struct
     
 end
 
+module DeclarationParams = struct
+  type t = {
+    partialResultToken : ProgressToken.t option;
+    textDocument : TextDocumentIdentifier.t;
+    position : Position.t;
+    work_done_token : ProgressToken.t option
+  }
+
+  let json_of_t (params : t) : Json.t =
+    let partial_result_token_json =
+      match params.partialResultToken with
+      | Some token -> ProgressToken.json_of_t token
+      | None -> `Null
+    in
+    let text_document_json = TextDocumentIdentifier.json_of_t params.textDocument in
+    let position_json = Position.json_of_t params.position in
+    let work_done_token_json =
+      match params.work_done_token with
+      | Some token -> ProgressToken.json_of_t token
+      | None -> `Null
+    in
+    `Assoc [
+      "partialResultToken", partial_result_token_json;
+      "textDocument", text_document_json;
+      "position", position_json;
+      "work_done_token", work_done_token_json
+    ]
+
+    let t_of_json (json : Json.t) : t =
+      match json with
+      | `Assoc fields ->
+        let partialResultToken =
+          match List.assoc_opt "partialResultToken" fields with
+          | Some token_json -> Some (ProgressToken.t_of_json token_json)
+          | None -> None
+        in
+        let textDocument =
+          match List.assoc_opt "textDocument" fields with
+          | Some text_doc_json -> TextDocumentIdentifier.t_of_json text_doc_json
+          | None -> raise (Invalid_argument "Invalid JSON format for DefinitionParams: textDocument")
+        in
+        let position =
+          match List.assoc_opt "position" fields with
+          | Some position_json -> Position.t_of_json position_json
+          | None -> raise (Invalid_argument "Invalid JSON format for DefinitionParams: position")
+        in
+        let work_done_token =
+          match List.assoc_opt "work_done_token" fields with
+          | Some token_json -> Some (ProgressToken.t_of_json token_json)
+          | None -> None
+        in
+        { partialResultToken; textDocument; position; work_done_token }
+      | _ -> raise (Invalid_argument "Invalid JSON format for DefinitionParams")
+    
+end
+
 module Location = struct 
   type t = {
     uri : DocumentUri.t;
@@ -1589,6 +1649,8 @@ module Command = struct
     arguments : Json.t list option
   }
 
+  let create ~title ~command ?arguments () = { title; command; arguments }
+
   let json_of_t (cmd : t) : Json.t =
     `Assoc [
       "title", `String cmd.title;
@@ -1732,4 +1794,38 @@ module PublishDiagnosticsParams = struct
       in 
       { uri; version; diagnostics }
     | _ -> raise (Invalid_argument "Invalid JSON format for PublishDiagnosticsParams")
+end
+
+module ExecuteCommandParams = struct
+  type t = {
+    command: string;
+    arguments: Json.t option
+  }
+
+  let json_of_t (params : t) : Json.t =
+    let arguments_json =
+      match params.arguments with
+      | Some args -> args
+      | None -> `Null
+    in
+    `Assoc [
+      "command", `String params.command;
+      "arguments", arguments_json
+    ]
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let command =
+        match List.assoc "command" fields with
+        | `String s -> s
+        | _ -> raise (Invalid_argument "Invalid JSON format for ExecuteCommandParams: command")
+      in
+      let arguments =
+        match List.assoc_opt "arguments" fields with
+        | Some args -> Some args
+        | None -> None
+      in
+      { command; arguments }
+    | _ -> raise (Invalid_argument "Invalid JSON format for ExecuteCommandParams")
 end
