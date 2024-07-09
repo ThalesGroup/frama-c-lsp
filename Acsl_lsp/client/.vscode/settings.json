@@ -7,6 +7,12 @@
 		"source.fixAll.eslint": "explicit"
 	},
 	"cSpell.words": [
-		"cpptools"
-	]
+		"cpptools",
+		"vscodeacsl"
+	],
+	"C_Cpp.codeFolding": "enabled",
+	"C_Cpp.commentContinuationPatterns": [
+		"/**"
+	],
+	"cmake.ignoreCMakeListsMissing": false
 }

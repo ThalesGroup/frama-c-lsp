@@ -1,5 +1,6 @@
 {
     "name": "vscodeacsl",
+    "displayName": "ACSL/C",
     "description": "Visual Studio Code Client for ACSL Language Server",
     "author": "Your Name",
     "version": "1.0.0",
@@ -19,11 +20,17 @@
     },
     "activationEvents": [
         "onLanguage:c",
-        "onLanguage:cpp",
-        "workspaceContains:/.vscode/c_cpp_properties.json"
+        "onLanguage:cpp"
     ],
     "main": "./out/extension",
     "contributes": {
+        "menus": {
+            "editor/context": [
+                {
+                    "command": "vscodeacsl.displayCIL"
+                }
+            ]
+        },
         "languages": [
             {
                 "id": "acsl",
@@ -45,39 +52,68 @@
                 "path": "./syntaxes/acsl.tmLanguage.json"
             }
         ],
-        "configuration": {
-            "type": "object",
-            "title": "ACSL/C",
-            "properties": {
-                "vscodeacsl.maxNumberOfProblems": {
-                    "scope": "resource",
-                    "type": "number",
-                    "default": 1000,
-                    "description": "Controls the maximum number of problems produced by the server."
-                },
-                "vscodeacsl.trace.server": {
-                    "scope": "window",
-                    "type": "string",
-                    "enum": [
-                        "off",
-                        "messages",
-                        "verbose"
-                    ],
-                    "default": "off",
-                    "description": "Traces the communication between VS Code and the language server."
-                },
-                "vscodeacsl.includePaths": {
-                    "scope": "workspace",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
+        "configuration": [
+            {
+                "title": "Server",
+                "properties": {
+                    "vscodeacsl.maxNumberOfProblems": {
+                        "scope": "resource",
+                        "type": "number",
+                        "default": 1000,
+                        "description": "Controls the maximum number of problems produced by the server."
                     },
-                    "default": "",
-                    "description": "Adds C/C++ include paths for the project"
+                    "vscodeacsl.trace.server": {
+                        "scope": "window",
+                        "type": "string",
+                        "enum": [
+                            "off",
+                            "messages",
+                            "verbose"
+                        ],
+                        "default": "verbose",
+                        "description": "Traces the communication between VS Code and the language server."
+                    }
                 }
-                
+            },
+            {
+                "title": "Frama-C",
+                "properties": {
+                    "framac.includePaths": {
+                        "scope": "workspace",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "default": "",
+                        "description": "Adds C/C++ include paths for the project"
+                    },
+                    "framac.sourceFiles": {
+                        "scope": "workspace",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "default": "",
+                        "description": "Specifies which source files must be parsed"
+                    },
+                    "framac.macros": {
+                        "scope": "workspace",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "default": "",
+                        "description": "Adds macros"
+                    }
+                }
             }
-        }
+        ],
+        "commands": [
+            {
+                "command": "vscodeacsl.displayCIL",
+                "title": "Display CIL"
+            }
+        ]
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
@@ -98,6 +134,7 @@
         "typescript": "^5.4.5"
     },
     "dependencies": {
+        "@types/vscode-webview": "^1.57.5",
         "types": "^0.1.1",
         "vscode-languageclient": "^9.0.1"
     }

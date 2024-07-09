@@ -1,4 +1,8 @@
 #!/bin/bash
 
-frama-c -acsl_lsp
+# Does not support unicode characters
+# 
+
+frama-c -acsl_lsp -no-unicode
+
 
