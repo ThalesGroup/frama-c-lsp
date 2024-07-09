@@ -165,22 +165,27 @@ A Language extension offers declarative (e.g.\: syntax highlighting, bracket aut
 
 \color{magenta}
 \part{Installation}
-\section{Frama-C plug-in}
-To install the plug-in you will need the following: opam, frama-c 28.0
-\begin{enumerate}
-	\item Open terminal and clone git project `Acsl\_lsp'
-	\item In the `server' folder, execute `dune build' then `dune install'
-\end{enumerate}
+\section{Dependencies}
+To perform these instructions you will need the following dependencies:
 
-\section{VS Code extension}
-Since the extension is not published, you can install it locally on your VS Code.
-You will need the following: 
 \begin{itemize}
 	\item \href{https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating}{node >= 18.18.0}
 	\item npm >= 9.8.0 (npm is installed if you have node installed)
 	\item vsce
+	\item opam
+	\item dune 
+	\item frama-c 28.0
 \end{itemize}
-If you need to recompile the client, perform these additional steps before:
+
+\section{Frama-C plug-in}
+\begin{enumerate}
+	\item Open terminal and clone git project `Acsl\_lsp'
+	\item Change opam switch : `opam switch 4.13.1\_fc28'
+	\item In the `server' folder, execute `dune build' then `dune install'
+\end{enumerate}
+
+\section{VS Code extension}
+If you need to compile, perform these instructions before (you can skip this part if you are not debugging):
 \begin{enumerate}
 	\item In the project cloned previously, go to `client'
 	\item Run `nvm use 18.18.0' if you have it installed else update it first with `node update 18.18.0', then run `npm install', `npm run compile' 
@@ -229,6 +234,8 @@ The code then initiates a search through various sections of the code to find wh
 Each of these searches uses visitor patterns, which traverse and inspect nodes in the AST, comparing each node's name to the symbol's name.
 
 If a definition is located, the exact file path and the range of lines and columns where the symbol is defined are packaged into a JSON response. If no definition is found, a response indicating a null result is returned. This response allows the LSP client (the user's text editor or IDE) to navigate directly to the symbol's definition or handle the case where no definition exists.
+
+
 
 \part{Ongoing tasks}
 \begin{itemize}

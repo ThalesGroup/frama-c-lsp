@@ -1,9 +1,9 @@
-PWD /home/user/git/L1/T0304764/acsl_lsp/doc/final_report/midterm_report
+PWD /home/user/git/L1/T0304764/acsl_lsp/doc/final_report
 INPUT /etc/texmf/web2c/texmf.cnf
 INPUT /usr/share/texmf/web2c/texmf.cnf
 INPUT /usr/share/texlive/texmf-dist/web2c/texmf.cnf
 INPUT /var/lib/texmf/web2c/pdftex/pdflatex.fmt
-INPUT /home/user/git/L1/T0304764/acsl_lsp/doc/final_report/midterm_report/final_report_Djamila_Mohamed.tex
+INPUT /home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex
 OUTPUT final_report_Djamila_Mohamed.log
 INPUT /usr/share/texlive/texmf-dist/tex/latex/base/article.cls
 INPUT /usr/share/texlive/texmf-dist/tex/latex/base/article.cls
