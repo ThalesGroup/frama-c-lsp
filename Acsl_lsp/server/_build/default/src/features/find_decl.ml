@@ -32,7 +32,6 @@ let glob_visitor loca symbol = object
       | GFunDecl (_,vi,loc) -> 
         if (String.equal symbol vi.vname) then
           begin
-            (* Printf.printf "fun decl : %s\n%!" vi.vname; *)
             loca := Some loc;
           end;
         Cil.DoChildren
@@ -61,20 +60,11 @@ let vrbl_visitor loca symbol = object
         Cil.DoChildren;
   end 
 
-let func_visitor loca symbol = object 
-  inherit Visitor.frama_c_inplace
-  method! vfunc v = 
-    if (String.equal symbol v.svar.vname) = true then 
-      begin
-        loca := Some v.svar.vdecl; Cil.DoChildren
-      end
-    else
-    Cil.DoChildren;
-  end 
+
 
 let retrieve_location (pos : Filepath.position) =
   let loca = ref None in 
-  let symbol = Utils.retrieve_symbol pos.pos_lnum (pos.pos_cnum - pos.pos_bol) (Utils.file_str pos.pos_path) in  
+  let symbol = Utils.retrieve_symbol pos.pos_lnum (pos.pos_cnum - pos.pos_bol) (Filepath.Normalized.to_pretty_string pos.pos_path) in  
   
   Visitor.visitFramacFile (glob_visitor loca symbol) (Ast.get ()); 
   Visitor.visitFramacFile (vrbl_visitor loca symbol) (Ast.get ()); 
@@ -83,16 +73,16 @@ let retrieve_location (pos : Filepath.position) =
   | Some loc -> loc
   | None -> (pos,pos) 
 
-let find_decl (req : Types.RequestMessage.t) sock : Json.json = 
-    let params = Types.DeclarationParams.t_of_json (Option.get req.params) in
+let find_decl (req : Types.RequestMessage.t) sock : Json.json = ignore sock;
+  let params = match req.params with 
+    | Some p -> Types.DeclarationParams.t_of_json p
+    | None -> Settings.Self.debug ~level:1 "No declaration params \n%!"; assert false
+  in
     let uri = params.textDocument.uri in 
     let file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
     let pos = Utils.position_t_to_filepath_position file params.position in
-    Load.init_files sock;
+    (* TODO : init files *)
 
-    if !States.erroring then (* todo : for the moment : we cannot have go to declaration feature while the file has errors *)
-      Types.ResponseMessage.json_of_t (Types.ResponseMessage.create ~jsonrpc:"2.0" ~id:req.id ~result:`Null ())
-    else
       let (pos1, pos2) = retrieve_location pos in
 
       if pos1 = pos2 then 
@@ -101,7 +91,7 @@ let find_decl (req : Types.RequestMessage.t) sock : Json.json =
         Types.ResponseMessage.json_of_t (Types.ResponseMessage.create ~jsonrpc:"2.0" ~id:req.id ~result:
           (Types.Location.json_of_t
             (Types.Location.create 
-              (Filepath.normalize (Utils.file_str pos1.pos_path))
+              (Filepath.normalize (Filepath.Normalized.to_pretty_string pos1.pos_path))
               (Types.Range.create (Types.Position.create (pos1.pos_lnum - 1) (pos1.pos_cnum - pos1.pos_bol))
                 (Types.Position.create (pos2.pos_lnum - 1) (pos2.pos_cnum - pos2.pos_bol))
               )

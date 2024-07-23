@@ -11,9 +11,11 @@ module Enabled = Self.False
   let help = "when on (off by default), activates lsp support for ACSL/C"
 end)
 
-module Testing = Self.False
+(* module Testing = Self.False
 (struct
     let option_name = "-enable_tests"
     let help = "Runs tests"
-end)
+end) *)
+
+
 

@@ -57,7 +57,7 @@
 			"patterns": [
 				{
 				"name": "variable.language.acsl",
-				"match": "\\b(admits|assert|assigns|assumes|allocates|axiom|axiomatic|behavior|behaviors|breaks|case|char|checks|complete|continues|decreases|disjoint|double|else|ensures|enum|exits|float|for|frees|if|inductive|int|integer|invariant|global|label|lemma|logic|long|loop|pragma|predicate|reads|real|requires|returns|short|signed|sizeof|slice|impact|struct|terminates|type|union|unsigned|variant|void)\\b"
+				"match": "\\b(admits|assert|assigns|assumes|allocates|axiom|axiomatic|ghost|behavior|behaviors|breaks|case|char|checks|complete|continues|decreases|disjoint|double|else|ensures|enum|exits|float|for|frees|if|inductive|int|integer|invariant|global|label|lemma|logic|long|loop|pragma|predicate|reads|real|requires|returns|short|signed|sizeof|slice|impact|struct|terminates|type|union|unsigned|variant|void)\\b"
 			}]
 		},
 		"supported-function": {

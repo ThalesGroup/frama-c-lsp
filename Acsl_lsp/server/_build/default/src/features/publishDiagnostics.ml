@@ -1,105 +1,34 @@
-let syntax_error filename msg loc = 
-Json.save_string (
-        Types.NotificationMessage.json_of_t (
-          Types.NotificationMessage.create
-            ~jsonrpc:"2.0"
-            ~method_:"textDocument/publishDiagnostics"
-            ~params:(Types.PublishDiagnosticsParams.json_of_t 
-            (Types.PublishDiagnosticsParams.create
-                ~uri:(Utils.file_str (Filepath.Normalized.of_string (Filepath.normalize filename)))
-                ~diagnostics:(
-                  [
-                    Types.Diagnostic.create 
-                      ~range:(Utils.get_lsp_range loc)
-                      ~severity:Types.DiagnosticSeverity.Error
-                      ~message:msg
-                      ()
-                  ]
-                )
-                ()
-            ))
-            ()
-        )
-      ) 
+let warn_categories = 
+  List.map (fun x -> 
+    Kernel.wkey_name x
+  ) (Kernel.get_all_warn_categories ())
 
-let includePaths_error msg = 
-  Json.save_string (
-          Types.NotificationMessage.json_of_t (
-            Types.NotificationMessage.create
-              ~jsonrpc:"2.0"
-              ~method_:"textDocument/publishDiagnostics"
-              ~params:(Types.PublishDiagnosticsParams.json_of_t 
-              (Types.PublishDiagnosticsParams.create
-                  ~uri:((Utils.file_str (Filepath.pwd ()))^"/.vscode/settings.json")
-                  ~diagnostics:(
-                    [
-                      Types.Diagnostic.create
-                        ~range:(
-                          Types.Range.create (Types.Position.create 0 0) (Types.Position.create 0 0)
-                        )
-                        ~severity:Types.DiagnosticSeverity.Error
-                        ~message:msg
-                        ()
-                    ]
-                  )
-                  ()
-              ))
-              ()
-          )
-        ) 
+let is_a_warn_category cat : bool = 
+  let res = ref false in 
+  List.iter (fun x ->
+    (* Settings.Self.debug ~level:1 "%s and %s\n%!" cat x; *)
+    res := !res || (String.equal cat x)
+  ) warn_categories;
+  !res
 
-let error filename msg loc = 
-  Json.save_string (
-          Types.NotificationMessage.json_of_t (
-            Types.NotificationMessage.create
-              ~jsonrpc:"2.0"
-              ~method_:"textDocument/publishDiagnostics"
-              ~params:(Types.PublishDiagnosticsParams.json_of_t 
-              (Types.PublishDiagnosticsParams.create
-                  ~uri:(Utils.file_str (Filepath.Normalized.of_string (Filepath.normalize filename)))
-                  ~diagnostics:(
-                    [
-                      Types.Diagnostic.create 
-                        ~range:(Utils.get_lsp_range loc)
-                        ~severity:Types.DiagnosticSeverity.Error
-                        ~source:("ACSL LSP "^msg)
-                        ~message:msg
-                        ()
-                    ]
-                  )
-                  ()
-              ))
-              ()
-          )
-        )
+let publishDiagnostics_request dlist filename = 
+  Types.NotificationMessage.json_of_t (
+    Types.NotificationMessage.create
+      ~jsonrpc:"2.0"
+      ~method_:"textDocument/publishDiagnostics"
+      ~params:(Types.PublishDiagnosticsParams.json_of_t 
+      (Types.PublishDiagnosticsParams.create
+          ~uri:(Utils.file_str (Filepath.Normalized.of_string (Filepath.normalize filename)))
+          ~diagnostics:dlist
+          ()
+      ))
+      ()
+  )
 
-let warning filename msg loc = 
-  Json.save_string (
-          Types.NotificationMessage.json_of_t (
-            Types.NotificationMessage.create
-              ~jsonrpc:"2.0"
-              ~method_:"textDocument/publishDiagnostics"
-              ~params:(Types.PublishDiagnosticsParams.json_of_t 
-              (Types.PublishDiagnosticsParams.create
-                  ~uri:(Utils.file_str (Filepath.Normalized.of_string (Filepath.normalize filename)))
-                  ~diagnostics:(
-                    [
-                      Types.Diagnostic.create 
-                        ~range:(Utils.get_lsp_range loc)
-                        ~severity:Types.DiagnosticSeverity.Warning
-                        ~source:("ACSL LSP "^msg)
-                        ~message:"Annotation error"
-                        ()
-                    ]
-                  )
-                  ()
-              ))
-              ()
-          )
-        )
+let publish_to = ref ""
+let diag_list = ref []
 
 let clear_diagnostics filename = 
-  Json.save_string (
     Types.NotificationMessage.json_of_t (
       Types.NotificationMessage.create
         ~jsonrpc:"2.0"
@@ -114,4 +43,82 @@ let clear_diagnostics filename =
         ))
         ()
     )
-  )
+
+
+let diagnostic loc severity msg = 
+  Types.Diagnostic.create 
+    ~range:(Utils.get_lsp_range loc)
+    ~severity:severity
+    ~message:msg
+    ()
+
+let diagnostics_handler filename sock (event : Log.event) = (* todo : send unit * string tuple *)
+    let msg = event.evt_message in
+    let _category = match event.evt_category with
+      | Some c -> c 
+      | None -> "no-category"
+    in
+    let loc = match event.evt_source with 
+      | Some pos -> 
+        publish_to := (Filepath.Normalized.to_pretty_string pos.pos_path); 
+        Utils.real_loc (pos,pos); 
+      | None -> (Utils.dummyLoc filename)
+    in
+    if (Utils.contains msg ~suffix:"syntax error" 
+      || Utils.contains msg ~suffix:"There were parsing errors in"
+      (* || Utils.contains msg ~suffix:"Can't preprocess annotation: " *)
+    ) then 
+      begin
+        Settings.Self.debug ~level:1 "Kind : Syntax error \n%!";
+        diag_list :=  (diagnostic 
+          (loc)
+          Types.DiagnosticSeverity.Error 
+          msg)::!diag_list
+      end
+    else
+    match event.evt_kind with 
+    | Log.Error ->  
+      Settings.Self.debug ~level:1 "Kind : Error \n%!";
+      diag_list :=  (diagnostic 
+          (loc)
+          Types.DiagnosticSeverity.Error 
+          msg)::!diag_list
+    | Log.Failure ->
+      Settings.Self.debug ~level:1 "Kind : Failure \n%!";
+        diag_list :=  (diagnostic 
+          (loc)
+          Types.DiagnosticSeverity.Error 
+          msg)::!diag_list
+    | Log.Warning -> 
+      Settings.Self.debug ~level:1 "Kind : Warning \n%!";
+      diag_list :=  (diagnostic 
+          (loc)
+          Types.DiagnosticSeverity.Warning 
+          msg)::!diag_list
+    | Log.Result -> 
+      Settings.Self.debug ~level:1 "Kind : Result \n%!";
+      diag_list :=  (diagnostic 
+          (loc)
+          Types.DiagnosticSeverity.Information 
+          msg)::!diag_list
+    | Log.Debug -> 
+      Settings.Self.debug ~level:1 "Kind : Debug \n%!";
+      diag_list := ( (diagnostic 
+          (loc)
+          Types.DiagnosticSeverity.Information 
+          msg))::!diag_list
+    | Log.Feedback ->
+      Settings.Self.debug ~level:1 "Kind : Feedback \n%!";
+        Utils.send_request sock (Json.save_string (clear_diagnostics filename))
+
+
+
+
+let error_event_handler sock (evt : Log.event) : unit = 
+  (* let file = Project.get_name (Project.current ()) in *)
+  (* let project = Project.get_name (Project.current ()) in *)
+  (* if (String.equal (project) "global_ast") then *)
+  (* let file = "project" in *)
+  diagnostics_handler !publish_to sock evt;
+  Settings.Self.debug ~level:0 "diagnostics size : %d\n%!" (List.length (!diag_list));
+

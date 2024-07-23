@@ -1,3 +1,4 @@
+(* request execution of vs code command *)
 let displayCIL id = 
   try 
     let ast = (Ast.get ()) in
@@ -19,7 +20,3 @@ let displayCIL id =
       ()
     )
 
-(* let command_handler (request : Types.RequestMessage.t) = 
-  match (Types.ExecuteCommandParams.t_of_json (Option.get request.params)).command with 
-  | "vscodeacsl.displayCIL" -> displayCIL 
-  | _ -> `Null *)

@@ -1,8 +1,23 @@
+(*
+            "completionProvider": {
+              "triggerCharacters": [],
+              "allCommitCharacters": [],
+              "resolveProvider": false,
+              "completionItem": {
+                "labelDetailsSupport": false
+              }
+            },
+*)
+
 let initialize (req : Types.RequestMessage.t): Json.json = 
     let req_json = (Types.RequestMessage.json_of_t req) in
     let temp =  Utils.remove_newline (Utils.remove_quotes (Json.save_string (Json.field "rootPath" (Json.field "params" req_json)))) in
     States.rootPath := States.(!rootPath) ^ temp;
-    Printf.printf "rootPath = %s\n%!" States.(!rootPath);
+    Settings.Self.debug ~level:1 "rootPath = %s\n%!" States.(!rootPath);
+
+    (* List.iter (fun x ->
+      Settings.Self.debug ~level:1 "warn category : %s\n%!" x
+    ) PublishDiagnostics.evt_categories; *)
 
       let result = {|{
         "jsonrpc": "2.0",
@@ -10,13 +25,15 @@ let initialize (req : Types.RequestMessage.t): Json.json =
         "result": {
           "capabilities": {
             "textDocumentSync": {
-              "change": 2,
+              "openClose": true,
+              "change": 0,
               "save": {
                 "includeText": false
               }
             },
             "definitionProvider": true,
             "declarationProvider": true,
+
             "diagnosticProvider": {
               "interFileDependencies": false,
               "workspaceDiagnostics": true

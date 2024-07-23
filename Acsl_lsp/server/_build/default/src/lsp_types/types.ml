@@ -2,6 +2,8 @@
 type id_ = Int of int | Str of string | Null
 type lsp_result = RQ_RESULT of Json.json | NTF_RESULT of unit | EMPTY of unit
 
+
+
 module Message = struct
   type t = { jsonrpc : string }
   let json_of_t (t : t) : Json.t =
@@ -79,16 +81,21 @@ module NotificationMessage = struct
   type t = {
     jsonrpc : string;
     method_ : string;
-    params : Json.json
+    params : Json.json option
   }
 
-  let create ~jsonrpc ~method_ ~params () = { jsonrpc ; method_ ; params }
+  let create ~jsonrpc ~method_ ?params () = { jsonrpc ; method_ ; params }
 
   let json_of_t (msg : t) : Json.t =
+    let params_json =
+      match msg.params with
+      | Some p -> p
+      | None -> `Null
+    in
     `Assoc [
       ("jsonrpc", `String msg.jsonrpc); 
       ("method", `String msg.method_); 
-      ("params", msg.params)
+      ("params", params_json)
     ]
 
   let t_of_json (json : Json.t) : t =
@@ -106,8 +113,8 @@ module NotificationMessage = struct
       in
       let params =
         match List.assoc_opt "params" fields with
-        | Some p -> p
-        | None -> `Assoc []
+        | Some p -> Some p
+        | None -> None
       in
       { jsonrpc; method_; params }
     | _ -> raise (Invalid_argument "Invalid JSON format for NotificationMessage")
@@ -211,7 +218,7 @@ module ResponseMessage = struct
         | None -> None
       in
       { jsonrpc; id; result; error }
-    | _ -> raise (Invalid_argument "Invalid JSON format for ResponseMessage")
+    | _ -> (raise (Invalid_argument "Invalid JSON format for ResponseMessage"))
 
 end
 
@@ -298,26 +305,26 @@ end
 
 module WorkDoneProgressParams = struct
   type t = {
-    work_done_token : ProgressToken.t option; 
+    workDoneToken : ProgressToken.t option; 
   }
   let json_of_t (params : t) : Json.t =
-    let work_done_token_json =
-      match params.work_done_token with
+    let workDoneToken_json =
+      match params.workDoneToken with
       | Some token -> ProgressToken.json_of_t token
       | None -> `Null
     in
     `Assoc [
-      "work_done_token", work_done_token_json
+      "workDoneToken", workDoneToken_json
     ]
   let t_of_json (json : Json.t) : t =
     match json with
     | `Assoc fields ->
-      let work_done_token =
-        match List.assoc_opt "work_done_token" fields with
+      let workDoneToken =
+        match List.assoc_opt "workDoneToken" fields with
         | Some token_json -> Some (ProgressToken.t_of_json token_json)
         | None -> None
       in
-      { work_done_token }
+      { workDoneToken }
     | _ -> raise (Invalid_argument "Invalid JSON format for WorkDoneProgressParams")
 end
 
@@ -401,7 +408,7 @@ module InitializeParams = struct
   }
 
   type t = {
-    work_done_token : ProgressToken.t option;
+    workDoneToken : ProgressToken.t option;
     process_id : int option;
     clientInfo : client_info option;
     locale : string option;
@@ -416,7 +423,7 @@ module InitializeParams = struct
 
   let json_of_t (params : t) : Json.t =
     `Assoc ([
-      "workDoneToken", (match params.work_done_token with Some token -> ProgressToken.json_of_t token | None -> `Null);
+      "workDoneToken", (match params.workDoneToken with Some token -> ProgressToken.json_of_t token | None -> `Null);
       "process_id", (match params.process_id with Some id -> `Int id | None -> `Null);
       "clientInfo", (match params.clientInfo with Some info -> json_of_client_info info | None -> `Null);
       "locale", (match params.locale with Some loc -> `String loc | None -> `Null);
@@ -447,7 +454,7 @@ module InitializeParams = struct
   let t_of_json (json : Json.t) : t =
     match json with
     | `Assoc fields ->
-      let work_done_token =
+      let workDoneToken =
         match List.assoc_opt "workDoneToken" fields with
         | Some `Null -> None
         | Some token_json -> Some (ProgressToken.t_of_json token_json)
@@ -497,7 +504,7 @@ module InitializeParams = struct
         | None -> None
         | _ -> raise (Invalid_argument "Invalid JSON format for InitializeParams: workspaceFolders")
       in
-      { work_done_token; process_id; clientInfo; locale; initialization_options; capabilities; trace; workspace_folders }
+      { workDoneToken; process_id; clientInfo; locale; initialization_options; capabilities; trace; workspace_folders }
     | _ -> raise (Invalid_argument "Invalid JSON format for InitializeParams")
 end
 
@@ -1337,27 +1344,27 @@ module DefinitionParams = struct
     partialResultToken : ProgressToken.t option;
     textDocument : TextDocumentIdentifier.t;
     position : Position.t;
-    work_done_token : ProgressToken.t option
+    workDoneToken : ProgressToken.t option
   }
 
   let json_of_t (params : t) : Json.t =
-    let partial_result_token_json =
+    let partialResultToken_json =
       match params.partialResultToken with
       | Some token -> ProgressToken.json_of_t token
       | None -> `Null
     in
     let text_document_json = TextDocumentIdentifier.json_of_t params.textDocument in
     let position_json = Position.json_of_t params.position in
-    let work_done_token_json =
-      match params.work_done_token with
+    let workDoneToken_json =
+      match params.workDoneToken with
       | Some token -> ProgressToken.json_of_t token
       | None -> `Null
     in
     `Assoc [
-      "partialResultToken", partial_result_token_json;
+      "partialResultToken", partialResultToken_json;
       "textDocument", text_document_json;
       "position", position_json;
-      "work_done_token", work_done_token_json
+      "workDoneToken", workDoneToken_json
     ]
 
     let t_of_json (json : Json.t) : t =
@@ -1378,12 +1385,12 @@ module DefinitionParams = struct
           | Some position_json -> Position.t_of_json position_json
           | None -> raise (Invalid_argument "Invalid JSON format for DefinitionParams: position")
         in
-        let work_done_token =
-          match List.assoc_opt "work_done_token" fields with
+        let workDoneToken =
+          match List.assoc_opt "workDoneToken" fields with
           | Some token_json -> Some (ProgressToken.t_of_json token_json)
           | None -> None
         in
-        { partialResultToken; textDocument; position; work_done_token }
+        { partialResultToken; textDocument; position; workDoneToken }
       | _ -> raise (Invalid_argument "Invalid JSON format for DefinitionParams")
     
 end
@@ -1393,27 +1400,27 @@ module DeclarationParams = struct
     partialResultToken : ProgressToken.t option;
     textDocument : TextDocumentIdentifier.t;
     position : Position.t;
-    work_done_token : ProgressToken.t option
+    workDoneToken : ProgressToken.t option
   }
 
   let json_of_t (params : t) : Json.t =
-    let partial_result_token_json =
+    let partialResultToken_json =
       match params.partialResultToken with
       | Some token -> ProgressToken.json_of_t token
       | None -> `Null
     in
     let text_document_json = TextDocumentIdentifier.json_of_t params.textDocument in
     let position_json = Position.json_of_t params.position in
-    let work_done_token_json =
-      match params.work_done_token with
+    let workDoneToken_json =
+      match params.workDoneToken with
       | Some token -> ProgressToken.json_of_t token
       | None -> `Null
     in
     `Assoc [
-      "partialResultToken", partial_result_token_json;
+      "partialResultToken", partialResultToken_json;
       "textDocument", text_document_json;
       "position", position_json;
-      "work_done_token", work_done_token_json
+      "workDoneToken", workDoneToken_json
     ]
 
     let t_of_json (json : Json.t) : t =
@@ -1434,12 +1441,12 @@ module DeclarationParams = struct
           | Some position_json -> Position.t_of_json position_json
           | None -> raise (Invalid_argument "Invalid JSON format for DefinitionParams: position")
         in
-        let work_done_token =
-          match List.assoc_opt "work_done_token" fields with
+        let workDoneToken =
+          match List.assoc_opt "workDoneToken" fields with
           | Some token_json -> Some (ProgressToken.t_of_json token_json)
           | None -> None
         in
-        { partialResultToken; textDocument; position; work_done_token }
+        { partialResultToken; textDocument; position; workDoneToken }
       | _ -> raise (Invalid_argument "Invalid JSON format for DefinitionParams")
     
 end
@@ -1685,14 +1692,14 @@ module LinkedEditingRangeParams = struct
   type t = {
     textDocument : TextDocumentIdentifier.t;
     position : Position.t;
-    work_done_token : ProgressToken.t option
+    workDoneToken : ProgressToken.t option
   }
 
   let json_of_t (params : t) : Json.t =
     `Assoc [
       "textDocument", TextDocumentIdentifier.json_of_t params.textDocument;
       "position", Position.json_of_t params.position;
-      "workDoneToken", (match params.work_done_token with
+      "workDoneToken", (match params.workDoneToken with
                         | Some token -> ProgressToken.json_of_t token
                         | None -> `Null)
     ]
@@ -1710,13 +1717,13 @@ module LinkedEditingRangeParams = struct
         | Some json_pos -> Position.t_of_json json_pos
         | _ -> raise (Invalid_argument "Invalid JSON format for LinkedEditingRangeParams: position")
       in
-      let work_done_token =
+      let workDoneToken =
         match List.assoc_opt "workDoneToken" fields with
         | Some `Null -> None
         | Some json_token -> Some (ProgressToken.t_of_json json_token)
         | None -> None
       in
-      { textDocument; position; work_done_token }
+      { textDocument; position; workDoneToken }
     | _ -> raise (Invalid_argument "Invalid JSON format for LinkedEditingRangeParams")
 end
 
@@ -1828,4 +1835,820 @@ module ExecuteCommandParams = struct
       in
       { command; arguments }
     | _ -> raise (Invalid_argument "Invalid JSON format for ExecuteCommandParams")
+end
+
+(* completion request interfaces *)
+module CompletionTriggerKind = struct
+  type t = Invoked | TriggerCharacter | TriggerForIncompleteCompletions
+
+  let json_of_t (t : t) : Json.t =
+    `Int (
+      match t with
+      | Invoked -> 1
+      | TriggerCharacter -> 2
+      | TriggerForIncompleteCompletions -> 3
+    )
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Int 1 -> Invoked
+    | `Int 2 -> TriggerCharacter
+    | `Int 3 -> TriggerForIncompleteCompletions
+    | _ -> raise (Invalid_argument "Invalid JSON format for CompletionTriggerKind")
+end
+
+
+module CompletionContext = struct
+  type t = {
+    triggerKind: CompletionTriggerKind.t;
+    triggerCharacter: string option
+  }
+
+  let create ~triggerKind ?triggerCharacter () = {triggerKind; triggerCharacter}
+
+  let json_of_t (t : t) : Json.t =
+    let triggerCharacter_json =
+      match t.triggerCharacter with
+      | Some s -> `String s
+      | None -> `Null
+    in
+    `Assoc [
+      "triggerKind", CompletionTriggerKind.json_of_t t.triggerKind;
+      "triggerCharacter", triggerCharacter_json;
+    ]
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let triggerKind =
+        match List.assoc_opt "triggerKind" fields with
+        | Some json_triggerKind -> CompletionTriggerKind.t_of_json(json_triggerKind)
+        | _ -> raise (Invalid_argument "Invalid JSON format for CompletionContext: triggerKind")
+      in
+      let triggerCharacter =
+        match List.assoc_opt "triggerCharacter" fields with
+        | Some `Null -> None
+        | Some (`String s) -> Some s
+        | None -> None
+        | _ -> raise (Invalid_argument "Invalid JSON format for CompletionContext: triggerCharacter")
+      in
+      { triggerKind; triggerCharacter }
+    | _ -> raise (Invalid_argument "Invalid JSON format for CompletionContext")
+end
+
+
+module CompletionParams = struct
+  type t = {
+    textDocument: TextDocumentIdentifier.t;
+    position: Position.t;
+    workDoneToken: ProgressToken.t option;
+    partialResultToken: ProgressToken.t option;
+    context: CompletionContext.t
+  }
+
+  let create ~textDocument ~position ?workDoneToken ?partialResultToken ~context () = 
+    {textDocument; position; workDoneToken; partialResultToken; context} 
+
+  let json_of_t (t : t) : Json.t =
+    let partialResultToken_json =
+      match t.partialResultToken with
+      | Some token -> ProgressToken.json_of_t token
+      | None -> `Null
+    in
+    let workDoneToken_json =
+      match t.workDoneToken with
+      | Some token -> ProgressToken.json_of_t token
+      | None -> `Null
+    in
+    `Assoc [
+      "textDocument", TextDocumentIdentifier.json_of_t t.textDocument;
+      "position", Position.json_of_t t.position;
+      "workDoneToken", workDoneToken_json;
+      "partialResultToken", partialResultToken_json;
+      "context", CompletionContext.json_of_t t.context
+    ]
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let partialResultToken =
+        match List.assoc_opt "partialResultToken" fields with
+        | Some token_json -> Some (ProgressToken.t_of_json token_json)
+        | None -> None
+      in
+      let textDocument =
+        match List.assoc_opt "textDocument" fields with
+        | Some text_doc_json -> TextDocumentIdentifier.t_of_json text_doc_json
+        | None -> raise (Invalid_argument "Invalid JSON format for CompletionParams: textDocument")
+      in
+      let position =
+        match List.assoc_opt "position" fields with
+        | Some position_json -> Position.t_of_json position_json
+        | None -> raise (Invalid_argument "Invalid JSON format for CompletionParams: position")
+      in
+      let workDoneToken =
+        match List.assoc_opt "workDoneToken" fields with
+        | Some token_json -> Some (ProgressToken.t_of_json token_json)
+        | None -> None
+      in
+      let context =
+        match List.assoc_opt "context" fields with
+        | Some json_context -> CompletionContext.t_of_json(json_context)
+        | _ -> raise (Invalid_argument "Invalid JSON format for CompletionParams: context")
+      in
+      { textDocument; position; workDoneToken; partialResultToken; context }
+    | _ -> raise (Invalid_argument "Invalid JSON format for CompletionParams")
+end
+
+
+(* completion response interfaces *)
+module CompletionItemLabelDetails = struct
+  type t = {
+    detail: string option;
+    description: string option
+  }
+
+  let create ?detail ?description () = { detail; description }
+  let json_of_t (t : t) : Json.t =
+    let detail_json =
+      match t.detail with
+      | Some s -> `String s
+      | None -> `Null
+    in
+    let description_json =
+      match t.description with
+      | Some s -> `String s
+      | None -> `Null
+    in
+    `Assoc [
+      "detail", detail_json;
+      "description", description_json
+    ]
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let detail =
+        match List.assoc_opt "detail" fields with
+        | Some `Null -> None
+        | Some (`String s) -> Some s
+        | None -> None
+        | _ -> raise (Invalid_argument "Invalid JSON format for CompletionItemLabelDetails: detail")
+      in
+      let description =
+        match List.assoc_opt "description" fields with
+        | Some `Null -> None
+        | Some (`String s) -> Some s
+        | None -> None
+        | _ -> raise (Invalid_argument "Invalid JSON format for CompletionItemLabelDetails: description")
+      in
+      { detail; description }
+    | _ -> raise (Invalid_argument "Invalid JSON format for CompletionItemLabelDetails")
+end
+
+
+module CompletionItemKind = struct
+  type t = 
+      Text
+    | Method
+    | Function
+    | Constructor
+    | Field
+    | Variable
+    | Class
+    | Interface
+    | Module
+    | Property
+    | Unit
+    | Value
+    | Enum
+    | Keyword
+    | Snippet
+    | Color
+    | File
+    | Reference
+    | Folder
+    | EnumMember
+    | Constant
+    | Struct
+    | Event
+    | Operator
+    | TypeParameter
+
+    let json_of_t (c : t) : Json.t = 
+      `Int (
+      match c with
+      | Text -> 1
+	    | Method -> 2
+	    | Function -> 3
+	    | Constructor -> 4
+	    | Field -> 5
+	    | Variable -> 6
+	    | Class -> 7
+	    | Interface -> 8
+	    | Module -> 9
+	    | Property -> 10
+	    | Unit -> 11
+	    | Value -> 12
+	    | Enum -> 13
+	    | Keyword -> 14
+	    | Snippet -> 15
+	    | Color -> 16
+	    | File -> 17
+	    | Reference -> 18
+	    | Folder -> 19
+	    | EnumMember -> 20
+	    | Constant -> 21
+	    | Struct -> 22
+	    | Event -> 23
+	    | Operator -> 24
+	    | TypeParameter -> 25
+    )
+
+    let t_of_json (json : Json.t) : t =
+      match json with
+      | `Int 1 -> Text 
+	    | `Int 2 -> Method 
+	    | `Int 3 -> Function 
+	    | `Int 4 -> Constructor 
+	    | `Int 5 -> Field 
+	    | `Int 6 -> Variable 
+	    | `Int 7 -> Class 
+	    | `Int 8 -> Interface 
+	    | `Int 9 -> Module 
+	    | `Int 10 -> Property 
+	    | `Int 11 -> Unit 
+	    | `Int 12 -> Value 
+	    | `Int 13 -> Enum 
+	    | `Int 14 -> Keyword 
+	    | `Int 15 -> Snippet 
+	    | `Int 16 -> Color 
+	    | `Int 17 -> File 
+	    | `Int 18 -> Reference 
+	    | `Int 19 -> Folder 
+	    | `Int 20 -> EnumMember 
+	    | `Int 21 -> Constant 
+	    | `Int 22 -> Struct 
+	    | `Int 23 -> Event 
+	    | `Int 24 -> Operator 
+	    | `Int 25 -> TypeParameter 
+      | _ -> raise (Invalid_argument "Invalid JSON format for CompletionTriggerKind")
+end
+
+
+module CompletionItemTag = struct
+  type t = Deprecated
+
+  let json_of_t (t : t) : Json.t =
+    match t with
+    | Deprecated -> `Int 1
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Int 1 -> Deprecated
+    | _ -> raise (Invalid_argument "Invalid JSON format for CompletionItemTag")
+end
+
+
+module MarkupKind = struct
+  type t = PlainText | Markdown
+
+  let json_of_t (t : t) : Json.t =
+    match t with
+    | PlainText -> `String "plaintext"
+    | Markdown -> `String "markdown"
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `String "plaintext" -> PlainText
+    | `String "markdown" -> Markdown
+    | _ -> raise (Invalid_argument "Invalid JSON format for MarkupKind")
+end
+
+
+module MarkupContent = struct
+  type t = {
+    kind: MarkupKind.t;
+    value: string
+  }
+
+  let create ~kind ~value () = {kind; value}
+
+  let json_of_t (t : t) : Json.t =
+    `Assoc [
+      "kind", MarkupKind.json_of_t t.kind;
+      "value", `String t.value
+    ]
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let kind =
+        match List.assoc_opt "kind" fields with
+        | Some json_kind -> MarkupKind.t_of_json json_kind
+        | _ -> raise (Invalid_argument "Invalid JSON format for MarkupContent: kind")
+      in
+      let value =
+        match List.assoc_opt "value" fields with
+        | Some (`String v) -> v
+        | _ -> raise (Invalid_argument "Invalid JSON format for MarkupContent: value")
+      in
+      { kind; value }
+    | _ -> raise (Invalid_argument "Invalid JSON format for MarkupContent")
+end
+
+
+module InsertTextFormat = struct
+  type t = PlainText | Snippet
+
+  let json_of_t (t : t) : Json.t =
+    match t with
+    | PlainText -> `Int 1
+    | Snippet -> `Int 2
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Int 1 -> PlainText
+    | `Int 2 -> Snippet
+    | _ -> raise (Invalid_argument "Invalid JSON format for InsertTextFormat")
+end
+
+
+module InsertTextMode = struct
+  type t = AsIs | AdjustIndentation
+
+  let json_of_t (t : t) : Json.t =
+    match t with
+    | AsIs -> `Int 1
+    | AdjustIndentation -> `Int 2
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Int 1 -> AsIs
+    | `Int 2 -> AdjustIndentation
+    | _ -> raise (Invalid_argument "Invalid JSON format for InsertTextMode")
+end
+
+
+module TextEdit = struct
+  type t = {
+    range: Range.t;
+    newText: string
+  }
+
+  let create ~range ~newText () = {range; newText}
+
+  let json_of_t (t : t) : Json.t =
+    `Assoc [
+      "range", Range.json_of_t t.range;
+      "newText", `String t.newText
+    ]
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let range =
+        match List.assoc_opt "range" fields with
+        | Some json_range -> Range.t_of_json json_range
+        | _ -> raise (Invalid_argument "Invalid JSON format for TextEdit: range")
+      in
+      let newText =
+        match List.assoc_opt "newText" fields with
+        | Some (`String t) -> t
+        | _ -> raise (Invalid_argument "Invalid JSON format for TextEdit: newText")
+      in
+      { range; newText }
+    | _ -> raise (Invalid_argument "Invalid JSON format for TextEdit")
+end
+
+
+module InsertReplaceEdit = struct
+  type t = {
+    newText: string;
+    insert: Range.t;
+    replace: Range.t
+  }
+
+  let create ~newText ~insert ~replace () = {newText; insert; replace}
+
+  let json_of_t (t : t) : Json.t =
+    `Assoc [
+      "newText", `String t.newText;
+      "insert", Range.json_of_t t.insert;
+      "replace", Range.json_of_t t.replace
+    ]
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let newText =
+        match List.assoc_opt "newText" fields with
+        | Some (`String t) -> t
+        | _ -> raise (Invalid_argument "Invalid JSON format for InsertReplaceEdit: newText")
+      in
+      let insert =
+        match List.assoc_opt "insert" fields with
+        | Some json_insert -> Range.t_of_json json_insert
+        | _ -> raise (Invalid_argument "Invalid JSON format for InsertReplaceEdit: insert")
+      in
+      let replace =
+        match List.assoc_opt "replace" fields with
+        | Some json_replace -> Range.t_of_json json_replace
+        | _ -> raise (Invalid_argument "Invalid JSON format for InsertReplaceEdit: replace")
+      in
+      { newText; insert; replace }
+    | _ -> raise (Invalid_argument "Invalid JSON format for InsertReplaceEdit")
+end
+
+
+module CompletionItem = struct
+  type doc = Str of string | Markup of MarkupContent.t | Null
+  type txtEd = TxtEd of TextEdit.t | InsReplEd of InsertReplaceEdit.t
+  type t = {
+    label: string;
+    labelDetails: CompletionItemLabelDetails.t option;
+    kind: CompletionItemKind.t option;
+    tags: CompletionItemTag.t list option;
+    detail: string option;
+    documentation: doc option;
+    deprecated: bool option;
+    preselect: bool option;
+    sortText: string option;
+    filterText: string option;
+    insertText: string option;
+    insertTextFormat: InsertTextFormat.t option;
+    insertTextMode: InsertTextMode.t option;
+    textEdit: txtEd option;
+    textEditText: string option;
+    additionalTextEdits: TextEdit.t option;
+    commitCharacters: string list option;
+    command: Command.t option;
+    data: Json.t option
+  }
+
+  let create 
+    ~label
+    ?labelDetails 
+    ?kind 
+    ?tags 
+    ?detail
+    ?documentation
+    ?deprecated
+    ?preselect
+    ?sortText
+    ?filterText
+    ?insertText
+    ?insertTextFormat 
+    ?insertTextMode 
+    ?textEdit
+    ?textEditText
+    ?additionalTextEdits 
+    ?commitCharacters 
+    ?command 
+    ?data 
+    ()
+  = 
+  {
+    label;
+    labelDetails ;
+    kind ;
+    tags ;
+    detail;
+    documentation;
+    deprecated;
+    preselect;
+    sortText;
+    filterText;
+    insertText;
+    insertTextFormat ;
+    insertTextMode ;
+    textEdit;
+    textEditText;
+    additionalTextEdits ;
+    commitCharacters ;
+    command ;
+    data 
+  }
+  let json_of_doc (d : doc) : Json.t =
+    match d with
+    | Str s -> `String s
+    | Markup m -> MarkupContent.json_of_t m
+    | Null -> `Null
+
+  let doc_of_json (json : Json.t) : doc =
+    match json with
+    | `String s -> Str s
+    | `Assoc _ as m -> Markup (MarkupContent.t_of_json m)
+    | `Null -> Null
+    | _ -> raise (Invalid_argument "Invalid JSON format for CompletionItem.doc")
+
+  let json_of_txtEd (t : txtEd) : Json.t =
+    match t with
+    | TxtEd e -> TextEdit.json_of_t e
+    | InsReplEd e -> InsertReplaceEdit.json_of_t e
+
+  let txtEd_of_json (json : Json.t) : txtEd =
+    match json with
+    | `Assoc fields when List.mem_assoc "newText" fields ->
+      if List.mem_assoc "insert" fields then
+        InsReplEd (InsertReplaceEdit.t_of_json json)
+      else
+        TxtEd (TextEdit.t_of_json json)
+    | _ -> raise (Invalid_argument "Invalid JSON format for CompletionItem.txtEd")
+
+  let json_of_t (t : t) : Json.t =
+    let labelDetails_json =
+      match t.labelDetails with
+      | Some d -> CompletionItemLabelDetails.json_of_t d
+      | None -> `Null
+    in
+    let kind_json =
+      match t.kind with
+      | Some k -> CompletionItemKind.json_of_t k
+      | None -> `Null
+    in
+    let tags_json =
+      match t.tags with
+      | Some ts -> `List (List.map CompletionItemTag.json_of_t ts)
+      | None -> `Null
+    in
+    let detail_json =
+      match t.detail with
+      | Some d -> `String d
+      | None -> `Null
+    in
+    let documentation_json =
+      match t.documentation with
+      | Some d -> json_of_doc d
+      | None -> `Null
+    in
+    let deprecated_json =
+      match t.deprecated with
+      | Some d -> `Bool d
+      | None -> `Null
+    in
+    let preselect_json =
+      match t.preselect with
+      | Some p -> `Bool p
+      | None -> `Null
+    in
+    let sortText_json =
+      match t.sortText with
+      | Some s -> `String s
+      | None -> `Null
+    in
+    let filterText_json =
+      match t.filterText with
+      | Some s -> `String s
+      | None -> `Null
+    in
+    let insertText_json =
+      match t.insertText with
+      | Some s -> `String s
+      | None -> `Null
+    in
+    let insertTextFormat_json =
+      match t.insertTextFormat with
+      | Some f -> InsertTextFormat.json_of_t f
+      | None -> `Null
+    in
+    let insertTextMode_json =
+      match t.insertTextMode with
+      | Some m -> InsertTextMode.json_of_t m
+      | None -> `Null
+    in
+    let textEdit_json =
+      match t.textEdit with
+      | Some e -> json_of_txtEd e
+      | None -> `Null
+    in
+    let textEditText_json =
+      match t.textEditText with
+      | Some s -> `String s
+      | None -> `Null
+    in
+    let additionalTextEdits_json =
+      match t.additionalTextEdits with
+      | Some e -> TextEdit.json_of_t e
+      | None -> `Null
+    in
+    let commitCharacters_json =
+      match t.commitCharacters with
+      | Some cs -> `List (List.map (fun c -> `String c) cs)
+      | None -> `Null
+    in
+    let command_json =
+      match t.command with
+      | Some c -> Command.json_of_t c
+      | None -> `Null
+    in
+    let data_json =
+      match t.data with
+      | Some d -> d
+      | None -> `Null
+    in
+    `Assoc [
+      "label", `String t.label;
+      "labelDetails", labelDetails_json;
+      "kind", kind_json;
+      "tags", tags_json;
+      "detail", detail_json;
+      "documentation", documentation_json;
+      "deprecated", deprecated_json;
+      "preselect", preselect_json;
+      "sortText", sortText_json;
+      "filterText", filterText_json;
+      "insertText", insertText_json;
+      "insertTextFormat", insertTextFormat_json;
+      "insertTextMode", insertTextMode_json;
+      "textEdit", textEdit_json;
+      "textEditText", textEditText_json;
+      "additionalTextEdits", additionalTextEdits_json;
+      "commitCharacters", commitCharacters_json;
+      "command", command_json;
+      "data", data_json
+    ]
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let label =
+        match List.assoc_opt "label" fields with
+        | Some (`String l) -> l
+        | _ -> raise (Invalid_argument "Invalid JSON format for CompletionItem: label")
+      in
+      let labelDetails =
+        match List.assoc_opt "labelDetails" fields with
+        | Some `Null -> None
+        | Some json_labelDetails -> Some (CompletionItemLabelDetails.t_of_json json_labelDetails)
+        | None -> None
+      in
+      let kind =
+        match List.assoc_opt "kind" fields with
+        | Some `Null -> None
+        | Some json_kind -> Some (CompletionItemKind.t_of_json json_kind)
+        | None -> None
+      in
+      let tags =
+        match List.assoc_opt "tags" fields with
+        | Some `Null -> None
+        | Some (`List json_tags) -> Some (List.map CompletionItemTag.t_of_json json_tags)
+        | None -> None
+        | _ -> raise (Invalid_argument "Invalid JSON format for CompletionItem: tags")
+      in
+      let detail =
+        match List.assoc_opt "detail" fields with
+        | Some `Null -> None
+        | Some (`String d) -> Some d
+        | None -> None
+        | _ -> raise (Invalid_argument "Invalid JSON format for CompletionItem: detail")
+      in
+      let documentation =
+        match List.assoc_opt "documentation" fields with
+        | Some `Null -> None
+        | Some json_doc -> Some (doc_of_json json_doc)
+        | None -> None
+      in
+      let deprecated =
+        match List.assoc_opt "deprecated" fields with
+        | Some `Null -> None
+        | Some (`Bool b) -> Some b
+        | None -> None
+        | _ -> raise (Invalid_argument "Invalid JSON format for CompletionItem: deprecated")
+      in
+      let preselect =
+        match List.assoc_opt "preselect" fields with
+        | Some `Null -> None
+        | Some (`Bool b) -> Some b
+        | None -> None
+        | _ -> raise (Invalid_argument "Invalid JSON format for CompletionItem: preselect")
+      in
+      let sortText =
+        match List.assoc_opt "sortText" fields with
+        | Some `Null -> None
+        | Some (`String s) -> Some s
+        | None -> None
+        | _ -> raise (Invalid_argument "Invalid JSON format for CompletionItem: sortText")
+      in
+      let filterText =
+        match List.assoc_opt "filterText" fields with
+        | Some `Null -> None
+        | Some (`String s) -> Some s
+        | None -> None
+        | _ -> raise (Invalid_argument "Invalid JSON format for CompletionItem: filterText")
+      in
+      let insertText =
+        match List.assoc_opt "insertText" fields with
+        | Some `Null -> None
+        | Some (`String s) -> Some s
+        | None -> None
+        | _ -> raise (Invalid_argument "Invalid JSON format for CompletionItem: insertText")
+      in
+      let insertTextFormat =
+        match List.assoc_opt "insertTextFormat" fields with
+        | Some `Null -> None
+        | Some json_insertTextFormat -> Some (InsertTextFormat.t_of_json json_insertTextFormat)
+        | None -> None
+      in
+      let insertTextMode =
+        match List.assoc_opt "insertTextMode" fields with
+        | Some `Null -> None
+        | Some json_insertTextMode -> Some (InsertTextMode.t_of_json json_insertTextMode)
+        | None -> None
+      in
+      let textEdit =
+        match List.assoc_opt "textEdit" fields with
+        | Some `Null -> None
+        | Some json_textEdit -> Some (txtEd_of_json json_textEdit)
+        | None -> None
+      in
+      let textEditText =
+        match List.assoc_opt "textEditText" fields with
+        | Some `Null -> None
+        | Some (`String s) -> Some s
+        | None -> None
+        | _ -> raise (Invalid_argument "Invalid JSON format for CompletionItem: textEditText")
+      in
+      let additionalTextEdits =
+        match List.assoc_opt "additionalTextEdits" fields with
+        | Some `Null -> None
+        | Some json_additionalTextEdits -> Some (TextEdit.t_of_json json_additionalTextEdits)
+        | None -> None
+      in
+      let commitCharacters =
+        match List.assoc_opt "commitCharacters" fields with
+        | Some `Null -> None
+        | Some (`List json_commitCharacters) -> Some (List.map (function `String s -> s | _ -> raise (Invalid_argument "Invalid JSON format for CompletionItem: commitCharacters")) json_commitCharacters)
+        | None -> None
+        | _ -> raise (Invalid_argument "Invalid JSON format for CompletionItem: commitCharacters")
+      in
+      let command =
+        match List.assoc_opt "command" fields with
+        | Some `Null -> None
+        | Some json_command -> Some (Command.t_of_json json_command)
+        | None -> None
+      in
+      let data =
+        match List.assoc_opt "data" fields with
+        | Some `Null -> None
+        | Some json_data -> Some json_data
+        | None -> None
+      in
+      {
+        label;
+        labelDetails;
+        kind;
+        tags;
+        detail;
+        documentation;
+        deprecated;
+        preselect;
+        sortText;
+        filterText;
+        insertText;
+        insertTextFormat;
+        insertTextMode;
+        textEdit;
+        textEditText;
+        additionalTextEdits;
+        commitCharacters;
+        command;
+        data
+      }
+    | _ -> raise (Invalid_argument "Invalid JSON format for CompletionItem")
+end
+
+module DidSaveTextDocumentParams = struct
+  type t = {
+    textDocument: TextDocumentIdentifier.t;
+    text: string option
+  }
+  let json_of_t (msg : t) : Json.t =
+    let text_json =
+      match msg.text with
+      | Some s -> `String s
+      | None -> `Null
+    in
+    `Assoc [
+      ("textDocument", TextDocumentIdentifier.json_of_t msg.textDocument); 
+      ("text", text_json); 
+    ]
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let textDocument =
+        match List.assoc_opt "textDocument" fields with
+        | Some text_doc_json -> TextDocumentIdentifier.t_of_json text_doc_json
+        | None -> raise (Invalid_argument "Invalid JSON format for DidSaveTextDocumentParams: textDocument")
+      in
+      let text =
+        match List.assoc_opt "text" fields with
+        | Some `Null -> None
+        | Some (`String s) -> Some s
+        | None -> None
+        | _ -> raise (Invalid_argument "Invalid JSON format for DidSaveTextDocumentParams: text")
+      in
+      { textDocument; text }
+    | _ -> raise (Invalid_argument "Invalid JSON format for DidSaveTextDocumentParams")
 end

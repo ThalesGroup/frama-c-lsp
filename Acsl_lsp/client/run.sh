@@ -1,8 +1,6 @@
-#!/bin/bash
+#!/bin/bash 
 
-# Does not support unicode characters
-# 
-
+# acsl lsp doesn't support unicode characters
 frama-c -acsl_lsp -no-unicode
 
 

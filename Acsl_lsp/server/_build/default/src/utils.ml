@@ -1,5 +1,4 @@
 let max_int = (-1) lsr 1 (* stdlib function *)
-let config_id = 123456789
 
 let file_str f = 
   let dir_list = [f] in 
@@ -10,6 +9,12 @@ let dummyLoc filename : Cil_types.location =
   (
     {pos_path=(Filepath.Normalized.of_string filename); pos_lnum=0;  pos_bol=1; pos_cnum=1},
     {pos_path=(Filepath.Normalized.of_string filename); pos_lnum=0;  pos_bol=1; pos_cnum=1}
+  )
+
+let real_loc ((pos1 : Filepath.position) , (pos2 : Filepath.position)) : Cil_types.location = 
+  (
+    {pos_path=pos1.pos_path; pos_lnum=pos1.pos_lnum-1; pos_bol=pos1.pos_bol-1; pos_cnum=pos1.pos_cnum},
+    {pos_path=pos2.pos_path; pos_lnum=pos2.pos_lnum-1; pos_bol=pos2.pos_bol-1; pos_cnum=pos2.pos_cnum}
   )
 
 let get_lsp_range ((pos1, pos2) : Cil_types.location) : Types.Range.t =
@@ -61,14 +66,19 @@ let read_line_from_file filename line_number =
   let line = ref "" in
   while (!cnt <= line_number) do
     try 
-      (*Printf.printf "curr_line_numb %d, given line_num %d \n%!"!cnt line_number;*)
       line := Stdlib.input_line ic;
       cnt := !cnt + 1;
-    with _ -> Stdlib.close_in ic; (* close the file in case input_line fails *)
+    with End_of_file -> Stdlib.close_in ic;
   done;
   Stdlib.close_in ic;
-  (*Printf.printf "line = %s\n%!" !line;*)
   !line
+
+let contains s1 ~suffix:s2 =
+  let re = Str.regexp_string s2 in
+  try 
+    ignore (Str.search_forward re s1 0); 
+    true
+  with Not_found -> false
 
 (* Function to retrieve function call at given line and character index *)
 let retrieve_symbol line_number character_index file_name =
@@ -80,13 +90,46 @@ let send_request client_sock response =
   let sent = Unix.send client_sock response_bytes 0 (Bytes.length response_bytes) [] in
   ignore sent
 
-let make_error err  = 
-  Types.ResponseMessage.json_of_t (Types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Types.Int 465841231564) ~error:(Types.ResponseError.create ~code:(-32803) ~message:err ()) ())
+let make_error err id = 
+  Types.ResponseMessage.json_of_t (Types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Types.Int id) ~error:(Types.ResponseError.create ~code:(-32803) ~message:err ()) ())
 
-let send_error_request err sock = 
-  send_request sock (Json.save_string (make_error err)) (* todo : give proper id *)
+let id_to_int id =
+  match id with 
+  | Types.Int i -> i 
+  | Types.Str s -> Stdlib.int_of_string s 
+  | Types.Null -> 0
+
+let send_error_request id err sock = 
+  send_request sock (Json.save_string (make_error err id)) (* todo : give proper id *)
 
 let apply_escapes (s : string) : string = 
   let regex = Str.regexp "\\\n" in 
   let _ = Str.match_beginning () in
   Str.global_replace regex "\n" s
+
+let get_whole_line (pos : Filepath.position) : Cil_types.location = 
+  let file = file_str pos.pos_path in 
+  let line = read_line_from_file file (pos.pos_lnum - 1) in
+  (
+    {pos_path=pos.pos_path; pos_lnum=pos.pos_lnum - 1; pos_bol=pos.pos_bol; pos_cnum=pos.pos_cnum},
+    {pos_path=pos.pos_path; pos_lnum=pos.pos_lnum - 1; pos_bol=pos.pos_bol; pos_cnum=pos.pos_cnum + (String.length line)}
+  )
+
+let split_key_value ss = 
+  List.map (fun s ->
+    let list = String.split_on_char ':' s in 
+    (List.nth list 0), (Some (List.nth list 1))
+  ) ss
+
+let get_warn_status_of_string s =
+  match s with 
+  | "inactive" -> Log.Winactive 
+  | "feedback_once" -> Log.Wfeedback_once 
+  | "feedback" -> Log.Wfeedback 
+  | "once" -> Log.Wonce 
+  | "active" -> Log.Wactive 
+  | "error_once" -> Log.Werror_once 
+  | "error" -> Log.Werror 
+  | "abort" -> Log.Wabort 
+  | _ -> Log.Wactive (* note : default behavior *)
+

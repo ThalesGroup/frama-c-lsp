@@ -27,7 +27,7 @@ let glob_visitor loca symbol = object
           loca := Some loc;
         Cil.DoChildren
       | GVar (vi, _, loc) -> 
-          (* Printf.printf "var : %s, symbol : %s \n%!" vi.vname symbol; *)
+          (* Settings.Self.debug ~level:1 "var : %s, symbol : %s \n%!" vi.vname symbol; *)
           if (String.equal symbol vi.vname) then
           begin
             loca := Some loc;
@@ -38,7 +38,7 @@ let glob_visitor loca symbol = object
       | GFun (fd,loc) -> 
         if (String.equal symbol fd.svar.vname;) then
           begin
-            (* Printf.printf "fun : %s\n%!" fd.svar.vname; *)
+            (* Settings.Self.debug ~level:1 "fun : %s\n%!" fd.svar.vname; *)
             loca := Some loc;
           end;
         Cil.DoChildren
@@ -53,33 +53,33 @@ let glob_visitor loca symbol = object
         | Dinvariant (li, loc) -> 
           if (String.equal symbol li.l_var_info.lv_name) then
             begin
-              (* Printf.printf "invariant : %s\n%!" li.l_var_info.lv_name; *)
+              (* Settings.Self.debug ~level:1 "invariant : %s\n%!" li.l_var_info.lv_name; *)
               loca := Some loc;
             end;
           Cil.DoChildren;
         | Dtype (lti, loc) -> 
           if (String.equal symbol lti.lt_name) then
             begin
-              (* Printf.printf "logic type : %s\n%!" lti.lt_name; *)
+              (* Settings.Self.debug ~level:1 "logic type : %s\n%!" lti.lt_name; *)
               loca := Some loc;
             end;
           Cil.DoChildren
         | Dtype_annot (li, loc) -> 
           if (String.equal symbol li.l_var_info.lv_name) then
             begin
-              (* Printf.printf "type annot : %s\n%!" li.l_var_info.lv_name; *)
+              (* Settings.Self.debug ~level:1 "type annot : %s\n%!" li.l_var_info.lv_name; *)
               loca := Some loc;
             end;
           Cil.DoChildren
         | Dfun_or_pred (li,loc) ->
           if (String.equal symbol li.l_var_info.lv_name) then
             begin
-              (* Printf.printf "fun or pred : %s\n%!" li.l_var_info.lv_name; *)
+              (* Settings.Self.debug ~level:1 "fun or pred : %s\n%!" li.l_var_info.lv_name; *)
               loca := Some loc;
             end;
           Cil.DoChildren
         | Dlemma (str,_,_,_,_,loc) ->
-          (* Printf.printf "lemma : %s\n%!" str; *)
+          (* Settings.Self.debug ~level:1 "lemma : %s\n%!" str; *)
           if (String.equal symbol str) then
             begin
               loca := Some loc;
@@ -114,7 +114,7 @@ let func_visitor loca symbol = object
 
 let retrieve_location (pos : Filepath.position) =
   let loca = ref None in 
-  let symbol = Utils.retrieve_symbol pos.pos_lnum (pos.pos_cnum - pos.pos_bol) (Utils.file_str pos.pos_path) in  
+  let symbol = Utils.retrieve_symbol pos.pos_lnum (pos.pos_cnum - pos.pos_bol) (Filepath.Normalized.to_pretty_string pos.pos_path) in  
   
   Visitor.visitFramacFile (glob_visitor loca symbol) (Ast.get ()); 
   
@@ -122,16 +122,16 @@ let retrieve_location (pos : Filepath.position) =
   | Some loc -> loc
   | None -> (pos,pos) 
 
-let find_def (req : Types.RequestMessage.t) sock : Json.json = 
-    let params = Types.DefinitionParams.t_of_json (Option.get req.params) in
+let find_def (req : Types.RequestMessage.t) sock : Json.json = ignore sock;
+    let params = match req.params with 
+      | Some p -> Types.DefinitionParams.t_of_json p
+      | None -> Settings.Self.debug ~level:1 "No definition params \n%!"; assert false
+    in
     let uri = params.textDocument.uri in 
     let file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
     let pos = Utils.position_t_to_filepath_position file params.position in
-    Load.init_files sock;
+    (* TODO : init files *)
 
-    if !States.erroring then (* todo : for the moment : we cannot have go to def feature while the file has errors *)
-      Types.ResponseMessage.json_of_t (Types.ResponseMessage.create ~jsonrpc:"2.0" ~id:req.id ~result:`Null ())
-    else
       let (pos1, pos2) = retrieve_location pos in
 
       if pos1 = pos2 then 
@@ -140,7 +140,7 @@ let find_def (req : Types.RequestMessage.t) sock : Json.json =
         Types.ResponseMessage.json_of_t (Types.ResponseMessage.create ~jsonrpc:"2.0" ~id:req.id ~result:
           (Types.Location.json_of_t
             (Types.Location.create 
-              (Filepath.normalize (Utils.file_str pos1.pos_path))
+              (Filepath.normalize (Filepath.Normalized.to_pretty_string pos1.pos_path))
               (Types.Range.create (Types.Position.create (pos1.pos_lnum - 1) (pos1.pos_cnum - pos1.pos_bol))
                 (Types.Position.create (pos2.pos_lnum - 1) (pos2.pos_cnum - pos2.pos_bol))
               )

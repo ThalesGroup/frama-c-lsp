@@ -65,53 +65,62 @@ export function activate(context: ExtensionContext) {
 		serverOptions,
 		clientOptions
 	);
+
+	const displayCILCommand = commands.registerCommand('vscodeacsl.displayCIL', async () => {
+		try {
+			const res = await client.sendRequest('vscodeacsl/displayCIL');
+			let cilContent = JSON.stringify(res, null, 1);
+			cilContent = escapeCharacters(cilContent);
+			cilContent = cilContent.slice(1, cilContent.length - 1); // remove first and last quotes
+			// .replace("\\\\\\", ''); 
+
+			// create a new untitled document in a new tab
+			const newUri = Uri.parse('untitled:CIL Representation');
+			const document = await workspace.openTextDocument(newUri);
+			const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
+
+			// delete previous content if any and set the content of the new document
+			editor.edit(editBuilder => {
+				const start = new Position(0, 0);
+				const end = new Position(document.lineCount, 0);
+				const fullRange = new Range(start, end);
+				editBuilder.delete(fullRange);
+				editBuilder.insert(editor.selection.start, cilContent);
+			});
+			await languages.setTextDocumentLanguage(document, 'acsl');
+
+		} catch (err) {
+			window.showErrorMessage('Failed to fetch and display CIL data: ' + err.message);
+			console.error('Error fetching CIL data:', err);
+		}
+	});
 	
+	const computeCGCommand = commands.registerCommand('vscodeacsl.computeCG', async () => {
+		try {
+			client.sendNotification('vscodeacsl/computeCG');
 
-	context.subscriptions.push(
-		commands.registerCommand('vscodeacsl.displayCIL', async () => {
-			try {
-				const res = await client.sendRequest('vscodeacsl/displayCIL');
-				let cilContent = JSON.stringify(res, null, 1);
-				cilContent = escapeCharacters(cilContent);
-				cilContent = cilContent.slice(1,cilContent.length-1); // remove first and last quotes
-				// .replace("\\\\\\", ''); 
+		} catch (err) {
+			window.showErrorMessage('Failed to compute callgraph: ' + err.message);
+			console.error('Error computing callgraph:', err);
+		}
+	});
 
-				// create a new untitled document in a new tab
-				const newUri = Uri.parse('untitled:CIL Representation');
-				const document = await workspace.openTextDocument(newUri);
-				const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
+	context.subscriptions.push(displayCILCommand, computeCGCommand);
 
-				// delete previous content if any and set the content of the new document
-				editor.edit(editBuilder => {
-					const start = new Position(0, 0);
-					const end = new Position(document.lineCount, 0);
-					const fullRange = new Range(start, end);
-					editBuilder.delete(fullRange);
-					editBuilder.insert(editor.selection.start, cilContent); 
-				});
-				await languages.setTextDocumentLanguage(document, 'acsl');
-
-			} catch (err) {
-				window.showErrorMessage('Failed to fetch and display CIL data: ' + err.message);
-				console.error('Error fetching CIL data:', err);
-			}
-		})
-	);
-	
 	// Start the client. This will also launch the server
 	client.start();
 }
 
 function escapeCharacters(cCode: string): string {
-    const escapedCode = cCode
-        .replace(/\\\\\\/g, '')  // escape triple backslashes
-        .replace(/\\\\"/g, '"')    // escape double quotes
+	const escapedCode = cCode
+		.replace(/\\\\\\/g, '')  // escape triple backslashes
+		.replace(/\\\\"/g, '"')    // escape double quotes
 		.replace(/(\\\\n)/g, '\n') // remove " \\n "
-        .replace(/\\\\r/g, '\r')   // escape carriage return characters
-        .replace(/\\\\t/g, '\t')   // escape tab characters
-        .replace(/\\\\f/g, '\f')   // escape form feed characters
-        .replace(/\\\\v/g, '\v');  // escape vertical tab characters
-    return escapedCode;
+		.replace(/\\\\r/g, '\r')   // escape carriage return characters
+		.replace(/\\\\t/g, '\t')   // escape tab characters
+		.replace(/\\\\f/g, '\f')   // escape form feed characters
+		.replace(/\\\\v/g, '\v');  // escape vertical tab characters
+	return escapedCode;
 }
 
 

@@ -19,8 +19,7 @@
         "vscode": "^1.75.0"
     },
     "activationEvents": [
-        "onLanguage:c",
-        "onLanguage:cpp"
+        "onLanguage:c"
     ],
     "main": "./out/extension",
     "contributes": {
@@ -28,6 +27,9 @@
             "editor/context": [
                 {
                     "command": "vscodeacsl.displayCIL"
+                },
+                {
+                    "command": "vscodeacsl.computeCG"
                 }
             ]
         },
@@ -54,7 +56,7 @@
         ],
         "configuration": [
             {
-                "title": "Server",
+                "title": "Debugging",
                 "properties": {
                     "vscodeacsl.maxNumberOfProblems": {
                         "scope": "resource",
@@ -72,70 +74,234 @@
                         ],
                         "default": "verbose",
                         "description": "Traces the communication between VS Code and the language server."
+                    },
+                    "vscodeacsl.trace.acslLsp": {
+                        "scope": "window",
+                        "type": "integer",
+                        "enum": [
+                            0,
+                            1,
+                            2,
+                            3,
+                            4
+                        ],
+                        "default": 0,
+                        "description": "Specify ACSL LSP debug messages level. (0 = highest, 4 = off)."
                     }
                 }
             },
             {
-                "title": "Frama-C",
+                "title": "Kernel options",
                 "properties": {
-                    "framac.includePaths": {
+                    "kernel.includePaths": {
                         "scope": "workspace",
                         "type": "array",
                         "items": {
                             "type": "string"
                         },
-                        "default": "",
-                        "description": "Adds C/C++ include paths for the project"
+                        "description": "-cpp-extra-args: Adds C/C++ include paths for the project."
                     },
-                    "framac.sourceFiles": {
+                    "kernel.sourceFiles": {
                         "scope": "workspace",
                         "type": "array",
                         "items": {
                             "type": "string"
                         },
-                        "default": "",
-                        "description": "Specifies which source files must be parsed"
+                        "description": "-cpp-extra-args: Specifies which source files must be parsed."
                     },
-                    "framac.macros": {
+                    "kernel.macros": {
                         "scope": "workspace",
                         "type": "array",
                         "items": {
                             "type": "string"
                         },
-                        "default": "",
-                        "description": "Adds macros"
+                        "description": "-cpp-extra-args: Adds macros."
+                    },
+                    "kernel.cc": {
+                        "scope": "workspace",
+                        "type": "boolean",
+                        "description": "-cpp-extra-args: adds -CC option",
+                        "default": false
+                    },
+                    "kernel.cppCommand": {
+                        "scope": "workspace",
+                        "type": "string",
+                        "description": "-cpp-command: specify behavior of option -cpp-command"
+                    },
+                    "kernel.machdep": {
+                        "scope": "workspace",
+                        "type": "string",
+                        "description": "Specify behavior of option -machdep"
+                    },
+                    "kernel.cppGnuLike": {
+                        "scope": "workspace",
+                        "type": "boolean",
+                        "description": "Specify behavior of option -cpp-frama-c-compliant",
+                        "default": false
+                    },
+                    "kernel.framacStdlib": {
+                        "scope": "workspace",
+                        "type": "boolean",
+                        "description": "Specify behavior of option -frama-c-stdlib",
+                        "default": true
+                    },
+                    "kernel.keepUnusedSpecifiedFunctions": {
+                        "scope": "workspace",
+                        "type": "boolean",
+                        "description": "Specify behavior of option -keep-unused-specified-functions",
+                        "default": true
+                    },
+                    "kernel.keepUnusedTypes": {
+                        "scope": "workspace",
+                        "type": "boolean",
+                        "description": "Specify behavior of option -keep-unused-types",
+                        "default": true
+                    },
+                    "kernel.aggressiveMerging": {
+                        "scope": "workspace",
+                        "type": "boolean",
+                        "description": "Specify behavior of option -aggressive-merging",
+                        "default": false
+                    },
+                    "kernel.generatedSpecCustom": {
+                        "scope": "workspace",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "Add key:value element to option -generated-spec-custom"
+                    },
+                    "kernel.continueAnnotError": {
+                        "scope": "workspace",
+                        "type": "boolean",
+                        "description": "Specify behavior of option -kernel-warn-key annot-error (formerly -continue-annot-error). Useful if you need more information on annotation errors.",
+                        "default": true
+                    },
+                    "kernel.origName": {
+                        "scope": "workspace",
+                        "type": "boolean",
+                        "description": "Specify behavior of option -orig-name",
+                        "default": false
+                    },
+                    "kernel.print": {
+                        "scope": "workspace",
+                        "type": "boolean",
+                        "description": "Specify behavior of option -print",
+                        "default": false
+                    },
+                    "kernel.annot": {
+                        "scope": "workspace",
+                        "type": "boolean",
+                        "description": "Specify behavior of option -annot",
+                        "default": false
+                    },
+                    "kernel.keepComments": {
+                        "scope": "workspace",
+                        "type": "boolean",
+                        "description": "Specify behavior of option -keep-comments",
+                        "default": false
+                    },
+                    "kernel.kernelLog": {
+                        "scope": "workspace",
+                        "type": "string",
+                        "description": "Specify behavior of option -kernel-log",
+                        "default": ""
+                    },
+                    "kernel.ocode": {
+                        "scope": "workspace",
+                        "type": "string",
+                        "description": "Specify behavior of option -ocode",
+                        "default": ""
+                    }
+                }
+            },
+            {
+                "title": "Wp",
+                "properties": {
+                    "wp.wpPruning": {
+                        "scope": "workspace",
+                        "type": "boolean",
+                        "description": "Specify behavior of option -wp-pruning",
+                        "default": true
+                    },
+                    "wp.wp": {
+                        "scope": "workspace",
+                        "type": "boolean",
+                        "description": "Specify behavior of option -wp",
+                        "default": false
+                    }
+                }
+            },
+            {
+                "title": "Metrics",
+                "properties": {
+                    "metrics.metrics": {
+                        "scope": "workspace",
+                        "type": "boolean",
+                        "description": "Specify behavior of option -metrics",
+                        "default": true
+                    }
+                }
+            },
+            {
+                "title": "Callgraph",
+                "properties": {
+                    "callgraph.cg": {
+                        "scope": "workspace",
+                        "type": "string",
+                        "description": "Specify behavior of option -cg",
+                        "default": ""
+                    },
+                   "callgraph.cgRoots": {
+                        "scope": "workspace",
+                        "type": "array",
+                        "items":{
+                            "type": "string"
+                        },
+                        "description": "Specify behavior of option -cg-roots",
+                        "default": ""
+                    },
+                    "callgraph.cgServices": {
+                        "scope": "workspace",
+                        "type": "boolean",
+                        "description": "Specify behavior of option -cg-services",
+                        "default": true
                     }
                 }
             }
-        ],
-        "commands": [
-            {
-                "command": "vscodeacsl.displayCIL",
-                "title": "Display CIL"
-            }
-        ]
+],
+"commands": [
+    {
+        "command": "vscodeacsl.displayCIL",
+        "title": "Display CIL"
     },
-    "scripts": {
-        "vscode:prepublish": "npm run compile",
-        "compile": "tsc -b",
-        "watch": "tsc -b -w",
-        "lint": "eslint ./src --ext .ts,.tsx",
-        "test": "sh ./scripts/e2e.sh"
-    },
-    "devDependencies": {
-        "@types/mocha": "^10.0.6",
-        "@types/node": "^18.18.0",
-        "@types/vscode": "^1.75.0",
-        "@typescript-eslint/eslint-plugin": "^7.11.0",
-        "@typescript-eslint/parser": "^7.11.0",
-        "eslint": "^8.57.0",
-        "minimatch": "^3.0.2",
-        "mocha": "^9.2.1",
-        "typescript": "^5.4.5"
-    },
-    "dependencies": {
-        "@types/vscode-webview": "^1.57.5",
-        "types": "^0.1.1",
-        "vscode-languageclient": "^9.0.1"
+    {
+        "command": "vscodeacsl.computeCG",
+        "title": "Compute Callgraph"
     }
+]
+},
+"scripts": {
+"vscode:prepublish": "npm run compile",
+"compile": "tsc -b",
+"watch": "tsc -b -w",
+"lint": "eslint ./src --ext .ts,.tsx",
+"test": "sh ./scripts/e2e.sh"
+},
+"devDependencies": {
+"@types/mocha": "^10.0.6",
+"@types/node": "^18.18.0",
+"@types/vscode": "^1.75.0",
+"@typescript-eslint/eslint-plugin": "^7.11.0",
+"@typescript-eslint/parser": "^7.11.0",
+"eslint": "^8.57.0",
+"minimatch": "^3.0.2",
+"mocha": "^9.2.1",
+"typescript": "^5.4.5"
+},
+"dependencies": {
+"@types/vscode-webview": "^1.57.5",
+"types": "^0.1.1",
+"vscode-languageclient": "^9.0.1"
+}
 }

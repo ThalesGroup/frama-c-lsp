@@ -1,67 +1,92 @@
-let configs = Vtypes.Configurations.create 
-  ~framac_includePaths:(ref []) 
-  ~framac_sourceFiles:(ref []) 
-  ~framac_macros:(ref []) 
-  () 
+let acsl_debug = ref 3
+let includePaths = (ref []) 
+let sourceFiles = (ref []) 
+let macros = (ref []) 
+let cc = ref false
+let cppCommand = (ref "") 
+let machdep = (ref "") 
+let cppGnuLike = (ref true)
+let framacStdlib = (ref true)
+let keepUnusedSpecifiedFunctions = (ref true)
+let keepUnusedTypes = (ref true)
+let aggressiveMerging = (ref false)
+let generatedSpecCustom : (string * string option) list ref = (ref []) 
+(* -continue-annot-error *) (* note : this option may be used in order to handle diagnostics *)
+(* let continueAnnotError : (string * string) list ref = (ref [])  *)
+let continueAnnotError = ref false
+let origName = ref false
+let print = ref false
+let annot = ref false
+let keepComments = ref false
+let kernelLog = ref ""
+let ocode = ref ""
+let wpPruning = ref true
+let metrics = ref false
+let cg = ref ""
+let cgRoots = ref []
+let cgServices = ref true
+let wp = ref false
 
-let request_includePaths client_sock : unit = 
-  Printf.printf "Asking for include paths\n%!";
-  let req = Types.RequestMessage.json_of_t 
-  (Types.RequestMessage.create 
-    ~jsonrpc:"2.0" 
-    ~id:(Types.Int (Utils.config_id)) 
-    ~method_:"workspace/configuration" 
-    ~params:(Json.load_string 
-    {|
-      {
-        "items":
-        [
-          {"section": "framac.includePaths"}
-        ]
-      }
-    |})
-    ()) in
-  Utils.send_request client_sock (Json.save_string req) 
-
-(* always update this function if configuration names change, etc. *)
 let request_configurations client_sock : unit = 
-  Printf.printf "Asking for configurations\n%!";
+  
+  Settings.Self.debug ~level:1 "Asking for configurations\n%!";
   let req = Types.RequestMessage.json_of_t 
   (Types.RequestMessage.create 
     ~jsonrpc:"2.0" 
-    ~id:(Types.Int (Utils.config_id)) 
+    ~id:(Types.Int (123456789)) 
     ~method_:"workspace/configuration" 
     ~params:(Json.load_string 
     {|
       {
         "items":
         [
-          {"section": "framac.includePaths"},
-          {"section": "framac.sourceFiles"},
-          {"section": "framac.macros"}
+          {"section": "vscodeacsl.trace.acslLsp"},
+          {"section": "kernel.includePaths"},
+          {"section": "kernel.sourceFiles"},
+          {"section": "kernel.macros"},
+          {"section": "kernel.cc"},
+          {"section": "kernel.cppCommand"},
+          {"section": "kernel.machdep"},
+          {"section": "kernel.cppGnuLike"},
+          {"section": "kernel.framacStdlib"},
+          {"section": "kernel.keepUnusedSpecifiedFunctions"},
+          {"section": "kernel.keepUnusedTypes"},
+          {"section": "kernel.aggressiveMerging"},
+          {"section": "kernel.generatedSpecCustom"},
+          {"section": "kernel.continueAnnotError"},
+          {"section": "kernel.origName"},
+          {"section": "kernel.print"},
+          {"section": "kernel.annot"},
+          {"section": "kernel.keepComments"},
+          {"section": "kernel.kernelLog"},
+          {"section": "kernel.ocode"},
+          {"section": "wp.wpPruning"},
+          {"section": "metrics.metrics"},
+          {"section": "callgraph.cg"},
+          {"section": "callgraph.cgRoots"},
+          {"section": "callgraph.cgServices"},
+          {"section": "wp.wp"}
         ]
       }
     |})
     ()) in
   Utils.send_request client_sock (Json.save_string req)
 
-  let validate_includePath path sock = 
-    Filepath.exists (Filepath.Normalized.of_string (Utils.remove_newline (Utils.remove_quotes path))) 
-    ||
-    (let json_string = PublishDiagnostics.includePaths_error ("Invalid include path: "^path) in
-    Utils.send_request sock json_string;
-    false)
+let validate_includePath path = 
+  Filepath.exists (Filepath.Normalized.of_string (Utils.remove_newline (Utils.remove_quotes path))) 
 
 let validate_sourceFile path = 
-    Filepath.exists (Filepath.Normalized.of_string (Utils.remove_newline (Utils.remove_quotes path)))
-    && 
-    String.ends_with ~suffix:".c" (Utils.remove_newline (Utils.remove_quotes path))
+  Filepath.exists (Filepath.Normalized.of_string (Utils.remove_newline (Utils.remove_quotes path)))
+  && 
+  String.ends_with ~suffix:".c" (Utils.remove_newline (Utils.remove_quotes path))
 
+let get_acsl_debug (): int = 
+  !acsl_debug
 
-let get_framac_includePaths sock () : string list = 
+let get_includePaths sock () : string list = ignore sock;
   let existing_dirs = List.filter (fun path -> 
-      validate_includePath path sock
-  ) !(configs.framac_includePaths) in    
+      validate_includePath path
+  ) !includePaths in    
   List.map (fun path -> 
     (" -I"^(path))
     ) existing_dirs
@@ -72,47 +97,262 @@ let validate_macro macr =
   (* Str.string_match regex macr 0 *)
   (* todo : write proper validation function with regex *)
 
-let get_framac_macros (): string list = 
+let get_macros (): string list = 
   let macros = List.filter (fun macro -> 
       validate_macro macro
-    ) !(configs.framac_macros) in    
+    ) !macros in    
   List.map (fun macr -> 
     (" -D"^(macr))
     ) macros
+    
+let get_cc (): string = 
+  if !cc then " -CC" else ""
   
+(* note : never forget default behavior of string options if not specified *)    
+let get_cppCommand (): string = (* todo : there is no string checking, the command could cause errors *)
+  if (String.equal !cppCommand "") 
+    then Kernel.CppCommand.get_default ()
+  else 
+    !cppCommand
 
-let set_framac_options sock : unit = 
-  Kernel.CppExtraArgs.set (List.append (get_framac_includePaths sock ()) (get_framac_macros ()));
+let get_machdep (): string = (* todo : there is no string checking, the machdep could cause errors *)
+  if (String.equal !machdep "") 
+    then Kernel.Machdep.get_default ()
+  else 
+    !machdep
+
+let get_cppGnuLike (): bool = 
+  !cppGnuLike
+
+let get_framacStdlib (): bool = 
+  !framacStdlib
+
+let get_keepUnusedSpecifiedFunctions (): bool = 
+  !keepUnusedSpecifiedFunctions
+
+let get_keepUnusedTypes (): bool = 
+  !keepUnusedTypes
+
+let get_aggressiveMerging (): bool = 
+  !aggressiveMerging
+
+let get_origName (): bool = 
+  !origName
+
+let get_generatedSpecCustom (): (string * string option) list = 
+  !generatedSpecCustom
+
+let get_continueAnnotError () = 
+  !continueAnnotError
+
+let get_print (): bool = 
+  !print
+
+let get_annot (): bool = 
+  !annot
+
+let get_keepComments (): bool = 
+  !keepComments
+
+let get_kernelLog (): string = 
+  !kernelLog
+
+let get_ocode (): string = 
+  !ocode
+
+let get_wpPruning (): bool = 
+  !wpPruning
+
+let get_metrics (): bool = 
+  !metrics
+
+let get_cg (): string = 
+  !cg
+
+let get_cgRoots (): string list = 
+  !cgRoots
+
+let get_cgServices (): bool = 
+  !cgServices
+
+let get_wp (): bool = 
+  !wp
+
+let set_generatedSpecCustom () = 
+  if not ((List.length !generatedSpecCustom) = 0) then 
+  List.iter (fun (k, v) ->
+    Kernel.GeneratedSpecCustom.add (k, v);
+  ) !generatedSpecCustom 
+
+let set_continueAnnotError () = 
+  if (get_continueAnnotError ()) then
+    Kernel.set_warn_status (Kernel.wkey_annot_error) (Log.Winactive)
+  else 
+    Kernel.set_warn_status (Kernel.wkey_annot_error) (Log.Wactive)
+
+let set_kernelLog () = 
+  if not (String.equal !kernelLog "") then
+    begin
+      let oc = Stdlib.open_out !kernelLog in
+      Log.set_output (Stdlib.output_substring oc) (fun () -> Stdlib.flush oc)
+    end
+
+let set_ocode () = 
+  if not (String.equal !ocode "") then
+    Kernel.CodeOutput.set (Filepath.Normalized.of_string !ocode) 
+    
+let set_cg () = 
+  if not (String.equal !cg "") then
+    Callgraph.Options.Filename.set (Filepath.Normalized.of_string !cg) 
+  else
+    Callgraph.Options.Filename.set (Filepath.Normalized.of_string "untitledCallgraph.dot")
+
+let set_cgRoots () = ()
+  (* let fxs = Globals.FileIndex.get_functions (Filepath.Normalized.of_string "/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server/test_files/test1.c") in
   List.iter (fun x ->
-    Printf.printf "extra arg : %s\n%!" x
-  ) (Kernel.CppExtraArgs.get ())
+    Settings.Self.debug ~level:0 "Kernel function : %s\n%!" (Pretty_utils.to_string (Cil_types_debug.pp_kernel_function) x);
+  ) fxs *)
+  (* let kf_list = List.map (fun x ->
+    try
+      Globals.Functions.find_by_name x
+    with Not_found -> assert false
+  ) !cgRoots in
+  Callgraph.Options.Roots.set (Cil_datatype.Kf.Set.of_list kf_list) *)
 
 
 let save_configs (result: Json.json) = 
-match result with
-| `List [`List incl; `List src; `List macr] -> 
-    configs.framac_includePaths := [];
-    configs.framac_sourceFiles := [];
-    configs.framac_macros := [];
+  (* note : result arguments must be in the same order as in the configuration request *)
+  match result with
+  | `List [
+      `Int json_acsl_debug;
+      `List json_incl; 
+      `List json_src; 
+      `List json_macr; 
+      `Bool json_cc;
+      `String json_cppcmd; 
+      `String json_machdep; 
+      `Bool json_cppGnuLike; 
+      `Bool json_framacStdlib;
+      `Bool json_keepUnusedSpecifiedFunctions;
+      `Bool json_keepUnusedTypes;
+      `Bool json_aggressiveMerging;
+      `List json_generatedSpecCustom;
+      `Bool json_continueAnnotError;
+      `Bool json_origName;
+      `Bool json_print;
+      `Bool json_annot;
+      `Bool json_keepComments;
+      `String json_kernelLog;
+      `String json_ocode;
+      `Bool json_wpPruning;
+      `Bool json_metrics;
+      `String json_cg;
+      `List json_cgRoots;
+      `Bool json_cgServices;
+      `Bool json_wp
+      ] 
+    -> 
+      acsl_debug := json_acsl_debug;
+      cppCommand := (Utils.remove_newline (Utils.remove_quotes (json_cppcmd))) ;
+      machdep := (Utils.remove_newline (Utils.remove_quotes (json_machdep))) ;
+      cc := json_cc;
+      cppGnuLike := json_cppGnuLike;
+      framacStdlib := json_framacStdlib;
+      keepUnusedSpecifiedFunctions := json_keepUnusedSpecifiedFunctions;
+      keepUnusedTypes := json_keepUnusedTypes;
+      aggressiveMerging := json_aggressiveMerging;
+      continueAnnotError := json_continueAnnotError;
+      origName := json_origName;
+      print := json_print;
+      annot := json_annot;
+      keepComments := json_keepComments;
+      kernelLog := (Utils.remove_newline (Utils.remove_quotes (json_kernelLog)));
+      ocode := (Utils.remove_newline (Utils.remove_quotes (json_ocode)));
+      wpPruning := json_wpPruning;
+      metrics := json_metrics;
+      cg := (Utils.remove_newline (Utils.remove_quotes (json_cg)));
+      cgServices := json_cgServices;
+      wp := json_wp;
+  
+      (* save include paths *)
+      includePaths := List.map (fun x ->
+        ((Utils.remove_newline (Utils.remove_quotes (Json.save_string x))))
+      ) json_incl;
+  
+      (* save source files *)
+      (* note : List.filter ? *)
+      sourceFiles := [];
+      List.iter (fun x ->
+        let y = (Utils.remove_newline (Utils.remove_quotes (Json.save_string x))) in
+        if validate_sourceFile y then 
+          begin
+            sourceFiles := y :: !sourceFiles;
+          end
+          else
+          sourceFiles := !sourceFiles;
+      ) json_src;
+  
+      (* save macros *)
+      macros := List.map (fun x ->
+        ((Utils.remove_newline (Utils.remove_quotes (Json.save_string x))))
+      ) json_macr;
+  
+      generatedSpecCustom := Utils.split_key_value (List.map (fun x ->
+        ((Utils.remove_newline (Utils.remove_quotes (Json.save_string x))))
+      ) json_generatedSpecCustom);
 
-    List.iter (fun x ->
-      configs.framac_includePaths := ((Utils.remove_newline (Utils.remove_quotes (Json.save_string x))) :: !(configs.framac_includePaths))
-    ) incl;
+      cgRoots := List.map (fun x ->
+        ((Utils.remove_newline (Utils.remove_quotes (Json.save_string x))))
+      ) json_cgRoots;
+  
+  | _ -> 
+    Settings.Self.debug ~level:1 "Requested unknown configuration(s), error : \n\t%s\n%!" (Printexc.get_backtrace ())
 
-    (* note : List.filter ? *)
-    List.iter (fun x ->
-      let y = (Utils.remove_newline (Utils.remove_quotes (Json.save_string x))) in
-      if validate_sourceFile y then 
-        begin
-          configs.framac_sourceFiles := y :: !(configs.framac_sourceFiles);
-        end
-        else
-        configs.framac_sourceFiles := !(configs.framac_sourceFiles);
-    ) src;
+let set_framac_options sock : unit = 
+  let framac_share = Utils.file_str Fc_config.datadir in
+  Kernel.Share.set (Fc_config.datadir);
+  let share = Kernel.Share.get () in
+  Filepath.add_symbolic_dir framac_share share; 
+  Filepath.reset_symbolic_dirs ();
+  (* Settings.Self.debug ~level:0 "frama c share : %s\n%!" (Filepath.basename (Kernel.Share.get ())); *)
 
-    List.iter (fun x ->
-      configs.framac_macros := ((Utils.remove_newline (Utils.remove_quotes (Json.save_string x))) :: !(configs.framac_macros) )
-    ) macr;
+  (* Kernel.Debug.set (0); *)
+  Kernel.CppExtraArgs.set ((get_includePaths sock ()) @ (get_macros ()) @ [get_cc ()]);
+  Kernel.CppCommand.set (get_cppCommand ());
+  Kernel.Machdep.set (get_machdep ());
+  Kernel.CppGnuLike.set (get_cppGnuLike ());
+  Kernel.FramaCStdLib.set (get_framacStdlib ());
+  Kernel.Keep_unused_specified_functions.set (get_keepUnusedSpecifiedFunctions ());
+  Kernel.Keep_unused_types.set (get_keepUnusedTypes ());
+  Kernel.AggressiveMerging.set (get_aggressiveMerging ());
+  set_generatedSpecCustom ();
+  set_continueAnnotError ();
+  Kernel.Orig_name.set (get_origName ());
+  Kernel.PrintCode.set (get_print ());
+  (* Kernel.ReadAnnot.set (get_annot ()); *) (* todo : this option gives an error *)
+  Kernel.PrintComments.set (get_keepComments ());
+  set_kernelLog ();
+  (* set_ocode (); todo : remove *)
+  (* Dynamic.Parameter.Bool.set "-metrics" true; *)
 
+  set_cg ();
+  set_cgRoots ();
+  Callgraph.Options.Services.set (get_cgServices ());
 
-| _ -> Printf.printf "[acsl-lsp] Warning: Requested unknown configuration(s)."
+  Wp.Wp_parameters.WP.set (get_wp ()); (* note : the following wp options are set only if -wp is enabled *)
+  if (Wp.Wp_parameters.WP.get ()) then
+    begin
+      (* Settings.Self.debug ~level:0 "QED : %s\n%!" (Pretty_utils.to_string Wp.VCS.pp_prover Wp.VCS.Qed);
+      Settings.Self.debug ~level:0 "TACTICAL : %s\n%!" (Pretty_utils.to_string Wp.VCS.pp_prover Wp.VCS.Tactical);
+      List.iter (fun x ->
+        Settings.Self.debug ~level:0 "WHY 3 : %s\n%!" (Pretty_utils.to_string Wp.VCS.pp_prover (Wp.VCS.Why3 x))
+      ) (Wp.Why3Provers.provers ()); *)
+
+      Wp.Wp_parameters.Prune.set (get_wpPruning ());
+
+      (* Wp.Wpo.iter_on_goals (fun x ->
+        Settings.Self.debug ~level:0 "Qed result : %s\n%!" (Pretty_utils.to_string Wp.VCS.pp_result (Wp.Wpo.get_result x Wp.VCS.Tactical))
+      ); *)
+
+    end
+

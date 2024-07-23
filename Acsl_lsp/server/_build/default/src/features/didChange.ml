@@ -1,4 +1,4 @@
-let parse (req : Types.NotificationMessage.t) : unit = 
+(* let parse (req : Types.NotificationMessage.t) : unit = 
   let req_json = (Types.NotificationMessage.json_of_t req) in
   let filename =  Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes (Json.save_string (Json.field "uri" (Json.field "textDocument" (Json.field "params" req_json)))))) in
   
@@ -18,6 +18,6 @@ let parse (req : Types.NotificationMessage.t) : unit =
   try
     ignore (File.init_from_c_files files);
   with Log.AbortError msg ->
-    Printf.printf "retrieved string : %s\n%!" msg
+    Settings.Self.debug ~level:1 "retrieved string : %s\n%!" msg
 
-  
+   *)
