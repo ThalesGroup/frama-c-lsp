@@ -36,4 +36,5 @@
     "metrics.metrics": true,
     "wp.wp": false,
     "wp.wpPruning": false,
+    "kernel.aggressiveMerging": false,
 }

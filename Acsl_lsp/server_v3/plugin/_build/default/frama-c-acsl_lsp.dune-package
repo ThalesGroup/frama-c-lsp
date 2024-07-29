@@ -1,0 +1,187 @@
+(lang dune 3.13)
+(name frama-c-acsl_lsp)
+(sections (lib .) (lib_root ..) (libexec .) (doc ../../doc/frama-c-acsl_lsp))
+(files
+ (lib
+  (META
+   core/acsl_lsp.a
+   core/acsl_lsp.cma
+   core/acsl_lsp.cmi
+   core/acsl_lsp.cmt
+   core/acsl_lsp.cmx
+   core/acsl_lsp.cmxa
+   core/acsl_lsp.ml
+   core/acsl_lsp__Command.cmi
+   core/acsl_lsp__Command.cmt
+   core/acsl_lsp__Command.cmx
+   core/acsl_lsp__DidOpen.cmi
+   core/acsl_lsp__DidOpen.cmt
+   core/acsl_lsp__DidOpen.cmx
+   core/acsl_lsp__DidSave.cmi
+   core/acsl_lsp__DidSave.cmt
+   core/acsl_lsp__DidSave.cmx
+   core/acsl_lsp__Find_decl.cmi
+   core/acsl_lsp__Find_decl.cmt
+   core/acsl_lsp__Find_decl.cmx
+   core/acsl_lsp__Find_def.cmi
+   core/acsl_lsp__Find_def.cmt
+   core/acsl_lsp__Find_def.cmx
+   core/acsl_lsp__Initialize.cmi
+   core/acsl_lsp__Initialize.cmt
+   core/acsl_lsp__Initialize.cmx
+   core/acsl_lsp__Initialized.cmi
+   core/acsl_lsp__Initialized.cmt
+   core/acsl_lsp__Initialized.cmx
+   core/acsl_lsp__ProjectConfig.cmi
+   core/acsl_lsp__ProjectConfig.cmt
+   core/acsl_lsp__ProjectConfig.cmx
+   core/acsl_lsp__PublishDiagnostics.cmi
+   core/acsl_lsp__PublishDiagnostics.cmt
+   core/acsl_lsp__PublishDiagnostics.cmx
+   core/acsl_lsp__RegisterCapability.cmi
+   core/acsl_lsp__RegisterCapability.cmt
+   core/acsl_lsp__RegisterCapability.cmx
+   core/acsl_lsp__Run_tests.cmi
+   core/acsl_lsp__Run_tests.cmt
+   core/acsl_lsp__Run_tests.cmx
+   core/acsl_lsp__Settings.cmi
+   core/acsl_lsp__Settings.cmt
+   core/acsl_lsp__Settings.cmx
+   core/acsl_lsp__Shutdown.cmi
+   core/acsl_lsp__Shutdown.cmt
+   core/acsl_lsp__Shutdown.cmx
+   core/acsl_lsp__States.cmi
+   core/acsl_lsp__States.cmt
+   core/acsl_lsp__States.cmx
+   core/acsl_lsp__Test_find_definition.cmi
+   core/acsl_lsp__Test_find_definition.cmt
+   core/acsl_lsp__Test_find_definition.cmx
+   core/acsl_lsp__Types.cmi
+   core/acsl_lsp__Types.cmt
+   core/acsl_lsp__Types.cmx
+   core/acsl_lsp__Utils.cmi
+   core/acsl_lsp__Utils.cmt
+   core/acsl_lsp__Utils.cmx
+   core/src/features/command.ml
+   core/src/features/didOpen.ml
+   core/src/features/didSave.ml
+   core/src/features/find_decl.ml
+   core/src/features/find_def.ml
+   core/src/features/initialize.ml
+   core/src/features/initialized.ml
+   core/src/features/projectConfig.ml
+   core/src/features/publishDiagnostics.ml
+   core/src/features/registerCapability.ml
+   core/src/features/shutdown.ml
+   core/src/lsp_types/types.ml
+   core/src/parsing_features/states.ml
+   core/src/settings.ml
+   core/src/testing/run_tests.ml
+   core/src/testing/test_find_definition.ml
+   core/src/utils.ml
+   dune-package))
+ (lib_root (frama-c/plugins/acsl_lsp/META))
+ (libexec (core/acsl_lsp.cmxs))
+ (doc (README)))
+(library
+ (name frama-c-acsl_lsp.core)
+ (kind normal)
+ (archives (byte core/acsl_lsp.cma) (native core/acsl_lsp.cmxa))
+ (plugins (byte core/acsl_lsp.cma) (native core/acsl_lsp.cmxs))
+ (native_archives core/acsl_lsp.a)
+ (requires
+  frama-c.kernel
+  frama-c-wp.core
+  frama-c-metrics.core
+  frama-c-callgraph.core)
+ (main_module_name Acsl_lsp)
+ (modes byte native)
+ (modules
+  (wrapped
+   (group
+    (alias
+     (obj_name acsl_lsp)
+     (visibility public)
+     (kind alias)
+     (source (path Acsl_lsp) (impl (path core/acsl_lsp.ml-gen))))
+    (name Acsl_lsp)
+    (modules
+     (module
+      (obj_name acsl_lsp__Command)
+      (visibility public)
+      (source (path Command) (impl (path core/src/features/command.ml))))
+     (module
+      (obj_name acsl_lsp__DidOpen)
+      (visibility public)
+      (source (path DidOpen) (impl (path core/src/features/didOpen.ml))))
+     (module
+      (obj_name acsl_lsp__DidSave)
+      (visibility public)
+      (source (path DidSave) (impl (path core/src/features/didSave.ml))))
+     (module
+      (obj_name acsl_lsp__Find_decl)
+      (visibility public)
+      (source (path Find_decl) (impl (path core/src/features/find_decl.ml))))
+     (module
+      (obj_name acsl_lsp__Find_def)
+      (visibility public)
+      (source (path Find_def) (impl (path core/src/features/find_def.ml))))
+     (module
+      (obj_name acsl_lsp__Initialize)
+      (visibility public)
+      (source (path Initialize) (impl (path core/src/features/initialize.ml))))
+     (module
+      (obj_name acsl_lsp__Initialized)
+      (visibility public)
+      (source
+       (path Initialized)
+       (impl (path core/src/features/initialized.ml))))
+     (module
+      (obj_name acsl_lsp__ProjectConfig)
+      (visibility public)
+      (source
+       (path ProjectConfig)
+       (impl (path core/src/features/projectConfig.ml))))
+     (module
+      (obj_name acsl_lsp__PublishDiagnostics)
+      (visibility public)
+      (source
+       (path PublishDiagnostics)
+       (impl (path core/src/features/publishDiagnostics.ml))))
+     (module
+      (obj_name acsl_lsp__RegisterCapability)
+      (visibility public)
+      (source
+       (path RegisterCapability)
+       (impl (path core/src/features/registerCapability.ml))))
+     (module
+      (obj_name acsl_lsp__Run_tests)
+      (visibility public)
+      (source (path Run_tests) (impl (path core/src/testing/run_tests.ml))))
+     (module
+      (obj_name acsl_lsp__Settings)
+      (visibility public)
+      (source (path Settings) (impl (path core/src/settings.ml))))
+     (module
+      (obj_name acsl_lsp__Shutdown)
+      (visibility public)
+      (source (path Shutdown) (impl (path core/src/features/shutdown.ml))))
+     (module
+      (obj_name acsl_lsp__States)
+      (visibility public)
+      (source (path States) (impl (path core/src/parsing_features/states.ml))))
+     (module
+      (obj_name acsl_lsp__Test_find_definition)
+      (visibility public)
+      (source
+       (path Test_find_definition)
+       (impl (path core/src/testing/test_find_definition.ml))))
+     (module
+      (obj_name acsl_lsp__Types)
+      (visibility public)
+      (source (path Types) (impl (path core/src/lsp_types/types.ml))))
+     (module
+      (obj_name acsl_lsp__Utils)
+      (visibility public)
+      (source (path Utils) (impl (path core/src/utils.ml))))))
+   (wrapped true))))

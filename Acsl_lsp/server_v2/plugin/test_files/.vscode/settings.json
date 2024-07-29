@@ -9,7 +9,7 @@
         "\"MACRO3=6\""
     ],
     "framac.sourceFiles": [],
-    "vscodeacsl.trace.server": "messages",
+    "vscodeacsl.trace.server": "verbose",
     "kernel.cppGnuLike": true,
     "kernel.includePaths": [
         "include_folder2",
@@ -36,4 +36,5 @@
     "metrics.metrics": true,
     "wp.wp": false,
     "wp.wpPruning": false,
+    "kernel.aggressiveMerging": false,
 }

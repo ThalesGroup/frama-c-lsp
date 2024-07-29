@@ -1,0 +1,8 @@
+lib: [
+  "_build/install/default/lib/wrapper/META"
+  "_build/install/default/lib/wrapper/dune-package"
+  "_build/install/default/lib/wrapper/opam"
+]
+bin: [
+  "_build/install/default/bin/wrapper"
+]
