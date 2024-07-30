@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2023.6.19)  1 JUL 2024 15:38
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2023.6.19)  30 JUL 2024 11:56
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1168,12 +1168,12 @@ Package biblatex Info: Reference segment=0 on input line 79.
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-<UniversiteParisCite_EIDD_WEB.png, id=83, 537.00626pt x 100.375pt>
+<UniversiteParisCite_EIDD_WEB.png, id=95, 537.00626pt x 100.375pt>
 File: UniversiteParisCite_EIDD_WEB.png Graphic file (type png)
 <use UniversiteParisCite_EIDD_WEB.png>
 Package pdftex.def Info: UniversiteParisCite_EIDD_WEB.png  used on input line 108.
 (pdftex.def)             Requested size: 402.75371pt x 75.28105pt.
-<Thales-logo-1.png, id=85, 451.6875pt x 150.5625pt>
+<Thales-logo-1.png, id=97, 451.6875pt x 150.5625pt>
 File: Thales-logo-1.png Graphic file (type png)
 <use Thales-logo-1.png>
 Package pdftex.def Info: Thales-logo-1.png  used on input line 108.
@@ -1238,7 +1238,7 @@ LaTeX Font Info:    Font shape `U/futm/m/n' will be
 LaTeX Font Info:    Font shape `U/futm/m/n' will be
 (Font)              scaled to size 6.25598pt on input line 127.
  [1]
-LaTeX Font Info:    Trying to load font information for TS1+futs on input line 172.
+LaTeX Font Info:    Trying to load font information for TS1+futs on input line 170.
  (/usr/share/texlive/texmf-dist/tex/latex/fourier/ts1futs.fd
 File: ts1futs.fd 2003/09/14 Fontinst v1.801 font definitions for TS1/futs.
 )
@@ -1247,38 +1247,38 @@ Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
  [2]
-<lifecycle.png, id=146, 1002.74625pt x 545.78906pt>
+<lifecycle.png, id=158, 1002.74625pt x 545.78906pt>
 File: lifecycle.png Graphic file (type png)
 <use lifecycle.png>
-Package pdftex.def Info: lifecycle.png  used on input line 218.
+Package pdftex.def Info: lifecycle.png  used on input line 213.
 (pdftex.def)             Requested size: 501.3719pt x 272.89386pt.
 
-Overfull \hbox (17.67503pt too wide) in paragraph at lines 218--219
+Overfull \hbox (17.67503pt too wide) in paragraph at lines 213--214
  [][] 
  []
 
 [3 <./lifecycle.png>] 
 AED: lastpage setting LastPage
-[4] (./final_report_Djamila_Mohamed.aux)
+[4] [5] (./final_report_Djamila_Mohamed.aux)
 Package rerunfilecheck Info: File `final_report_Djamila_Mohamed.out' has not changed.
-(rerunfilecheck)             Checksum: 9974FC67575FC0142FF91AE55E71474E;2818.
+(rerunfilecheck)             Checksum: 24641C5059452F1E103D1C38A2BDA0C2;3153.
 Package logreq Info: Writing requests to 'final_report_Djamila_Mohamed.run.xml'.
 \openout1 = `final_report_Djamila_Mohamed.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 36040 strings out of 478287
- 667793 string characters out of 5849289
- 1350728 words of memory out of 5000000
- 53359 multiletter control sequences out of 15000+600000
- 583462 words of font info for 278 fonts, out of 8000000 for 9000
+ 36058 strings out of 478287
+ 667989 string characters out of 5849289
+ 1350731 words of memory out of 5000000
+ 53362 multiletter control sequences out of 15000+600000
+ 584272 words of font info for 287 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 99i,11n,94p,1928b,1918s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 99i,12n,94p,1928b,1918s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/share/texlive/texmf-dist/fonts/type1/adobe/utopia/putb8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/adobe/utopia/putr8a.pfb>
-Output written on final_report_Djamila_Mohamed.pdf (6 pages, 126599 bytes).
+Output written on final_report_Djamila_Mohamed.pdf (7 pages, 130791 bytes).
 PDF statistics:
- 180 PDF objects out of 1000 (max. 8388607)
- 160 compressed objects within 2 object streams
- 40 named destinations out of 1000 (max. 500000)
- 86196 words of extra memory for PDF output out of 89155 (max. 10000000)
+ 201 PDF objects out of 1000 (max. 8388607)
+ 180 compressed objects within 2 object streams
+ 43 named destinations out of 1000 (max. 500000)
+ 86220 words of extra memory for PDF output out of 89155 (max. 10000000)
 

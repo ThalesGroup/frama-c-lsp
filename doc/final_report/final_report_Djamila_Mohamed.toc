@@ -6,15 +6,18 @@
 \contentsline {section}{\numberline {3}The Language Server Protocol}{1}{section.3}%
 \contentsline {subsection}{\numberline {3.1}Introduction}{1}{subsection.3.1}%
 \contentsline {subsection}{\numberline {3.2}LSP Capabilities}{1}{subsection.3.2}%
-\contentsline {subsection}{\numberline {3.3}Use cases for each LSP capability}{2}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.3}Use cases for each LSP feature}{2}{subsection.3.3}%
 \contentsline {section}{\numberline {4}Frama-C plugin development}{2}{section.4}%
 \contentsline {section}{\numberline {5}VS Code Extensions}{2}{section.5}%
 \contentsline {part}{III\hspace {1em}Installation}{2}{part.3}%
 \contentsline {section}{\numberline {6}Dependencies}{2}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Run}{2}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Debug}{2}{subsection.6.2}%
 \contentsline {section}{\numberline {7}Frama-C plug-in}{2}{section.7}%
 \contentsline {section}{\numberline {8}VS Code extension}{2}{section.8}%
 \contentsline {part}{IV\hspace {1em}Development}{3}{part.4}%
 \contentsline {section}{\numberline {9}Server implementation}{3}{section.9}%
-\contentsline {section}{\numberline {10}Initializing the editor's workspace folder}{3}{section.10}%
-\contentsline {section}{\numberline {11}`Go To Definition' feature}{3}{section.11}%
+\contentsline {section}{\numberline {10}File parsing, put this at the end}{3}{section.10}%
+\contentsline {section}{\numberline {11}`Go To Definition' feature}{4}{section.11}%
+\contentsline {section}{\numberline {12}File Synchronization \& Diagnostics}{4}{section.12}%
 \contentsline {part}{V\hspace {1em}Ongoing tasks}{4}{part.5}%
