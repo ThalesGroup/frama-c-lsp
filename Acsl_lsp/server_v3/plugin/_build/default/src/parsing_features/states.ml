@@ -1,3 +1,0 @@
-let receivedShutdown = ref false
-let initialized = ref false 
-let rootPath = ref ""

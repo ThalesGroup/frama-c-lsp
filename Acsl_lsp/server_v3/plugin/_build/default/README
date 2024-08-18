@@ -1,9 +1,0 @@
-Remaining features to implement : 
-- Enhance find_def 
-- Diagnostics feature
-- Display CIL representation of C source file
-- Enhance/fix ACSL syntax coloration
-- Documentation for server code
-
-Installation : 
-- 

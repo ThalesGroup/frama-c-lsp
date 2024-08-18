@@ -1,0 +1,35 @@
+Defined functions (9)
+=====================
+ az (1 call); func1 (0 call); func2 (2 calls); func3 (0 call); main (0 call);
+ print_ints (2 calls); print_string_const (1 call); set_to_0 (1 call);
+ test (1 call); 
+
+Specified-only functions (0)
+============================
+ 
+
+Undefined and unspecified functions (0)
+=======================================
+ 
+
+'Extern' global variables (0)
+=============================
+ 
+
+Potential entry points (3)
+==========================
+ func1; func3; main; 
+
+Global metrics
+============== 
+Sloc = 40
+Decision point = 2
+Global variables = 0
+If = 2
+Loop = 2
+Goto = 0
+Assignment = 12
+Exit point = 9
+Function = 9
+Function call = 12
+Pointer dereferencing = 3

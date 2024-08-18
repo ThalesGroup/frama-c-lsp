@@ -1,0 +1,39 @@
+{
+    "wp.smokeTests": false,
+    "kernel.framacStdlib": true,
+    "vscodeacsl.trace.acslLsp": 3,
+    "kernel.aggressiveMerging": false,
+    "kernel.annot": true,
+    "kernel.cc": false,
+    "kernel.continueAnnotError": true,
+    "kernel.cppCommand": "",
+    "kernel.cppGnuLike": false,
+    "kernel.includePaths": [
+        "include_folder",
+        "include_folder2"
+    ],
+    "kernel.keepComments": false,
+    "kernel.keepUnusedSpecifiedFunctions": true,
+    "kernel.keepUnusedTypes": true,
+    "kernel.kernelLog": "",
+    "kernel.machdep": "",
+    "kernel.origName": false,
+    "kernel.print": false,
+    "kernel.sourceFiles": [
+        "test1.c",
+        "include_folder2/locale.h",
+        "locale.c"
+    ],
+    "wp.checkMemoryModel": true,
+    "wp.dump": false,
+    "wp.gen": false,
+    "wp.status": false,
+    "wp.volatile": false,
+    "wp.wpPruning": "",
+    "wp.wpRte": false,
+    "metrics.byFunction": false,
+    "metrics.output": "",
+    "callgraph.cg": "",
+    "callgraph.cgRoots": [],
+    "callgraph.cgServices": true
+}

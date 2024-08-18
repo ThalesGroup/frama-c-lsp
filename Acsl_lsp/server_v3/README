@@ -1,0 +1,9 @@
+Bugs : 
+- corrupted json sent by server for did save when a diagnostic is sent, makes the extension crash
+- syntax coloration not so good for ghost code (function names are not colored as they should be)
+- find definition and find declaration only search by matching the symbol
+
+
+Go To Declaration : 
+- if a variable is declared twice (one globally and one inside a function), no declaration is returned
+- in a function : returns the declaration of a variable of another function if they have the same name 

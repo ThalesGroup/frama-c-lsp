@@ -1,0 +1,30 @@
+digraph G {
+  ratio=0.500000;
+  set_to_0 [style="bold", ];
+  main [style="bold", ];
+  func1 [style="bold", ];
+  test [style="bold", ];
+  printf_va_3 [style="dotted", ];
+  az [style="bold", ];
+  print_string_const [style="bold", ];
+  printf_va_2 [style="dotted", ];
+  func2 [style="bold", ];
+  printf_va_4 [style="dotted", ];
+  func3 [style="bold", ];
+  print_ints [style="bold", ];
+  printf_va_1 [style="dotted", ];
+  
+  
+  set_to_0 -> printf_va_1;
+  main -> az;
+  main -> print_ints;
+  main -> print_string_const;
+  main -> set_to_0;
+  main -> test;
+  func1 -> func2;
+  print_string_const -> printf_va_2;
+  func3 -> func2;
+  print_ints -> printf_va_3;
+  print_ints -> printf_va_4;
+  
+  }
