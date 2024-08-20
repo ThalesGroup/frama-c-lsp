@@ -6,6 +6,15 @@ module Enabled = Self.False
   let help = "when on (off by default), activates lsp support for ACSL/C"
 end)
 
+module Did_open = Self.String (* filename *)
+(struct
+  let option_name = "-did_open"
+  let help = "didOpen request"
+  let arg_name = "did open"
+  let default = ""
+
+end)
+
 module Did_save = Self.String (* filename *)
 (struct
   let option_name = "-did_save"
@@ -15,18 +24,20 @@ module Did_save = Self.String (* filename *)
 
 end)
 
+module Did_close = Self.String (* filename *)
+(struct
+  let option_name = "-did_close"
+  let help = "didClose request"
+  let arg_name = "did close"
+  let default = ""
+
+end)
+
 module Handler_opt = Self.False
 (struct
   let option_name = "-handler"
   let help = "activates handler mode (mandatory for lsp), off by default"
 end)
-
-(* module Did_save = Self.False 
-(struct
-  let option_name = "-did_save"
-  let help = "didSave request"
-
-end) *)
 
 module Find_def = Self.String 
 (struct
@@ -41,6 +52,14 @@ module Find_decl = Self.String
   let option_name = "-find_decl"
   let help = "declaration request"
   let arg_name = "declaration"
+  let default = ""
+end)
+
+module Find_comp = Self.String 
+(struct
+  let option_name = "-find_comp"
+  let help = "completion request"
+  let arg_name = "completion"
   let default = ""
 end)
 
@@ -125,19 +144,19 @@ let addr = Unix.inet_addr_of_string "127.0.0.1"
 let send_request plugin_sock response =
   let response_str = Printf.sprintf "Content-Length: %d\r\n\r\n%s" (String.length response) response in
   let response_bytes = Bytes.of_string response_str in
-  let sent = Unix.send plugin_sock (response_bytes) 0 (String.length response_str) []  in
-  Printf.printf "size : %d content : %s\n%!" sent response_str
+  let sent = Unix.send plugin_sock (response_bytes) 0 (String.length response_str) [] in
+  Self.debug ~level:0 "size : %d content : %s\n%!" sent response_str
 
 
 let run () = 
   if Enabled.get () then 
   (
     if Handler_opt.get () then 
-      (Printf.printf "Running LSP Handler\n%!";
+      (Settings.Self.debug ~level:1 "Running LSP Handler\n%!";
         try
             Start_server.connect ()
         with exn ->
-          Printf.printf "There was an error in the server %s:\n Backtrace : %s\n%!" (Printexc.to_string exn) (Printexc.get_backtrace ())
+          Settings.Self.debug ~level:3 "There was an error in the server %s:\n Backtrace : %s\n%!" (Printexc.to_string exn) (Printexc.get_backtrace ())
       )
     else
     let plugin_sock = (Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0) in
@@ -146,8 +165,8 @@ let run () =
       Kernel.Share.set (Fc_config.datadir);
       let share = Kernel.Share.get () in
       Filepath.add_symbolic_dir framac_share share; 
+
         if not (String.equal (Did_save.get ()) "") then
-          (* if (Did_save.get ()) then *)
           (
             (* ignore (Stdlib.raise (Failure "Settings : did save")); *)
             (* let data = Json.save_string (PublishDiagnostics.handle (Filepath.Normalized.to_pretty_string (List.nth (Kernel.Files.get ()) 0))) in *)
@@ -156,12 +175,26 @@ let run () =
             ignore (send_request plugin_sock data)
           );
 
+        if not (String.equal (Did_open.get ()) "") then
+          (
+            let data = Json.save_string (DidOpen.handle (Did_open.get ())) in
+            Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
+            ignore (send_request plugin_sock data)
+          );
+
+        if not (String.equal (Did_close.get ()) "") then
+          (
+            let data = Json.save_string (DidClose.handle (Did_close.get ())) in
+            Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
+            ignore (send_request plugin_sock data)
+          ); 
+
         if not (String.equal (Find_def.get ()) "") then
           (
             Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
             let req_info = String.split_on_char ':' (Find_def.get ()) in 
             let int_id = (Id.get ()) in 
-            let data = Json.save_string (Definition.find int_id (List.nth req_info 0) (Stdlib.int_of_string (List.nth req_info 1)) (Stdlib.int_of_string (List.nth req_info 2)) (Source_files.get ()) (Root_path.get ())) in
+            let data = Json.save_string (Definition.find int_id (List.nth req_info 0) (Stdlib.int_of_string (List.nth req_info 1)) (Stdlib.int_of_string (List.nth req_info 2))) in
             ignore (send_request plugin_sock data)
           );
         
@@ -169,7 +202,7 @@ let run () =
           (
             let req_info = String.split_on_char ':' (Find_decl.get ()) in 
             let int_id = (Id.get ()) in 
-            let data = Json.save_string (Declaration.find int_id (List.nth req_info 0) (Stdlib.int_of_string (List.nth req_info 1)) (Stdlib.int_of_string (List.nth req_info 2)) (Source_files.get ()) (Root_path.get ())) in
+            let data = Json.save_string (Declaration.find int_id (List.nth req_info 0) (Stdlib.int_of_string (List.nth req_info 1)) (Stdlib.int_of_string (List.nth req_info 2))) in
             Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
             ignore (send_request plugin_sock data)
           );
@@ -183,31 +216,47 @@ let run () =
 
         if (Compute_CG.get ()) then 
           (
-            let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t 
-              (Lsp_types.ResponseMessage.create 
-                ~jsonrpc:"2.0" 
-                ~id: (Lsp_types.Int (Id.get ()))
-                ~result: ((`String "Computed callgraph successfully.")) (* todo : display in a bubble in vs code *)
-                ()
-              )) in
+            let data = Json.save_string 
+              (Lsp_types.ResponseMessage.json_of_t 
+                (Lsp_types.ResponseMessage.create 
+                  ~jsonrpc:"2.0" 
+                  ~id:(Lsp_types.Int (Id.get ()))
+                  ~result: (Lsp_types.ShowMessageParams.json_of_t 
+                    (Lsp_types.ShowMessageParams.create 
+                      ~type_: Lsp_types.MessageType.Info
+                      ~message: "Computed callgraph successfully"
+                      ()
+                    )
+                  )
+                  ()
+                )
+              ) in
             Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
             ignore (send_request plugin_sock data)
           );  
 
         if (Show_metrics.get ()) then 
           (
-            let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t 
-              (Lsp_types.ResponseMessage.create 
-                ~jsonrpc:"2.0" 
-                ~id: (Lsp_types.Int (Id.get ()))
-                ~result: ((`String "Calculated metrics successfully.")) (* todo : display in a bubble in vs code *)
-                ()
-              )) in
+            let data = Json.save_string 
+              (Lsp_types.NotificationMessage.json_of_t 
+                (Lsp_types.NotificationMessage.create 
+                  ~jsonrpc:"2.0" 
+                  ~method_:"window/showMessage" 
+                  ~params: (Lsp_types.ShowMessageParams.json_of_t 
+                    (Lsp_types.ShowMessageParams.create 
+                      ~type_: Lsp_types.MessageType.Info
+                      ~message: "Calculated metrics successfully"
+                      ()
+                    )
+                  )
+                  ()
+                )
+              ) in
             Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
             ignore (send_request plugin_sock data)
           );  
 
-        if not (String.equal (Acsl_wp.get ()) "") then 
+        (* if not (String.equal (Acsl_wp.get ()) "") then 
           (
             (* let id = Id.get () in  *)
             let file = Acsl_wp.get () in 
@@ -215,7 +264,7 @@ let run () =
   
             Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
             ignore (send_request plugin_sock data)
-          ); 
+          );  *)
 
         if not (String.equal (Show_POVC.get ()) "") then 
           (
@@ -254,12 +303,46 @@ let run () =
               )
               ()
             )) in
+            (* (match result with 
+            | `String "" -> 
+              (Lsp_types.NotificationMessage.json_of_t 
+                (Lsp_types.NotificationMessage.create 
+                  ~jsonrpc:"2.0" 
+                  ~method_:"window/showMessage" 
+                  ~params: (Lsp_types.ShowMessageParams.json_of_t 
+                    (Lsp_types.ShowMessageParams.create 
+                      ~type_: Lsp_types.MessageType.Info
+                      ~message: "No proof obligations"
+                      ()
+                    )
+                  )
+                  ()
+                )
+            )
+            | _ -> 
+              (Lsp_types.ResponseMessage.json_of_t 
+                (Lsp_types.ResponseMessage.create 
+                  ~jsonrpc:"2.0" 
+                  ~id: (Lsp_types.Int (Id.get ()))
+                  ~result: result
+                  ()
+                ) 
+              )) *)
             Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
             ignore (send_request plugin_sock data)
-          )
+          );
+
+        if not (String.equal (Find_comp.get ()) "") then
+          (
+            Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
+            let req_info = String.split_on_char ':' (Find_comp.get ()) in 
+            let int_id = (Id.get ()) in 
+            let data = Json.save_string (Completion.completion_items int_id (List.nth req_info 0) (Stdlib.int_of_string (List.nth req_info 1)) (Stdlib.int_of_string (List.nth req_info 2))) in
+            ignore (send_request plugin_sock data)
+          );
 
   with exn ->
-    Self.debug ~level:3 "Error while processing request : %s, Backtrace : %s\n%!" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
+    Self.debug ~level:2 "Error while processing request : %s, Backtrace : %s\n%!" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
     (* Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac)); *)
     let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t 
       (Lsp_types.ResponseMessage.create 

@@ -141,8 +141,8 @@ let get_warn_status_of_string s =
   | _ -> Log.Wactive (* note : default behavior *)
 
 let is_header_of cfile hfile = 
-  Printf.printf "c file : %s , h file : %s\n%!" cfile hfile;
-  Printf.printf "c file basename : %s , h file basename : %s\n%!" (Filename.basename cfile) (Filename.basename hfile);
+  Settings.Self.debug ~level:0 "c file : %s , h file : %s\n%!" cfile hfile;
+  Settings.Self.debug ~level:0 "c file basename : %s , h file basename : %s\n%!" (Filename.basename cfile) (Filename.basename hfile);
   String.equal 
     (Filename.remove_extension (Filename.basename (String.trim cfile))) 
     (Filename.remove_extension (Filename.basename (String.trim hfile)))
@@ -170,3 +170,27 @@ let get_corr_cfile rootPath hfile : string list =
   in
   init_files_rec rootPath;
   List.filter (fun cfile -> is_header_of cfile hfile) !c_files
+
+let get_workspace_files rootPath : string list = 
+  if (String.equal rootPath "") then 
+    (Settings.Self.debug ~level:0 "No source files and no root path provided.\n%!"; assert false)
+  else
+  let c_files = ref [] in
+  let rec init_files_rec path = 
+    let curr_files = ref [] in 
+    (* read all files and folders of current directory *)
+    let filenames = Array.to_list (Filepath.readdir (Filepath.Normalized.of_string path)) in
+    (* make paths absolute *)
+    curr_files := List.append !curr_files (List.map(fun x ->
+      path^"/"^x
+    ) filenames);
+    (* remove non source files *)
+    c_files := List.append !c_files (List.filter (fun x -> String.ends_with ~suffix:".c" x) (!curr_files));
+    (* call the function recursively if folders were found in the current directory *)
+    let folders = List.filter (fun x -> Sys.is_directory x) !curr_files in
+    List.iter (fun folder ->
+      init_files_rec (folder)
+    ) folders;
+  in
+  init_files_rec rootPath;
+  !c_files

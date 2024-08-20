@@ -64,12 +64,12 @@ let vrbl_visitor symbol declarations = object
   method! vlval (lh,_) = 
     match lh with 
     | Var v -> 
-      (* Printf.printf "Lval : %s\n%!" (Pretty_utils.to_string Printer.pp_varinfo v); *)
+      (* Settings.Self.debug ~level:0 "Lval : %s\n%!" (Pretty_utils.to_string Printer.pp_varinfo v); *)
       if (String.equal symbol v.vname) && (not v.vformal) then 
         declarations := v.vdecl :: !declarations;
       Cil.DoChildren;
     | Mem _ -> 
-      (* Printf.printf "Exp : %s\n%!" (Pretty_utils.to_string Printer.pp_exp e); *)
+      (* Settings.Self.debug ~level:0 "Exp : %s\n%!" (Pretty_utils.to_string Printer.pp_exp e); *)
 
       (* match e.enode with 
       | Const c -> 
@@ -93,23 +93,23 @@ let decl_visitor symbol declarations = object
 
 let iter_decl () = 
   Globals.Vars.iter_in_file_order (fun v _ -> 
-      Printf.printf "Iter file order : %s\n%!" v.vname
+      Settings.Self.debug ~level:0 "Iter file order : %s\n%!" v.vname
     )   
 
 let print_fxs file = 
-  Printf.printf "Printing fxs ...\n%!";
+  Settings.Self.debug ~level:0 "Printing fxs ...\n%!";
   let fxs = Globals.FileIndex.get_functions ~declarations:true file in
   List.iter (fun (f : Cil_types.kernel_function) ->
     match f.fundec with 
     | Definition (fd, _) -> 
-      Printf.printf "function definition name : %s\n%!" fd.svar.vname
+      Settings.Self.debug ~level:0 "function definition name : %s\n%!" fd.svar.vname
     | Declaration (_,vi,_,_) -> 
-      Printf.printf "function declaration name : %s\n%!" vi.vname
+      Settings.Self.debug ~level:0 "function declaration name : %s\n%!" vi.vname
   ) fxs
 
 let get_workspace_files rootPath : string list = 
   if (String.equal rootPath "") then 
-    (Settings.Self.debug ~level:0 "No source files and no root path provided.\n%!"; assert false)
+    (Settings.Self.debug ~level:2 "No source files and no root path provided.\n%!"; assert false)
   else
   let c_files = ref [] in
   let rec init_files_rec path = 
@@ -146,10 +146,10 @@ let retrieve_location2 (pos : Filepath.position) (cil_files : Cil_types.file lis
   let counter = ref 0 in
   List.iter (fun f ->
     counter := !counter + 1;
-    Printf.printf "retrieve_location setting project : %s\n%!" ("file"^(Stdlib.string_of_int !counter));
+    Settings.Self.debug ~level:0 "retrieve_location setting project : %s\n%!" ("file"^(Stdlib.string_of_int !counter));
     Project.set_current (Project.from_unique_name ("file"^(Stdlib.string_of_int !counter)));
     Visitor.visitFramacFile (glob_visitor symbol declarations) (f); 
-    (* Printf.printf "Ast of %s : %s\n%!" ("file"^(Stdlib.string_of_int !counter)) (Pretty_utils.to_string Printer.pp_file f); *)
+    (* Settings.Self.debug ~level:0 "Ast of %s : %s\n%!" ("file"^(Stdlib.string_of_int !counter)) (Pretty_utils.to_string Printer.pp_file f); *)
 
   ) cil_files;
   !declarations
@@ -161,11 +161,11 @@ let retrieve_location3 (pos : Filepath.position) new_globals =
     List.iter(fun (v : Cil_types.varinfo) ->
       if (String.equal symbol v.vname) then 
         (
-          Printf.printf "Symbol : %s, vname : %s\n%!" symbol v.vname;
+          Settings.Self.debug ~level:0 "Symbol : %s, vname : %s\n%!" symbol v.vname;
           declarations := v.vdecl :: !declarations;
           match v.vdefined with 
-          | true -> Printf.printf "New defined global : %s with location : %s\n%!" (Pretty_utils.to_string Printer.pp_varinfo v) (Pretty_utils.to_string Printer.pp_location v.vdecl)
-          | false -> Printf.printf "New global : %s with location : %s\n%!" (Pretty_utils.to_string Printer.pp_varinfo v) (Pretty_utils.to_string Printer.pp_location v.vdecl)
+          | true -> Settings.Self.debug ~level:0 "New defined global : %s with location : %s\n%!" (Pretty_utils.to_string Printer.pp_varinfo v) (Pretty_utils.to_string Printer.pp_location v.vdecl)
+          | false -> Settings.Self.debug ~level:0 "New global : %s with location : %s\n%!" (Pretty_utils.to_string Printer.pp_varinfo v) (Pretty_utils.to_string Printer.pp_location v.vdecl)
         )
     ) !new_globals;
 
@@ -186,38 +186,10 @@ let create_lsp_locations (declarations) =
   Json.of_list res
   
 
-let find id declarationFile line ch sourceFiles rootPath : Json.json = 
+let find id declarationFile line ch : Json.json = 
   let pos = Utils.to_filepath_position declarationFile line ch in
 
-  let new_globals = ref [] in 
-  Cabs2cil.register_new_global_hook (fun vi _ -> 
-    new_globals := vi :: !new_globals; 
-    );
-
   try 
-    if not (String.equal sourceFiles "") then 
-      (File.init_from_c_files 
-      (List.map (fun x -> File.from_filename 
-        (Filepath.Normalized.of_string x)) 
-        (List.filter (fun x -> (String.ends_with ~suffix:".c" x) || (String.ends_with ~suffix:".h" x))
-          (List.map (fun x -> (x)) 
-            (String.split_on_char ' ' sourceFiles)
-          )
-        )
-      );)
-    else
-      File.init_from_c_files (List.map (fun f -> File.from_filename (Filepath.Normalized.of_string f)) (get_workspace_files rootPath));
-      (* let temp_files = (List.map (fun f -> File.from_filename (Filepath.Normalized.of_string f)) (get_workspace_files rootPath)) in
-      let counter = ref 0 in
-      let cil_files = List.map (fun f ->
-        counter := !counter + 1;
-        Printf.printf "find creating project : %s\n%!" ("file"^(Stdlib.string_of_int !counter));
-        Project.set_current (Project.create ("file"^(Stdlib.string_of_int !counter)));
-        Kernel.CppExtraArgs.set (extra_args);
-        File.init_from_c_files [f];
-        Ast.get ();
-      ) temp_files in *)
-
   let locations = retrieve_location pos in
 
   if (List.length locations) = 0 then 

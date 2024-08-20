@@ -44,6 +44,9 @@ void print_string_const(){
   printf("string constant : %s\n", STRING_CONSTANT);
 }
 
+/*@
+  requires n > 77;
+*/
 void print_ints(int *a, size_t n)
 {
   for (int i = 0; i < n; i++)
@@ -82,6 +85,7 @@ int main()
   az(i1, n);
   print_string_const();
 
+  print_ints(a, n);
   int z = test(2);
   return 0;
 }

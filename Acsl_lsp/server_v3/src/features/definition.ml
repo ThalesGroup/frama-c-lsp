@@ -27,7 +27,7 @@ let glob_visitor loca symbol = object
           loca := Some loc;
         Cil.DoChildren
       | GVar (vi, _, loc) -> 
-          (* Printf.printf "var : %s, symbol : %s \n%!" vi.vname symbol; *)
+          Settings.Self.debug ~level:0 "var : %s, symbol : %s \n%!" vi.vname symbol;
           if (String.equal symbol vi.vname) then
           begin
             loca := Some loc;
@@ -38,7 +38,7 @@ let glob_visitor loca symbol = object
       | GFun (fd,loc) -> 
         if (String.equal symbol fd.svar.vname;) then
           begin
-            (* Printf.printf "fun : %s\n%!" fd.svar.vname; *)
+            Settings.Self.debug ~level:0 "fun : %s\n%!" fd.svar.vname;
             loca := Some loc;
           end;
         Cil.DoChildren
@@ -47,40 +47,40 @@ let glob_visitor loca symbol = object
           loca := Some loc;
         Cil.DoChildren
       | GPragma (_,_) -> 
-        (* Printf.printf "Pragma : %s\n%!" (Pretty_utils.to_string Printer.pp_global g); *)
+        Settings.Self.debug ~level:0 "Pragma : %s\n%!" (Pretty_utils.to_string Printer.pp_global g);
         Cil.DoChildren
       | GAnnot (ga, _) -> 
         (match ga with 
         | Dinvariant (li, loc) -> 
           if (String.equal symbol li.l_var_info.lv_name) then
             begin
-              (* Printf.printf "invariant : %s\n%!" li.l_var_info.lv_name; *)
+              Settings.Self.debug ~level:0 "invariant : %s\n%!" li.l_var_info.lv_name;
               loca := Some loc;
             end;
           Cil.DoChildren;
         | Dtype (lti, loc) -> 
           if (String.equal symbol lti.lt_name) then
             begin
-              (* Printf.printf "logic type : %s\n%!" lti.lt_name; *)
+              Settings.Self.debug ~level:0 "logic type : %s\n%!" lti.lt_name;
               loca := Some loc;
             end;
           Cil.DoChildren
         | Dtype_annot (li, loc) -> 
           if (String.equal symbol li.l_var_info.lv_name) then
             begin
-              (* Printf.printf "type annot : %s\n%!" li.l_var_info.lv_name; *)
+              Settings.Self.debug ~level:0 "type annot : %s\n%!" li.l_var_info.lv_name;
               loca := Some loc;
             end;
           Cil.DoChildren
         | Dfun_or_pred (li,loc) ->
           if (String.equal symbol li.l_var_info.lv_name) then
             begin
-              (* Printf.printf "fun or pred : %s\n%!" li.l_var_info.lv_name; *)
+              Settings.Self.debug ~level:0 "fun or pred : %s\n%!" li.l_var_info.lv_name;
               loca := Some loc;
             end;
           Cil.DoChildren
         | Dlemma (str,_,_,_,_,loc) ->
-          (* Printf.printf "lemma : %s\n%!" str; *)
+          Settings.Self.debug ~level:0 "lemma : %s\n%!" str;
           if (String.equal symbol str) then
             begin
               loca := Some loc;
@@ -119,42 +119,17 @@ let print_attrs () =
     List.iter (fun (attr : Cil_types.attribute) -> 
       match attr with 
       | Attr (name, params) -> 
-        Printf.printf "attribute : %s\n%!" name;
+        Settings.Self.debug ~level:0 "attribute : %s\n%!" name;
         List.iter (fun (param : Cil_types.attrparam) ->
-          Printf.printf "Attr param : %s\n%!" (Pretty_utils.to_string Printer.pp_attrparam param)
+          Settings.Self.debug ~level:0 "Attr param : %s\n%!" (Pretty_utils.to_string Printer.pp_attrparam param)
         ) params;
       | _ -> ()
     ) (Cil.global_attributes glob)
   )
 
 
-let get_workspace_files rootPath : string list = 
-  if (String.equal rootPath "") then 
-    (Settings.Self.debug ~level:0 "No source files and no root path provided.\n%!"; assert false)
-  else
-  let c_files = ref [] in
-  let rec init_files_rec path = 
-    let curr_files = ref [] in 
-    (* read all files and folders of current directory *)
-    let filenames = Array.to_list (Filepath.readdir (Filepath.Normalized.of_string path)) in
-    (* make paths absolute *)
-    curr_files := List.append !curr_files (List.map(fun x ->
-      path^"/"^x
-    ) filenames);
-    (* remove non source files *)
-    c_files := List.append !c_files (List.filter (fun x -> String.ends_with ~suffix:".c" x) (!curr_files));
-    (* call the function recursively if folders were found in the current directory *)
-    let folders = List.filter (fun x -> Sys.is_directory x) !curr_files in
-    List.iter (fun folder ->
-      init_files_rec (folder)
-    ) folders;
-  in
-  init_files_rec rootPath;
-  !c_files
-
 let retrieve_location (pos : Filepath.position) =
   let loca = ref None in 
-  (* print_attrs (); *)
   let symbol = Utils.retrieve_symbol pos.pos_lnum (pos.pos_cnum - pos.pos_bol) (Filepath.Normalized.to_pretty_string pos.pos_path) in  
   
   Visitor.visitFramacFile (glob_visitor loca symbol) (Ast.get ()); 
@@ -163,25 +138,10 @@ let retrieve_location (pos : Filepath.position) =
   | Some loc -> loc
   | None -> (pos,pos) 
 
-let find id definitionFile line ch sourceFiles rootPath: Json.json =
+let find id definitionFile line ch : Json.json =
   let pos = Utils.to_filepath_position definitionFile line ch in
   
   try 
-    if not (String.equal sourceFiles "") then 
-      (File.init_from_c_files 
-      (List.map (fun x -> File.from_filename 
-        (Filepath.Normalized.of_string x)) 
-        (List.filter (fun x -> (String.ends_with ~suffix:".c" x) || (String.ends_with ~suffix:".h" x))
-          (List.map (fun x -> (x)) 
-            (String.split_on_char ' ' sourceFiles)
-          )
-        )
-      );)
-    else
-      File.init_from_c_files (List.map (fun f -> File.from_filename (Filepath.Normalized.of_string f)) (get_workspace_files rootPath));
-
-  (* Cil.iterGlobals (Ast.get ()) (fun g -> Printf.printf "Curr global : %s\n%!" (Pretty_utils.to_string Printer.pp_global g)); *)
-  
   let (pos1, pos2) = retrieve_location pos in
 
   if pos1 = pos2 then 

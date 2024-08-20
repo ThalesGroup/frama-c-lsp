@@ -36,11 +36,11 @@ let handle_data server_sock =
       let data_buf = Bytes.make data_size '0' in
       let _req_data_len = Unix.read server_sock data_buf 0 data_size in
       let request_str = (Bytes.to_string data_buf) in
-      (* Printf.printf "Received from client : %s\n\n%!" request_str; *)
+      Settings.Self.debug ~level:1 "Received from client : %s\n\n%!" request_str;
       let response : Lsp_types.lsp_result = Lsp_handler.handle request_str server_sock in
       match response with 
       | CONTENT string_json -> 
-        Printf.printf "Sending to client : %s\n\n%!" string_json;
+        Settings.Self.debug ~level:1 "Sending to client : %s\n\n%!" string_json;
         send_request server_sock (string_json); 
       | EMPTY _ -> ()
     with exn -> 

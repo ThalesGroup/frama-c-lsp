@@ -21,19 +21,22 @@
     "kernel.print": false,
     "kernel.sourceFiles": [
         "test1.c",
-        "include_folder2/locale.h",
         "locale.c"
     ],
     "wp.checkMemoryModel": true,
     "wp.dump": false,
-    "wp.gen": false,
+    "wp.gen": true,
     "wp.status": false,
     "wp.volatile": false,
-    "wp.wpPruning": "",
+    "wp.wpPruning": false,
     "wp.wpRte": false,
     "metrics.byFunction": false,
     "metrics.output": "",
-    "callgraph.cg": "",
-    "callgraph.cgRoots": [],
-    "callgraph.cgServices": true
+    "callgraph.cg": "myCallgraph",
+    "callgraph.cgRoots": [
+        "print_ints"
+    ],
+    "callgraph.cgServices": true,
+
 }
+    

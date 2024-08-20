@@ -252,6 +252,6 @@ let save_configs (result:  Json.json) =
       ();
 
 
-      Printf.printf "save_configs : global_params length : %d\n%!" (List.length (Json.list result))
+      Settings.Self.debug ~level:0 "save_configs : global_params length : %d\n%!" (List.length (Json.list result))
   | x -> 
-    Printf.printf "Requested unknown configuration(s), error : %s\n\t%s\n%!" (Json.save_string ~pretty:true x) (Printexc.get_backtrace ())
+    Settings.Self.debug ~level:2 "Requested unknown configuration(s), error : %s\n\t%s\n%!" (Json.save_string ~pretty:true x) (Printexc.get_backtrace ())

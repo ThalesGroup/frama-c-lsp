@@ -35,11 +35,18 @@ let get_property rootPath file line ch : Json.json =
     let line2 = end_.pos_lnum in 
     let char1 = start.pos_cnum - start.pos_bol in 
     let char2 = end_.pos_cnum - end_.pos_bol in 
-    Printf.printf "po_file %s, begin : %d:%d, end : %d:%d,\ncurr_file : cursor : %d:%d\n%!" (rootPath^"/"^po_file) line1 char1 line2 char2 (line+1) ch;
+    (* Settings.Self.debug ~level:0 "po_file %s, begin : %d:%d, end : %d:%d,\ncurr_file : cursor : %d:%d\n%!" (rootPath^"/"^po_file) line1 char1 line2 char2 (line+1) ch; *)
     if (
         (String.equal file (rootPath^"/"^po_file)) 
         && is_position_between (line+1,ch) (line1, char1) (line2,char2)
+        && (Wp.WpPropId.is_requires (Wp.Wpo.get_property po))
       ) 
+    then 
+      proof_oblgs := (Pretty_utils.to_string (Wp.Wpo.pp_goal) po) :: !proof_oblgs
+    else if (
+          (String.equal file (rootPath^"/"^po_file)) 
+          && is_position_between (line+1,ch) (line1, char1) (line2,char2)
+        ) 
     then 
       proof_oblgs := (Pretty_utils.to_string (Wp.Wpo.pp_goal) po) :: !proof_oblgs
   );

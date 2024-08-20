@@ -87,7 +87,7 @@ let escape_unicode str =
   Str.global_replace regex "unknown-char" str
 
 let diagnostics_handler (event : Log.event) = 
-  (* Printf.printf "diags handler : nb diags = %d\n%!" (List.length !diag_list); *)
+  (* Settings.Self.debug ~level:0 "diags handler : nb diags = %d\n%!" (List.length !diag_list); *)
   let publish_to = ref "" in
   let msg = event.evt_message in
   let _category = match event.evt_category with
@@ -120,7 +120,7 @@ let diagnostics_handler (event : Log.event) =
   else
   match event.evt_kind with 
   | Log.Error ->  
-    Printf.printf "Error\n%!";
+    Settings.Self.debug ~level:0 "Error\n%!";
     diag_list :=  (diagnostic 
         (loc)
         Lsp_types.DiagnosticSeverity.Error 
@@ -128,7 +128,7 @@ let diagnostics_handler (event : Log.event) =
         event.evt_plugin
         )::!diag_list
   | Log.Failure ->
-      Printf.printf "Failure\n%!";
+      Settings.Self.debug ~level:0 "Failure\n%!";
       diag_list :=  (diagnostic 
         (loc)
         Lsp_types.DiagnosticSeverity.Error 
@@ -136,19 +136,19 @@ let diagnostics_handler (event : Log.event) =
         event.evt_plugin
         )::!diag_list
   | Log.Warning -> 
-    Printf.printf "Warning\n%!";
+    Settings.Self.debug ~level:0 "Warning\n%!";
     diag_list :=  (diagnostic 
         (loc)
         Lsp_types.DiagnosticSeverity.Warning 
         (escape_double_quotes (escape_unicode msg))
         event.evt_plugin
         )::!diag_list;
-(* Printf.printf "diags handler warning : nb diags = %d\n%!" (List.length !diag_list); *)
+(* Settings.Self.debug ~level:0 "diags handler warning : nb diags = %d\n%!" (List.length !diag_list); *)
 
   | Log.Result -> 
-    Printf.printf "Result\n%!";
+    Settings.Self.debug ~level:0 "Result\n%!";
   | Log.Debug -> 
-    Printf.printf "Debug\n%!";
+    Settings.Self.debug ~level:0 "Debug\n%!";
     diag_list := ( (diagnostic 
         (loc)
         Lsp_types.DiagnosticSeverity.Information 
@@ -156,7 +156,7 @@ let diagnostics_handler (event : Log.event) =
         event.evt_plugin
         ))::!diag_list
   | Log.Feedback ->
-    Printf.printf "Feedback\n%!";
+    Settings.Self.debug ~level:0 "Feedback\n%!";
       ()
 
 let remove_file_scheme uri =
@@ -174,7 +174,7 @@ let remove_newline str =
 
 let handle filename : Json.json = 
   Log.add_listener (diagnostics_handler);
-  Printf.printf "listener added\n%!";
+  Settings.Self.debug ~level:0 "listener added\n%!";
 
   file := filename;
 
@@ -186,7 +186,7 @@ let handle filename : Json.json =
       (publishDiagnostics_notification !diag_list filename)
   with
   | _exn ->
-    (* Printf.printf "DidSave error :  %s, Backtrace : %s\n%!" (Printexc.exn_slot_name _exn) (Printexc.get_backtrace ()); *)
+    (* Settings.Self.debug ~level:0 "DidSave error :  %s, Backtrace : %s\n%!" (Printexc.exn_slot_name _exn) (Printexc.get_backtrace ()); *)
       (publishDiagnostics_notification !diag_list filename)
   
 

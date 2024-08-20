@@ -11,9 +11,9 @@
    core/acsl_lsp.cmx
    core/acsl_lsp.cmxa
    core/acsl_lsp.ml
-   core/acsl_lsp__AcslWp.cmi
-   core/acsl_lsp__AcslWp.cmt
-   core/acsl_lsp__AcslWp.cmx
+   core/acsl_lsp__Completion.cmi
+   core/acsl_lsp__Completion.cmt
+   core/acsl_lsp__Completion.cmx
    core/acsl_lsp__Configuration.cmi
    core/acsl_lsp__Configuration.cmt
    core/acsl_lsp__Configuration.cmx
@@ -23,24 +23,21 @@
    core/acsl_lsp__Definition.cmi
    core/acsl_lsp__Definition.cmt
    core/acsl_lsp__Definition.cmx
-   core/acsl_lsp__DidOpen_old.cmi
-   core/acsl_lsp__DidOpen_old.cmt
-   core/acsl_lsp__DidOpen_old.cmx
+   core/acsl_lsp__DidClose.cmi
+   core/acsl_lsp__DidClose.cmt
+   core/acsl_lsp__DidClose.cmx
+   core/acsl_lsp__DidOpen.cmi
+   core/acsl_lsp__DidOpen.cmt
+   core/acsl_lsp__DidOpen.cmx
    core/acsl_lsp__DidSave.cmi
    core/acsl_lsp__DidSave.cmt
    core/acsl_lsp__DidSave.cmx
-   core/acsl_lsp__DidSave_old.cmi
-   core/acsl_lsp__DidSave_old.cmt
-   core/acsl_lsp__DidSave_old.cmx
    core/acsl_lsp__DisplayCIL.cmi
    core/acsl_lsp__DisplayCIL.cmt
    core/acsl_lsp__DisplayCIL.cmx
    core/acsl_lsp__Initialize.cmi
    core/acsl_lsp__Initialize.cmt
    core/acsl_lsp__Initialize.cmx
-   core/acsl_lsp__Initialized_old.cmi
-   core/acsl_lsp__Initialized_old.cmt
-   core/acsl_lsp__Initialized_old.cmx
    core/acsl_lsp__Lsp_handler.cmi
    core/acsl_lsp__Lsp_handler.cmt
    core/acsl_lsp__Lsp_handler.cmx
@@ -50,12 +47,6 @@
    core/acsl_lsp__Options.cmi
    core/acsl_lsp__Options.cmt
    core/acsl_lsp__Options.cmx
-   core/acsl_lsp__ProjectConfig_old.cmi
-   core/acsl_lsp__ProjectConfig_old.cmt
-   core/acsl_lsp__ProjectConfig_old.cmx
-   core/acsl_lsp__PublishDiagnostics_old.cmi
-   core/acsl_lsp__PublishDiagnostics_old.cmt
-   core/acsl_lsp__PublishDiagnostics_old.cmx
    core/acsl_lsp__RegisterCapability.cmi
    core/acsl_lsp__RegisterCapability.cmt
    core/acsl_lsp__RegisterCapability.cmx
@@ -77,17 +68,14 @@
    core/acsl_lsp__Utils.cmi
    core/acsl_lsp__Utils.cmt
    core/acsl_lsp__Utils.cmx
-   core/src/features/acslWp.ml
+   core/src/features/completion.ml
    core/src/features/declaration.ml
    core/src/features/definition.ml
-   core/src/features/didOpen_old.ml
+   core/src/features/didClose.ml
+   core/src/features/didOpen.ml
    core/src/features/didSave.ml
-   core/src/features/didSave_old.ml
    core/src/features/displayCIL.ml
    core/src/features/initialize.ml
-   core/src/features/initialized_old.ml
-   core/src/features/projectConfig_old.ml
-   core/src/features/publishDiagnostics_old.ml
    core/src/features/showPOVC.ml
    core/src/features/showProofVerdict.ml
    core/src/handler/configuration.ml
@@ -128,9 +116,9 @@
     (name Acsl_lsp)
     (modules
      (module
-      (obj_name acsl_lsp__AcslWp)
+      (obj_name acsl_lsp__Completion)
       (visibility public)
-      (source (path AcslWp) (impl (path core/src/features/acslWp.ml))))
+      (source (path Completion) (impl (path core/src/features/completion.ml))))
      (module
       (obj_name acsl_lsp__Configuration)
       (visibility public)
@@ -148,21 +136,17 @@
       (visibility public)
       (source (path Definition) (impl (path core/src/features/definition.ml))))
      (module
-      (obj_name acsl_lsp__DidOpen_old)
+      (obj_name acsl_lsp__DidClose)
       (visibility public)
-      (source
-       (path DidOpen_old)
-       (impl (path core/src/features/didOpen_old.ml))))
+      (source (path DidClose) (impl (path core/src/features/didClose.ml))))
+     (module
+      (obj_name acsl_lsp__DidOpen)
+      (visibility public)
+      (source (path DidOpen) (impl (path core/src/features/didOpen.ml))))
      (module
       (obj_name acsl_lsp__DidSave)
       (visibility public)
       (source (path DidSave) (impl (path core/src/features/didSave.ml))))
-     (module
-      (obj_name acsl_lsp__DidSave_old)
-      (visibility public)
-      (source
-       (path DidSave_old)
-       (impl (path core/src/features/didSave_old.ml))))
      (module
       (obj_name acsl_lsp__DisplayCIL)
       (visibility public)
@@ -171,12 +155,6 @@
       (obj_name acsl_lsp__Initialize)
       (visibility public)
       (source (path Initialize) (impl (path core/src/features/initialize.ml))))
-     (module
-      (obj_name acsl_lsp__Initialized_old)
-      (visibility public)
-      (source
-       (path Initialized_old)
-       (impl (path core/src/features/initialized_old.ml))))
      (module
       (obj_name acsl_lsp__Lsp_handler)
       (visibility public)
@@ -191,18 +169,6 @@
       (obj_name acsl_lsp__Options)
       (visibility public)
       (source (path Options) (impl (path core/src/options.ml))))
-     (module
-      (obj_name acsl_lsp__ProjectConfig_old)
-      (visibility public)
-      (source
-       (path ProjectConfig_old)
-       (impl (path core/src/features/projectConfig_old.ml))))
-     (module
-      (obj_name acsl_lsp__PublishDiagnostics_old)
-      (visibility public)
-      (source
-       (path PublishDiagnostics_old)
-       (impl (path core/src/features/publishDiagnostics_old.ml))))
      (module
       (obj_name acsl_lsp__RegisterCapability)
       (visibility public)

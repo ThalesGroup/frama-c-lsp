@@ -1,7 +1,9 @@
-acsl_lsp__AcslWp
+acsl_lsp__Completion
 acsl_lsp__Configuration
 acsl_lsp__Declaration
 acsl_lsp__Definition
+acsl_lsp__DidClose
+acsl_lsp__DidOpen
 acsl_lsp__DidSave
 acsl_lsp__DisplayCIL
 acsl_lsp__Lsp_handler

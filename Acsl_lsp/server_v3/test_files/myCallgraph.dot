@@ -1,0 +1,16 @@
+digraph G {
+  ratio=0.500000;
+  "UV print_ints (1030)" [color="#809000", label="print_ints", shape=diamond,
+                          style="bold", ];
+  "UV printf_va_3 (1315)" [color="#809000", label="printf_va_3",
+                           style="dotted", ];
+  "UV printf_va_4 (1318)" [color="#809000", label="printf_va_4",
+                           style="dotted", ];
+  
+  subgraph cluster_1030 { color="#809000"; label="S 1030"; style="bold"; "UV printf_va_4 (1318)";"UV printf_va_3 (1315)";"UV print_ints (1030)";
+     };
+  
+  "UV print_ints (1030)" -> "UV printf_va_3 (1315)" [color="#809000", ];
+  "UV print_ints (1030)" -> "UV printf_va_4 (1318)" [color="#809000", ];
+  
+  }
