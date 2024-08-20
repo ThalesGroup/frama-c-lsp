@@ -159,7 +159,7 @@ let diagnostics_handler (event : Log.event) =
       ()
 
 let remove_file_scheme uri =
-  let regex = Str.regexp {|file://|} in
+  let regex = Str.regexp {|file://|} in 
   Str.global_replace regex "" uri
 
 let remove_quotes str = 
