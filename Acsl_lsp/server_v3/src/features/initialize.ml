@@ -13,7 +13,7 @@ let initialize : Json.json =
 
     
     (* List.iter (fun x ->
-      Settings.Self.debug ~level:1 "warn category : %s\n%!" x
+      Settings.Self.debug ~level:3 "warn category : %s\n%!" x
     ) PublishDiagnostics.evt_categories; *)
 
       let result = {|{

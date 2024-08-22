@@ -1,6 +1,4 @@
 acsl_lsp__Configuration
 acsl_lsp__Lsp_types
-acsl_lsp__RegisterCapability
 acsl_lsp__Settings
-acsl_lsp__Shutdown
 acsl_lsp__Utils

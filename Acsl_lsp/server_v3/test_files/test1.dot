@@ -1,13 +1,66 @@
 digraph G {
   ratio=0.500000;
-  "UV set_to_0 (923)" [color="#20E0D0", label="set_to_0", shape=diamond,
-                       style="bold", ];
-  "UV printf_va_1 (1217)" [color="#20E0D0", label="printf_va_1",
+  "UV print_string_const (1029)" [color="#801080",
+                                  label="print_string_const", shape=diamond,
+                                  style="bold", ];
+  "UV print_ints (1030)" [color="#809000", label="print_ints", shape=diamond,
+                          style="bold", ];
+  "UV az (1037)" [color="#8010C0", label="az", shape=diamond, style="bold", ];
+  "UV func2 (1043)" [color="#00D080", label="func2", shape=diamond,
+                     style="bold", ];
+  "UV func1 (1045)" [color="#805080", label="func1", shape=diamond,
+                     style="bold", ];
+  "UV isalpha (921)" [color="#2060D0", label="isalpha", shape=diamond,
+                      style="dotted", ];
+  "UV func3 (1050)" [color="#00D040", label="func3", shape=diamond,
+                     style="bold", ];
+  "UV printf_va_1 (1311)" [color="#E060B0", label="printf_va_1",
                            style="dotted", ];
+  "UV main (1055)" [color="#80D0C0", label="main", shape=diamond,
+                    style="bold", ];
+  "UV printf_va_2 (1314)" [color="#801080", label="printf_va_2",
+                           style="dotted", ];
+  "UV printf_va_3 (1317)" [color="#809000", label="printf_va_3",
+                           style="dotted", ];
+  "UV printf_va_4 (1320)" [color="#809000", label="printf_va_4",
+                           style="dotted", ];
+  "UV test (1005)" [color="#E020F0", label="test", shape=diamond,
+                    style="bold", ];
+  "UV set_to_0 (1013)" [color="#E060B0", label="set_to_0", shape=diamond,
+                        style="bold", ];
   
-  subgraph cluster_923 { color="#20E0D0"; label="S 923"; style="bold"; "UV printf_va_1 (1217)";"UV set_to_0 (923)";
+  subgraph cluster_1005 { color="#E020F0"; label="S 1005"; style="bold"; "UV test (1005)";
+     };
+  subgraph cluster_1013 { color="#E060B0"; label="S 1013"; style="bold"; "UV set_to_0 (1013)";"UV printf_va_1 (1311)";
+     };
+  subgraph cluster_1029 { color="#801080"; label="S 1029"; style="bold"; "UV printf_va_2 (1314)";"UV print_string_const (1029)";
+     };
+  subgraph cluster_1030 { color="#809000"; label="S 1030"; style="bold"; "UV printf_va_4 (1320)";"UV printf_va_3 (1317)";"UV print_ints (1030)";
+     };
+  subgraph cluster_1037 { color="#8010C0"; label="S 1037"; style="bold"; "UV az (1037)";
+     };
+  subgraph cluster_1043 { color="#00D080"; label="S 1043"; style="bold"; "UV func2 (1043)";
+     };
+  subgraph cluster_1045 { color="#805080"; label="S 1045"; style="bold"; "UV func1 (1045)";
+     };
+  subgraph cluster_1050 { color="#00D040"; label="S 1050"; style="bold"; "UV func3 (1050)";
+     };
+  subgraph cluster_1055 { color="#80D0C0"; label="S 1055"; style="bold"; "UV main (1055)";
+     };
+  subgraph cluster_921 { color="#2060D0"; label="S 921"; style="bold"; "UV isalpha (921)";
      };
   
-  "UV set_to_0 (923)" -> "UV printf_va_1 (1217)" [color="#20E0D0", ];
+  "UV print_string_const (1029)" -> "UV printf_va_2 (1314)" [color="#801080", ];
+  "UV print_ints (1030)" -> "UV printf_va_3 (1317)" [color="#809000", ];
+  "UV print_ints (1030)" -> "UV printf_va_4 (1320)" [color="#809000", ];
+  "UV func1 (1045)" -> "UV func2 (1043)" [color="#805080", ];
+  "UV func3 (1050)" -> "UV func2 (1043)" [color="#00D040", ];
+  "UV main (1055)" -> "UV isalpha (921)" [color="#80D0C0", ];
+  "UV main (1055)" -> "UV test (1005)" [color="#80D0C0", ];
+  "UV main (1055)" -> "UV set_to_0 (1013)" [color="#80D0C0", ];
+  "UV main (1055)" -> "UV print_string_const (1029)" [color="#80D0C0", ];
+  "UV main (1055)" -> "UV print_ints (1030)" [color="#80D0C0", ];
+  "UV main (1055)" -> "UV az (1037)" [color="#80D0C0", ];
+  "UV set_to_0 (1013)" -> "UV printf_va_1 (1311)" [color="#E060B0", ];
   
   }

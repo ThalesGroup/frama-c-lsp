@@ -110,7 +110,7 @@ let completion_items id file line ch : Json.json =
   let curr_line = ref "" in
   let acsl_block_started = ref false in
   let res = ref false in
-  Settings.Self.debug ~level:1 "Requested line: %d\n%!" line;
+  Settings.Self.debug ~level:4 "Requested line: %d\n%!" line;
 
   try 
     while true do
@@ -118,25 +118,25 @@ let completion_items id file line ch : Json.json =
       curr_line := Stdlib.input_line ic;
       match Utils.contains !curr_line ~suffix:"/*@" with
       | true ->  
-          Settings.Self.debug ~level:1 "Found beginning of acsl block: %d\n%!" !cnt;
+          Settings.Self.debug ~level:4 "Found beginning of acsl block: %d\n%!" !cnt;
           start_line := !cnt;
           acsl_block_started := true;
       | false -> 
         (match Utils.contains !curr_line ~suffix:"*/" with 
         | true ->
-            Settings.Self.debug ~level:1 "Found end of acsl block: %d\n%!" !cnt;
+            Settings.Self.debug ~level:4 "Found end of acsl block: %d\n%!" !cnt;
             end_line := !cnt;
             acsl_block_started := false; 
             res := !res || (line >= !start_line && line <= !end_line) ; (* todo : how to interrupt the loop when found *)
             (match !res with 
-            | true -> Settings.Self.debug ~level:1 "Is in acsl block\n%!";
-            | false -> Settings.Self.debug ~level:1 "Is not in acsl block\n%!";)
+            | true -> Settings.Self.debug ~level:4 "Is in acsl block\n%!";
+            | false -> Settings.Self.debug ~level:4 "Is not in acsl block\n%!";)
         | false -> ();)
         done;
         Stdlib.close_in ic;
         !res
     with _ -> 
-      Settings.Self.debug ~level:1 "END OF FILE REACHED FOR ACSL BLOCK CHECK\n%!";
+      Settings.Self.debug ~level:4 "END OF FILE REACHED FOR ACSL BLOCK CHECK\n%!";
       Stdlib.close_in ic;
       !res *)
 

@@ -119,7 +119,7 @@ let diagnostics_handler (event : Log.event) =
   else
   match event.evt_kind with 
   | Log.Error ->  
-    Settings.Self.debug ~level:0 "Error\n%!";
+    Settings.Self.debug ~level:4 "Error\n%!";
     diag_list :=  (diagnostic 
         (loc)
         Lsp_types.DiagnosticSeverity.Error 
@@ -127,7 +127,7 @@ let diagnostics_handler (event : Log.event) =
         event.evt_plugin
         )::!diag_list
   | Log.Failure ->
-      Settings.Self.debug ~level:0 "Failure\n%!";
+      Settings.Self.debug ~level:4 "Failure\n%!";
       diag_list :=  (diagnostic 
         (loc)
         Lsp_types.DiagnosticSeverity.Error 
@@ -135,19 +135,19 @@ let diagnostics_handler (event : Log.event) =
         event.evt_plugin
         )::!diag_list
   | Log.Warning -> 
-    Settings.Self.debug ~level:0 "Warning\n%!";
+    Settings.Self.debug ~level:4 "Warning\n%!";
     diag_list :=  (diagnostic 
         (loc)
         Lsp_types.DiagnosticSeverity.Warning 
         (escape_double_quotes (escape_unicode msg))
         event.evt_plugin
         )::!diag_list;
-(* Settings.Self.debug ~level:0 "diags handler warning : nb diags = %d\n%!" (List.length !diag_list); *)
+(* Settings.Self.debug ~level:4 "diags handler warning : nb diags = %d\n%!" (List.length !diag_list); *)
 
   | Log.Result -> 
-    Settings.Self.debug ~level:0 "Result\n%!";
+    Settings.Self.debug ~level:4 "Result\n%!";
   | Log.Debug -> 
-    Settings.Self.debug ~level:0 "Debug\n%!";
+    Settings.Self.debug ~level:4 "Debug\n%!";
     diag_list := ( (diagnostic 
         (loc)
         Lsp_types.DiagnosticSeverity.Information 
@@ -155,7 +155,7 @@ let diagnostics_handler (event : Log.event) =
         event.evt_plugin
         ))::!diag_list
   | Log.Feedback ->
-    Settings.Self.debug ~level:0 "Feedback\n%!";
+    Settings.Self.debug ~level:4 "Feedback\n%!";
       ()
 
 let remove_file_scheme uri =
@@ -173,7 +173,7 @@ let remove_newline str =
 
 let handle filename : Json.json = 
   Log.add_listener (diagnostics_handler);
-  Settings.Self.debug ~level:0 "listener added\n%!";
+  Settings.Self.debug ~level:4 "listener added\n%!";
 
   file := filename;
 

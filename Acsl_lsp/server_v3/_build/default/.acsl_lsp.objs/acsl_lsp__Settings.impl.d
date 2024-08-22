@@ -1,1 +1,1 @@
-src/settings.ml: Plugin
+src/cmdline_parameters/settings.ml: Plugin

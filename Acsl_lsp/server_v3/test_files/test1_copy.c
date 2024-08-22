@@ -21,7 +21,7 @@
 void set_to_0(int *a, size_t n)
 {
   size_t i;
-  
+
   /*@
     loop invariant 0 <= i <= n;
     loop invariant
@@ -33,7 +33,7 @@ void set_to_0(int *a, size_t n)
   */
   for (i = 0; i < n; ++i)
     a[i] = 0;
-  printf("integer constant index: %d\n", a[INTEGER_CONSTANT]);
+  printf("integer constant ind*ùµx: %d\n", a[INTEGER_CONSTANT]);
 }
 
 int test(double x) {
@@ -56,9 +56,8 @@ void print_ints(int *a, size_t n)
   printf("\n");
 }
 
-int az(int p, int b){
-  size_t n;
-  return b;
+int az(int p, int n){
+  return n;
 }
 
 /*@ 

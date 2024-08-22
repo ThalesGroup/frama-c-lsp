@@ -22,19 +22,6 @@ let get_lsp_range ((pos1, pos2) : Cil_types.location) : Lsp_types.Range.t =
     (Lsp_types.Position.create pos1.pos_lnum (pos1.pos_cnum - pos1.pos_bol))
     (Lsp_types.Position.create pos2.pos_lnum (pos2.pos_cnum - pos2.pos_bol))
 
-let remove_file_scheme uri =
-  let regex = Str.regexp {|file://|} in
-  Str.global_replace regex "" uri
-
-let remove_quotes str = 
-  let regex = Str.regexp {|[\"]|} in
-  Str.global_replace regex "" str
-
-let remove_newline str = 
-  let regex = Str.regexp {|.*|} in 
-  ignore (Str.search_forward regex str 0);
-  Str.matched_string str
-
 let getnumber str = 
   let regex = Str.regexp {|[0-9]+|} in 
   ignore (Str.search_forward regex str 0);
@@ -100,12 +87,6 @@ let send_request client_sock response =
 let make_error err id = 
   Lsp_types.ResponseMessage.json_of_t (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~error:(Lsp_types.ResponseError.create ~code:(-32803) ~message:err ()) ())
 
-let id_to_int id =
-  match id with 
-  | Lsp_types.Int i -> i 
-  | Lsp_types.Str s -> Stdlib.int_of_string s 
-  | Lsp_types.Null -> 0
-
 let send_error_request id err sock = 
   send_request sock (Json.save_string (make_error err id)) (* todo : give proper id *)
 
@@ -141,15 +122,15 @@ let get_warn_status_of_string s =
   | _ -> Log.Wactive (* note : default behavior *)
 
 let is_header_of cfile hfile = 
-  Settings.Self.debug ~level:0 "c file : %s , h file : %s\n%!" cfile hfile;
-  Settings.Self.debug ~level:0 "c file basename : %s , h file basename : %s\n%!" (Filename.basename cfile) (Filename.basename hfile);
+  Settings.Self.debug ~level:4 "c file : %s , h file : %s\n%!" cfile hfile;
+  Settings.Self.debug ~level:4 "c file basename : %s , h file basename : %s\n%!" (Filename.basename cfile) (Filename.basename hfile);
   String.equal 
     (Filename.remove_extension (Filename.basename (String.trim cfile))) 
     (Filename.remove_extension (Filename.basename (String.trim hfile)))
 
 let get_corr_cfile rootPath hfile : string list = 
   if (String.equal rootPath "") then 
-    (Settings.Self.debug ~level:0 "No source files and no root path provided.\n%!"; assert false)
+    (Settings.Self.debug ~level:4 "No source files and no root path provided.\n%!"; assert false)
   else
   let c_files = ref [] in
   let rec init_files_rec path = 
@@ -173,7 +154,7 @@ let get_corr_cfile rootPath hfile : string list =
 
 let get_workspace_files rootPath : string list = 
   if (String.equal rootPath "") then 
-    (Settings.Self.debug ~level:0 "No source files and no root path provided.\n%!"; assert false)
+    (Settings.Self.debug ~level:4 "No source files and no root path provided.\n%!"; assert false)
   else
   let c_files = ref [] in
   let rec init_files_rec path = 
@@ -194,3 +175,28 @@ let get_workspace_files rootPath : string list =
   in
   init_files_rec rootPath;
   !c_files
+
+let remove_file_scheme uri =
+  let regex = Str.regexp {|file://|} in
+  Str.global_replace regex "" uri
+
+let remove_quotes str = 
+  let regex = Str.regexp {|[\"]|} in
+  Str.global_replace regex "" str
+
+let remove_newline str = 
+  let regex = Str.regexp {|.*|} in 
+  ignore (Str.search_forward regex str 0);
+  Str.matched_string str
+
+let id_to_int id =
+  match id with 
+  | Lsp_types.Int i -> i 
+  | Lsp_types.Str s -> Stdlib.int_of_string s 
+  | Lsp_types.Null -> 0
+
+let id_to_str id =
+  match id with 
+  | Lsp_types.Int i -> Stdlib.string_of_int i
+  | Lsp_types.Str s -> s 
+  | Lsp_types.Null -> ""

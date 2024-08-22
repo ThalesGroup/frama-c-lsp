@@ -64,12 +64,12 @@ let vrbl_visitor symbol declarations = object
   method! vlval (lh,_) = 
     match lh with 
     | Var v -> 
-      (* Settings.Self.debug ~level:0 "Lval : %s\n%!" (Pretty_utils.to_string Printer.pp_varinfo v); *)
+      (* Settings.Self.debug ~level:4 "Lval : %s\n%!" (Pretty_utils.to_string Printer.pp_varinfo v); *)
       if (String.equal symbol v.vname) && (not v.vformal) then 
         declarations := v.vdecl :: !declarations;
       Cil.DoChildren;
     | Mem _ -> 
-      (* Settings.Self.debug ~level:0 "Exp : %s\n%!" (Pretty_utils.to_string Printer.pp_exp e); *)
+      (* Settings.Self.debug ~level:4 "Exp : %s\n%!" (Pretty_utils.to_string Printer.pp_exp e); *)
 
       (* match e.enode with 
       | Const c -> 
@@ -93,23 +93,23 @@ let decl_visitor symbol declarations = object
 
 let iter_decl () = 
   Globals.Vars.iter_in_file_order (fun v _ -> 
-      Settings.Self.debug ~level:0 "Iter file order : %s\n%!" v.vname
+      Settings.Self.debug ~level:4 "Iter file order : %s\n%!" v.vname
     )   
 
 let print_fxs file = 
-  Settings.Self.debug ~level:0 "Printing fxs ...\n%!";
+  Settings.Self.debug ~level:4 "Printing fxs ...\n%!";
   let fxs = Globals.FileIndex.get_functions ~declarations:true file in
   List.iter (fun (f : Cil_types.kernel_function) ->
     match f.fundec with 
     | Definition (fd, _) -> 
-      Settings.Self.debug ~level:0 "function definition name : %s\n%!" fd.svar.vname
+      Settings.Self.debug ~level:4 "function definition name : %s\n%!" fd.svar.vname
     | Declaration (_,vi,_,_) -> 
-      Settings.Self.debug ~level:0 "function declaration name : %s\n%!" vi.vname
+      Settings.Self.debug ~level:4 "function declaration name : %s\n%!" vi.vname
   ) fxs
 
 let get_workspace_files rootPath : string list = 
   if (String.equal rootPath "") then 
-    (Settings.Self.debug ~level:2 "No source files and no root path provided.\n%!"; assert false)
+    (Settings.Self.debug ~level:3 "No source files and no root path provided.\n%!"; assert false)
   else
   let c_files = ref [] in
   let rec init_files_rec path = 
@@ -146,10 +146,10 @@ let retrieve_location2 (pos : Filepath.position) (cil_files : Cil_types.file lis
   let counter = ref 0 in
   List.iter (fun f ->
     counter := !counter + 1;
-    Settings.Self.debug ~level:0 "retrieve_location setting project : %s\n%!" ("file"^(Stdlib.string_of_int !counter));
+    Settings.Self.debug ~level:4 "retrieve_location setting project : %s\n%!" ("file"^(Stdlib.string_of_int !counter));
     Project.set_current (Project.from_unique_name ("file"^(Stdlib.string_of_int !counter)));
     Visitor.visitFramacFile (glob_visitor symbol declarations) (f); 
-    (* Settings.Self.debug ~level:0 "Ast of %s : %s\n%!" ("file"^(Stdlib.string_of_int !counter)) (Pretty_utils.to_string Printer.pp_file f); *)
+    (* Settings.Self.debug ~level:4 "Ast of %s : %s\n%!" ("file"^(Stdlib.string_of_int !counter)) (Pretty_utils.to_string Printer.pp_file f); *)
 
   ) cil_files;
   !declarations
@@ -161,11 +161,11 @@ let retrieve_location3 (pos : Filepath.position) new_globals =
     List.iter(fun (v : Cil_types.varinfo) ->
       if (String.equal symbol v.vname) then 
         (
-          Settings.Self.debug ~level:0 "Symbol : %s, vname : %s\n%!" symbol v.vname;
+          Settings.Self.debug ~level:4 "Symbol : %s, vname : %s\n%!" symbol v.vname;
           declarations := v.vdecl :: !declarations;
           match v.vdefined with 
-          | true -> Settings.Self.debug ~level:0 "New defined global : %s with location : %s\n%!" (Pretty_utils.to_string Printer.pp_varinfo v) (Pretty_utils.to_string Printer.pp_location v.vdecl)
-          | false -> Settings.Self.debug ~level:0 "New global : %s with location : %s\n%!" (Pretty_utils.to_string Printer.pp_varinfo v) (Pretty_utils.to_string Printer.pp_location v.vdecl)
+          | true -> Settings.Self.debug ~level:4 "New defined global : %s with location : %s\n%!" (Pretty_utils.to_string Printer.pp_varinfo v) (Pretty_utils.to_string Printer.pp_location v.vdecl)
+          | false -> Settings.Self.debug ~level:4 "New global : %s with location : %s\n%!" (Pretty_utils.to_string Printer.pp_varinfo v) (Pretty_utils.to_string Printer.pp_location v.vdecl)
         )
     ) !new_globals;
 

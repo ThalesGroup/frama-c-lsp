@@ -2,13 +2,13 @@ module Self = Settings.Self
 
 module Enabled = Self.False
 (struct
-  let option_name = "-acsl_lsp"
+  let option_name = "-lsp"
   let help = "when on (off by default), activates lsp support for ACSL/C"
 end)
 
 module Did_open = Self.String (* filename *)
 (struct
-  let option_name = "-did_open"
+  let option_name = "-lsp-did-open"
   let help = "didOpen request"
   let arg_name = "did open"
   let default = ""
@@ -17,7 +17,7 @@ end)
 
 module Did_save = Self.String (* filename *)
 (struct
-  let option_name = "-did_save"
+  let option_name = "-lsp-did-save"
   let help = "didSave request"
   let arg_name = "did save"
   let default = ""
@@ -26,7 +26,7 @@ end)
 
 module Did_close = Self.String (* filename *)
 (struct
-  let option_name = "-did_close"
+  let option_name = "-lsp-did-close"
   let help = "didClose request"
   let arg_name = "did close"
   let default = ""
@@ -35,13 +35,13 @@ end)
 
 module Handler_opt = Self.False
 (struct
-  let option_name = "-handler"
+  let option_name = "-lsp-handler"
   let help = "activates handler mode (mandatory for lsp), off by default"
 end)
 
 module Find_def = Self.String 
 (struct
-  let option_name = "-find_def"
+  let option_name = "-lsp-definition"
   let help = "definition request"
   let arg_name = "definition"
   let default = ""
@@ -49,7 +49,7 @@ end)
 
 module Find_decl = Self.String 
 (struct
-  let option_name = "-find_decl"
+  let option_name = "-lsp-declaration"
   let help = "declaration request"
   let arg_name = "declaration"
   let default = ""
@@ -57,23 +57,15 @@ end)
 
 module Find_comp = Self.String 
 (struct
-  let option_name = "-find_comp"
+  let option_name = "-lsp-completion"
   let help = "completion request"
   let arg_name = "completion"
   let default = ""
 end)
 
-module Source_files = Self.String
-(struct
-  let option_name = "-source_files"
-  let help = "specify source files to be parsed by the plug-in (not by frama-c directly)"
-  let arg_name = "source files"
-  let default = ""
-end)
-
 module Id = Self.Int
 (struct
-  let option_name = "-id"
+  let option_name = "-lsp-id"
   let help = "id of the request"
   let arg_name = "id"
   let default = 0
@@ -81,58 +73,40 @@ end)
 
 module Root_path = Self.String
 (struct
-  let option_name = "-root_path"
+  let option_name = "-lsp-root-path"
   let help = "path to the workspace folder"
   let arg_name = "root path"
   let default = ""
 end)
 
-module Cpp_extra_args = Self.String
-(struct
-  let option_name = "-cpp_extra_args"
-  let help = "path to the workspace folder"
-  let arg_name = "re-specify cpp extra args"
-  let default = ""
-end)
-
 module Display_CIL = Self.False
 (struct
-  let option_name = "-display_cil"
+  let option_name = "-lsp-display-cil"
   let help = "send back the ast of the current file to editor"
 end)
 
-module Compute_CG = Self.False
+module Compute_CG = Self.String
 (struct
-  let option_name = "-compute_cg"
+  let option_name = "-lsp-compute-cg"
   let help = "send back the callgraph of the current file to the editor"
+  let arg_name = "compute callgraph"
+  let default = ""
 end)
 
 module Show_POVC = Self.String
 (struct
-  let option_name = "-show_povc"
+  let option_name = "-lsp-show-povc"
   let help = "send back the povc of the located property"
-    let arg_name = "show povc"
+  let arg_name = "show povc"
   let default = ""
 end)
 
-module Acsl_wp = Self.String 
+module Show_metrics = Self.String
 (struct
-  let option_name = "-acsl_wp"
-  let help = "activate wp through acsl lsp"
-    let arg_name = "acsl wp"
+  let option_name = "-lsp-metrics"
+  let help = "send metrics"
+  let arg_name = "calculate metrics"
   let default = ""
-end)
-
-module Show_POVC_all = Self.False
-(struct
-  let option_name = "-show_povc_all"
-  let help = "send back all the povcs of the file"
-end)
-
-module Show_metrics = Self.False
-(struct
-  let option_name = "-show_metrics"
-  let help = "send back the metrics"
 end)
 
 let wrapper_port_framac = 8006
@@ -145,18 +119,19 @@ let send_request plugin_sock response =
   let response_str = Printf.sprintf "Content-Length: %d\r\n\r\n%s" (String.length response) response in
   let response_bytes = Bytes.of_string response_str in
   let sent = Unix.send plugin_sock (response_bytes) 0 (String.length response_str) [] in
-  Self.debug ~level:0 "size : %d content : %s\n%!" sent response_str
+  Self.debug ~level:4 "size : %d content : %s\n%!" sent response_str
 
 
 let run () = 
   if Enabled.get () then 
   (
     if Handler_opt.get () then 
-      (Settings.Self.debug ~level:1 "Running LSP Handler\n%!";
+      (
+            (* Settings.Self.debug ~level:3 "Running LSP Handler\n%!"; *)
         try
             Start_server.connect ()
         with exn ->
-          Settings.Self.debug ~level:3 "There was an error in the server %s:\n Backtrace : %s\n%!" (Printexc.to_string exn) (Printexc.get_backtrace ())
+          Settings.Self.debug ~level:1 "There was an error in the server %s:\n Backtrace : %s\n%!" (Printexc.to_string exn) (Printexc.get_backtrace ())
       )
     else
     let plugin_sock = (Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0) in
@@ -170,6 +145,8 @@ let run () =
           (
             (* ignore (Stdlib.raise (Failure "Settings : did save")); *)
             (* let data = Json.save_string (PublishDiagnostics.handle (Filepath.Normalized.to_pretty_string (List.nth (Kernel.Files.get ()) 0))) in *)
+            Log.add_listener ~plugin:"wp" (DidSave.diagnostics_handler);
+            Settings.Self.debug ~level:4 "wp listener added\n%!";
             let data = Json.save_string (DidSave.handle (Did_save.get ())) in
             Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
             ignore (send_request plugin_sock data)
@@ -214,28 +191,31 @@ let run () =
             ignore (send_request plugin_sock data)
           );
 
-        if (Compute_CG.get ()) then 
+          if not (String.equal (Compute_CG.get ()) "") then 
           (
+            ignore (Sys.command ("dot -Tpdf "^(Compute_CG.get ())^".dot -o "^(Compute_CG.get ())^".pdf"));
+            Settings.Self.debug ~level:2 ("Generated %s.dot and %s.pdf files") (Compute_CG.get ()) (Compute_CG.get ());
             let data = Json.save_string 
-              (Lsp_types.ResponseMessage.json_of_t 
-                (Lsp_types.ResponseMessage.create 
+              (Lsp_types.NotificationMessage.json_of_t 
+                (Lsp_types.NotificationMessage.create 
                   ~jsonrpc:"2.0" 
-                  ~id:(Lsp_types.Int (Id.get ()))
-                  ~result: (Lsp_types.ShowMessageParams.json_of_t 
+                  ~method_:"window/showMessage"
+                  ~params: (Lsp_types.ShowMessageParams.json_of_t 
                     (Lsp_types.ShowMessageParams.create 
                       ~type_: Lsp_types.MessageType.Info
-                      ~message: "Computed callgraph successfully"
+                      ~message: ("Computed callgraph successfully, files generated : "^(Compute_CG.get ())^".dot and "^(Compute_CG.get ())^".pdf")
                       ()
                     )
                   )
                   ()
                 )
               ) in
+
             Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
-            ignore (send_request plugin_sock data)
+            ignore (send_request plugin_sock data);
           );  
 
-        if (Show_metrics.get ()) then 
+        if not (String.equal (Show_metrics.get ()) "") then 
           (
             let data = Json.save_string 
               (Lsp_types.NotificationMessage.json_of_t 
@@ -245,7 +225,7 @@ let run () =
                   ~params: (Lsp_types.ShowMessageParams.json_of_t 
                     (Lsp_types.ShowMessageParams.create 
                       ~type_: Lsp_types.MessageType.Info
-                      ~message: "Calculated metrics successfully"
+                      ~message: (Printf.sprintf "Calculated metrics successfully, file generated : %s.txt" (Show_metrics.get ()))
                       ()
                     )
                   )
@@ -253,7 +233,8 @@ let run () =
                 )
               ) in
             Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
-            ignore (send_request plugin_sock data)
+            ignore (send_request plugin_sock data);
+            Settings.Self.debug ~level:2 "Calculated metrics successfully, file generated : %s.txt" (Show_metrics.get ())
           );  
 
         (* if not (String.equal (Acsl_wp.get ()) "") then 
@@ -266,80 +247,38 @@ let run () =
             ignore (send_request plugin_sock data)
           );  *)
 
-        if not (String.equal (Show_POVC.get ()) "") then 
-          (
-            let req_info = String.split_on_char ':' (Show_POVC.get ()) in 
-            let id = Id.get () in 
-            let file = List.nth req_info 0 in 
-            let line = Stdlib.int_of_string (List.nth req_info 1) in
-            let ch = Stdlib.int_of_string (List.nth req_info 2) in
-            let result = ShowPOVC.get_property (Root_path.get ()) file line ch in
-            let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t 
-            (Lsp_types.ResponseMessage.create 
-              ~jsonrpc:"2.0" 
-              ~id: (Lsp_types.Int id)
-              ~result:(
-                match result with 
-                | `String "" -> (`String "No proof obligations")
-                | _ -> result
-              )
-              ()
-            )) in
-            Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
-            ignore (send_request plugin_sock data)
-          ); 
-          
-        if (Show_POVC_all.get ()) then 
-          (
-            let result = ShowPOVC.get_all () in
-            let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t 
-            (Lsp_types.ResponseMessage.create 
-              ~jsonrpc:"2.0" 
-              ~id: (Lsp_types.Int (Id.get ()))
-              ~result:(
-                match result with 
-                | `String "" -> (`String "No proof obligations")
-                | _ -> result
-              )
-              ()
-            )) in
-            (* (match result with 
-            | `String "" -> 
-              (Lsp_types.NotificationMessage.json_of_t 
-                (Lsp_types.NotificationMessage.create 
-                  ~jsonrpc:"2.0" 
-                  ~method_:"window/showMessage" 
-                  ~params: (Lsp_types.ShowMessageParams.json_of_t 
-                    (Lsp_types.ShowMessageParams.create 
-                      ~type_: Lsp_types.MessageType.Info
-                      ~message: "No proof obligations"
-                      ()
-                    )
-                  )
-                  ()
-                )
+      if not (String.equal (Show_POVC.get ()) "") then 
+        (
+          let req_info = String.split_on_char ':' (Show_POVC.get ()) in 
+          let id = Id.get () in 
+          let file = List.nth req_info 0 in 
+          let line = Stdlib.int_of_string (List.nth req_info 1) in
+          let ch = Stdlib.int_of_string (List.nth req_info 2) in
+          let result = ShowPOVC.get_property (Root_path.get ()) file line ch in
+          let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t 
+          (Lsp_types.ResponseMessage.create 
+            ~jsonrpc:"2.0" 
+            ~id: (Lsp_types.Int id)
+            ~result:(
+              match result with 
+              | `String "" -> (`String "No proof obligations")
+              | _ -> result
             )
-            | _ -> 
-              (Lsp_types.ResponseMessage.json_of_t 
-                (Lsp_types.ResponseMessage.create 
-                  ~jsonrpc:"2.0" 
-                  ~id: (Lsp_types.Int (Id.get ()))
-                  ~result: result
-                  ()
-                ) 
-              )) *)
-            Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
-            ignore (send_request plugin_sock data)
-          );
+            ()
+          )) in
+          Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
+          ignore (send_request plugin_sock data)
+        ); 
+        
 
-        if not (String.equal (Find_comp.get ()) "") then
-          (
-            Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
-            let req_info = String.split_on_char ':' (Find_comp.get ()) in 
-            let int_id = (Id.get ()) in 
-            let data = Json.save_string (Completion.completion_items int_id (List.nth req_info 0) (Stdlib.int_of_string (List.nth req_info 1)) (Stdlib.int_of_string (List.nth req_info 2))) in
-            ignore (send_request plugin_sock data)
-          );
+      if not (String.equal (Find_comp.get ()) "") then
+        (
+          Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
+          let req_info = String.split_on_char ':' (Find_comp.get ()) in 
+          let int_id = (Id.get ()) in 
+          let data = Json.save_string (Completion.completion_items int_id (List.nth req_info 0) (Stdlib.int_of_string (List.nth req_info 1)) (Stdlib.int_of_string (List.nth req_info 2))) in
+          ignore (send_request plugin_sock data)
+        );
 
   with exn ->
     Self.debug ~level:2 "Error while processing request : %s, Backtrace : %s\n%!" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());

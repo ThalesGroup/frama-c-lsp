@@ -11,6 +11,9 @@
    core/acsl_lsp.cmx
    core/acsl_lsp.cmxa
    core/acsl_lsp.ml
+   core/acsl_lsp__Cmdline.cmi
+   core/acsl_lsp__Cmdline.cmt
+   core/acsl_lsp__Cmdline.cmx
    core/acsl_lsp__Completion.cmi
    core/acsl_lsp__Completion.cmt
    core/acsl_lsp__Completion.cmx
@@ -44,12 +47,6 @@
    core/acsl_lsp__Lsp_types.cmi
    core/acsl_lsp__Lsp_types.cmt
    core/acsl_lsp__Lsp_types.cmx
-   core/acsl_lsp__Options.cmi
-   core/acsl_lsp__Options.cmt
-   core/acsl_lsp__Options.cmx
-   core/acsl_lsp__RegisterCapability.cmi
-   core/acsl_lsp__RegisterCapability.cmt
-   core/acsl_lsp__RegisterCapability.cmx
    core/acsl_lsp__Settings.cmi
    core/acsl_lsp__Settings.cmt
    core/acsl_lsp__Settings.cmx
@@ -59,15 +56,14 @@
    core/acsl_lsp__ShowProofVerdict.cmi
    core/acsl_lsp__ShowProofVerdict.cmt
    core/acsl_lsp__ShowProofVerdict.cmx
-   core/acsl_lsp__Shutdown.cmi
-   core/acsl_lsp__Shutdown.cmt
-   core/acsl_lsp__Shutdown.cmx
    core/acsl_lsp__Start_server.cmi
    core/acsl_lsp__Start_server.cmt
    core/acsl_lsp__Start_server.cmx
    core/acsl_lsp__Utils.cmi
    core/acsl_lsp__Utils.cmt
    core/acsl_lsp__Utils.cmx
+   core/src/cmdline_parameters/cmdline.ml
+   core/src/cmdline_parameters/settings.ml
    core/src/features/completion.ml
    core/src/features/declaration.ml
    core/src/features/definition.ml
@@ -80,13 +76,9 @@
    core/src/features/showProofVerdict.ml
    core/src/handler/configuration.ml
    core/src/handler/lsp_handler.ml
-   core/src/handler/registerCapability.ml
-   core/src/handler/shutdown.ml
    core/src/handler/start_server.ml
-   core/src/lsp_types.ml
-   core/src/options.ml
-   core/src/settings.ml
-   core/src/utils.ml
+   core/src/lib/lsp_types.ml
+   core/src/lib/utils.ml
    dune-package))
  (lib_root (frama-c/plugins/acsl_lsp/META))
  (libexec (core/acsl_lsp.cmxs))
@@ -115,6 +107,12 @@
      (source (path Acsl_lsp) (impl (path core/acsl_lsp.ml-gen))))
     (name Acsl_lsp)
     (modules
+     (module
+      (obj_name acsl_lsp__Cmdline)
+      (visibility public)
+      (source
+       (path Cmdline)
+       (impl (path core/src/cmdline_parameters/cmdline.ml))))
      (module
       (obj_name acsl_lsp__Completion)
       (visibility public)
@@ -164,21 +162,13 @@
      (module
       (obj_name acsl_lsp__Lsp_types)
       (visibility public)
-      (source (path Lsp_types) (impl (path core/src/lsp_types.ml))))
-     (module
-      (obj_name acsl_lsp__Options)
-      (visibility public)
-      (source (path Options) (impl (path core/src/options.ml))))
-     (module
-      (obj_name acsl_lsp__RegisterCapability)
-      (visibility public)
-      (source
-       (path RegisterCapability)
-       (impl (path core/src/handler/registerCapability.ml))))
+      (source (path Lsp_types) (impl (path core/src/lib/lsp_types.ml))))
      (module
       (obj_name acsl_lsp__Settings)
       (visibility public)
-      (source (path Settings) (impl (path core/src/settings.ml))))
+      (source
+       (path Settings)
+       (impl (path core/src/cmdline_parameters/settings.ml))))
      (module
       (obj_name acsl_lsp__ShowPOVC)
       (visibility public)
@@ -190,10 +180,6 @@
        (path ShowProofVerdict)
        (impl (path core/src/features/showProofVerdict.ml))))
      (module
-      (obj_name acsl_lsp__Shutdown)
-      (visibility public)
-      (source (path Shutdown) (impl (path core/src/handler/shutdown.ml))))
-     (module
       (obj_name acsl_lsp__Start_server)
       (visibility public)
       (source
@@ -202,5 +188,5 @@
      (module
       (obj_name acsl_lsp__Utils)
       (visibility public)
-      (source (path Utils) (impl (path core/src/utils.ml))))))
+      (source (path Utils) (impl (path core/src/lib/utils.ml))))))
    (wrapped true))))

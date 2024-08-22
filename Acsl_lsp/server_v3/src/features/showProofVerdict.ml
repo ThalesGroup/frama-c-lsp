@@ -35,7 +35,7 @@ let get_property rootPath file line ch : Json.json =
     let line2 = end_.pos_lnum in 
     let char1 = start.pos_cnum - start.pos_bol in 
     let char2 = end_.pos_cnum - end_.pos_bol in 
-    Settings.Self.debug "po_file %s, begin : %d:%d, end : %d:%d,\ncurr_file : cursor : %d:%d\n%!" (rootPath^"/"^po_file) line1 char1 line2 char2 (line+1) ch;
+    Settings.Self.debug ~level:4 "po_file %s, begin : %d:%d, end : %d:%d,\ncurr_file : cursor : %d:%d\n%!" (rootPath^"/"^po_file) line1 char1 line2 char2 (line+1) ch;
     if (
         (String.equal file (rootPath^"/"^po_file)) 
         && is_position_between (line+1,ch) (line1, char1) (line2,char2)

@@ -7,60 +7,45 @@
                 "labelDetailsSupport": false
               }
             }, *)
+let registerCapabilityRequest json = 
+  Lsp_types.RequestMessage.json_of_t (Lsp_types.RequestMessage.create
+    ~jsonrpc:"2.0"
+    ~id:(Lsp_types.Str "register_capability") (* give proper id *)
+    ~method_:"client/registerCapability"
+    ~params:json
+    ())
 
+let registration method_ = 
+    Lsp_types.Registration.create
+      ~id:"registration"
+      ~method_:method_
+      ()
+
+let registrationParams registrations = 
+  Lsp_types.RegistrationParams.json_of_t (
+    Lsp_types.RegistrationParams.create
+      ~registrations:registrations
+      ()
+  )
+
+let shutdown (req : Lsp_types.RequestMessage.t) : Json.json = 
+  Lsp_types.ResponseMessage.json_of_t (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:req.id ~result:`Null ())
+
+let shutdown_error (req : Lsp_types.RequestMessage.t) : Json.json = 
+  Lsp_types.ResponseMessage.json_of_t (
+    (Lsp_types.ResponseMessage.create 
+    ~jsonrpc:"2.0" 
+    ~id:req.id 
+    ~error:(Lsp_types.ResponseError.create 
+      ~code:(-32600)
+      ~message:"Invalid request received after shutdown"
+    ()) 
+    ) 
+  ())
+  
 let receivedShutdown = ref false
 let rootPath = ref ""
-let remove_file_scheme uri =
-  let regex = Str.regexp {|file://|} in
-  Str.global_replace regex "" uri
 
-let remove_quotes str = 
-  let regex = Str.regexp {|[\"]|} in
-  Str.global_replace regex "" str
-
-let remove_newline str = 
-  let regex = Str.regexp {|.*|} in 
-  ignore (Str.search_forward regex str 0);
-  Str.matched_string str
-
-let find_word str ch =
-  if (String.equal str "") then "" else
-  let r = Str.regexp {|\b[_A-Za-z0-9]+\b|} in
-  try 
-    ignore(Str.search_backward r str ch);
-    Str.matched_string str
-  with Not_found -> ""
-  
-let make_error err id = 
-  Lsp_types.ResponseMessage.json_of_t (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~error:(Lsp_types.ResponseError.create ~code:(-32803) ~message:err ()) ())
-    
-let read_line_from_file filename line_number =
-  let ic = open_in filename in
-  let cnt = ref 0 in
-  let line = ref "" in
-  while (!cnt <= line_number) do
-    try 
-      line := Stdlib.input_line ic;
-      cnt := !cnt + 1;
-    with End_of_file -> Stdlib.close_in ic;
-  done;
-  Stdlib.close_in ic;
-  !line
-
-let retrieve_symbol line_number character_index file_name =
-  find_word (read_line_from_file file_name line_number) character_index 
-
-let id_to_int id =
-  match id with 
-  | Lsp_types.Int i -> i 
-  | Lsp_types.Str s -> Stdlib.int_of_string s 
-  | Lsp_types.Null -> 0
-
-let id_to_str id =
-  match id with 
-  | Lsp_types.Int i -> Stdlib.string_of_int i
-  | Lsp_types.Str s -> s 
-  | Lsp_types.Null -> ""
 
 let is_result json_string = 
   try
@@ -68,7 +53,7 @@ let is_result json_string =
     match json with
     | `Assoc fields ->
       (List.exists (fun (key, _) -> key = "result") fields)
-    | _ -> Settings.Self.debug ~level:2 "no result\n%!"; false
+    | _ -> Settings.Self.debug ~level:3 "no result\n%!"; false
   with
   | Json.Error _ -> false
 
@@ -78,7 +63,7 @@ let is_error json_string =
     match json with
     | `Assoc fields ->
       (List.exists (fun (key, _) -> key = "error") fields)
-    | _ -> Settings.Self.debug ~level:2 "no error\n%!"; false
+    | _ -> Settings.Self.debug ~level:3 "no error\n%!"; false
 
   with
   | Json.Error _ -> false
@@ -89,7 +74,7 @@ let is_notif json_string =
     match json with
     | `Assoc fields ->
       not (List.exists (fun (key, _) -> key = "id") fields)
-    | _ -> Settings.Self.debug ~level:2 "no notif\n%!"; false
+    | _ -> Settings.Self.debug ~level:3 "no notif\n%!"; false
 
   with
   | Json.Error _ -> false
@@ -100,18 +85,23 @@ let is_request json_string =
     match json with
     | `Assoc fields ->
       (List.exists (fun (key, _) -> key = "id") fields)
-    | _ -> Settings.Self.debug ~level:2 "no request\n%!"; false
+    | _ -> Settings.Self.debug ~level:3 "no request\n%!"; false
 
   with
   | Json.Error _ -> false
   
+let debug () = 
+  Stdlib.string_of_int !Configuration.global_params.acslLsp
+
+let wp_diags () = 
+  !Configuration.global_params.diagnosticsWp
+
 let cpp_extra_args () = 
   let includePaths = 
     List.map (fun x -> "-I"^(!rootPath^"/"^(Filename.basename x))) (!Configuration.global_params.includePaths)
   in
-  let cc = if (!Configuration.global_params.cc) then " -CC" else "" in
   let macros = List.map (fun x -> "-D"^x) (!Configuration.global_params.macros) in
-  let res = " -cpp-extra-args=\""^(String.concat " " includePaths)^(String.concat " " macros)^"\""^cc in 
+  let res = " -cpp-extra-args=\""^(String.concat " " includePaths)^(String.concat " " macros)^"\"" in 
   res
 
 let cpp_extra_args_acsl () = 
@@ -125,27 +115,8 @@ let cpp_extra_args_acsl () =
 let source_files () = 
   let sourceFiles = List.map (fun x -> (!rootPath)^"/"^x) (!Configuration.global_params.sourceFiles) in
   (String.concat " " sourceFiles)
-
-let kernel_boolean_args () =     
-  let args = ref "" in
-  let add_arg arg = 
-    args := !args^arg 
-  in
-  if (!Configuration.global_params.cppGnuLike) then add_arg " -cpp-frama-c-compliant";
-  if (not (!Configuration.global_params.framacStdlib)) then add_arg " -no-frama-c-stdlib";
-  if (not (!Configuration.global_params.keepUnusedSpecifiedFunctions)) then add_arg " -remove-unused-specified-functions";
-  if (not (!Configuration.global_params.keepUnusedTypes)) then add_arg " -remove-unused-types";
-  if (!Configuration.global_params.aggressiveMerging) then add_arg " -aggressive-merging";
-  if (!Configuration.global_params.origName) then add_arg " -orig-name";
-  if (!Configuration.global_params.print) then add_arg " -print";
-  if (not (!Configuration.global_params.annot)) then add_arg " -no-annot";
-  if (!Configuration.global_params.keepComments) then add_arg " -keep-comments";
-
-  add_arg " -kernel-warn-key annot-error=active";
-  add_arg " -no-unicode";
-  !args
   
-let kernel_string_args () = 
+let kernel_args () = 
   let args = ref "" in
   let add_arg arg = 
     args := !args^arg 
@@ -153,35 +124,43 @@ let kernel_string_args () =
   let not_empty s =
     not (String.equal s "")
   in
-  if not_empty (!Configuration.global_params.cppCommand) then add_arg (" -cpp-command=\""^(!Configuration.global_params.cppCommand)^"\"");
   if not_empty (!Configuration.global_params.machdep) then add_arg (" -machdep=\""^(!Configuration.global_params.machdep)^"\"");
-  if not_empty (!Configuration.global_params.kernelLog) then add_arg (" -kernel-log=\"eiufrwd:"^(!rootPath^"/"^(Filename.basename (!Configuration.global_params.kernelLog)))^"\"");
-  (* 'key:value' args *)
   let generatedSpecCustom = String.concat "," (!Configuration.global_params.generatedSpecCustom) in
   if not_empty generatedSpecCustom then add_arg (" -generated-spec-custom=\""^generatedSpecCustom^"\"");
+
+  if (not (!Configuration.global_params.keepUnusedSpecifiedFunctions)) then add_arg " -remove-unused-specified-functions";
+  if (!Configuration.global_params.aggressiveMerging) then add_arg " -aggressive-merging";
+
+  add_arg " -kernel-warn-key annot-error=active";
+  add_arg " -no-unicode";
   !args
 
-let metrics_boolean_args () = 
+let global_metrics_args () = 
+  let args = ref "" in
+  let add_arg arg = 
+    args := !args^arg 
+  in
+  let not_empty s =
+    not (String.equal s "")
+  in
+  add_arg " -metrics";
+  add_arg " -metrics-by-function";
+  if not_empty (!Configuration.global_params.metricsOutput) then 
+      add_arg (" -metrics-output=\""^(!rootPath)^"/"^(Filename.remove_extension !Configuration.global_params.metricsOutput)^".txt\"") 
+  else add_arg (" -metrics-output=\"project_metrics.txt\"");
+  !args 
+
+let local_metrics_args file () = 
   let args = ref "" in
   let add_arg arg = 
     args := !args^arg 
   in
   add_arg " -metrics";
-  if !Configuration.global_params.metricsByFunction then add_arg " -metrics-by-function";
-  !args
-
-let metrics_string_args () = 
-  let args = ref "" in
-  let add_arg arg = 
-    args := !args^arg 
-  in
-  let not_empty s =
-    not (String.equal s "")
-  in
-  if not_empty (!Configuration.global_params.metricsOutput) then add_arg (" -metrics-output=\""^(!rootPath)^"/"^(!Configuration.global_params.metricsOutput)^"\"") else add_arg (" -metrics-output=\""^(!rootPath)^"/"^"untitledMetrics.txt\"");
+  add_arg " -metrics-by-function";
+  add_arg (" -metrics-output=\""^file^".txt\"");
   !args 
 
-let callgraph_string_args () = 
+let callgraph_args file () = 
   let args = ref "" in
   let add_arg arg = 
     args := !args^arg 
@@ -189,40 +168,34 @@ let callgraph_string_args () =
   let not_empty s =
     not (String.equal s "")
   in
-  if not_empty (!Configuration.global_params.cg) then add_arg (" -cg=\""^(!rootPath^"/"^(!Configuration.global_params.cg))^".dot\"") else add_arg " -cg=\"untitledCallgraph.dot\"";
+  if not_empty (!Configuration.global_params.cgOutput) then add_arg (" -cg=\""^(!rootPath^"/"^(!Configuration.global_params.cgOutput))^".dot\"") else add_arg (" -cg=\""^file^".dot\"");
   (* 'key:value' args *)
   let cgRoots = String.concat "," (!Configuration.global_params.cgRoots) in
   if not_empty cgRoots then add_arg (" -cg-roots=\""^cgRoots^"\"");
+
+  if (!Configuration.global_params.cgServices) then add_arg " -cg-services" else add_arg " -cg-no-services";
+
   !args
 
-let get_cg_output_file () = 
+let get_cg_output_file file () = 
   let not_empty s =
     not (String.equal s "")
   in
-  if not_empty (!Configuration.global_params.cg) then ((!rootPath^"/"^(!Configuration.global_params.cg))) else "untitledCallgraph.dot"
+  if not_empty (!Configuration.global_params.cgOutput) then ((!rootPath^"/"^(!Configuration.global_params.cgOutput))) else file
 
-let callgraph_boolean_args () = 
+let wp_args () = 
   let args = ref "" in
-  let add_arg arg = 
-    args := !args^arg 
-  in
-  if (!Configuration.global_params.cgServices) then add_arg " -cg-services" else add_arg " -cg-no-services";
-  !args
-
-let wp_boolean_args () = 
-  let args = ref "" in
-  let add_arg arg = 
-    args := !args^arg 
-  in
-  (* add_arg " -wp"; *)
+  let add_arg arg = args := !args^arg in
+  let not_empty s = not (String.equal s "") in
+  add_arg " -wp";
+  add_arg " -wp-gen";
   if (!Configuration.global_params.wpRte) then add_arg " -wp-rte";
   if not (!Configuration.global_params.wpPruning) then add_arg " -wp-no-pruning";
-  (* if (!Configuration.global_params.wpCheckMemoryModel) then add_arg " -wp-check-memory-model"; *)
+  if (!Configuration.global_params.wpCheckMemoryModel) then add_arg " -wp-check-memory-model";
   if (!Configuration.global_params.wpVolatile) then add_arg " -wp-volatile";
-  if (!Configuration.global_params.wpGen) then add_arg " -wp-gen";
-  if (!Configuration.global_params.wpDump) then add_arg " -wp-dump";
-  if (!Configuration.global_params.wpStatus) then add_arg " -wp-status";
-  if (!Configuration.global_params.wpSmokeTests) then add_arg " -wp-smoke-tests";
+  if not_empty (!Configuration.global_params.wpProver) then add_arg (" -wp-prover=\""^(!Configuration.global_params.wpProver)^"\"");
+  if not_empty (!Configuration.global_params.wpSession) then add_arg (" -wp-session=\""^(!Configuration.global_params.wpSession)^"\"");
+  add_arg (" -wp-timeout=\""^Stdlib.string_of_int(!Configuration.global_params.wpTimeout)^"\"");
 
   !args
 let getnumber str = 
@@ -234,7 +207,7 @@ let send_request server_sock response =
   let response_str = Printf.sprintf "Content-Length: %d\r\n\r\n%s" (String.length response) response in
   let response_bytes = Bytes.of_string response_str in
   let sent = Unix.send server_sock response_bytes 0 (Bytes.length response_bytes) [] in
-  Settings.Self.debug ~level:0 "Size of sent content : %d\n%!" sent
+  Settings.Self.debug ~level:4 "Size of sent content : %d\n%!" sent
 
 let readcontlen sock : string = 
   let contlenbuf = Bytes.create 1 in
@@ -249,36 +222,68 @@ let readcontlen sock : string =
   ignore (Unix.read sock contlenbuf 0 1); (* consume remaining "\r\n" from request header *) (* note : why 1 ? *)
   !res
 
-let execute_command command = 
-  (* Settings.Self.debug ~level:0 "before wrapper sock\n%!"; *)
+let execute_command command didSave ?id () = 
+  let had_errors = ref false in 
+  let msg = ref "" in
+  let response_id : Lsp_types.id_ = match id with 
+    | Some id -> id
+    | None -> (Lsp_types.Str "frama_c_error")
+  in
+  (* Settings.Self.debug ~level:4 "before wrapper sock\n%!"; *)
   let wrapper_sock = Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in 
-  (* Settings.Self.debug ~level:0 "after wrapper sock\n%!"; *)
+  (* Settings.Self.debug ~level:4 "after wrapper sock\n%!"; *)
   Unix.bind wrapper_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, 8006));
-  (* Settings.Self.debug ~level:0 "after bind\n%!"; *)
+  (* Settings.Self.debug ~level:4 "after bind\n%!"; *)
   Unix.listen wrapper_sock 100;
   let ic = Unix.open_process_in command in
   ignore 
   (try 
     while true do
-      Settings.Self.debug ~level:1 "\t%s\n%!" (Stdlib.input_line ic);
+      msg := Stdlib.input_line ic;
+      Printf.printf "\t%s\n%!" (!msg);
+      if (Utils.contains !msg ~suffix:"syntax error" 
+        || Utils.contains !msg ~suffix:"There were parsing errors in"
+        || Utils.contains !msg ~suffix:"User Error"
+        || Utils.contains !msg ~suffix:"invalid user input"
+        || Utils.contains !msg ~suffix:"Invalid symbol"
+        || Utils.contains !msg ~suffix:"before or at token"
+      ) then had_errors := true;
     done;
-  with End_of_file -> Settings.Self.debug ~level:0 "\n%!";);
-  (* Settings.Self.debug ~level:0 "before accept\n%!"; *)
-  let (plugin_sock, _) = Unix.accept wrapper_sock in
-  let data_size = getnumber (readcontlen plugin_sock) in 
-  let buffer = Bytes.make data_size '0' in
-  let _req_data_len = Unix.read plugin_sock buffer 0 data_size in
-  let request_str = (Bytes.to_string buffer) in
-  (* Settings.Self.debug ~level:0 "accept\n%!"; *)
-  ignore (Unix.close_process_in ic);
-  let _bytes_read = Unix.recv plugin_sock buffer 0 (Bytes.length buffer) [] in 
-  (* Settings.Self.debug ~level:0 "recv\n%!"; *)
-  Unix.close plugin_sock;
-  Unix.close wrapper_sock;
-  request_str
+  with End_of_file -> Settings.Self.debug ~level:4 "\n%!";);
+  (* Settings.Self.debug ~level:4 "before accept\n%!"; *)
+  match !had_errors && (not didSave) with 
+  | true -> 
+    Settings.Self.debug ~level:2 "Error while executing frama-c command\n%!";
+    (* Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac)); *)
+    let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t 
+      (Lsp_types.ResponseMessage.create 
+        ~jsonrpc:"2.0" 
+        ~id:response_id
+        ~error: (Lsp_types.ResponseError.create
+          ~code:(-32603)
+          ~message:!msg
+          ()
+        )
+        ()
+      )) in
+    Unix.close wrapper_sock;
+    data
+  | false ->
+    let (plugin_sock, _) = Unix.accept wrapper_sock in
+    let data_size = getnumber (readcontlen plugin_sock) in 
+    let buffer = Bytes.make data_size '0' in
+    let _req_data_len = Unix.read plugin_sock buffer 0 data_size in
+    let request_str = (Bytes.to_string buffer) in
+    (* Settings.Self.debug ~level:4 "accept\n%!"; *)
+    ignore (Unix.close_process_in ic);
+    let _bytes_read = Unix.recv plugin_sock buffer 0 (Bytes.length buffer) [] in 
+    (* Settings.Self.debug ~level:4 "recv\n%!"; *)
+    Unix.close plugin_sock;
+    Unix.close wrapper_sock;
+    Settings.Self.debug ~level:4 "Sending from handler to client : %s\n%!" request_str;
+    request_str
 
 let rq_handler json_string =
-  
   let json = Json.load_string json_string in 
   let request = Lsp_types.RequestMessage.t_of_json json in 
   let curr_method = request.method_ in 
@@ -286,8 +291,9 @@ let rq_handler json_string =
   try
     match curr_method with 
     | "initialize" -> 
+      Settings.Self.debug ~level:4 "initialize\n%!";
       let req_json = (Lsp_types.RequestMessage.json_of_t request) in
-      let temp = remove_newline (remove_quotes (Json.save_string (Json.field "rootPath" (Json.field "params" req_json)))) in
+      let temp = Utils.remove_newline (Utils.remove_quotes (Json.save_string (Json.field "rootPath" (Json.field "params" req_json)))) in
       rootPath := temp;
       Lsp_types.CONTENT (
         {|{
@@ -326,13 +332,13 @@ let rq_handler json_string =
       );
 
     | "textDocument/definition" -> 
-      Settings.Self.debug ~level:0 "definition\n%!";
+      Settings.Self.debug ~level:4 "definition\n%!";
       let params = match request.params with 
         | Some p -> Lsp_types.DefinitionParams.t_of_json p
-        | None -> Settings.Self.debug ~level:2 "No definition params \n%!"; assert false
+        | None -> Settings.Self.debug ~level:3 "No definition params \n%!"; assert false
       in
       let uri = params.textDocument.uri in 
-      let _file = remove_file_scheme (remove_newline (remove_quotes uri)) in
+      let _file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
       let line = params.position.line in 
       let ch = params.position.character in
       let files_to_parse = 
@@ -340,19 +346,19 @@ let rq_handler json_string =
           | "" -> String.concat " " (Utils.get_workspace_files !rootPath)
           | _ -> (source_files ())
         in
-      let command = "frama-c "^files_to_parse^" "^(cpp_extra_args ())^(kernel_boolean_args ())^(kernel_string_args ())^" -then -acsl_lsp -id=\""^(Stdlib.string_of_int (id_to_int request.id))^"\" -root_path=\""^(!rootPath)^"\" -find_def="^_file^":"^(Stdlib.string_of_int line)^":"^(Stdlib.string_of_int ch) in
-      Settings.Self.debug ~level:1 "Command = %s\n%!" command;
-      let data = execute_command command in
+      let command = "frama-c "^files_to_parse^" "^(cpp_extra_args ())^(kernel_args ())^" -then -lsp -lsp-id=\""^(Stdlib.string_of_int (Utils.id_to_int request.id))^"\" -lsp-root-path=\""^(!rootPath)^"\" -lsp-definition="^_file^":"^(Stdlib.string_of_int line)^":"^(Stdlib.string_of_int ch) in
+      Settings.Self.debug ~level:3 "Command = %s\n%!" command;
+      let data = execute_command command false ~id:request.id () in
       Lsp_types.CONTENT data;
       
     | "textDocument/declaration" -> 
-      Settings.Self.debug ~level:0 "declaration\n%!";
+      Settings.Self.debug ~level:4 "declaration\n%!";
       let params = match request.params with 
         | Some p -> Lsp_types.DeclarationParams.t_of_json p
-        | None -> Settings.Self.debug ~level:2 "No declaration params \n%!"; assert false
+        | None -> Settings.Self.debug ~level:3 "No declaration params \n%!"; assert false
       in
       let uri = params.textDocument.uri in 
-      let _file = remove_file_scheme (remove_newline (remove_quotes uri)) in
+      let _file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
       let line = params.position.line in 
       let ch = params.position.character in
 
@@ -362,33 +368,23 @@ let rq_handler json_string =
           | _ -> (source_files ())
         in
       
-      let command = "frama-c "^files_to_parse^" "^(cpp_extra_args ())^(kernel_boolean_args ())^(kernel_string_args ())^" -then -acsl_lsp -id=\""^(Stdlib.string_of_int (id_to_int request.id))^"\" -root_path=\""^(!rootPath)^"\" -find_decl="^_file^":"^(Stdlib.string_of_int line)^":"^(Stdlib.string_of_int ch) in
-      Settings.Self.debug ~level:1 "Command = %s\n%!" command;
-      let data = execute_command command in
+      let command = "frama-c "^files_to_parse^" "^(cpp_extra_args ())^(kernel_args ())^" -then -lsp -lsp-id=\""^(Stdlib.string_of_int (Utils.id_to_int request.id))^"\" -lsp-root-path=\""^(!rootPath)^"\" -lsp-declaration="^_file^":"^(Stdlib.string_of_int line)^":"^(Stdlib.string_of_int ch) in
+      Settings.Self.debug ~level:3 "Command = %s\n%!" command;
+      let data = execute_command command false ~id:request.id () in
       Lsp_types.CONTENT (data);
 
     | "displayCIL" -> 
-      Settings.Self.debug ~level:0 "displayCIL\n%!";
+      Settings.Self.debug ~level:4 "displayCIL\n%!";
       let file = match request.params with 
-        | Some `List [f] -> remove_newline (remove_quotes (Json.save_string f))
-        | _ -> Settings.Self.debug ~level:2 "No params for displayCIL \n%!"; assert false
+        | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
+        | _ -> Settings.Self.debug ~level:3 "No params for displayCIL \n%!"; assert false
       in
-      let command = "frama-c "^file^(cpp_extra_args ())^(kernel_boolean_args ())^(kernel_string_args ())^" -then -acsl_lsp -display_cil -id=\""^(Stdlib.string_of_int (id_to_int request.id))^"\"" in
-      Settings.Self.debug ~level:1 "Command = %s\n%!" command;
-      Lsp_types.CONTENT (execute_command command);
-
-    | "computeCG" -> 
-      Settings.Self.debug ~level:0 "computeCG\n%!";
-      let file = match request.params with 
-          | Some `List [f] -> remove_newline (remove_quotes (Json.save_string f))
-          | _ -> Settings.Self.debug ~level:2 "No params for computeCG \n%!"; assert false
-        in
-      let command = "frama-c "^file^(cpp_extra_args ())^(kernel_boolean_args ())^(kernel_string_args ())^" -then"^(callgraph_string_args ())^(callgraph_boolean_args ())^" -then -acsl_lsp -compute_cg -id=\""^(Stdlib.string_of_int (id_to_int request.id))^"\"" in
-      Settings.Self.debug ~level:1 "Command = %s\n%!" command;
-      Lsp_types.CONTENT (execute_command command);
+      let command = "frama-c "^file^(cpp_extra_args ())^(kernel_args ())^" -then -lsp -lsp-display-cil -lsp-id=\""^(Stdlib.string_of_int (Utils.id_to_int request.id))^"\"" in
+      Settings.Self.debug ~level:3 "Command = %s\n%!" command;
+      Lsp_types.CONTENT (execute_command command false ~id:request.id ());
     
     | "showPOVC" -> (* show proof obligation of specific function *)
-      Settings.Self.debug ~level:0 "showPOVC, %d\n%!" (id_to_int request.id);
+      Settings.Self.debug ~level:4 "showPOVC, %d\n%!" (Utils.id_to_int request.id);
       let (file, line, ch) = match request.params with 
           | Some `List 
             [`List 
@@ -396,55 +392,42 @@ let rq_handler json_string =
                 "line", `Int l;
                 "character", `Int c;
               ]]] -> 
-            (remove_newline (remove_quotes (f)), Stdlib.string_of_int(l), Stdlib.string_of_int(c))
-          | _ -> Settings.Self.debug ~level:2 "No params for showPOVC \n%!"; assert false
+            (Utils.remove_newline (Utils.remove_quotes (f)), Stdlib.string_of_int(l), Stdlib.string_of_int(c))
+          | _ -> Settings.Self.debug ~level:3 "No params for showPOVC \n%!"; assert false
         in
+      (* additionnal source files if the parsed file is a header file *)
       let files = 
         String.concat " " (match (String.ends_with ~suffix:".h" file) with
         | true -> file::(Utils.get_corr_cfile (!rootPath) file); 
         | false -> [file])
       in
       
-      let command = "frama-c "^file^(cpp_extra_args ())^(kernel_boolean_args ())^(kernel_string_args ())^" -then -acsl_lsp -id=\""^(Stdlib.string_of_int (id_to_int request.id))^"\" -root_path=\""^(!rootPath)^"\" -source_files=\""^files^"\" -show_povc=\""^file^":"^line^":"^ch^"\" -wp -wp-gen -wp-no-check-memory-model"^(wp_boolean_args ()) in
-      Settings.Self.debug ~level:1 "Command = %s\n%!" command;
-      Lsp_types.CONTENT (execute_command command);
-
-    | "showAllPOVC" -> (* show proof obligations of entire file *)
-      Settings.Self.debug ~level:0 "showAllPOVC, %d\n%!" (id_to_int request.id);
-      let file = match request.params with 
-          | Some `List 
-            [`List 
-              [`String f]
-            ] -> 
-            (remove_newline (remove_quotes (f)))
-          | _ -> Settings.Self.debug ~level:2 "No params for showPOVC \n%!"; assert false
-        in
-      let command = "frama-c "^file^(cpp_extra_args ())^(kernel_boolean_args ())^(kernel_string_args ())^" -then"^(wp_boolean_args ())^" -then -acsl_lsp -id=\""^(Stdlib.string_of_int (id_to_int request.id))^"\" -show_povc_all -wp "^(wp_boolean_args ()) in
-      Settings.Self.debug ~level:1 "Command = %s\n%!" command;
-      Lsp_types.CONTENT (execute_command command);
+      let command = "frama-c "^files^(cpp_extra_args ())^(kernel_args ())^" -then -lsp -lsp-id=\""^(Stdlib.string_of_int (Utils.id_to_int request.id))^"\" -lsp-root-path=\""^(!rootPath)^"\" -lsp-show-povc=\""^file^":"^line^":"^ch^"\""^(wp_args ()) in
+      Settings.Self.debug ~level:3 "Command = %s\n%!" command;
+      Lsp_types.CONTENT (execute_command command false ~id:request.id ());
 
     | "textDocument/completion" -> 
-      Settings.Self.debug ~level:0 "completion\n%!";
+      Settings.Self.debug ~level:4 "completion\n%!";
       let params = match request.params with 
         | Some p -> Lsp_types.CompletionParams.t_of_json p
-        | None -> Settings.Self.debug ~level:2 "No completion params \n%!"; assert false
+        | None -> Settings.Self.debug ~level:3 "No completion params \n%!"; assert false
       in
       let uri = params.textDocument.uri in 
       let file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
       let line = Stdlib.string_of_int params.position.line in 
       let ch = Stdlib.string_of_int params.position.character in 
-      let command = "frama-c -then -acsl_lsp -id=\""^(Stdlib.string_of_int (id_to_int request.id))^"\" -find_comp=\""^file^":"^line^":"^ch^"\"" in
-      Settings.Self.debug ~level:1 "Command = %s\n%!" command;
-      Lsp_types.CONTENT (execute_command command);
+      let command = "frama-c -then -lsp -lsp-id=\""^(Stdlib.string_of_int (Utils.id_to_int request.id))^"\" -lsp-completion=\""^file^":"^line^":"^ch^"\"" in
+      Settings.Self.debug ~level:3 "Command = %s\n%!" command;
+      Lsp_types.CONTENT (execute_command command false ~id:request.id ());
 
     | "shutdown" -> receivedShutdown := true; 
-      Lsp_types.CONTENT (Json.save_string (Shutdown.shutdown request));
+      Lsp_types.CONTENT (Json.save_string (shutdown request));
     | _ -> 
       Lsp_types.CONTENT (Json.save_string `Null)
   with exn ->  
-    Settings.Self.debug ~level:2 "Request error \n%!";
-    Settings.Self.debug ~level:2 "Backtrace : %s\n" (Printexc.get_backtrace ());
-    Lsp_types.CONTENT (Json.save_string (make_error (Printexc.to_string (exn)) (id_to_int id)))
+    Settings.Self.debug ~level:3 "Request error \n%!";
+    Settings.Self.debug ~level:3 "Backtrace : %s\n" (Printexc.get_backtrace ());
+    Lsp_types.CONTENT (Json.save_string (Utils.make_error (Printexc.to_string (exn)) (Utils.id_to_int id)))
 
 
 let notif_handler json_string server_sock =
@@ -453,65 +436,80 @@ let notif_handler json_string server_sock =
   let curr_method = notif.method_ in 
   match curr_method with 
   | "initialized" -> 
-    Settings.Self.debug ~level:0 "initialized\n%!";
+    Settings.Self.debug ~level:4 "initialized\n%!";
     send_request server_sock (Json.save_string Configuration.request_configurations);
     Lsp_types.CONTENT (Json.save_string (
-      RegisterCapability.registerCapabilityRequest 
-      (RegisterCapability.registrationParams 
-        ([RegisterCapability.registration "workspace/didChangeConfiguration"])
+      registerCapabilityRequest 
+      (registrationParams 
+        ([registration "workspace/didChangeConfiguration"])
       );
     ))
 
   (* | "textDocument/didOpen" ->
-    Settings.Self.debug ~level:0 "didOpen\n%!";
+    Settings.Self.debug ~level:4 "didOpen\n%!";
     let params = match notif.params with 
       | Some p -> Lsp_types.DidOpenTextDocumentParams.t_of_json p
       | None -> assert false
     in
     let uri = params.textDocument.uri in 
-    let _file = remove_file_scheme (remove_newline (remove_quotes uri)) in
-    let command = "frama-c"^(cpp_extra_args ())^(kernel_boolean_args ())^(kernel_string_args ())^" -acsl_lsp -did_open=" ^ _file in
-    Settings.Self.debug ~level:1 "Command = %s\n%!" command;
-    Lsp_types.CONTENT ((execute_command command)); *)
+    let _file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
+    let command = "frama-c"^(cpp_extra_args ())^(kernel_args ())^" -lsp -lsp-did-open=" ^ _file in
+    Settings.Self.debug ~level:3 "Command = %s\n%!" command;
+    Lsp_types.CONTENT ((execute_command command false)); *)
 
   | "textDocument/didClose" ->
-    Settings.Self.debug ~level:0 "didClose\n%!";
+    Settings.Self.debug ~level:4 "didClose\n%!";
     let params = match notif.params with 
       | Some p -> Lsp_types.DidCloseTextDocumentParams.t_of_json p
       | None -> assert false
     in
     let uri = params.textDocument.uri in 
-    let _file = remove_file_scheme (remove_newline (remove_quotes uri)) in
-    let command = "frama-c -acsl_lsp -did_close=" ^ _file in
-    Settings.Self.debug ~level:1 "Command = %s\n%!" command;
-    Lsp_types.CONTENT (execute_command command);
+    let _file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
+    let command = "frama-c -lsp -lsp-did-close=" ^ _file in
+    Settings.Self.debug ~level:3 "Command = %s\n%!" command;
+    Lsp_types.CONTENT (execute_command command false ());
 
   | "textDocument/didSave" ->
-    Settings.Self.debug ~level:0 "didSave\n%!";
+    Settings.Self.debug ~level:4 "didSave\n%!";
     let params = match notif.params with 
       | Some p -> Lsp_types.DidSaveTextDocumentParams.t_of_json p
       | None -> assert false
     in
     let uri = params.textDocument.uri in 
-    let _file = remove_file_scheme (remove_newline (remove_quotes uri)) in
-    let command = "frama-c"^(cpp_extra_args ())^(kernel_boolean_args ())^(kernel_string_args ())^" -acsl_lsp -did_save=" ^ _file in
-    Settings.Self.debug ~level:1 "Command = %s\n%!" command;
-    Lsp_types.CONTENT (execute_command command);
+    let _file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
+    let command = "frama-c"^(cpp_extra_args ())^(kernel_args ())^" -lsp -lsp-debug=4 -lsp-did-save=" ^ _file ^ " -then -wp -wp-gen" in
+    Settings.Self.debug ~level:3 "Command = %s\n%!" command;
+    Lsp_types.CONTENT (execute_command command true ());
 
-    | "showMetrics" -> 
-      Settings.Self.debug ~level:0 "metrics\n%!";
+    | "showGlobalMetrics" -> 
+      Settings.Self.debug ~level:4 "global metrics\n%!";
+      let project_filename = if not (String.equal (!Configuration.global_params.metricsOutput) "") then (Filename.remove_extension !Configuration.global_params.metricsOutput) else "project_metrics" in
+      let command = "frama-c "^(source_files ())^(cpp_extra_args ())^(kernel_args ())^" -then"^(global_metrics_args ())^" -then -lsp -lsp-metrics=\""^(!rootPath)^"/"^project_filename^"\"" in
+      Settings.Self.debug ~level:3 "Command = %s\n%!" command;
+      Lsp_types.CONTENT (execute_command command false ());
+
+    | "showLocalMetrics" -> 
+      Settings.Self.debug ~level:4 "local metrics\n%!";
       let file = match notif.params with 
-          | Some `List [f] -> remove_newline (remove_quotes (Json.save_string f))
-          | _ -> Settings.Self.debug ~level:2 "No params for metrics \n%!"; assert false
+          | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
+          | _ -> Settings.Self.debug ~level:3 "No params for metrics \n%!"; assert false
         in
-      let command = "frama-c "^file^(cpp_extra_args ())^(kernel_boolean_args ())^(kernel_string_args ())^" -then"^(metrics_boolean_args ())^(metrics_string_args ())^" -then -acsl_lsp -show_metrics" in
-      Settings.Self.debug ~level:1 "Command = %s\n%!" command;
-      Lsp_types.CONTENT (execute_command command);
-
+      let command = "frama-c "^file^(cpp_extra_args ())^(kernel_args ())^" -then"^(local_metrics_args (Filename.remove_extension file) ())^" -then -lsp -lsp-metrics=\""^(Filename.remove_extension file)^"\"" in
+      Settings.Self.debug ~level:3 "Command = %s\n%!" command;
+      Lsp_types.CONTENT (execute_command command false ());
     
+    | "computeCG" -> 
+      Settings.Self.debug ~level:4 "computeCG\n%!";
+      let file = match notif.params with 
+          | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
+          | _ -> Settings.Self.debug ~level:3 "No params for computeCG \n%!"; assert false
+        in
+      let command = "frama-c "^file^(cpp_extra_args ())^(kernel_args ())^" -then"^(callgraph_args (Filename.remove_extension file) ())^" -then -lsp -lsp-compute-cg=\""^(get_cg_output_file (Filename.remove_extension file) ())^"\"" in
+      Settings.Self.debug ~level:3 "Command = %s\n%!" command;
+      Lsp_types.CONTENT (execute_command command false ());
 
   | "workspace/didChangeConfiguration" ->
-    Settings.Self.debug ~level:0 "didChangeConfiguration\n%!";
+    Settings.Self.debug ~level:4 "didChangeConfiguration\n%!";
     Lsp_types.CONTENT (Json.save_string (Configuration.request_configurations));
 
   | "exit" -> if !receivedShutdown then Unix._exit 0 else Unix._exit 1
@@ -525,7 +523,7 @@ let result_handler json_string =
   let request = Lsp_types.ResponseMessage.t_of_json json in 
   let result = match request.result with 
     | Some r -> r
-    | None -> Settings.Self.debug ~level:2 "No result \n%!"; assert false
+    | None -> Settings.Self.debug ~level:3 "No result \n%!"; assert false
   in 
 
   let id = request.id in
@@ -543,7 +541,7 @@ let error_handler json_string =
   let error = 
     match request.error with 
     | Some err -> err 
-    | None -> Settings.Self.debug ~level:2 "No error \n%!"; assert false
+    | None -> Settings.Self.debug ~level:3 "No error \n%!"; assert false
   in 
   Lsp_types.ResponseError.json_of_t (error)
 
@@ -552,23 +550,23 @@ let handle (json_string : string) server_sock : Lsp_types.lsp_result =
     Lsp_types.CONTENT (Shutdown.shutdown_error (Lsp_types.RequestMessage.t_of_json (Json.load_string json_string))) else  *)
   if (is_result json_string) then (* todo : how to do this with a match with *)
     begin
-      Settings.Self.debug ~level:0 "result_handler\n%!";
+      Settings.Self.debug ~level:4 "result_handler\n%!";
       result_handler json_string 
     end
   else if (is_error json_string) then 
     begin
-      Settings.Self.debug ~level:0 "error_handler\n%!";
+      Settings.Self.debug ~level:4 "error_handler\n%!";
       Lsp_types.CONTENT (Json.save_string (error_handler json_string))
     end
   else if (is_notif json_string) then 
     begin
-      Settings.Self.debug ~level:0 "notif_handler\n%!";
+      Settings.Self.debug ~level:4 "notif_handler\n%!";
       (* Settings.Self.debug ~level: "Received from client : %s\n%!" json_string; *)
       notif_handler json_string server_sock
     end
   else if (is_request json_string) then 
     begin
-      Settings.Self.debug ~level:0 "rq_handler\n%!";
+      Settings.Self.debug ~level:4 "rq_handler\n%!";
       rq_handler json_string
     end
   else 
