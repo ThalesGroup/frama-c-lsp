@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2023.6.19)  22 AUG 2024 19:07
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2023.6.19)  24 AUG 2024 22:55
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -903,33 +903,32 @@ Package csquotes Info: Checking for multilingual support...
 Package csquotes Info: ... found 'babel' package.
 Package csquotes Info: Adjusting default style.
 Package csquotes Info: Redefining alias 'default' -> 'english'.
-
-No file final_report_Djamila_Mohamed.aux.
+ (./final_report_Djamila_Mohamed.aux)
 \openout1 = `final_report_Djamila_Mohamed.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 82.
-LaTeX Font Info:    ... okay on input line 82.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 82.
-LaTeX Font Info:    ... okay on input line 82.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 82.
-LaTeX Font Info:    ... okay on input line 82.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 82.
-LaTeX Font Info:    ... okay on input line 82.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 82.
-LaTeX Font Info:    ... okay on input line 82.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 82.
-LaTeX Font Info:    ... okay on input line 82.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 82.
-LaTeX Font Info:    ... okay on input line 82.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 82.
-LaTeX Font Info:    ... okay on input line 82.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 82.
-LaTeX Font Info:    ... okay on input line 82.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 87.
+LaTeX Font Info:    ... okay on input line 87.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 87.
+LaTeX Font Info:    ... okay on input line 87.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 87.
+LaTeX Font Info:    ... okay on input line 87.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 87.
+LaTeX Font Info:    ... okay on input line 87.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 87.
+LaTeX Font Info:    ... okay on input line 87.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 87.
+LaTeX Font Info:    ... okay on input line 87.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 87.
+LaTeX Font Info:    ... okay on input line 87.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 87.
+LaTeX Font Info:    ... okay on input line 87.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 87.
+LaTeX Font Info:    ... okay on input line 87.
 Package lastpage Info: Please have a look at the pageslts package at
 (lastpage)             https://www.ctan.org/pkg/pageslts
-(lastpage)             ! on input line 82.
+(lastpage)             ! on input line 87.
 \c@lstlisting=\count473
-(/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
+ (/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count474
 \scratchdimen=\dimen305
@@ -957,7 +956,7 @@ Package: ltcaption 2020/05/30 v1.4b longtable captions (AR)
 )
 Package caption Info: rotating package is loaded.
 Package caption Info: End \AtBeginDocument code.
-Package hyperref Info: Link coloring ON on input line 82.
+Package hyperref Info: Link coloring ON on input line 87.
  (/usr/share/texlive/texmf-dist/tex/latex/hyperref/nameref.sty
 Package: nameref 2021-04-02 v2.47 Cross-referencing by name of section
  (/usr/share/texlive/texmf-dist/tex/latex/refcount/refcount.sty
@@ -967,9 +966,10 @@ Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 )
 \c@section@level=\count480
 )
-LaTeX Info: Redefining \ref on input line 82.
-LaTeX Info: Redefining \pageref on input line 82.
-LaTeX Info: Redefining \nameref on input line 82.
+LaTeX Info: Redefining \ref on input line 87.
+LaTeX Info: Redefining \pageref on input line 87.
+LaTeX Info: Redefining \nameref on input line 87.
+ (./final_report_Djamila_Mohamed.out) (./final_report_Djamila_Mohamed.out)
 \@outlinefile=\write5
 \openout5 = `final_report_Djamila_Mohamed.out'.
 
@@ -984,11 +984,11 @@ Package biblatex Info: Automatic encoding selection.
 \openout4 = `final_report_Djamila_Mohamed.bcf'.
 
 Package biblatex Info: Trying to load bibliographic data...
-Package biblatex Info: ... file 'final_report_Djamila_Mohamed.bbl' not found.
+Package biblatex Info: ... file 'final_report_Djamila_Mohamed.bbl' found.
+ (./final_report_Djamila_Mohamed.bbl)
+Package biblatex Info: Reference section=0 on input line 87.
+Package biblatex Info: Reference segment=0 on input line 87.
 
-No file final_report_Djamila_Mohamed.bbl.
-Package biblatex Info: Reference section=0 on input line 82.
-Package biblatex Info: Reference segment=0 on input line 82.
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
 *geometry* verbose mode - [ preamble ] result:
@@ -1023,2669 +1023,626 @@ Package biblatex Info: Reference segment=0 on input line 82.
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-<UniversiteParisCite_EIDD_WEB.png, id=7, 537.00626pt x 100.375pt>
-File: UniversiteParisCite_EIDD_WEB.png Graphic file (type png)
-<use UniversiteParisCite_EIDD_WEB.png>
-Package pdftex.def Info: UniversiteParisCite_EIDD_WEB.png  used on input line 111.
+<img/UniversiteParisCite_EIDD_WEB.png, id=183, 537.00626pt x 100.375pt>
+File: img/UniversiteParisCite_EIDD_WEB.png Graphic file (type png)
+<use img/UniversiteParisCite_EIDD_WEB.png>
+Package pdftex.def Info: img/UniversiteParisCite_EIDD_WEB.png  used on input line 116.
 (pdftex.def)             Requested size: 402.75371pt x 75.28105pt.
-<Thales-logo-1.png, id=9, 451.6875pt x 150.5625pt>
-File: Thales-logo-1.png Graphic file (type png)
-<use Thales-logo-1.png>
-Package pdftex.def Info: Thales-logo-1.png  used on input line 111.
+<img/Thales-logo-1.png, id=185, 451.6875pt x 150.5625pt>
+File: img/Thales-logo-1.png Graphic file (type png)
+<use img/Thales-logo-1.png>
+Package pdftex.def Info: img/Thales-logo-1.png  used on input line 116.
 (pdftex.def)             Requested size: 271.01459pt x 90.33818pt.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 111.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 116.
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 111.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 116.
  (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 ) [1
 
-{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map} <./UniversiteParisCite_EIDD_WEB.png> <./Thales-Logo-1.png>]
+{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map} <./img/UniversiteParisCite_EIDD_WEB.png> <./img/Thales-Logo-1.png>] (./final_report_Djamila_Mohamed.toc
+LaTeX Font Info:    Trying to load font information for T1+cmtt on input line 33.
+ (/usr/share/texlive/texmf-dist/tex/latex/base/t1cmtt.fd
+File: t1cmtt.fd 2019/12/16 v2.5j Standard LaTeX font definitions
+))
 \tf@toc=\write6
 \openout6 = `final_report_Djamila_Mohamed.toc'.
 
 pdfTeX warning (ext4): destination with the same identifier (name{page.}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.115 \newpage
+l.120 \newpage
                [2]
-<grep.png, id=26, 693.792pt x 393.8715pt>
-File: grep.png Graphic file (type png)
-<use grep.png>
-Package pdftex.def Info: grep.png  used on input line 151.
+<img/grep.png, id=249, 693.792pt x 393.8715pt>
+File: img/grep.png Graphic file (type png)
+<use img/grep.png>
+Package pdftex.def Info: img/grep.png  used on input line 156.
 (pdftex.def)             Requested size: 485.65108pt x 275.70816pt.
 
-Overfull \hbox (1.95421pt too wide) in paragraph at lines 151--152
+Overfull \hbox (1.95421pt too wide) in paragraph at lines 156--157
  [][] 
  []
 
-[1] [2 <./grep.png>]
-<lsp_exchange_example.png, id=56, 886.31125pt x 367.3725pt>
-File: lsp_exchange_example.png Graphic file (type png)
-<use lsp_exchange_example.png>
-Package pdftex.def Info: lsp_exchange_example.png  used on input line 190.
+[1] [2 <./img/grep.png>]
+<img/lsp_exchange_example.png, id=269, 886.31125pt x 367.3725pt>
+File: img/lsp_exchange_example.png Graphic file (type png)
+<use img/lsp_exchange_example.png>
+Package pdftex.def Info: img/lsp_exchange_example.png  used on input line 193.
 (pdftex.def)             Requested size: 354.51822pt x 146.94638pt.
-<diag2.drawio.png, id=57, 352.31625pt x 262.9825pt>
-File: diag2.drawio.png Graphic file (type png)
-<use diag2.drawio.png>
-Package pdftex.def Info: diag2.drawio.png  used on input line 205.
-(pdftex.def)             Requested size: 246.61969pt x 184.08649pt.
- [3 <./lsp_exchange_example.png (PNG copy)> <./diag2.drawio.png>]
-Overfull \hbox (4.13211pt too wide) in paragraph at lines 215--216
+
+Overfull \hbox (57.05072pt too wide) in paragraph at lines 210--211
+\T1/cmr/m/n/10 sav-ing, and clos-ing files. Ex-am-ples in-clude \T1/cmtt/m/n/10 textDocument/didOpen\T1/cmr/m/n/10 , \T1/cmtt/m/n/10 textDocument/didChange\T1/cmr/m/n/10 , and \T1/cmtt/m/n/10 textDocument/didSave\T1/cmr/m/n/10 . 
+ []
+
+
+Overfull \hbox (4.13211pt too wide) in paragraph at lines 212--213
 []\T1/cmr/m/n/10 Language Fea-tures: These fea-tures pro-vide language-specific fea-tures such as au-to-com-ple-tion, go-to-definition,
  []
 
 
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:221: Package array Error:  Illegal pream-token (\begin): `c' used.
+Overfull \hbox (13.117pt too wide) in paragraph at lines 212--213
+\T1/cmr/m/n/10 hover in-for-ma-tion, and find-references. Ex-am-ples in-clude \T1/cmtt/m/n/10 textDocument/completion\T1/cmr/m/n/10 , \T1/cmtt/m/n/10 textDocument/definition\T1/cmr/m/n/10 ,
+ []
 
-See the array package documentation for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.221     \begin
-                {tabular}{|l|l|}
-Try typing  <return>  to proceed.
-If that doesn't work, type  X <return>  to quit.
 
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:222: Misplaced \noalign.
-\hline ->\noalign 
-                  {\ifnum 0=`}\fi \penalty \@M \futurelet \@let@token \LT@@h...
-l.222 		\hline
-              
-I expect to see \noalign only after the \cr of
-an alignment. Proceed, and I'll ignore this case.
+Overfull \hbox (3.1546pt too wide) in paragraph at lines 228--228
+[]|[]| 
+ []
 
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:223: Misplaced \omit.
-\multispan ->\omit 
-                   \@multispan 
-l.223 		\textbf
-               {Feature} &
-I expect to see \omit only after tab marks or the \cr of
-an alignment. Proceed, and I'll ignore this case.
 
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:223: Extra alignment tab has been changed to \cr.
-<recently read> \endtemplate 
-                             
-l.223 		\textbf{Feature} &
-                          
-You have given more \span or & marks than there were
-in the preamble to the \halign or \valign now in progress.
-So I'll assume that you meant to type \cr instead.
+Overfull \hbox (3.1546pt too wide) in paragraph at lines 229--229
+[]|[]| 
+ []
 
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:225: Extra alignment tab has been changed to \cr.
-<recently read> \endtemplate 
-                             
-l.225 		Definition 					&
-                          \includegraphics[scale=0.7]{definition_result.png}...
-You have given more \span or & marks than there were
-in the preamble to the \halign or \valign now in progress.
-So I'll assume that you meant to type \cr instead.
 
-<definition_result.png, id=67, 362.10281pt x 149.05687pt>
-File: definition_result.png Graphic file (type png)
-<use definition_result.png>
-Package pdftex.def Info: definition_result.png  used on input line 225.
-(pdftex.def)             Requested size: 253.47023pt x 104.3391pt.
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:226: Extra alignment tab has been changed to \cr.
-<recently read> \endtemplate 
-                             
-l.226 		Declaration 				&
-                          \includegraphics[scale=0.7]{declaration_result.png...
-You have given more \span or & marks than there were
-in the preamble to the \halign or \valign now in progress.
-So I'll assume that you meant to type \cr instead.
+Overfull \hbox (1.21063pt too wide) in paragraph at lines 230--230
+[]|[]| 
+ []
 
-<declaration_result.png, id=68, 392.96812pt x 179.92218pt>
-File: declaration_result.png Graphic file (type png)
-<use declaration_result.png>
-Package pdftex.def Info: declaration_result.png  used on input line 226.
+
+Overfull \hbox (1.21063pt too wide) in paragraph at lines 231--231
+[]|[]| 
+ []
+
+
+Overfull \hbox (3.1546pt too wide) in paragraph at lines 232--232
+[]|[]| 
+ []
+
+
+Overfull \hbox (1.21063pt too wide) in paragraph at lines 233--233
+[]|[]| 
+ []
+
+
+Overfull \hbox (3.1546pt too wide) in paragraph at lines 234--234
+[]|[]| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 235--235
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 235--235
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 235--235
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 235--235
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 235--235
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 235--235
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 235--235
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 236--236
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 236--236
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 237--237
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 237--237
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 237--237
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 237--237
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 237--237
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 237--237
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 237--237
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 238--238
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 238--238
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 238--238
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 238--238
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 238--238
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 238--238
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 238--238
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 239--239
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 239--239
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 239--239
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 239--239
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 239--239
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 239--239
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 239--239
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 240--240
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 240--240
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 240--240
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 240--240
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 240--240
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 240--240
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 241--241
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 241--241
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 241--241
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 241--241
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 241--241
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 241--241
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 242--242
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 242--242
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 242--242
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 242--242
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 242--242
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 243--243
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 243--243
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 243--243
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 244--244
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 245--245
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 246--246
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 247--247
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 248--248
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 249--249
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 250--250
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 251--251
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 252--252
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 253--253
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 254--254
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+[3 <./img/lsp_exchange_example.png (PNG copy)>] [4] [5]
+<img/architecture.png, id=291, 1019.30812pt x 570.63188pt>
+File: img/architecture.png Graphic file (type png)
+<use img/architecture.png>
+Package pdftex.def Info: img/architecture.png  used on input line 398.
+(pdftex.def)             Requested size: 407.71602pt x 228.2487pt.
+ [6]
+<img/vscode_subprocess_seq_diag.png, id=301, 751.30687pt x 360.59718pt>
+File: img/vscode_subprocess_seq_diag.png Graphic file (type png)
+<use img/vscode_subprocess_seq_diag.png>
+Package pdftex.def Info: img/vscode_subprocess_seq_diag.png  used on input line 420.
+(pdftex.def)             Requested size: 450.7876pt x 216.35997pt.
+ [7 <./img/architecture.png>]
+Overfull \hbox (88.13144pt too wide) in paragraph at lines 442--442
+[]|\T1/cmtt/m/n/10 frama-c test_files/test1.c -cpp-extra-args="-Itest_files/include_folder
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 442--442
+\T1/cmtt/m/n/10 -Itest_files/include_folder2" -lsp -lsp-debug=0
+ []
+
+
+Overfull \hbox (224.59811pt too wide) in paragraph at lines 442--442
+\T1/cmtt/m/n/10 -lsp-declaration="/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server_v3/test_files/test1.c:88:8"| 
+ []
+
+<img/declaration_result.png, id=310, 392.96812pt x 179.92218pt>
+File: img/declaration_result.png Graphic file (type png)
+<use img/declaration_result.png>
+Package pdftex.def Info: img/declaration_result.png  used on input line 443.
 (pdftex.def)             Requested size: 275.07579pt x 125.94466pt.
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:227: Extra alignment tab has been changed to \cr.
-<recently read> \endtemplate 
-                             
-l.227 		Display CIL 				&
-                          \includegraphics[scale=0.7]{display_cil_result.png...
-You have given more \span or & marks than there were
-in the preamble to the \halign or \valign now in progress.
-So I'll assume that you meant to type \cr instead.
-
-<display_cil_result.png, id=69, 396.7322pt x 112.92188pt>
-File: display_cil_result.png Graphic file (type png)
-<use display_cil_result.png>
-Package pdftex.def Info: display_cil_result.png  used on input line 227.
+<img/display_cil_result.png, id=311, 396.7322pt x 112.92188pt>
+File: img/display_cil_result.png Graphic file (type png)
+<use img/display_cil_result.png>
+Package pdftex.def Info: img/display_cil_result.png  used on input line 444.
 (pdftex.def)             Requested size: 277.71063pt x 79.04475pt.
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:228: Extra alignment tab has been changed to \cr.
-<recently read> \endtemplate 
-                             
-l.228 		Callgraph 					&
-                         \includegraphics[scale=0.7]{callgraph_result.png} \...
-You have given more \span or & marks than there were
-in the preamble to the \halign or \valign now in progress.
-So I'll assume that you meant to type \cr instead.
-
-<callgraph_result.png, id=70, 402.00188pt x 166.37157pt>
-File: callgraph_result.png Graphic file (type png)
-<use callgraph_result.png>
-Package pdftex.def Info: callgraph_result.png  used on input line 228.
+<img/callgraph_result.png, id=312, 402.00188pt x 166.37157pt>
+File: img/callgraph_result.png Graphic file (type png)
+<use img/callgraph_result.png>
+Package pdftex.def Info: img/callgraph_result.png  used on input line 445.
 (pdftex.def)             Requested size: 281.39938pt x 116.45929pt.
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:229: Extra alignment tab has been changed to \cr.
-<recently read> \endtemplate 
-                             
-l.229 		Local Metrics 				&
-                            \includegraphics[scale=0.7]{local_metrics_result...
-You have given more \span or & marks than there were
-in the preamble to the \halign or \valign now in progress.
-So I'll assume that you meant to type \cr instead.
-
-<local_metrics_result.png, id=71, 399.74344pt x 121.20282pt>
-File: local_metrics_result.png Graphic file (type png)
-<use local_metrics_result.png>
-Package pdftex.def Info: local_metrics_result.png  used on input line 229.
+<img/local_metrics_result.png, id=313, 399.74344pt x 121.20282pt>
+File: img/local_metrics_result.png Graphic file (type png)
+<use img/local_metrics_result.png>
+Package pdftex.def Info: img/local_metrics_result.png  used on input line 446.
 (pdftex.def)             Requested size: 279.81848pt x 84.84138pt.
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:230: Extra alignment tab has been changed to \cr.
-<recently read> \endtemplate 
-                             
-l.230 		Global Metrics 				&
-                             \includegraphics[scale=0.7]{global_metrics_resu...
-You have given more \span or & marks than there were
-in the preamble to the \halign or \valign now in progress.
-So I'll assume that you meant to type \cr instead.
-
-<global_metrics_result.png, id=72, 397.485pt x 124.21407pt>
-File: global_metrics_result.png Graphic file (type png)
-<use global_metrics_result.png>
-Package pdftex.def Info: global_metrics_result.png  used on input line 230.
+<img/global_metrics_result.png, id=314, 397.485pt x 124.21407pt>
+File: img/global_metrics_result.png Graphic file (type png)
+<use img/global_metrics_result.png>
+Package pdftex.def Info: img/global_metrics_result.png  used on input line 447.
 (pdftex.def)             Requested size: 278.2376pt x 86.94923pt.
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:231: Extra alignment tab has been changed to \cr.
-<recently read> \endtemplate 
-                             
-l.231 		Proof Obligations 			&
-                               \includegraphics[scale=0.7]{po_result.png} \\...
-You have given more \span or & marks than there were
-in the preamble to the \halign or \valign now in progress.
-So I'll assume that you meant to type \cr instead.
-
-<po_result.png, id=73, 395.97937pt x 330.48468pt>
-File: po_result.png Graphic file (type png)
-<use po_result.png>
-Package pdftex.def Info: po_result.png  used on input line 231.
+<img/po_result.png, id=315, 395.97937pt x 330.48468pt>
+File: img/po_result.png Graphic file (type png)
+<use img/po_result.png>
+Package pdftex.def Info: img/po_result.png  used on input line 448.
 (pdftex.def)             Requested size: 277.18367pt x 231.33769pt.
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:232: Extra alignment tab has been changed to \cr.
-<recently read> \endtemplate 
-                             
-l.232 		Prove Annotation 			&
-                              Not implemented \\ \hline
-You have given more \span or & marks than there were
-in the preamble to the \halign or \valign now in progress.
-So I'll assume that you meant to type \cr instead.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:233: Extra alignment tab has been changed to \cr.
-<recently read> \endtemplate 
-                             
-l.233 		Diagnostics 				&
-                          -metrics, -metrics-output \\ \hline
-You have given more \span or & marks than there were
-in the preamble to the \halign or \valign now in progress.
-So I'll assume that you meant to type \cr instead.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:234: Extra }, or forgotten $.
-<recently read> \egroup 
-                        
-l.234     \end{tabular}
-                       
-I've deleted a group-closing symbol because it seems to be
-spurious, as in `$x}$'. But perhaps the } is legitimate and
-you forgot something else, as in `\hbox{$x}'. In such cases
-the way to recover is to insert both the forgotten and the
-deleted material, e.g., by typing `I$}'.
-
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:234: LaTeX Error: \begin{longtable} on input line 220 ended by \end{tabular}.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.234     \end{tabular}
-                       
-Your command was ignored.
-Type  I <command> <return>  to replace it with another command,
-or  <return>  to continue without it.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:234: Missing $ inserted.
-<inserted text> 
-                $
-l.234     \end{tabular}
-                       
-I've inserted something that you may have forgotten.
-(See the <inserted text> above.)
-With luck, this will get me unwedged. But if you
-really didn't forget anything, try typing `2' now; then
-my insertion and my current dilemma will both disappear.
-
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:235: Package caption Error: \caption outside float.
-
-See the caption package documentation for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.235 	\caption
-               {Example of corresponding JSON for each feature}
-If you do not understand this error, please take a closer look
-at the documentation of the `caption' package, especially the
-section about errors.
-Try typing  <return>  to proceed.
-If that doesn't work, type  X <return>  to quit.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:237: Misplaced \crcr.
-\endlongtable ->\crcr 
-                      \noalign {\let \LT@entry \LT@entry@chop \xdef \LT@save...
-l.237 \end{longtable}
-                     
-I can't figure out why you would want to use a tab mark
-or \cr or \span just now. If something like a right brace
-up above has ended a previous alignment prematurely,
-you're probably due for more error messages, and you
-might try typing `S' now just to see what is salvageable.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:237: Misplaced \noalign.
-\endlongtable ->\crcr \noalign 
-                               {\let \LT@entry \LT@entry@chop \xdef \LT@save...
-l.237 \end{longtable}
-                     
-I expect to see \noalign only after the \cr of
-an alignment. Proceed, and I'll ignore this case.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:237: Misplaced \crcr.
-\LT@echunk ->\crcr 
-                   \LT@save@row \cr \egroup \global \setbox \LT@gbox \lastbo...
-l.237 \end{longtable}
-                     
-I can't figure out why you would want to use a tab mark
-or \cr or \span just now. If something like a right brace
-up above has ended a previous alignment prematurely,
-you're probably due for more error messages, and you
-might try typing `S' now just to see what is salvageable.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:237: Misplaced alignment tab character &.
-<argument> &
-            
-l.237 \end{longtable}
-                     
-I can't figure out why you would want to use a tab mark
-here. If you just want an ampersand, the remedy is
-simple: Just type `I\&' now. But if some right brace
-up above has ended a previous alignment prematurely,
-you're probably due for more error messages, and you
-might try typing `S' now just to see what is salvageable.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:237: Misplaced \omit.
-\LT@entry ...->\ifhmode \@firstofone {&}\fi \omit 
-                                                  \ifnum #1=\c@LT@chunks \el...
-l.237 \end{longtable}
-                     
-I expect to see \omit only after tab marks or the \cr of
-an alignment. Proceed, and I'll ignore this case.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:237: Misplaced \cr.
-\LT@echunk ->\crcr \LT@save@row \cr 
-                                    \egroup \global \setbox \LT@gbox \lastbo...
-l.237 \end{longtable}
-                     
-I can't figure out why you would want to use a tab mark
-or \cr or \span just now. If something like a right brace
-up above has ended a previous alignment prematurely,
-you're probably due for more error messages, and you
-might try typing `S' now just to see what is salvageable.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:237: Extra }, or forgotten \endgroup.
-\LT@echunk ->\crcr \LT@save@row \cr \egroup 
-                                            \global \setbox \LT@gbox \lastbo...
-l.237 \end{longtable}
-                     
-I've deleted a group-closing symbol because it seems to be
-spurious, as in `$x}$'. But perhaps the } is legitimate and
-you forgot something else, as in `\hbox{$x}'. In such cases
-the way to recover is to insert both the forgotten and the
-deleted material, e.g., by typing `I$}'.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:237: Extra }, or forgotten \endgroup.
-\LT@echunk ...x \LT@gbox \lastbox \unskip \egroup 
-                                                  
-l.237 \end{longtable}
-                     
-I've deleted a group-closing symbol because it seems to be
-spurious, as in `$x}$'. But perhaps the } is legitimate and
-you forgot something else, as in `\hbox{$x}'. In such cases
-the way to recover is to insert both the forgotten and the
-deleted material, e.g., by typing `I$}'.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:237: Undefined control sequence.
-<argument> \@currentHref 
-                         
-l.237 \end{longtable}
-                     
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:237: LaTeX Error: \begin{singlespace} on input line 83 ended by \end{longtable}.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.237 \end{longtable}
-                     
-Your command was ignored.
-Type  I <command> <return>  to replace it with another command,
-or  <return>  to continue without it.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:243: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.243 ...cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|}
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:243: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.243 ...cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|}
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:243: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.243 ...cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|}
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:243: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.243 ...cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|}
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:243: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.243 ...cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|}
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:243: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.243 ...cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|}
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:243: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.243 ...cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|}
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:243: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.243 ...cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|}
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:243: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.243 ...cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|}
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:243: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.243 ...cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|}
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:243: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.243 ...cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|}
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:243: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.243 ...cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|}
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:243: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.243 ...cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|}
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:244: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.244     \hline
-                
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-
-Overfull \hbox (3.1546pt too wide) in paragraph at lines 249--249
-[]|[]| 
- []
-
-
-Overfull \hbox (3.1546pt too wide) in paragraph at lines 250--250
-[]|[]| 
- []
-
-
-Overfull \hbox (1.21063pt too wide) in paragraph at lines 251--251
-[]|[]| 
- []
-
-
-Overfull \hbox (1.21063pt too wide) in paragraph at lines 252--252
-[]|[]| 
- []
-
-
-Overfull \hbox (3.1546pt too wide) in paragraph at lines 253--253
-[]|[]| 
- []
-
-
-Overfull \hbox (1.21063pt too wide) in paragraph at lines 254--254
-[]|[]| 
- []
-
-
-Overfull \hbox (3.1546pt too wide) in paragraph at lines 255--255
-[]|[]| 
- []
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:255: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.255       \rot{\textbf{Diagnostics}} \\ \hline
-                                                
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 256--256
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 256--256
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 256--256
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 256--256
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 256--256
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 256--256
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 256--256
-[]|\T1/cmr/m/n/10 X| 
- []
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:256: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.256 ...& X & X & X & X & X & X & X & X \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 257--257
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 257--257
-[]|\T1/cmr/m/n/10 X| 
- []
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:257: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.257 ...& X &   &   &   & X &   &   & X \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 258--258
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 258--258
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 258--258
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 258--258
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 258--258
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 258--258
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 258--258
-[]|\T1/cmr/m/n/10 X| 
- []
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:258: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.258 ...& X & X & X & X & X & X & X & X \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 259--259
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 259--259
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 259--259
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 259--259
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 259--259
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 259--259
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 259--259
-[]|\T1/cmr/m/n/10 X| 
- []
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:259: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.259 ...& X & X & X & X & X & X & X & X \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 260--260
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 260--260
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 260--260
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 260--260
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 260--260
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 260--260
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 260--260
-[]|\T1/cmr/m/n/10 X| 
- []
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:260: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.260 ...&   & X & X & X & X & X & X & X \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 261--261
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 261--261
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 261--261
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 261--261
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 261--261
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 261--261
-[]|\T1/cmr/m/n/10 X| 
- []
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:261: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.261 ...X & X & X & X & X & X & X & X & \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 262--262
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 262--262
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 262--262
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 262--262
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 262--262
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 262--262
-[]|\T1/cmr/m/n/10 X| 
- []
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:262: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.262 ... & X & X & X & X & X & X & X &  \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 263--263
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 263--263
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 263--263
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 263--263
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 263--263
-[]|\T1/cmr/m/n/10 X| 
- []
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:263: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.263 ...&   & X & X & X & X & X &   &   \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 264--264
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 264--264
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 264--264
-[]|\T1/cmr/m/n/10 X| 
- []
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:264: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.264 ...  &   &   & X & X & X &   &   & \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 265--265
-[]|\T1/cmr/m/n/10 X| 
- []
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:265: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.265 ...  &   &   & X &   &   &   &   & \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 266--266
-[]|\T1/cmr/m/n/10 X| 
- []
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:266: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.266 ...  &   &   & X &   &   &   &   & \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 267--267
-[]|\T1/cmr/m/n/10 X| 
- []
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:267: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.267 ...  &   &   & X &   &   &   &   & \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 268--268
-[]|\T1/cmr/m/n/10 X| 
- []
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:268: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.268 ...&   &   &   &   &   &   & X &   \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 269--269
-[]|\T1/cmr/m/n/10 X| 
- []
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:269: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.269 ...&   &   &   &   &   &   & X &   \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 270--270
-[]|\T1/cmr/m/n/10 X| 
- []
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:270: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.270 ...&   &   &   &   &   &   & X &   \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 271--271
-[]|\T1/cmr/m/n/10 X| 
- []
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:271: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.271 ...&   &   &   &   &   &   & X &   \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 272--272
-[]|\T1/cmr/m/n/10 X| 
- []
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:272: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.272 ...&   &   &   &   &   &   & X &   \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 273--273
-[]|\T1/cmr/m/n/10 X| 
- []
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:273: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.273 ...&   &   &   &   &   &   & X &   \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 274--274
-[]|\T1/cmr/m/n/10 X| 
- []
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:274: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.274 ...&   &   &   &   &   &   & X &   \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 275--275
-[]|\T1/cmr/m/n/10 X| 
- []
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:275: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.275 ...&   &   &   &   &   &   &   & X \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-[4] [5] [6] [7]
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:430: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.430     \begin{tabular}{|l|l|l|}
-                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:430: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.430     \begin{tabular}{|l|l|l|}
-                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:430: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.430     \begin{tabular}{|l|l|l|}
-                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:430: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.430     \begin{tabular}{|l|l|l|}
-                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:431: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.431 		\hline
-              
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:434: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.434 		\textbf{Frama-C option(s)} \\ \hline
-                                            
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:435: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.435 ...					& ACSL LSP    & -lsp-debug	\\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:436: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.436 ...		& Kernel    & -cpp-extra-args \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:437: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.437 ...		& Kernel    & -cpp-extra-args \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:438: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.438 ...sourceFiles 					& Kernel    &  \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:439: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.439 ...ep 						& Kernel    & -machdep \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:440: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.440 ...move-unused-specified-functions \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:441: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.441 ...Kernel    & -aggressive-merging \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:442: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.442 ...nel    & -generated-spec-custom \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:443: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.443 ...s   & -metrics, -metrics-output \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:444: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.444 ...			& Callgraph & -cg, -cg-roots \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:445: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.445 ...			& Callgraph & -cg, -cg-roots \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:446: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.446 ...allgraph & -cg, -cg-no-services \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:447: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.447 ....rte 							& WP & -wp, -wp-rte \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:448: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.448 ...P & -wp, -wp-check-memory-model \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:449: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.449 ...e 					& WP & -wp, -wp-volatile \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:450: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.450 ...					& WP & -wp, -wp-no-pruning \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:451: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.451 ...er 						& WP & -wp, -wp-prover \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:452: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.452 ...t 						& WP & -wp, -wp-timeout \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:453: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.453 ...n 						& WP & -wp, -wp-session \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:454: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.454 ...cs.wp 					& ACSL LSP & -lsp-wp \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-[8] [9]
-
-LaTeX Warning: No positions in optional float specifier.
-               Default added (so using `tbp') on input line 504.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:508: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.508 	\begin{tabular}{|p{1in}|p{2in}|l|l|}
-                                           
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:508: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.508 	\begin{tabular}{|p{1in}|p{2in}|l|l|}
-                                           
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:508: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.508 	\begin{tabular}{|p{1in}|p{2in}|l|l|}
-                                           
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:508: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.508 	\begin{tabular}{|p{1in}|p{2in}|l|l|}
-                                           
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:508: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.508 	\begin{tabular}{|p{1in}|p{2in}|l|l|}
-                                           
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:509: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.509 	\hline
-             
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:510: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.510 ...orithm} & \textbf{Parsing mode} \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:511: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.511 ... Json & Tree traversal & Global \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:512: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.512 ... Json & Tree traversal & Global \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:513: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.513 ...      & Event listener & Local  \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-
-Underfull \hbox (badness 1275) in paragraph at lines 514--514
+[8 <./img/vscode_subprocess_seq_diag.png> <./img/declaration_result.png>]
+LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <10> not available
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 455.
+ [9 <./img/display_cil_result.png> <./img/callgraph_result.png> <./img/local_metrics_result.png> <./img/global_metrics_result.png> <./img/po_result.png>]
+<img/definition_result.png, id=334, 362.10281pt x 149.05687pt>
+File: img/definition_result.png Graphic file (type png)
+<use img/definition_result.png>
+Package pdftex.def Info: img/definition_result.png  used on input line 467.
+(pdftex.def)             Requested size: 253.47023pt x 104.3391pt.
+File: img/declaration_result.png Graphic file (type png)
+<use img/declaration_result.png>
+Package pdftex.def Info: img/declaration_result.png  used on input line 468.
+(pdftex.def)             Requested size: 275.07579pt x 125.94466pt.
+File: img/display_cil_result.png Graphic file (type png)
+<use img/display_cil_result.png>
+Package pdftex.def Info: img/display_cil_result.png  used on input line 469.
+(pdftex.def)             Requested size: 277.71063pt x 79.04475pt.
+File: img/callgraph_result.png Graphic file (type png)
+<use img/callgraph_result.png>
+Package pdftex.def Info: img/callgraph_result.png  used on input line 470.
+(pdftex.def)             Requested size: 281.39938pt x 116.45929pt.
+File: img/local_metrics_result.png Graphic file (type png)
+<use img/local_metrics_result.png>
+Package pdftex.def Info: img/local_metrics_result.png  used on input line 471.
+(pdftex.def)             Requested size: 279.81848pt x 84.84138pt.
+File: img/global_metrics_result.png Graphic file (type png)
+<use img/global_metrics_result.png>
+Package pdftex.def Info: img/global_metrics_result.png  used on input line 472.
+(pdftex.def)             Requested size: 278.2376pt x 86.94923pt.
+File: img/po_result.png Graphic file (type png)
+<use img/po_result.png>
+Package pdftex.def Info: img/po_result.png  used on input line 473.
+(pdftex.def)             Requested size: 277.18367pt x 231.33769pt.
+ [10 <./img/definition_result.png>] [11] [12]
+Underfull \hbox (badness 1275) in paragraph at lines 603--603
 []|\T1/cmr/m/n/10 Display CIL of
  []
 
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:514: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.514 ...      & Get            & Local  \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
+
+Underfull \hbox (badness 10000) in paragraph at lines 604--604
+[]|\T1/cmr/m/n/10 Show proof
+ []
 
 
-Underfull \hbox (badness 1122) in paragraph at lines 515--515
+Underfull \hbox (badness 10000) in paragraph at lines 604--604
+\T1/cmr/m/n/10 obli-ga-tions
+ []
+
+
+Underfull \hbox (badness 1122) in paragraph at lines 604--604
 []|\T1/cmr/m/n/10 WP, Prop-erty, Filepath, Json,
  []
 
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:515: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.515 ...        & Local                 \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
 
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:516: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.516 ...      & List traversal & Local  \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 517--517
+Underfull \hbox (badness 10000) in paragraph at lines 606--606
 []|\T1/cmr/m/n/10 Compute Call-
  []
 
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:517: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.517 ...      & Get            & Local  \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:518: Undefined control sequence.
-\hline ... \hrule \let \@width \@height {\CT@arc@ 
-                                                  \vline }\futurelet \reserv...
-l.518 ...      & Get            & Local  \\ \hline
-                                                  
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:522: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.522 \begin{longtable}{|p{2in}|p{3in}|l|l|}
-                                            
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:522: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.522 \begin{longtable}{|p{2in}|p{3in}|l|l|}
-                                            
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:522: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.522 \begin{longtable}{|p{2in}|p{3in}|l|l|}
-                                            
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:522: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.522 \begin{longtable}{|p{2in}|p{3in}|l|l|}
-                                            
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:522: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.522 \begin{longtable}{|p{2in}|p{3in}|l|l|}
-                                            
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:524: Undefined control sequence.
-\LT@@hline ...{\fi }\multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.524 	\multicolumn
-                   {1}{|l|}{\textbf{LSP features}} &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:524: Undefined control sequence.
-\LT@@hline ...T@sep \multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.524 	\multicolumn
-                   {1}{|l|}{\textbf{LSP features}} &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:524: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.524 	\multicolumn{1}{|l|}{\textbf{LSP features}}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:524: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.524 	\multicolumn{1}{|l|}{\textbf{LSP features}}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:525: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.525 	  \multicolumn{1}{l|}{\textbf{Use case(s)}}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:526: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.526 ...mn{1}{l|}{\textbf{Implementation status}}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:527: Undefined control sequence.
-<template> ...@setup \CT@row@color \CT@cell@color 
-                                                  \CT@do@color \endgroup \@t...
-l.527 	  \textbf{Supported by VS Code} \\ \hline
-                                                
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:528: Undefined control sequence.
-\LT@@hline ...{\fi }\multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.528 	\multicolumn
-                   {4}{|l|}{Language features} \\ \hline
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:528: Undefined control sequence.
-\LT@@hline ...T@sep \multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.528 	\multicolumn
-                   {4}{|l|}{Language features} \\ \hline
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:528: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.528 	\multicolumn{4}{|l|}{Language features}
-                                               \\ \hline
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:528: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.528 	\multicolumn{4}{|l|}{Language features}
-                                               \\ \hline
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:529: Undefined control sequence.
-\LT@@hline ...{\fi }\multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.529 	\multicolumn
-                   {1}{|l|}{Go to Declaration} &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:529: Undefined control sequence.
-\LT@@hline ...T@sep \multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.529 	\multicolumn
-                   {1}{|l|}{Go to Declaration} &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:529: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.529 	\multicolumn{1}{|l|}{Go to Declaration}
-                                               &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:529: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.529 	\multicolumn{1}{|l|}{Go to Declaration}
-                                               &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:530: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.530 ..., ACSL types, ACSL terms and predicates.}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:531: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.531 	  \multicolumn{1}{l|}{Implemented}
-                                          &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:532: Undefined control sequence.
-<template> ...@setup \CT@row@color \CT@cell@color 
-                                                  \CT@do@color \endgroup \@t...
-l.532 	  Yes \\ \hline
-                      
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:533: Undefined control sequence.
-\LT@@hline ...{\fi }\multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.533 	\multicolumn
-                   {1}{|l|}{Go to Definition} &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:533: Undefined control sequence.
-\LT@@hline ...T@sep \multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.533 	\multicolumn
-                   {1}{|l|}{Go to Definition} &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:533: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.533 	\multicolumn{1}{|l|}{Go to Definition}
-                                              &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:533: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.533 	\multicolumn{1}{|l|}{Go to Definition}
-                                              &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:534: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.534 ..., ACSL types, ACSL terms and predicates.}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:535: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.535 	  \multicolumn{1}{l|}{Implemented}
-                                          &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:536: Undefined control sequence.
-<template> ...@setup \CT@row@color \CT@cell@color 
-                                                  \CT@do@color \endgroup \@t...
-l.536 	  Yes \\ \hline
-                      
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:537: Undefined control sequence.
-\LT@@hline ...{\fi }\multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.537 	\multicolumn
-                   {1}{|l|}{Go to Type Definition} &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:537: Undefined control sequence.
-\LT@@hline ...T@sep \multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.537 	\multicolumn
-                   {1}{|l|}{Go to Type Definition} &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:537: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.537 	\multicolumn{1}{|l|}{Go to Type Definition}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:537: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.537 	\multicolumn{1}{|l|}{Go to Type Definition}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:538: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.538 ...Frama-C and user defined functions types}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:539: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.539 ...plemented (included in go to definition)}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:540: Undefined control sequence.
-<template> ...@setup \CT@row@color \CT@cell@color 
-                                                  \CT@do@color \endgroup \@t...
-l.540 	  Yes \\ \hline
-                      
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:541: Undefined control sequence.
-\LT@@hline ...{\fi }\multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.541 	\multicolumn
-                   {1}{|l|}{Go to Implementation} &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:541: Undefined control sequence.
-\LT@@hline ...T@sep \multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.541 	\multicolumn
-                   {1}{|l|}{Go to Implementation} &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:541: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.541 	\multicolumn{1}{|l|}{Go to Implementation}
-                                                  &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:541: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.541 	\multicolumn{1}{|l|}{Go to Implementation}
-                                                  &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:542: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.542 ..., ACSL types, ACSL terms and predicates.}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:543: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.543 	  \multicolumn{1}{l|}{}
-                               &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:544: Undefined control sequence.
-<template> ...@setup \CT@row@color \CT@cell@color 
-                                                  \CT@do@color \endgroup \@t...
-l.544 	  Yes \\ \hline
-                      
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:545: Undefined control sequence.
-\LT@@hline ...{\fi }\multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.545 	\multicolumn
-                   {1}{|l|}{Find References} &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:545: Undefined control sequence.
-\LT@@hline ...T@sep \multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.545 	\multicolumn
-                   {1}{|l|}{Find References} &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:545: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.545 	\multicolumn{1}{|l|}{Find References}
-                                             &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:545: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.545 	\multicolumn{1}{|l|}{Find References}
-                                             &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:546: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.546 ..., ACSL types, ACSL terms and predicates.}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:547: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.547 	  \multicolumn{1}{l|}{}
-                               &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:548: Undefined control sequence.
-<template> ...@setup \CT@row@color \CT@cell@color 
-                                                  \CT@do@color \endgroup \@t...
-l.548 	  Yes \\ \hline
-                      
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:549: Undefined control sequence.
-\LT@@hline ...{\fi }\multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.549 	\multicolumn
-                   {1}{|l|}{Prepare Call Hierarchy} &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:549: Undefined control sequence.
-\LT@@hline ...T@sep \multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.549 	\multicolumn
-                   {1}{|l|}{Prepare Call Hierarchy} &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:549: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.549 ...lticolumn{1}{|l|}{Prepare Call Hierarchy}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:549: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.549 ...lticolumn{1}{|l|}{Prepare Call Hierarchy}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:550: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.550 ...f C functions, ACSL terms and predicates}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:551: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.551 	  \multicolumn{1}{l|}{}
-                               &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:552: Undefined control sequence.
-<template> ...@setup \CT@row@color \CT@cell@color 
-                                                  \CT@do@color \endgroup \@t...
-l.552 	  Yes \\ \hline
-                      
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:553: Undefined control sequence.
-\LT@@hline ...{\fi }\multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.553 	\multicolumn
-                   {1}{|l|}{Call Hierarchy Incoming Calls} &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:553: Undefined control sequence.
-\LT@@hline ...T@sep \multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.553 	\multicolumn
-                   {1}{|l|}{Call Hierarchy Incoming Calls} &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:553: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.553 ...mn{1}{|l|}{Call Hierarchy Incoming Calls}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:553: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.553 ...mn{1}{|l|}{Call Hierarchy Incoming Calls}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:554: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.554 ...}{l|}{List incoming calls of C functions}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:555: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.555 	  \multicolumn{1}{l|}{}
-                               &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:556: Undefined control sequence.
-<template> ...@setup \CT@row@color \CT@cell@color 
-                                                  \CT@do@color \endgroup \@t...
-l.556 	  Yes \\ \hline
-                      
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:557: Undefined control sequence.
-\LT@@hline ...{\fi }\multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.557 	\multicolumn
-                   {1}{|l|}{Call Hierarchy Outgoing Calls} &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:557: Undefined control sequence.
-\LT@@hline ...T@sep \multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.557 	\multicolumn
-                   {1}{|l|}{Call Hierarchy Outgoing Calls} &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:557: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.557 ...mn{1}{|l|}{Call Hierarchy Outgoing Calls}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:557: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.557 ...mn{1}{|l|}{Call Hierarchy Outgoing Calls}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:558: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.558 ...}{l|}{List outgoing calls of C functions}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:559: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.559 	  \multicolumn{1}{l|}{}
-                               &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:560: Undefined control sequence.
-<template> ...@setup \CT@row@color \CT@cell@color 
-                                                  \CT@do@color \endgroup \@t...
-l.560 	  Yes \\ \hline
-                      
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:561: Undefined control sequence.
-\LT@@hline ...{\fi }\multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.561 	\multicolumn
-                   {1}{|l|}{Prepare Type Hierarchy} &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:561: Undefined control sequence.
-\LT@@hline ...T@sep \multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.561 	\multicolumn
-                   {1}{|l|}{Prepare Type Hierarchy} &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:561: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.561 ...lticolumn{1}{|l|}{Prepare Type Hierarchy}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:561: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.561 ...lticolumn{1}{|l|}{Prepare Type Hierarchy}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:562: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.562 ...1}{l|}{Prepare type hierarchy of C types}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:563: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.563 	  \multicolumn{1}{l|}{}
-                               &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:564: Undefined control sequence.
-<template> ...@setup \CT@row@color \CT@cell@color 
-                                                  \CT@do@color \endgroup \@t...
-l.564 	  Yes \\ \hline
-                      
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:565: Undefined control sequence.
-\LT@@hline ...{\fi }\multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.565 	\multicolumn
-                   {1}{|l|}{Type Hierarchy Super Types} &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:565: Undefined control sequence.
-\LT@@hline ...T@sep \multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.565 	\multicolumn
-                   {1}{|l|}{Type Hierarchy Super Types} &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:565: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.565 ...olumn{1}{|l|}{Type Hierarchy Super Types}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:565: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.565 ...olumn{1}{|l|}{Type Hierarchy Super Types}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:566: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.566 ...olumn{1}{l|}{List super types of C types}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:567: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.567 	  \multicolumn{1}{l|}{}
-                               &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:568: Undefined control sequence.
-<template> ...@setup \CT@row@color \CT@cell@color 
-                                                  \CT@do@color \endgroup \@t...
-l.568 	  Yes \\ \hline
-                      
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:569: Undefined control sequence.
-\LT@@hline ...{\fi }\multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.569 	\multicolumn
-                   {1}{|l|}{Type Hierarchy Sub Types} &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:569: Undefined control sequence.
-\LT@@hline ...T@sep \multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.569 	\multicolumn
-                   {1}{|l|}{Type Hierarchy Sub Types} &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:569: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.569 ...icolumn{1}{|l|}{Type Hierarchy Sub Types}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:569: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.569 ...icolumn{1}{|l|}{Type Hierarchy Sub Types}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:570: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.570 ...icolumn{1}{l|}{List sub types of C types}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:571: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.571 	  \multicolumn{1}{l|}{}
-                               &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:572: Undefined control sequence.
-<template> ...@setup \CT@row@color \CT@cell@color 
-                                                  \CT@do@color \endgroup \@t...
-l.572 	  Yes \\ \hline
-                      
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:573: Undefined control sequence.
-\LT@@hline ...{\fi }\multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.573 	\multicolumn
-                   {1}{|l|}{Document Highlight} &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:573: Undefined control sequence.
-\LT@@hline ...T@sep \multispan \LT@cols {\CT@arc@ 
-                                                  \leaders \hrule \@height \...
-l.573 	\multicolumn
-                   {1}{|l|}{Document Highlight} &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:573: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.573 	\multicolumn{1}{|l|}{Document Highlight}
-                                                &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:573: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.573 	\multicolumn{1}{|l|}{Document Highlight}
-                                                &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:574: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.574 ...s, ACSL types, ACSL terms and predicates}
-                                                   &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:575: Undefined control sequence.
-<argument> {\CT@arc@ 
-                     \vline }
-l.575 	  \multicolumn{1}{l|}{}
-                               &
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:576: Undefined control sequence.
-<template> ...@setup \CT@row@color \CT@cell@color 
-                                                  \CT@do@color \endgroup \@t...
-l.576 	  Yes \\ \hline
-                      
-(That makes 100 errors; please try again.) 
+
+Underfull \hbox (badness 1939) in paragraph at lines 812--812
+[]|\T1/cmr/m/n/10 Get workspace ed-its which will be ap-plied to
+ []
+
+
+Overfull \hbox (275.84619pt too wide) in alignment at lines 611--878
+ [] [] [] [] 
+ []
+
+[13] [14] [15]
+Underfull \hbox (badness 2961) in paragraph at lines 901--901
+[]|\T1/cmr/m/n/10 Show def-i-ni-tion of C li-brary,
+ []
+
+
+Underfull \hbox (badness 2359) in paragraph at lines 904--904
+[]|\T1/cmr/m/n/10 Show ref-er-ences of C li-brary,
+ []
+
+
+Underfull \hbox (badness 6236) in paragraph at lines 907--907
+\T1/cmr/m/n/10 macros, types, ACSL types,
+ []
+
+
+Underfull \hbox (badness 7740) in paragraph at lines 909--909
+[]|\T1/cmr/m/n/10 Show all Sym-bol Def-i-ni-tions
+ []
+
+
+Underfull \hbox (badness 3449) in paragraph at lines 913--913
+\T1/cmr/m/n/10 source code within the open
+ []
+
+
+Underfull \hbox (badness 1502) in paragraph at lines 915--915
+[]|\T1/cmr/m/n/10 Possible Ac-tions on Er-rors or
+ []
+
+
+Underfull \hbox (badness 1264) in paragraph at lines 916--916
+\T1/cmr/m/n/10 ACSL code, un-closed brack-ets
+ []
+
+
+Underfull \hbox (badness 5331) in paragraph at lines 918--918
+[]|\T1/cmr/m/n/10 CodeLens - Show Ac-tion-able
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 918--918
+\T1/cmr/m/n/10 Con-text In-for-ma-tion Within
+ []
+
+
+Underfull \hbox (badness 1226) in paragraph at lines 930--930
+[]|\T1/cmr/m/n/10 Incrementally For-mat Code as
+ []
+
+
+Underfull \hbox (badness 1509) in paragraph at lines 931--931
+[]|\T1/cmr/m/n/10 Same as above but code for-
+ []
+
+
+Underfull \hbox (badness 3635) in paragraph at lines 934--934
+[]|\T1/cmr/m/n/10 Rename all oc-cur-rences of a
+ []
+
+
+Underfull \hbox (badness 1577) in paragraph at lines 934--934
+\T1/cmr/m/n/10 sym-bol, it should dif-fer-en-ti-ate
+ []
+
+
+Underfull \hbox (badness 4479) in paragraph at lines 934--934
+\T1/cmr/m/n/10 be-tween func-tions, pred-i-cates,
+ []
+
+[16] 
+AED: lastpage setting LastPage
+[17] (./final_report_Djamila_Mohamed.aux)
+Package rerunfilecheck Info: File `final_report_Djamila_Mohamed.out' has not changed.
+(rerunfilecheck)             Checksum: A5E16B823241C726D4826082D3B8D501;6903.
+Package logreq Info: Writing requests to 'final_report_Djamila_Mohamed.run.xml'.
+\openout1 = `final_report_Djamila_Mohamed.run.xml'.
+
+ ) 
 Here is how much of TeX's memory you used:
- 34536 strings out of 478287
- 652698 string characters out of 5849289
- 1393361 words of memory out of 5000000
- 52145 multiletter control sequences out of 15000+600000
- 484403 words of font info for 66 fonts, out of 8000000 for 9000
+ 34664 strings out of 478287
+ 655709 string characters out of 5849289
+ 1442290 words of memory out of 5000000
+ 52227 multiletter control sequences out of 15000+600000
+ 484381 words of font info for 66 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 99i,13n,94p,814b,850s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 99i,13n,94p,843b,1933s stack positions out of 5000i,500n,10000p,200000b,80000s
+{/usr/share/texmf/fonts/enc/dvips/cm-super/cm-super-t1.enc}</usr/share/texmf/fonts/type1/public/cm-super/sfbx1000.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfbx1200.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfbx1440.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfbx1728.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm0600.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm0700.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm0800.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm1000.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm1200.pfb></usr/share/texmf/fonts/type1/public/cm-super/sftt1000.pfb>
+Output written on final_report_Djamila_Mohamed.pdf (19 pages, 573910 bytes).
+PDF statistics:
+ 439 PDF objects out of 1000 (max. 8388607)
+ 369 compressed objects within 4 object streams
+ 81 named destinations out of 1000 (max. 500000)
+ 430 words of extra memory for PDF output out of 10000 (max. 10000000)
 
-/home/user/git/L1/T0304764/acsl_lsp/doc/final_report/final_report_Djamila_Mohamed.tex:576:  ==> Fatal error occurred, no output PDF file produced!
