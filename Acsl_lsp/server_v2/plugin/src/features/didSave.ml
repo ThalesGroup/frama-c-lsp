@@ -16,14 +16,14 @@ let wp_actions filename () =
     (
       let obj = (Wp.Generator.create ()) in 
       Wp.Register.do_wp_proofs (obj#compute_main ());
-      Settings.Self.debug ~level:0 "Filename : %s\n%!" filename; 
+      Settings.Self.debug ~level:4 "Filename : %s\n%!" filename; 
       Property_status.iter(fun prop ->
       let _property_line = (Stdlib.fst (Property.location prop)).Filepath.pos_lnum in 
-      (* Settings.Self.debug ~level:0 "Property location : %s\n%!" (Pretty_utils.to_string Printer.pp_location (Property.location prop));  *)
+      (* Settings.Self.debug ~level:4 "Property location : %s\n%!" (Pretty_utils.to_string Printer.pp_location (Property.location prop));  *)
       if (filename = (Filepath.Normalized.to_pretty_string (Stdlib.fst (Property.location prop)).Filepath.pos_path)) then
       (  ignore(Wp.VC.generate_ip prop);
-        (* Settings.Self.debug ~level:0 "Property location : %s\n%!" (Pretty_utils.to_string Printer.pp_location (Property.location prop));  *)
-        Settings.Self.debug ~level:0 "\tNumber of POs : %d\n%!" (List.length (Wp.VC.proof prop));)
+        (* Settings.Self.debug ~level:4 "Property location : %s\n%!" (Pretty_utils.to_string Printer.pp_location (Property.location prop));  *)
+        Settings.Self.debug ~level:4 "\tNumber of POs : %d\n%!" (List.length (Wp.VC.proof prop));)
     );
     )
 
@@ -52,7 +52,7 @@ let handle (req : Types.NotificationMessage.t) params : Json.json =
   let rq_params = 
     match req.params with 
     | Some p -> Types.DidSaveTextDocumentParams.t_of_json p
-    | None -> Settings.Self.debug ~level:1 "No didSave params \n%!"; assert false
+    | None -> Settings.Self.debug ~level:3 "No didSave params \n%!"; assert false
   in
   filename := 
     (try 
@@ -64,27 +64,27 @@ let handle (req : Types.NotificationMessage.t) params : Json.json =
       ) 
     with 
     | Invalid_argument msg -> 
-      Settings.Self.debug ~level:0 "didSave: %s\n%!" msg; ""
+      Settings.Self.debug ~level:4 "didSave: %s\n%!" msg; ""
     );
   PublishDiagnostics.publish_to := !filename; 
   let filepath = Filepath.Normalized.of_string !filename in
   let _file = File.from_filename (filepath) in 
 
-  Settings.Self.debug ~level:0 "Projects :\n%!";
+  Settings.Self.debug ~level:4 "Projects :\n%!";
   Project.iter_on_projects (fun x ->
-    Settings.Self.debug ~level:0 "\t- %s\n%!" (Project.get_name x);
+    Settings.Self.debug ~level:4 "\t- %s\n%!" (Project.get_name x);
   );
-  Settings.Self.debug ~level:0 "Filename : %s\n%!" (!filename);
+  Settings.Self.debug ~level:4 "Filename : %s\n%!" (!filename);
 
   (* Project.clear (); *)
   (* let selection = State_selection.only_dependencies Ast.self in
   Project.clear ~selection (); *)
 
-  Settings.Self.debug ~level:0 "Current proj : %s\n%!" (Project.get_name (Project.current ()));
+  Settings.Self.debug ~level:4 "Current proj : %s\n%!" (Project.get_name (Project.current ()));
   (* ProjectConfig.set_framac_options (); *)
   ProjectConfig.set_framac_options params;
-  Settings.Self.debug ~level:0 "Cpp extra args : %s\n%!" (Kernel.CppExtraArgs.As_string.get ());
-  Settings.Self.debug ~level:0 "Processed file name : %s\n%!" (File.get_name _file);
+  Settings.Self.debug ~level:4 "Cpp extra args : %s\n%!" (Kernel.CppExtraArgs.As_string.get ());
+  Settings.Self.debug ~level:4 "Processed file name : %s\n%!" (File.get_name _file);
 
   cpt := !cpt + 1;
 
@@ -100,7 +100,7 @@ let handle (req : Types.NotificationMessage.t) params : Json.json =
       (PublishDiagnostics.clear_diagnostics !PublishDiagnostics.publish_to)
   with
   | exn ->
-    Settings.Self.debug ~level:0 "DidSave error :  %s, Backtrace : %s\n%!" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
+    Settings.Self.debug ~level:4 "DidSave error :  %s, Backtrace : %s\n%!" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
     if (List.length !PublishDiagnostics.diag_list > 0) then 
       (PublishDiagnostics.publishDiagnostics_request !PublishDiagnostics.diag_list !PublishDiagnostics.publish_to)
     else 

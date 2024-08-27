@@ -27,7 +27,7 @@ let glob_visitor loca symbol = object
           loca := Some loc;
         Cil.DoChildren
       | GVar (vi, _, loc) -> 
-          (* Settings.Self.debug ~level:1 "var : %s, symbol : %s \n%!" vi.vname symbol; *)
+          (* Settings.Self.debug ~level:3 "var : %s, symbol : %s \n%!" vi.vname symbol; *)
           if (String.equal symbol vi.vname) then
           begin
             loca := Some loc;
@@ -38,7 +38,7 @@ let glob_visitor loca symbol = object
       | GFun (fd,loc) -> 
         if (String.equal symbol fd.svar.vname;) then
           begin
-            (* Settings.Self.debug ~level:1 "fun : %s\n%!" fd.svar.vname; *)
+            (* Settings.Self.debug ~level:3 "fun : %s\n%!" fd.svar.vname; *)
             loca := Some loc;
           end;
         Cil.DoChildren
@@ -53,33 +53,33 @@ let glob_visitor loca symbol = object
         | Dinvariant (li, loc) -> 
           if (String.equal symbol li.l_var_info.lv_name) then
             begin
-              (* Settings.Self.debug ~level:1 "invariant : %s\n%!" li.l_var_info.lv_name; *)
+              (* Settings.Self.debug ~level:3 "invariant : %s\n%!" li.l_var_info.lv_name; *)
               loca := Some loc;
             end;
           Cil.DoChildren;
         | Dtype (lti, loc) -> 
           if (String.equal symbol lti.lt_name) then
             begin
-              (* Settings.Self.debug ~level:1 "logic type : %s\n%!" lti.lt_name; *)
+              (* Settings.Self.debug ~level:3 "logic type : %s\n%!" lti.lt_name; *)
               loca := Some loc;
             end;
           Cil.DoChildren
         | Dtype_annot (li, loc) -> 
           if (String.equal symbol li.l_var_info.lv_name) then
             begin
-              (* Settings.Self.debug ~level:1 "type annot : %s\n%!" li.l_var_info.lv_name; *)
+              (* Settings.Self.debug ~level:3 "type annot : %s\n%!" li.l_var_info.lv_name; *)
               loca := Some loc;
             end;
           Cil.DoChildren
         | Dfun_or_pred (li,loc) ->
           if (String.equal symbol li.l_var_info.lv_name) then
             begin
-              (* Settings.Self.debug ~level:1 "fun or pred : %s\n%!" li.l_var_info.lv_name; *)
+              (* Settings.Self.debug ~level:3 "fun or pred : %s\n%!" li.l_var_info.lv_name; *)
               loca := Some loc;
             end;
           Cil.DoChildren
         | Dlemma (str,_,_,_,_,loc) ->
-          (* Settings.Self.debug ~level:1 "lemma : %s\n%!" str; *)
+          (* Settings.Self.debug ~level:3 "lemma : %s\n%!" str; *)
           if (String.equal symbol str) then
             begin
               loca := Some loc;
@@ -125,7 +125,7 @@ let retrieve_location (pos : Filepath.position) =
 let find_def (req : Types.RequestMessage.t) : Json.json =
     let params = match req.params with 
       | Some p -> Types.DefinitionParams.t_of_json p
-      | None -> Settings.Self.debug ~level:1 "No definition params \n%!"; assert false
+      | None -> Settings.Self.debug ~level:3 "No definition params \n%!"; assert false
     in
     let uri = params.textDocument.uri in 
     let file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in

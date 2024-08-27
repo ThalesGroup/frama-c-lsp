@@ -8,7 +8,7 @@ let warn_categories =
 let is_a_warn_category cat : bool = 
   let res = ref false in 
   List.iter (fun x ->
-    (* Settings.Self.debug ~level:0 "%s and %s\n%!" cat x; *)
+    (* Settings.Self.debug ~level:4 "%s and %s\n%!" cat x; *)
     res := !res || (String.equal cat x)
   ) warn_categories;
   !res
@@ -70,7 +70,7 @@ let diagnostics_handler filename (event : Log.event) =
       || Utils.contains msg ~suffix:"There were parsing errors in"
     ) then 
       begin
-        Settings.Self.debug ~level:0 "Kind : Syntax error \n%!";
+        Settings.Self.debug ~level:4 "Kind : Syntax error \n%!";
         diag_list := (diagnostic 
           (loc)
           Types.DiagnosticSeverity.Error 
@@ -79,41 +79,41 @@ let diagnostics_handler filename (event : Log.event) =
     else
     match event.evt_kind with 
     | Log.Error ->  
-      Settings.Self.debug ~level:0 "Kind : Error \n%!";
+      Settings.Self.debug ~level:4 "Kind : Error \n%!";
       diag_list :=  (diagnostic 
           (loc)
           Types.DiagnosticSeverity.Error 
           msg)::!diag_list
     | Log.Failure ->
-      Settings.Self.debug ~level:0 "Kind : Failure \n%!";
+      Settings.Self.debug ~level:4 "Kind : Failure \n%!";
         diag_list :=  (diagnostic 
           (loc)
           Types.DiagnosticSeverity.Error 
           msg)::!diag_list
     | Log.Warning -> 
-      Settings.Self.debug ~level:0 "Kind : Warning \n%!";
+      Settings.Self.debug ~level:4 "Kind : Warning \n%!";
       diag_list :=  (diagnostic 
           (loc)
           Types.DiagnosticSeverity.Warning 
           msg)::!diag_list
     | Log.Result -> 
-      Settings.Self.debug ~level:0 "Kind : Result \n%!";
+      Settings.Self.debug ~level:4 "Kind : Result \n%!";
       diag_list :=  (diagnostic 
           (loc)
           Types.DiagnosticSeverity.Information 
           msg)::!diag_list
     | Log.Debug -> 
-      Settings.Self.debug ~level:0 "Kind : Debug \n%!";
+      Settings.Self.debug ~level:4 "Kind : Debug \n%!";
       diag_list := ( (diagnostic 
           (loc)
           Types.DiagnosticSeverity.Information 
           msg))::!diag_list
     | Log.Feedback ->
-      Settings.Self.debug ~level:0 "Kind : Feedback \n%!"
+      Settings.Self.debug ~level:4 "Kind : Feedback \n%!"
 
 
 let error_event_handler (evt : Log.event) : unit = 
   diagnostics_handler !publish_to evt;
-  Settings.Self.debug ~level:0 "diagnostics size : %d\n%!" (List.length (!diag_list))
+  Settings.Self.debug ~level:4 "diagnostics size : %d\n%!" (List.length (!diag_list))
 
 let () = Log.add_listener ~kind:[Log.Feedback; Log.Warning; Log.Error; Log.Failure] (error_event_handler)

@@ -3,7 +3,7 @@ let () = Printf.printf "global_params length : %d\n%!" (List.length (Frama_c_ker
 
 let request_configurations : Frama_c_kernel.Json.json = 
   
-  Acsl_lsp.Settings.Self.debug ~level:1 "Asking for configurations\n%!";
+  Acsl_lsp.Settings.Self.debug ~level:3 "Asking for configurations\n%!";
   Acsl_lsp.Types.RequestMessage.json_of_t 
   (Acsl_lsp.Types.RequestMessage.create 
     ~jsonrpc:"2.0" 
@@ -53,5 +53,5 @@ let save_configs (result:  Frama_c_kernel.Json.json) =
       global_params := result;
       Printf.printf "save_configs : global_params length : %d\n%!" (List.length (Frama_c_kernel.Json.list !global_params))
   | _ -> 
-    Acsl_lsp.Settings.Self.debug ~level:1 "Requested unknown configuration(s), error : \n\t%s\n%!" (Printexc.get_backtrace ())
+    Acsl_lsp.Settings.Self.debug ~level:3 "Requested unknown configuration(s), error : \n\t%s\n%!" (Printexc.get_backtrace ())
 

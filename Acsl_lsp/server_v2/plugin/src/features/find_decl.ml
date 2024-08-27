@@ -76,7 +76,7 @@ let retrieve_location (pos : Filepath.position) =
 let find_decl (req : Types.RequestMessage.t) : Json.json = 
   let params = match req.params with 
     | Some p -> Types.DeclarationParams.t_of_json p
-    | None -> Settings.Self.debug ~level:1 "No declaration params \n%!"; assert false
+    | None -> Settings.Self.debug ~level:3 "No declaration params \n%!"; assert false
   in
     let uri = params.textDocument.uri in 
     let file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in

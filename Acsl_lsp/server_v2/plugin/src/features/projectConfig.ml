@@ -162,7 +162,7 @@ let set_cg () =
 let set_cgRoots () = ()
   (* let fxs = Globals.FileIndex.get_functions (Filepath.Normalized.of_string "/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server/test_files/test1.c") in
   List.iter (fun x ->
-    Settings.Self.debug ~level:0 "Kernel function : %s\n%!" (Pretty_utils.to_string (Cil_types_debug.pp_kernel_function) x);
+    Settings.Self.debug ~level:4 "Kernel function : %s\n%!" (Pretty_utils.to_string (Cil_types_debug.pp_kernel_function) x);
   ) fxs *)
   (* let kf_list = List.map (fun x ->
     try
@@ -259,7 +259,7 @@ let save_configs (params: Json.json) =
       ) json_cgRoots;
   
   | _ -> 
-    Settings.Self.debug ~level:1 "Requested unknown configuration(s), error : \n\t%s\n%!" (Printexc.get_backtrace ())
+    Settings.Self.debug ~level:3 "Requested unknown configuration(s), error : \n\t%s\n%!" (Printexc.get_backtrace ())
 
 let set_framac_options params : unit = 
   save_configs params;
@@ -271,7 +271,7 @@ let set_framac_options params : unit =
   Filepath.reset_symbolic_dirs (); *)
   Kernel.Unicode.set(false);
 
-  (* Settings.Self.debug ~level:0 "frama c share : %s\n%!" (Filepath.basename (Kernel.Share.get ())); *)
+  (* Settings.Self.debug ~level:4 "frama c share : %s\n%!" (Filepath.basename (Kernel.Share.get ())); *)
 
   (* Kernel.Debug.set (0); *)
   (* note : user defined settings *)
@@ -300,21 +300,21 @@ let set_framac_options params : unit =
   Wp.Wp_parameters.WP.set (get_wp ()); (* note : the following wp options are set only if -wp is enabled *)
   if (Wp.Wp_parameters.WP.get ()) then
     begin
-      (* Settings.Self.debug ~level:0 "QED : %s\n%!" (Pretty_utils.to_string Wp.VCS.pp_prover Wp.VCS.Qed);
-      Settings.Self.debug ~level:0 "TACTICAL : %s\n%!" (Pretty_utils.to_string Wp.VCS.pp_prover Wp.VCS.Tactical);
+      (* Settings.Self.debug ~level:4 "QED : %s\n%!" (Pretty_utils.to_string Wp.VCS.pp_prover Wp.VCS.Qed);
+      Settings.Self.debug ~level:4 "TACTICAL : %s\n%!" (Pretty_utils.to_string Wp.VCS.pp_prover Wp.VCS.Tactical);
       List.iter (fun x ->
-        Settings.Self.debug ~level:0 "WHY 3 : %s\n%!" (Pretty_utils.to_string Wp.VCS.pp_prover (Wp.VCS.Why3 x))
+        Settings.Self.debug ~level:4 "WHY 3 : %s\n%!" (Pretty_utils.to_string Wp.VCS.pp_prover (Wp.VCS.Why3 x))
       ) (Wp.Why3Provers.provers ()); *)
 
       Wp.Wp_parameters.Prune.set (get_wpPruning ());
 
       (* Wp.Wpo.iter_on_goals (fun x ->
-        Settings.Self.debug ~level:0 "Qed result : %s\n%!" (Pretty_utils.to_string Wp.VCS.pp_result (Wp.Wpo.get_result x Wp.VCS.Tactical))
+        Settings.Self.debug ~level:4 "Qed result : %s\n%!" (Pretty_utils.to_string Wp.VCS.pp_result (Wp.Wpo.get_result x Wp.VCS.Tactical))
       ); *)
 
     end;
 
-    Settings.Self.debug ~level:0 "Cpp extra args Configuration\n%!";
+    Settings.Self.debug ~level:4 "Cpp extra args Configuration\n%!";
     List.iter (fun x ->
-      Settings.Self.debug ~level:0 "\t %s\n%!" (x);
+      Settings.Self.debug ~level:4 "\t %s\n%!" (x);
     ) (get_includePaths ());

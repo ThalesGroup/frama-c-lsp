@@ -35,9 +35,9 @@ let handle_data sock =
 
   
 let connect () =
-  Acsl_lsp.Settings.Self.debug ~level:1 "Connecting on port %d\n%!" server_port;
+  Acsl_lsp.Settings.Self.debug ~level:3 "Connecting on port %d\n%!" server_port;
   let (ic, oc) = Unix.open_connection (Unix.ADDR_INET (addr, server_port)) in 
-  Acsl_lsp.Settings.Self.debug ~level:1 "Connected on port %d\n%!" server_port;
+  Acsl_lsp.Settings.Self.debug ~level:3 "Connected on port %d\n%!" server_port;
 
   let client_sock = Unix.descr_of_in_channel ic in
 

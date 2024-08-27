@@ -17,14 +17,14 @@ let wp_actions filename () =
     (
       let obj = (Wp.Generator.create ()) in 
       Wp.Register.do_wp_proofs (obj#compute_main ());
-      Settings.Self.debug ~level:0 "Filename : %s\n%!" filename; 
+      Settings.Self.debug ~level:4 "Filename : %s\n%!" filename; 
       Property_status.iter(fun prop ->
       let _property_line = (Stdlib.fst (Property.location prop)).Filepath.pos_lnum in 
-      (* Settings.Self.debug ~level:0 "Property location : %s\n%!" (Pretty_utils.to_string Printer.pp_location (Property.location prop));  *)
+      (* Settings.Self.debug ~level:4 "Property location : %s\n%!" (Pretty_utils.to_string Printer.pp_location (Property.location prop));  *)
       if (filename = (Filepath.Normalized.to_pretty_string (Stdlib.fst (Property.location prop)).Filepath.pos_path)) then
       (  ignore(Wp.VC.generate_ip prop);
-        (* Settings.Self.debug ~level:0 "Property location : %s\n%!" (Pretty_utils.to_string Printer.pp_location (Property.location prop));  *)
-        Settings.Self.debug ~level:0 "\tNumber of POs : %d\n%!" (List.length (Wp.VC.proof prop));)
+        (* Settings.Self.debug ~level:4 "Property location : %s\n%!" (Pretty_utils.to_string Printer.pp_location (Property.location prop));  *)
+        Settings.Self.debug ~level:4 "\tNumber of POs : %d\n%!" (List.length (Wp.VC.proof prop));)
     );
     )
 
@@ -39,7 +39,7 @@ let handle (req : Types.NotificationMessage.t) sock : unit =
   let params = 
     match req.params with 
     | Some p -> Types.DidOpenTextDocumentParams.t_of_json p
-    | None -> Settings.Self.debug ~level:1 "No DidOpen params \n%!"; assert false
+    | None -> Settings.Self.debug ~level:3 "No DidOpen params \n%!"; assert false
   in
   filename := 
     (try 
@@ -51,28 +51,28 @@ let handle (req : Types.NotificationMessage.t) sock : unit =
       ) 
     with 
     | Invalid_argument msg -> 
-      Settings.Self.debug ~level:1 "didOpen: %s\n%!" msg; ""
+      Settings.Self.debug ~level:3 "didOpen: %s\n%!" msg; ""
       );
   PublishDiagnostics.publish_to := !filename; 
   let filepath = Filepath.Normalized.of_string !filename in
   let _file = File.from_filename (filepath) in 
 
-  Settings.Self.debug ~level:0 "Projects :\n%!";
+  Settings.Self.debug ~level:4 "Projects :\n%!";
   Project.iter_on_projects (fun x ->
-    Settings.Self.debug ~level:0 "\t- %s\n%!" (Project.get_name x);
+    Settings.Self.debug ~level:4 "\t- %s\n%!" (Project.get_name x);
   );
   
   Project.clear ();
   (* let selection = State_selection.only_dependencies Ast.self in
   Project.clear ~selection (); *)
 
-  Settings.Self.debug ~level:0 "Current proj : %s\n%!" (Project.get_name (Project.current ()));
+  Settings.Self.debug ~level:4 "Current proj : %s\n%!" (Project.get_name (Project.current ()));
   Configuration.set_framac_options ();
-  Settings.Self.debug ~level:0 "Cpp extra args\n%!";
+  Settings.Self.debug ~level:4 "Cpp extra args\n%!";
   List.iter (fun x ->
-    Settings.Self.debug ~level:0 "\t %s\n%!" (x);
+    Settings.Self.debug ~level:4 "\t %s\n%!" (x);
   ) (Kernel.CppExtraArgs.get ());
-  Settings.Self.debug ~level:0 "Processed file name : %s\n%!" (File.get_name _file);
+  Settings.Self.debug ~level:4 "Processed file name : %s\n%!" (File.get_name _file);
 
   cpt := !cpt + 1;
 
@@ -95,7 +95,7 @@ let handle (req : Types.NotificationMessage.t) sock : unit =
       Project.remove ()
     with Project.Cannot_remove _ -> 
       Project.clear();
-    Settings.Self.debug ~level:0 "DidOpen error :  %s, Backtrace : %s\n%!" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
+    Settings.Self.debug ~level:4 "DidOpen error :  %s, Backtrace : %s\n%!" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
 );
 
    *)
