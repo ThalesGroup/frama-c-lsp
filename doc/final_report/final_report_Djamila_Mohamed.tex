@@ -98,7 +98,7 @@
             \includegraphics[scale=0.60]{img/Thales-logo-1.png}\\
             
 		\HRule{2pt} \\
-		\LARGE \textbf{Implementation of the language server protocol and a Visual Studio Code extension for C/ACSL programming language features.} %para que quede encerrado en las lineas
+		\LARGE \textbf{Implementation of the Language Server Protocol for C/ACSL with Frama-C} %para que quede encerrado en las lineas
 		\HRule{2pt} \\ [0.5cm]
 		\normalsize \today}
 		
@@ -122,11 +122,7 @@
 \newpage
 % Add your own abstract here
 
-
-
 \pagenumbering{arabic}
-% Uncomment the next line if you want keywords/index terms after the abstract. 
-%\textit{\textbf{Keywords}: lorem, ipsum, dolor}
 \section{Introduction}
 \subsection{Thales DIS}
 Thales Digital Identity and Security is the global business unit of Thales which operates in the field of secure software, providing biometric and encryption solutions. Within DIS is the Identity and Biometric Solutions business line which is in charge of digital identity (e.g.:\ cards and passports). 
@@ -138,13 +134,36 @@ The IBS BL is divided in three subunits: ID Documents Solutions (IDDS), Digital 
 \subsubsection{Frama-C}
 In IDDS, developers use program analyzers such as Frama-C\footnote{https://frama-c.com/html/overview.html}, a C source file analyzer developed by CEA and Inria\footnote{two prominent research institutions with overlapping goals in scientific advancement and technology innovation}. 
 
-Frama-C is a sophisticated toolkit for analyzing source code written in C. It combines various static and dynamic analysis methods into a single system, allowing different tools included in the suite to build on each other's results for enhanced accuracy.
+Frama-C is a toolkit for analyzing source code written in C. It combines various static and dynamic analysis methods into a single system, allowing different tools included in the suite to build on each other's results for enhanced accuracy.
 
 A key feature of Frama-C is its support for the ANSI/ISO C Specification Language (ACSL), a formal language designed for specifying the behavior of C programs. ACSL facilitates the precise expression of functional properties through function contracts. It enables both human-readable and machine-processable specifications, ensuring a detailed understanding of function behavior.
 
 Frama-C's static analysis is oriented towards ensuring code correctness. Frama-C guarantees the identification of all possible runtime errors and validates adherence to specified functional requirements.
 
 The collaborative framework of Frama-C enhances its analytical power, integrating various tools and allowing them to contribute to a comprehensive examination of code. Its modular and extensible design supports a wide range of analysis techniques, making it a good choice for ensuring code reliability and compliance to detailed functional specifications.
+
+To write specifications, developers use predicates and logic functions to construct function contracts. Figure~\ref{fig:acsl-example} describes a C function called set\_to\_0 that sets all elements of an array to 0.
+
+Precondition (requires): The array a must be valid allocated pointer and have n elements.
+
+Postcondition (ensures): After the function executes, all elements in the array a from index 0 to n-1 will be 0.
+
+Loop Invariant 1:
+\texttt{0 <= i <= n}: The loop variable i always remains within the bounds from 0 to n.
+
+Loop invariant 2: For every index j less than i, the element a[j] has already been set to 0.
+
+Loop Variant: The expression n-i decreases with each iteration, ensuring loop termination.
+
+Side Effects (assigns): The function modifies the array a and the loop variable i.
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.7]{img/acsl_example.png}
+	\caption{Example of ACSL specification for C function}
+	\label{fig:acsl-example}
+\end{figure}
 
 \subsubsection{Problem}
 Frama-C currently lacks a dedicated integrated development environment (IDE) for editing and browsing C code and ACSL annotations, leading to significant inefficiencies in the development process. Writing ACSL specifications often requires manually searching through the Frama-C libraries to find the relevant functions and their definitions. This approach is inefficient.
@@ -169,7 +188,6 @@ The goal of this project is to develop a software solution to offer language pro
 
 \subsection{Work organization}
 % TODO : mettre le project plan sous forme d'histogramme
-
 
 \section{Background}
 \subsection{The Language Server Protocol}
@@ -213,52 +231,50 @@ Language Features: These features provide language-specific features such as aut
 
 Workspace Features: These features relate to operations that affect the entire workspace, such as searching for symbols or managing project settings. Examples include {workspace/symbol} and {workspace/configuration}.
 
-Here is a listing of all LSP features and the use cases associated with it.
+Table \ref{tab:lsp-features} is a listing of all LSP features and the use cases associated with it.
 
-\begin{table}
-	\centering
-    \caption{Option details}
-    \label{tab:features-options-details}
-    \begin{tabular}{|l|l|l|l|p{0.2cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|}
-    \hline
+\begin{longtable}[H]{|l|l|l|l|p{0.2cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|p{0.2cm}|}
+	\hline
     \textbf{Client option} &
-      \rot{\textbf{Advanced}} &
-      \rot{\textbf{Definition}} &
-      \rot{\textbf{Declaration}} &
-      \rot{\textbf{Display CIL}} &
-      \rot{\textbf{Callgraph}} &
-      \rot{\textbf{Local Metrics}} &
-      \rot{\textbf{Global Metrics}} &
-      \rot{\textbf{Proof Obligations}} &
-      \rot{\textbf{Prove Annotation}} &
-      \rot{\textbf{Diagnostics}} \\ \hline
-    acslLsp							&   & X & X & X & X & X & X & X & X & X \\ \hline
-    kernel.sourceFiles						&   & X & X &   &   &   & X &   &   & X \\ \hline
-    kernel.includePaths  					&   & X & X & X & X & X & X & X & X & X \\ \hline
-    kernel.macros							&   & X & X & X & X & X & X & X & X & X \\ \hline
-    kernel.machdep 						&   &   &   & X & X & X & X & X & X & X \\ \hline
-    kernel.keepUnusedSpecifiedFunctions 	&   & X & X & X & X & X & X & X & X & \\ \hline
-    kernel.aggressiveMerging			 	&   & X & X & X & X & X & X & X & X &  \\ \hline
-    kernel.generatedSpecCustom 			& Yes &   &   & X & X & X & X & X &   &   \\ \hline
-    metrics.output 					&   &   &   &   & X & X & X &   &   & \\ \hline
-	callgraph.output						&   &   &   &   & X &   &   &   &   & \\ \hline
-    callgraph.roots							&   &   &   &   & X &   &   &   &   & \\ \hline
-    callgraph.services 					&   &   &   &   & X &   &   &   &   & \\ \hline
-    wp.rte 							&   &   &   &   &   &   &   &   & X &   \\ \hline
-    wp.checkMemoryModel 				& Yes &   &   &   &   &   &   &   & X &   \\ \hline
-    wp.volatile 						& Yes &   &   &   &   &   &   &   & X &   \\ \hline
-    wp.pruning 					& Yes &   &   &   &   &   &   &   & X &   \\ \hline
-    wp.prover 						&   &   &   &   &   &   &   &   & X &   \\ \hline
-    wp.timeout 						&   &   &   &   &   &   &   &   & X &   \\ \hline
-    wp.session 						&   &   &   &   &   &   &   &   & X &   \\ \hline
-	diagnostics.wp 					&   &   &   &   &   &   &   &   &   & X \\ \hline
-    \end{tabular}
-\end{table}
+	\rot{\textbf{Advanced}} &
+	\rot{\textbf{Definition}} &
+	\rot{\textbf{Declaration}} &
+	\rot{\textbf{Display CIL}} &
+	\rot{\textbf{Callgraph}} &
+	\rot{\textbf{Local Metrics}} &
+	\rot{\textbf{Global Metrics}} &
+	\rot{\textbf{Proof Obligations}} &
+	\rot{\textbf{Prove Annotation}} &
+	\rot{\textbf{Diagnostics}} 
+	\\ \hline
+    acslLsp									&  	  & X & X & X & X & X & X & X & X & X 	\\ \hline
+    kernel.sourceFiles						&  	  & X & X &   &   &   & X &   &   & X 	\\ \hline
+    kernel.includePaths  					&     & X & X & X & X & X & X & X & X & X 	\\ \hline
+    kernel.macros							&     & X & X & X & X & X & X & X & X & X 	\\ \hline
+    kernel.machdep 							&     &   &   & X & X & X & X & X & X & X 	\\ \hline
+    kernel.keepUnusedSpecifiedFunctions 	&     & X & X & X & X & X & X & X & X & 	\\ \hline
+    kernel.aggressiveMerging			 	&     & X & X & X & X & X & X & X & X &  	\\ \hline
+    kernel.generatedSpecCustom 				& Yes &   &   & X & X & X & X & X &   &   	\\ \hline
+    metrics.output 							&     &   &   &   & X & X & X &   &   & 	\\ \hline
+	callgraph.output						&     &   &   &   & X &   &   &   &   & 	\\ \hline
+    callgraph.roots							&     &   &   &   & X &   &   &   &   & 	\\ \hline
+    callgraph.services 						&     &   &   &   & X &   &   &   &   & 	\\ \hline
+    wp.rte 									&     &   &   &   &   &   &   &   & X &   	\\ \hline
+    wp.checkMemoryModel 					& Yes &   &   &   &   &   &   &   & X &   	\\ \hline
+    wp.volatile 							& Yes &   &   &   &   &   &   &   & X &   	\\ \hline
+    wp.pruning 								& Yes &   &   &   &   &   &   &   & X &   	\\ \hline
+    wp.prover 								&     &   &   &   &   &   &   &   & X &   	\\ \hline
+    wp.timeout 								&     &   &   &   &   &   &   &   & X &   	\\ \hline
+    wp.session 								&     &   &   &   &   &   &   &   & X &   	\\ \hline
+	diagnostics.wp 							&     &   &   &   &   &   &   &   &   & X 	\\ \hline
+	\caption{Option details}
+    \label{tab:features-options-details}
+\end{longtable}
 
 \subsection{Frama-C plugin development}
 This document provides a brief overview of the key aspects of developing a Frama-C plug-in, including OCaml’s module system and the process of registration, building, and installing a plug-in using Dune.
 
-\subsubsection{Overview of OCaml}
+\paragraph*{Overview of OCaml}
 OCaml is a functional programming language with a rich type system. It organizes code into modules, which can be used to encapsulate and manage related functionalities. Key features of OCaml’s module system include:
 
 \begin{itemize}
@@ -268,71 +284,122 @@ OCaml is a functional programming language with a rich type system. It organizes
 \end{itemize}
 OCaml's type system helps ensure the correctness of complex static analysis tasks by catching errors at compile time. The language's functional programming features, comprising pattern matching, simplify the manipulation of abstract syntax trees and other data structures crucial for program analysis. Additionally, OCaml’s modular system facilitates the organization and extension of Frama-C’s various analysis components.
 
-\subsubsection{Environment Setup}
+\paragraph*{Environment Setup \& Documentation}
 \begin{itemize}
-    \item[--] Frama-C Installation: Ensure Frama-C is installed. It is recommended to use the latest version.
-    \item[--] OCaml Toolchain: Install the OCaml toolchain, including tools like \texttt{ocamlfind}, \texttt{ocamlbuild}, and \texttt{opam}.
-    \item[--] Editor Configuration: Set up a code editor with OCaml support for syntax highlighting and code completion.
+    \item[--] Frama-C Installation: Ensure Frama-C is installed. The minimum required is version 28.0.
+    \item[--] OCaml Toolchain: Install the OCaml toolchain, including tools like \texttt{opam}, \texttt{ocamlbuild}, \texttt{ocamllsp} and \texttt{ocamlfind}.
+    \item[--] It is necessary to have the Frama-C user manual\footnote{https://frama-c.com/download/frama-c-user-manual.pdf} Frama-C plug-in development guide\footnote{https://frama-c.com/download/frama-c-plugin-development-guide.pdf} beside.
 \end{itemize}
 
-\subsubsection{Understanding Frama-C’s Architecture}
+\paragraph*{Understanding Frama-C’s Architecture}
+Figure \ref{fig:framac-archi} shows how the Frama-C modules are organized.
 \begin{itemize}
-    \item[--] Frama-C Kernel: Provides essential services such as AST (Abstract Syntax Tree) management, project handling, and results storage.
-    \item[--] Existing Plug-ins: Review existing Frama-C plug-ins (e.g., Eva, WP) for structural insights.
-    \item[--] API Documentation: Familiarize with the Frama-C API for functions and modules.
+    \item[--] Frama-C Kernel: Provides essential services such as Abstract Syntax Tree (AST) management, project handling, and results storage, the kernel services are the main modules we will work with.
+    \item[--] Existing plug-ins: Depending on the analysis goals, the plugin may need to interact with specific Frama-C modules like CFG or WP. For instance, a plugin designed to analyze the control flow of a program will use the CFG module to traverse and manipulate the CFG.
+    \item[--] API Documentation: The Frama-C API provides an online API where we can browse each plug-in's library and better understand its functions
 \end{itemize}
 
-\subsubsection{Plug-in Registration}
-To register a Frama-C plug-in, a file named \texttt{plugin.ml} is created. This file includes the plug-in’s meta-information and registration code. The typical registration involves defining a module with plug-in details and using \texttt{Plugin.register} to integrate the plug-in with the Frama-C system.
+\begin{figure}[H]
+	\centering
+	\includegraphics[]{img/framac_architecture.png}
+	\caption{Frama-C Architecture Design}
+	\label{fig:framac-archi}
+\end{figure}
 
-\subsubsection{Building with Dune}
-Dune is a build system for OCaml projects that simplifies the build process. To build a Frama-C plug-in using Dune:
+\paragraph*{Plug-in Registration}
+To register a Frama-C plug-in, a file that defines the API of the plugin \texttt{plugin-name.ml} is created. The typical registration involves defining a module with plug-in details and using \texttt{Plugin.Register} to integrate the plug-in with the Frama-C system.
+In our case it would be: 
+\begin{lstlisting}
+	module Self = Plugin.Register 
+		(struct
+			let name = "ACSL LSP"
+			let shortname = "lsp"
+			let help = "Activates LSP support for ACSL/C"
+		end)
+\end{lstlisting}
+
+We set the plug-in's entry point with the line:
+\begin{lstlisting}
+	let () = Db.Main.extend run
+\end{lstlisting}
+Here, Db.Main.extend is used to integrate the plug-in's function `run' into Frama-C's main execution process. The entry point is the starting point of the program's execution, where `run' manages the plug-in's options and starts its operations within the Frama-C environment.
+
+\paragraph*{Building with Dune}
+Dune\footnote{https://dune.build/} is a build system for OCaml projects that simplifies the build process. To build a Frama-C plug-in using Dune:
 
 \begin{itemize}
-    \item[--] Create a \texttt{dune-project} file to define the project settings:
+    \item[--] To initiate a project we create a \texttt{dune-project} file to define the project settings:
 \end{itemize}
 
-\begin{verbatim}
-(lang dune 2.8)
-(name myplugin)
-\end{verbatim}
+\begin{lstlisting}
+	(lang dune 3.7)
+	(using dune_site 0.1)
+
+	(name frama-c-acsl_lsp)
+	(package (name frama-c-acsl_lsp))
+\end{lstlisting}
 
 \begin{itemize}
-    \item[--] Write a \texttt{dune} file to specify build rules, including dependencies and build options:
+    \item[--] Then write a \texttt{dune} file to specify build rules, including dependencies and build options:
 \end{itemize}
 
-\begin{verbatim}
-(executable
- (name plugin)
- (libraries frama-c)
- (preprocess (pps ppx_deriving.std))
- (flags (:standard -w +a)))
-\end{verbatim}
+\begin{lstlisting}
+	(rule
+		(alias frama-c-configure)
+		(deps (universe))
+		(action (progn
+				(echo "acsl_lsp:" %{lib-available:frama-c-acsl_lsp.core} "\n")
+				(echo " - Frama-C:" %{lib-available:frama-c.kernel} "\n")
+			)
+		)
+	)
+	(include_subdirs unqualified)
+	(library
+		(name acsl_lsp)
+		(public_name frama-c-acsl_lsp.core)
+		(flags -open Frama_c_kernel :standard)
+		(libraries 
+			frama-c.kernel
+			frama-c-wp.core
+			frama-c-metrics.core
+			frama-c-callgraph.core
+		)
+	)
+	(plugin
+		(name acsl_lsp)
+		(libraries frama-c-acsl_lsp.core)
+		(site (frama-c plugins))
+	)
+
+\end{lstlisting}
 
 \begin{itemize}
     \item[--] Build the plug-in with \texttt{dune build}, which compiles the plug-in and manages dependencies.
 \end{itemize}
 
-\subsubsection{Installing the Plug-in}
+\paragraph*{Installing the Plug-in}
 After building, the plug-in is installed using the command: \texttt{dune install}
-This command places the plug-in in a directory where Frama-C can find and use it. Verification of the installation involves checking that the plug-in is correctly loaded by Frama-C.
+This command places the plug-in in a directory where Frama-C can find and use it. We verify that the plug-in is installed by running \texttt{frama-c -lsp} and expect no error messages.
 
-% \textcolor{red}{describe working example, comment on crée un plugin, dune (librairies, entry point)}
+% \textcolor{green}{describe working example, comment on crée un plugin, dune (librairies, entry point)}
 
-% \textcolor{red}{describe the kernel api, wp api and modules that are relevant to implement the LSP}
+% \textcolor{green}{describe the kernel api, wp api and modules that are relevant to implement the LSP}
 
-% \textcolor{red}{parler de l'invariant : un seul ast par projet}
+% \textcolor{green}{parler de l'invariant : un seul ast par projet}
 
-\subsubsection{Useful plugins}
-The following plug-ins are the ones we will be focusing on in our plug-in development process:
+\paragraph*{Useful plugins}
+The following plug-ins are the ones we will be focusing on in our development process:
 
-\paragraph*{Control Flow Graph (CFG)}{The CFG plug-in is central to performing control flow analysis in Frama-C. It allows the construction and manipulation of control flow graphs, which represent all possible paths of execution in a program. Plugins that need to analyze or transform the control flow of a program rely heavily on this module.}
+\textbf{Control Flow Graph (CFG)}: The CFG plug-in is central to performing control flow analysis in Frama-C. It allows the construction and manipulation of control flow graphs, which represent all possible paths of execution in a program. Plugins that need to analyze or transform the control flow of a program rely heavily on this module.
 
-\paragraph*{Deductive Verification (WP)}{The WP plugin is used to generate verification conditions using the weakest precondition calculus. These conditions are then checked to ensure that the program adheres to its formal specification, typically expressed in ACSL (ANSI/ISO C Specification Language). This module is crucial for plugins aimed at formal verification or proof-based analysis.}
+\textbf{Deductive Verification (WP)}: The WP plugin is used to generate verification conditions using the weakest precondition calculus. These conditions are then checked to ensure that the program adheres to its formal specification, typically expressed in ACSL (ANSI/ISO C Specification Language). This module is crucial for plugins aimed at formal verification or proof-based analysis.
 
-\paragraph*{Metrics}{This module computes various code metrics, such as cyclomatic complexity and lines of code. These metrics are often used to assess the quality and maintainability of the code, making this module useful for plugins focused on code quality analysis.}
+\textbf{Metrics}: This module computes various code metrics, such as cyclomatic complexity and lines of code. These metrics are often used to assess the quality and maintainability of the code, making this module useful for plugins focused on code quality analysis.
 
-\subsubsection{}
+\paragraph*{Frama-C invariants}
+Frama-C plug-in developers must respect certain invariants, particularly when interacting with the AST. The AST must remain consistent and uncorrupted, as it is central to all analyses. Modifications to the AST should be minimal and carefully managed to avoid disrupting other plug-ins. 
+The following invariant ---as will be explained later--- is important in our case: \textit{``An AST must never be modified inside a project.''}. 
+
 % \subsubsection{Steps in Developing a Plugin}
 % Developing a plugin for Frama-C involves several methodical steps, each crucial for ensuring that the plugin integrates seamlessly with the existing Frama-C infrastructure:
 
@@ -361,41 +428,104 @@ The following plug-ins are the ones we will be focusing on in our plug-in develo
 
 \subsection{VS Code Extensions}
 
-\textcolor{red}{ TODO : working example (extension plaintext ?), comment est organisé une extension typescript}
 \subsubsection{TypeScript extension organization}
-The TypeScript extension is organized with various configuration files and directories crucial for its functionality in Visual Studio Code. Key components include language-configuration.json for defining language features, tsconfig.json for TypeScript compiler settings, and package.json for extension configuration. The src directory contains the TypeScript source code that launches the language client, while directories like node\_modules and out manage dependencies and compiled outputs.
+The TypeScript extension is organized with various configuration files and directories. Key components include language-configuration.json for defining a part of the declarative language features, tsconfig.json for TypeScript compiler settings, and package.json for extension configuration. The src directory contains the TypeScript source code that launches the language client, while directories like `node\_modules' and `out' manage dependencies and compiled outputs.
 
 The architecture of VS Code extensions is based on a client-server model, which aligns perfectly with the Language Server Protocol. VS Code provides an API with TypeScript libraries for developing different types of extensions, particularly, language extensions. 
 A language extension offers declarative (e.g.\: syntax highlighting, bracket autoclosing) and programmatic (e.g.\: hover information, jump to definition) language features. 
 
-\subsubsection{Frama-C extensions}
+\subsubsection{Frama-C extensions} 
+\label{sec:framac-vscode-ext}
 Very few VS Code extensions for Frama-C exist in the marketplace\footnote{The Visual Studio marketplace where VS Code extensions can be installed}.
-The only extensions related to Frama-C are for ACSL syntax coloration made by an independent developer\footnote{https://github.com/MisterZurg}. 
+The only extensions related to Frama-C are for ACSL syntax coloring made by an independent developer\footnote{https://github.com/MisterZurg}. 
 
-The first one, `ACSL-lite'\footnote{https://github.com/MisterZurg/acsl-lite} removes syntax coloration for C code and adds coloration for ACSL annotations, but it has no other feature. The drawback of this extension is that it removes entirely the coloration for C when we also need it. 
+The first one, `ACSL-lite'\footnote{https://github.com/MisterZurg/acsl-lite} removes syntax coloring for C code and adds coloring for ACSL annotations, but it has no other feature. The drawback of this extension is that it removes entirely the coloring for C when we also need it. 
 
-The second one `ACSL:\@ ANSI/ISO C Specification Language'\footnote{https://github.com/MisterZurg/acsl-ansi-iso-c-specification-language} has coloration for both ACSL and C. But there are a few fixes to make.
+The second one `ACSL:\@ ANSI/ISO C Specification Language'\footnote{https://github.com/MisterZurg/acsl-ansi-iso-c-specification-language} has coloring for both ACSL and C. But there are a few fixes to make.
 
-\subsubsection{VS Code IntelliSense}
+% \subsubsection{VS Code IntelliSense}
+% IntelliSense is a feature in VS Code that provides intelligent code suggestions, auto-completions, and real-time error detection as you type.
+
+% VS Code supports word-based completions for any programming language by default, providing basic IntelliSense features such as simple code suggestions and auto-completions. However, for a new language extension, IntelliSense can be significantly enhanced by integrating it with a language server. This allows for more advanced features such as context-aware code completions, real-time diagnostics, signature help, and navigation capabilities like go-to-definition and find-references. The language server provides deep insights into the language's syntax and semantics, allowing IntelliSense to offer more accurate and relevant assistance to developers working with the new language.
+
+\subsubsection{Overlay multiple extensions}
+The goal is to retain C language features while adding ACSL language support on top. VS Code allows multiple extensions to coexist within the same instance, such as the GitHub Actions with C/C++ extensions. However, it does not permit the activation of different language extensions for the same file type simultaneously. Since the ACSL extension targets the same file extensions as the C language extension in VS Code, it is necessary to reimplement C language features alongside ACSL features within a single extension. While this combined implementation may not offer the full range of functionalities provided by the original C extension, it will ensure the essential features required for effective code navigation.
+
+\subsubsection{Language client implementation} 
+\paragraph*{Entry point}
+To develop the VS Code extension language client, the process began with a sample project provided by VS Code, specifically the `plaintext' extension, a simple code providing autocompletion for predefined words for `.txt' files\footnote{https://github.com/microsoft/vscode-extension-samples/tree/main/lsp-sample}. This sample was used as a foundational template and was then customized to meet specific requirements. The sample server part was removed as we already have our own language server implemented in OCaml.
+
+The first step involved modifying the sample code to align the extension's functionality with the target language. This included adjusting project configurations to ensure proper interaction between the language server and the client, enabling the correct recognition and processing of the language's syntax and structure.
+
+For syntax highlighting, TextMate (TM) language grammars were integrated, allowing VS Code to apply syntax coloring. This required defining patterns and scopes within a .tmLanguage file to highlight various syntax elements such as keywords, strings, and comments. The existing syntax coloring for ACSL (ACSL-lite) code---as mentioned in \ref{sec:framac-vscode-ext}--- was extracted, fixed, enhanced and combined to C syntax coloring of official VS Code extension for C and C++\footnote{https://github.com/microsoft/vscode/blob/main/extensions/cpp/syntaxes/c.tmLanguage.json} 
+
+In addition, a language configuration file was provided by the sample code to define language-specific behaviors, including comment styles, bracket matching, and auto-closing pairs.
+
+\paragraph*{VS Code commands}
+VS Code commands are custom VS Code-specific features that can be registered for any extension. Commands are declared in the configuration file in the `commands' section (package.json)(fig. \ref{fig:declare-command}). Then they must be set up for a specified menu of the editor (fig. \ref{fig:set-command}) in section `menus' of package.json and must be implemented and registered in the main entry point (extension.ts) in function `activate()' (fig. \ref{fig:register-command}).
+
+\begin{figure}[H]
+	\centering
+	\caption{Example of command declaration in package.json}
+	\includegraphics[scale=0.7]{img/declare_cmd.png}
+	\label{fig:declare-command}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\caption{Example of command set up in package.json}
+	\includegraphics[scale=0.7]{img/setup_cmd.png}
+	\label{fig:set-command}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\caption{Example of command implementation in extension.ts}
+	\includegraphics[scale=0.4]{img/impl_cmd.png}
+	\label{fig:register-command}
+\end{figure}
+
+The commands call functions of the LSP API (sendRequest(), sendNotification(), etc.) to interact with the server.
+In the example in figure \ref{fig:register-command}, we have created a method called ``displayCIL'', that is a request sent from the client to the server. The method logic is implemented in the server.
+We choose to name the command the same name as the method called inside.
 
 \section{Design Choices}
+\subsection {File parsing}
+In order to use the Frama-C module's functions, the plug-in converts the source code files into their C Intermediate Language (CIL) representation, which provides a detailed hierarchical structure of the source code. It captures the syntactic elements and relationships within the code, for deeper analysis and processing. This representation allows the server to efficiently navigate and manipulate the code, supporting features like `Go To Definition' and other code navigation tools.
+
+The system is designed to handle the parsing of both single and multiple source code files. Regardless of the number of files being parsed, the resulting ASTs from each file are merged into a single one. This merging process is crucial as it simplifies the analysis and manipulation of the code, providing a unified structure that the server can work with.
+
+When dealing with large codebases, users often face the challenge of working with a vast number of source files. Parsing all these files can be a time-consuming task. To address this issue, the system offers a client setting (`sourceFiles') that allows users to specify which source files need to be parsed. By focusing the parsing process on only the relevant files, this setting helps optimizing the time spent on parsing, making the workflow more efficient.
+
+Users must ensure that all necessary source files are included in the parsing process. If a user fails to specify a source file that is needed for certain features, such as Go To Definition, they may not function correctly. It is therefore the responsibility of the user to provide all the relevant files.
+
 \subsection{Language Server architecture}
-The server was implemented as a Frama-C plug-in to fully exploit the advanced parsing and analysis capabilities inherent in the Frama-C framework. By developing the server as a plug-in, we can directly leverage these pre-existing tools.
+The server was implemented as a Frama-C plug-in to fully exploit the advanced parsing and analysis capabilities at our disposal in the Frama-C framework.
 
-\textcolor{brown}{
-	The plug-in is separated in two modes: the command line mode and the handler mode. The command line mode allows a non-LSP usage of the plug-in, meaning the plug-in will not need to connect to an editor in order to function, in this case, the result will be returned in the terminal in the form of a JSON string, the user will have to be careful of the options they are combining as some of them will produce an unwanted result or an error. The handler mode activates the LSP usage of the plug-in, it will search for a server process listening to the specified port and connect to it, it starts an infinite loop in which a handler manages the incoming and outgoing requests, the commands are decided by the handler and the user's workspace configurations.
-}
+The plug-in operates in two distinct modes: command line mode and handler mode. In command line mode as represented in figure \ref{fig:cmdline-seq}, the plug-in functions independently of an editor, allowing for non-LSP usage. In this mode, the results are returned directly in the terminal as a JSON string. However, users must be cautious when combining options, as certain combinations may lead to errors or unintended results. Handler mode as depicted in figure \ref{fig:handler-seq}, on the other hand, enables LSP functionality. In this mode, the plug-in connects to a server process that listens on a specified port and initiates an infinite loop where a handler manages incoming and outgoing requests. The commands executed are determined by the handler in accordance with the user's workspace configurations.
 
-The plug-in consists of four entities: 
+\begin{figure}[H]
+	\centering
+	\caption{LSP plug-in example of command line usage sequence diagram}
+	\includegraphics[scale=0.7]{img/cmdline_seq_diag.png}
+	\label{fig:cmdline-seq}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\caption{LSP plug-in example of handler mode usage sequence diagram}
+	\includegraphics[scale=0.5]{img/handler_seq_diag.png}
+	\label{fig:handler-seq}
+\end{figure}
+
+The plug-in consists of four components: 
 \begin{itemize}
 	\item[--] \textbf{Cmdline\_parameters}: Registers plug-in, defines the plug-in's command line options and the actions associated with them according to their values.
 	\item[--] \textbf{Handler}: Contains the code that connects to the editor, the main loop that handles requests, and stores the user's workspace configurations (sent by the editor).
-	\item[--] \textbf{Lib}: OCaml modules that hold the LSP types.
-	\item[--] \textbf{Features}: Main features, functions interacting with the AST and other plug-ins to provide results.
+	\item[--] \textbf{Lib}: OCaml modules that implement the LSP types.
+	\item[--] \textbf{Features}: Contains the main features, functions interacting with the AST and other plug-ins to provide results.
 \end{itemize}
 \begin{figure}[H]
 	\centering
-	\includegraphics[scale=0.4]{img/architecture.png}
+	\includegraphics[scale=0.3]{img/architecture.png}
 	\caption{Architecture of the plug-in}
 \end{figure}
 
@@ -407,7 +537,6 @@ Since the processes are all located on the same host, Unix sockets offer a signi
 Furthermore, the OCaml Unix module, which provides native support for Unix sockets, allows ideal integration with the existing OCaml-based infrastructure of the server. This compatibility ensures that data is transmitted efficiently. By leveraging Unix sockets, we achieve a communication mechanism that is not only fast and reliable but also well-suited to the architecture of the application.
 
 \subsection{VS Code subprocess}
-\textcolor{green}{vscode = serveur}
 
 The language server in this context is not an actual server in the traditional sense, but rather a process that connects to the VS Code server. VS Code manages the communication channels, such as pipes or sockets, by creating them and then allowing the language server process to connect. Essentially, VS Code handles the setup by calling a function starting the server process, and ensuring the connection is established. 
 
@@ -433,21 +562,46 @@ For each LSP request (e.g., \texttt{textDocument/definition}, \texttt{textDocume
 
 If an error occurs during the execution of a command, the handler catches the exception and returns an appropriate LSP error response.
 
+When the result of a file parsing must be used by another plug-in (e.g.: Callgraph, Metrics)
 Figure \ref{tab:json-result} below is a table listing an example of Frama-C command for each feature.
 
-\begin{longtable}{|l|p{10cm}|}
+\begin{longtable}[H]{|l|p{10cm}|}
 		\hline
 		\textbf{Feature} &
-		\textbf{JSON} \\ \hline
-		Definition 					& \texttt{frama-c test\_files/test1.c -cpp-extra-args="-Itest\_files/include\_folder -Itest\_files/include\_folder2" -lsp -lsp-debug=0 -lsp-declaration="/home/user/git/L1/T0304764/acsl\_lsp/Acsl\_lsp/server\_v3/test\_files/test1.c:88:8"} \\ \hline
-		Declaration 				& \includegraphics[scale=0.7]{img/declaration_result.png} \\ \hline
-		Display CIL 				& \includegraphics[scale=0.7]{img/display_cil_result.png} \\ \hline
-		Callgraph 					& \includegraphics[scale=0.7]{img/callgraph_result.png} \\ \hline
-		Local Metrics 				& \includegraphics[scale=0.7]{img/local_metrics_result.png} \\ \hline
-		Global Metrics 				& \includegraphics[scale=0.7]{img/global_metrics_result.png} \\ \hline
-		Proof Obligations 			& \includegraphics[scale=0.7]{img/po_result.png} \\ \hline
+		\textbf{Command} \\ \hline
+		Definition 					& 
+\begin{lstlisting}
+frama-c test\_files/test1.c -cpp-extra-args="-Itest_files include_folder -Itest_files/include_folder2" -lsp -lsp-debug=0 -lsp-definition="/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server_v3/test_files/test1.c:88:8" 
+\end{lstlisting} \\ \hline
+		Declaration 				& 
+\begin{lstlisting}
+frama-c test_files/test1.c -cpp-extra-args="-Itest_files/include_folder -Itest_files/include_folder2" -lsp -lsp-debug=0 -lsp-declaration="/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server_v3/test_files/test1.c:89:12" 
+\end{lstlisting} \\ \hline
+		Display CIL 				& 
+\begin{lstlisting}
+frama-c test_files/folder1/test2.c -cpp-extra-args="-Itest_files/include_folder -Itest_files/include_folder2" -lsp -lsp-debug=0 -lsp-display-cil 
+\end{lstlisting} \\ \hline
+		Callgraph 					& 
+\begin{lstlisting}
+frama-c test_files/test1.c -cpp-extra-args="-Itest_files/include_folder -Itest_files/include_folder2" -then -cg="/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server_v3/test_files/test1.dot" -cg-services -then -lsp -lsp-debug=0 -lsp-compute-cg="/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server_v3/test_files/test1" 
+\end{lstlisting} \\ \hline
+		Local Metrics 				& 
+\begin{lstlisting}
+frama-c test_files/test1.c -cpp-extra-args="-Itest_files/include_folder -Itest_files/include_folder2" -then -metrics -mtrics-by-function -metrics-output="/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server_v3/test_files/test1.txt" -then -lsp -lsp-debug=0 -lsp-metrics="/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server_v3/test_files/test1" 
+\end{lstlisting} \\ \hline
+		Global Metrics 				& 
+\begin{lstlisting}
+frama-c test_files/test1.c test_files/folder1/test2.c -cpp-extra-args="-Itest_files/include_folder -Itest_files/include_folder2" -then -metrics -mtrics-by-function -metrics-output="/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server_v3/test_files/project_metrics.txt" -then -lsp -lsp-debug=0 -lsp-metrics="/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server_v3/test_files/project_metrics" 
+\end{lstlisting} \\ \hline
+		Proof Obligations 			& 
+\begin{lstlisting}
+frama-c /home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server_v3/test_files/test1.c -cpp-extra-args="-I/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server_v3/test_files/include_folder -I/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server_v3/test_files/include_folder2" -then -lsp -lsp-root-path="/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server_v3/test_files" -lsp-show-povc="/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server_v3/test_files/test1.c:29:27" -wp -wp-gen 
+\end{lstlisting} \\ \hline
 		Prove Annotation 			& Not implemented \\ \hline
-		Diagnostics 				& -metrics, -metrics-output \\ \hline
+		Diagnostics 				& 
+\begin{lstlisting}
+frama-c -cpp-extra-args="-I/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server/test_files/include_folder -I/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server/test_files/include_folder2" -lsp -lsp-debug=4 -lsp-did-save=/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server/test_files/test1.c 
+\end{lstlisting} \\ \hline
 	\caption{Example Frama-C command for each feature}
     \label{tab:frama-c-command}
 \end{longtable}
@@ -456,29 +610,50 @@ Figure \ref{tab:json-result} below is a table listing an example of Frama-C comm
 
 \subsubsection{Custom Features}
 
-The handler includes custom commands such as \texttt{displayCIL}, \texttt{showPOVC}, and metrics-related commands, which are specific to Frama-C. These commands extend the LSP functionality to support domain-specific tasks beyond the standard LSP features.
+The handler includes custom commands such as \texttt{displayCIL}, \texttt{showPOVC}, and metrics-related commands, which are specific to Frama-C. 
 
 Figure \ref{tab:json-result} below is a table listing an example of JSON result for each feature.
 
-\begin{longtable}{|l|l|}
-		\hline
-		\textbf{Feature} &
-		\textbf{JSON} \\ \hline
-		Definition 					& \includegraphics[scale=0.7]{img/definition_result.png} \\ \hline
-		Declaration 				& \includegraphics[scale=0.7]{img/declaration_result.png} \\ \hline
-		Display CIL 				& \includegraphics[scale=0.7]{img/display_cil_result.png} \\ \hline
-		Callgraph 					& \includegraphics[scale=0.7]{img/callgraph_result.png} \\ \hline
-		Local Metrics 				& \includegraphics[scale=0.7]{img/local_metrics_result.png} \\ \hline
-		Global Metrics 				& \includegraphics[scale=0.7]{img/global_metrics_result.png} \\ \hline
-		Proof Obligations 			& \includegraphics[scale=0.7]{img/po_result.png} \\ \hline
-		Prove Annotation 			& Not implemented \\ \hline
-		Diagnostics 				& -metrics, -metrics-output \\ \hline
-	\caption{Example of corresponding JSON for each feature}
+\begin{longtable}[H]{|l|l|}
+	\hline
+	\textbf{Feature} &
+	\textbf{JSON} \\ \hline
+	Definition 					& \includegraphics[scale=0.7]{img/definition_result.png} \\ \hline
+	Declaration 				& \includegraphics[scale=0.7]{img/declaration_result.png} \\ \hline
+	Display CIL 				& \includegraphics[scale=0.7]{img/display_cil_result.png} \\ \hline
+	Callgraph 					& \includegraphics[scale=0.7]{img/callgraph_result.png} \\ \hline
+	Local Metrics 				& \includegraphics[scale=0.7]{img/local_metrics_result.png} \\ \hline
+	Global Metrics 				& \includegraphics[scale=0.7]{img/global_metrics_result.png} \\ \hline
+	Proof Obligations 			& \includegraphics[scale=0.7]{img/po_result.png} \\ \hline
+	Prove Annotation 			& Not implemented \\ \hline
+	Diagnostics 				& \includegraphics[scale=0.7]{img/didsave_result.png} \\ \hline
+	\caption{Example of corresponding JSON result for each feature}
     \label{tab:json-result}
 \end{longtable}
-\textcolor{red}{TODO : options de notre plugin, celles qui peuvent pas s'activer en meme temps}
+\textcolor{green}{TODO : options de notre plugin, celles qui peuvent pas s'activer en meme temps}
 
-
+\begin{longtable}[H]{|p{3cm}|p{2.3cm}|p{8cm}|p{1.3cm}|}
+	\hline
+	\textbf{Option} &
+	\textbf{Type}  & 
+	\textbf{Description} &
+	\textbf{Default} \\ \hline
+	-lsp				& boolean		& Enables LSP plug-in		& Off \\ \hline
+	-lsp-handler		& boolean		& Enables handler mode for LSP, (only to be used when launching the language server for LSP)		& Off \\ \hline
+	-lsp-cmdline		& boolean		& Enables command line mode for LSP IF handler mode is activated, not to be used outside the LSP context			 & On \\ \hline
+	-lsp-id				& integer		& Id of the request, required if LSP handler mode is activated		& 0 \\ \hline
+	-lsp-root-path		& string		& Path to the workspace folder opened in the editor, required if LSP handler mode is activated		& ``'' \\ \hline
+	-lsp-compute-cg		& string		& Callgraph output file, to inform the user the files that were generated, write file name without extension		& ``'' \\ \hline
+	-lsp-declaration	& string		& File, line and character where the user requested the declaration		& ``'' \\ \hline
+	-lsp-definition		& string		& File, line and character where the user requested the definition		& ``'' \\ \hline
+	-lsp-did-close		& string		& Name of the file to be closed, generates diagnostics. Do not give the filename to frama-c first.		& ``'' \\ \hline
+	-lsp-did-save		& string		& Name of the file to be saved, generates diagnostics. Do not give the filename to frama-c first.		& ``'' \\ \hline
+	-lsp-display-cil	& boolean		& If activated, sends the prettified CIL Ast of the parsed file 			 & Off \\ \hline
+	-lsp-metrics		& string		& If specified, writes metrics inside the file. If only one file was parsed, outputs the metrics of that file, if multiple files were given, outputs the combined metrics of those files. 			 & ``'' \\ \hline
+	-lsp-show-povc		& string		& File, line and character where the user requested the proof obligation(s). If the user wants the obligations of a pre-condition, they must send the location of the desired function call 			 & ``'' \\ \hline
+	\caption{List of Frama-C LSP plug-in options}
+	\label{tab:lsp-options}
+\end{longtable}
 
 \subsection{A first approach on the server implementation}
 In the context of Frama-C, an execution instance, whether initiated via the command line or through a function call within the Frama-C library, is referred to as a session. Initially, we considered implementing the server directly as a Frama-C plug-in, where the main loop responsible for handling Language Server Protocol (LSP) requests would be executed within this plug-in. This approach would handle all LSP requests into a single, continuous session.
@@ -487,7 +662,7 @@ However, this design presented a significant drawback: when Frama-C encounters a
 
 Terminating the session as a response to an error is not a viable solution, as it would lead to the server's shutdown. This, in turn, would cause the client to disconnect, leading to a crash of the extension. Consequently, the user would need to manually restart the extension, which is an undesirable outcome. To avoid such disruptions and maintain a seamless user experience, it is imperative that the server architecture be designed to handle errors more gracefully without necessitating a session termination.
 
-\subsection{plug-in installation}
+\subsection{Plug-in installation}
 % TODO : 
 % - choix de la methode de communication : sockets OK
 % - choix du serveur en tant que plug-in frama-c OK
@@ -499,102 +674,113 @@ Terminating the session as a response to an error is not a viable solution, as i
 
 \section{Development}
 
-
-
-
-\subsection{Working example}
-
+\subsection{Working example ?}
 
 \subsection{Project configurations}
 
-\textcolor{green}{tableau feature/parsing local (.h ou .c) ou global (spécifié par user ou par defaut que les fichiers .c)}
+% \textcolor{green}{tableau feature/parsing local (.h ou .c) ou global (spécifié par user ou par defaut que les fichiers .c)}
 
-\textcolor{magenta}{tableau de chaque feature et sa ligne de commande frama-c (usage de -then et -then-last) faire le lien avec les configs}
+% \textcolor{red}{tableau de chaque feature et sa ligne de commande frama-c (usage de -then et -then-last) faire le lien avec les configs}
+Table \ref{tab:features-options} lists all client configurations that are supported by the language server. They must have the same name for every client implementation.
 
-\textcolor{green}{listing de toutes les options, leur organisation}
-\begin{table}
-	\centering
-    \caption{Frama-C options available to the user}
-    \label{tab:features-options}
-    \begin{tabular}{|l|l|l|}
-		\hline
-		\textbf{Client option} &
-		\textbf{Plug-in} &
-		\textbf{Frama-C option(s)} \\ \hline
-		acslLsp 						& ACSL LSP    & -lsp-debug	\\ \hline
-		kernel.includePaths 					& Kernel    & -cpp-extra-args \\ \hline
-		kernel.macros 							& Kernel    & -cpp-extra-args \\ \hline
-		kernel.sourceFiles 					& Kernel    &  \\ \hline
-		kernel.machdep 						& Kernel    & -machdep \\ \hline
-		kernel.keepUnusedSpecifiedFunctions 	& Kernel    & -remove-unused-specified-functions \\ \hline
-		kernel.aggressiveMerging 				& Kernel    & -aggressive-merging \\ \hline
-		kernel.generatedSpecCustom 			& Kernel    & -generated-spec-custom \\ \hline
-		metrics.output 					& Metrics   & -metrics, -metrics-output \\ \hline
-		callgraph.output 							& Callgraph & -cg, -cg-roots \\ \hline
-		callgraph.roots 							& Callgraph & -cg, -cg-roots \\ \hline
-		callgraph.services 					& Callgraph & -cg, -cg-no-services \\ \hline
-		wp.rte 							& WP & -wp, -wp-rte \\ \hline
-		wp.checkMemoryModel 			& WP & -wp, -wp-check-memory-model \\ \hline
-		wp.volatile 					& WP & -wp, -wp-volatile \\ \hline
-		wp.noPruning 					& WP & -wp, -wp-no-pruning \\ \hline
-		wp.prover 						& WP & -wp, -wp-prover \\ \hline
-		wp.timeout 						& WP & -wp, -wp-timeout \\ \hline
-		wp.session 						& WP & -wp, -wp-session \\ \hline
-		diagnostics.wp 					& ACSL LSP & -lsp-wp \\ \hline
-    \end{tabular}
-\end{table}
+% \textcolor{green}{listing de toutes les options, leur organisation}
+\begin{longtable}[H]{|l|l|l|}
+	\hline
+	\textbf{Client configuration name} &
+	\textbf{Plug-in} &
+	\textbf{Frama-C option(s)} \\ \hline
+	acslLsp 						& ACSL LSP    & -lsp-debug	\\ \hline
+	kernel.includePaths 					& Kernel    & -cpp-extra-args \\ \hline
+	kernel.macros 							& Kernel    & -cpp-extra-args \\ \hline
+	kernel.sourceFiles 					& Kernel    &  \\ \hline
+	kernel.machdep 						& Kernel    & -machdep \\ \hline
+	kernel.keepUnusedSpecifiedFunctions 	& Kernel    & -remove-unused-specified-functions \\ \hline
+	kernel.aggressiveMerging 				& Kernel    & -aggressive-merging \\ \hline
+	kernel.generatedSpecCustom 			& Kernel    & -generated-spec-custom \\ \hline
+	metrics.output 					& Metrics   & -metrics, -metrics-output \\ \hline
+	callgraph.output 							& Callgraph & -cg, -cg-roots \\ \hline
+	callgraph.roots 							& Callgraph & -cg, -cg-roots \\ \hline
+	callgraph.services 					& Callgraph & -cg, -cg-no-services \\ \hline
+	wp.rte 							& WP & -wp, -wp-rte \\ \hline
+	wp.checkMemoryModel 			& WP & -wp, -wp-check-memory-model \\ \hline
+	wp.volatile 					& WP & -wp, -wp-volatile \\ \hline
+	wp.noPruning 					& WP & -wp, -wp-no-pruning \\ \hline
+	wp.prover 						& WP & -wp, -wp-prover \\ \hline
+	wp.timeout 						& WP & -wp, -wp-timeout \\ \hline
+	wp.session 						& WP & -wp, -wp-session \\ \hline
+	diagnostics.wp 					& ACSL LSP & -lsp-wp \\ \hline
+	\caption{Frama-C options available to the user}
+	\label{tab:features-options}
+\end{longtable}
 
-
-
-\textcolor{green}{tableau feature/module api frama-c utilisé}
+% \textcolor{green}{tableau feature/module api frama-c utilisé}
 \textcolor{red}{tableau algo principal de chaque feature}
-\textcolor{red}{tableau des capacités du serveur}
+% \textcolor{green}{tableau des capacités du serveur -> LSP features use cases}
 
+\subsection{Description of ACSL LSP plug-in features}
+\subsubsection{Go To Definition}
+The `Go To Definition' feature allows developers to easily navigate to the definition of symbols within their code. 
 
-\subsection{`Go To Definition' feature}
-The `Go To Definition' feature of Visual Studio Code allows developers to easily navigate to the definition of symbols within their code. In this context, the challenges involve implementing a VS Code extension that supports this feature for two languages associated with the same file extension (`.c' and `.h'). 
-
-When a user requests to find the definition of a symbol at a specific position in the code, the server first identifies the name of the symbol located at that position. This involves parsing, analyzing the file and extracting the relevant word based on the provided line and column numbers.
-The code then initiates a search through various subsections of the code to find where the symbol is defined. This search involves visiting different parts of the source file's Abstract Syntax Tree (AST) and concerns both ACSL and C code:
+When a user requests to find the definition of a symbol at a specific position in the code, the language server first identifies the name of the symbol located at that position. This involves parsing, analyzing the file and extracting the relevant word based on the provided line and column numbers.
+The code then initiates a search through various subsections of the code to find where the symbol is defined. This search involves visiting different parts of the source files' AST and concerns both ACSL and C code:
 \begin{itemize}
 \item[--] ACSL Definitions: The code checks if the symbol matches any logical predicates or terms, which are specific to tools like Frama-C used for static analysis of C programs.
 \item[--] C Definitions: It examines global entities, such as enums, structures, functions, and variables, to see if the symbol matches any of these.
 \end{itemize}
 Each of these searches uses visitor patterns, which traverse and inspect nodes in the AST, comparing each node's name to the symbol's name.
 
-If a definition is located, the exact file path and the range of lines and columns where the symbol is defined are packaged into a JSON response. If no definition is found, a response indicating a null result is returned. This response allows the LSP client (the user's text editor or IDE) to navigate directly to the symbol's definition or handle the case where no definition exists.
+If a definition is located, the exact file path and the range of lines and columns where the symbol is defined are written into a JSON response. If no definition is found, a response indicating a null result is returned. This response allows the LSP client (the user's text editor or IDE) to navigate directly to the symbol's definition or handle the case where no definition exists.
 
+\subsubsection{Go To Declaration}
+The `Go To Declaration' feature allows developers to easily navigate to the declaration of symbols within their code. 
 
-\subsection{File Synchronization \& Diagnostics}
-File synchronization is a key feature of the LSP\@. Three types of requests are sent by VS Code to notify document opening, changing and saving actions performed by the user. 
-A single file parsing is performed each time a file is opened or saved. We add an event listener to catch any error or warning raised by the Frama-C parser and we store them inside a JSON block.
-All diagnostics are published to the editor and displayed to the user in the form of squiggles and listed in the `Problems' subsection of the VS Code terminal/console (?).
+The process of finding declarations is the same algorithm as finding definitions except a few differences:
+\begin{itemize}
+	\item[--] The first visitor which visits all the global entities, traverses the AST and examines variable, function, enumeration and type declarations instead of definitions.
+	\item[--] An additional visitor is used to find variable declarations within a file. It visits the AST for l-values\footnote{L-values are nodes in the AST that are not functions, expressions or constants}.
+	\item[--] If multiple declarations exist in header files, it will only send back the declaration that is located in the first header file included.
+	\item[--] If a variable is declared twice (one globally and one inside a function), no declaration is returned
+	\item[--] The plug-in has the ability to send multiple declarations but it was omitted as Frama-C doesn't provide multiple declaration locations.
+\end{itemize}
+
+\subsubsection{Display CIL}
+
+\subsubsection{Callgraph}
+This feature is designed to compute and visualize the function call relationships within a given C source code. This feature generates a callgraph that maps out which functions call which other functions, providing a graphical representation of the code’s structure. The callgraph can be helpful for understanding the control flow and dependencies within the program, especially in complex codebases.
+
+Implementation Overview:
+The computeCG method, defined in the client handles the generation of the callgraph. It starts by extracting the relevant file from the parameters provided by the LSP (Language Server Protocol) notification. The plug-in then constructs a command to invoke Frama-C, passing the necessary file paths and configuration options, including arguments specific to callgraph computation (callgraph\_args). This command directs Frama-C to analyze the code and produce a .dot file that describes the callgraph in Graphviz format.
+
+On the client side, the computeCG command is registered to trigger the callgraph computation. When invoked, this command sends a notification to the Frama-C language server, passing the filename of the currently active document in the editor. The notification is sent using client.sendNotification, which initiates the process on the server.
+
+This feature allows the user to generate a visual representation of the code's function calls, making it easier to identify key functions, understand dependencies, and determine the impact of potential changes. For example, if a developer wants to modify a core function, they can use the callgraph to see all the other functions that depend on it, allowing them to plan the changes more effectively. The generated .pdf file provides a clear representation of the callgraph.
+
+\subsubsection{Local Metrics}
+
+\subsubsection{Global Metrics}
+
+\subsubsection{Proof Obligations}
+
+\subsubsection{Prove Annotation (not implemented)}
+
+\subsubsection{File Synchronization \& Diagnostics}
+File synchronization is a key feature of the LSP\@. Requests can by sent by the editing tool to notify document opening, changing and saving actions performed by the user. 
+A single file parsing is performed each time a file is opened or saved. We add a Frama-C Kernel event listener to catch any error or warning raised by the Frama-C parser and we store them inside a JSON block.
+All diagnostics are published to the editor and displayed to the user in the form of squiggles and listed in the `Problems' view of the editor.
 
 There are two types of diagnostics: warnings and errors. Warnings are raised in case an ACSL annotation is not formed properly or when an unknown function is called. Errors are raised when there is a syntax error in the C code preventing the parser to finish (which are fatal errors). In the latter case, normally, any Frama-C session stops, but we ensure that diagnostics are sent either in case the parsing succeeds or fails. So we send them just before the exception aborts fatally.
 In case the parsing succeeds without any messages, the diagnostics are cleared in the editor.
 
-The listener is a Frama-C function that reports any event emitted by Frama-C while parsing. From those events we can extract their source, their message and their kind (whether it is an error, a warning a feedback, etc.). By manipulating these data, we organize them and adapt them to the LSP standard.
+The listener is a Frama-C function that reports any event emitted by Frama-C while parsing. From those events we can extract their source, their message and their kind (whether it is an error, a warning a feedback, etc.).
 
 This feature is only implemented for single file parsing and diagnostics are computed only when the file is saved. No diagnostics are published for multiple file parsing, which means we do not know if those files are in state of error. So the user has to make sure the source files they provided have no errors.
 
-\subsection{File parsing}
-In order to use the Frama-C module's functions, the plug-in converts the source code files into their C Intermediate Language (CIL) representation, which provides a detailed hierarchical structure of the source code. It captures the syntactic elements and relationships within the code, for deeper analysis and processing. This representation allows the server to efficiently navigate and manipulate the code, supporting features like `Go To Definition' and other code navigation tools.
-
-The system is designed to handle the parsing of both single and multiple source code files. Regardless of the number of files being parsed, the resulting Abstract Syntax Trees (ASTs) from each file are merged into a single one. This merging process is crucial as it simplifies the analysis and manipulation of the code, providing a unified structure that the server can work with more effectively.
-
-When dealing with large codebases, users often face the challenge of working with a vast number of source files. Parsing all these files can be a time-consuming task. To address this issue, the system offers a Visual Studio Code setting that allows users to specify which source files need to be parsed. By focusing the parsing process on only the relevant files, this setting helps optimizing the time spent on parsing, making the workflow more efficient.
-
-Users must ensure that all necessary source files are included in the parsing process. If a user fails to specify a source file that is needed for certain features, such as Go To Definition, they may not function correctly. It is therefore the responsibility of the user to provide all the relevant files.
 
 
-\section{LSP use cases with VS Code}
+\section{Appendix: LSP use cases with VS Code}
 % TODO : mettre en annexe les tableaux
 In this enclosed figure is a listing of all LSP features, if they are handled by VS Code, and their implementation status on the server side.
-\begin{table}
-	\centering
-	\caption{Features implementation details}
-	\label{tab:features-implementation-details}
-	\begin{tabular}{|p{1in}|p{2in}|l|l|}
+\begin{longtable}[H]{|p{1in}|p{2in}|l|l|}
 	\hline
 	\textbf{Feature}                             & \textbf{Related Frama-C API modules}        & \textbf{Main algorithm} & \textbf{Parsing mode} \\ \hline
 	Go To Declaration   & Cil, Visitor, Filepath, File, Ast, Json & Tree traversal of AST & Global \\ \hline
@@ -605,286 +791,287 @@ In this enclosed figure is a listing of all LSP features, if they are handled by
 	Show proof verdict  &                                         & List traversal & Local  \\ \hline
 	Compute Callgraph   & Callgraph                               & Get computed Callgraph           & Local  \\ \hline
 	Show Metrics        & Metrics                                 & Get metrics result           & Local  \\ \hline
-	\end{tabular}
-\end{table}
+	\caption{Features implementation details}
+	\label{tab:features-implementation-details}
+\end{longtable}
 
-\begin{longtable}{|p{3cm}|p{8cm}|l|l|}
+\begin{longtable}[H]{|p{3cm}|p{6cm}|p{3cm}|p{2cm}|}
 	\hline
-	\multicolumn{1}{|l|}{\textbf{LSP features}} &
-	  \multicolumn{1}{p{8cm}|}{\textbf{Use case(s)}} &
-	  \multicolumn{1}{p{8cm}|}{\textbf{Implementation status}} &
+	\textbf{LSP features} &
+	  \textbf{Use case(s)} &
+	  \textbf{Implementation status} &
 	  \textbf{Supported by VS Code} \\ \hline
 	\multicolumn{4}{|l|}{Language features} \\ \hline
-	\multicolumn{1}{|l|}{Go to Declaration} &
-	  \multicolumn{1}{p{8cm}|}{Show declaration of C library, Frama-C and user defined functions, variables, macros, types, ACSL types, ACSL terms and predicates.} &
-	  \multicolumn{1}{p{2cm}|}{Implemented} &
+	Go to Declaration &
+	  Show declaration of C library, Frama-C and user defined functions, variables, macros, types, ACSL types, ACSL terms and predicates.
+	  & Implemented & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Go to Definition} &
-	  \multicolumn{1}{p{8cm}|}{Show definition of C library, Frama-C and user defined functions, variables, macros, types, ACSL types, ACSL terms and predicates.} &
-	  \multicolumn{1}{p{2cm}|}{Implemented} &
+	Go to Definition &
+	  Show definition of C library, Frama-C and user defined functions, variables, macros, types, ACSL types, ACSL terms and predicates.
+	  & Implemented &
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Go to Type Definition} &
-	  \multicolumn{1}{p{8cm}|}{Show definition of C library, Frama-C and user defined functions types} &
-	  \multicolumn{1}{p{8cm}|}{Implemented (included in go to definition)} &
+	Go to Type Definition &
+	  Show definition of C library, Frama-C and user defined functions types
+	  & Implemented (included in go to definition) &
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Go to Implementation} &
-	  \multicolumn{1}{p{8cm}|}{Show implementation of C library, Frama-C and user defined functions, variables, macros, types, ACSL types, ACSL terms and predicates.} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Go to Implementation &
+	  Show implementation of C library, Frama-C and user defined functions, variables, macros, types, ACSL types, ACSL terms and predicates.
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Find References} &
-	  \multicolumn{1}{p{8cm}|}{Show references of C library, Frama-C and user defined functions, variables, macros, types, ACSL types, ACSL terms and predicates.} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Find References &
+	  Show references of C library, Frama-C and user defined functions, variables, macros, types, ACSL types, ACSL terms and predicates.
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Prepare Call Hierarchy} &
-	  \multicolumn{1}{p{8cm}|}{Prepare call hierarchy of C functions, ACSL terms and predicates} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Prepare Call Hierarchy &
+	  Prepare call hierarchy of C functions, ACSL terms and predicates
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Call Hierarchy Incoming Calls} &
-	  \multicolumn{1}{p{8cm}|}{List incoming calls of C functions} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Call Hierarchy Incoming Calls &
+	  List incoming calls of C functions
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Call Hierarchy Outgoing Calls} &
-	  \multicolumn{1}{p{8cm}|}{List outgoing calls of C functions} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Call Hierarchy Outgoing Calls &
+	  List outgoing calls of C functions
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Prepare Type Hierarchy} &
-	  \multicolumn{1}{p{8cm}|}{Prepare type hierarchy of C types} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Prepare Type Hierarchy &
+	  Prepare type hierarchy of C types
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Type Hierarchy Super Types} &
-	  \multicolumn{1}{p{8cm}|}{List super types of C types} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Type Hierarchy Super Types &
+	  List super types of C types
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Type Hierarchy Sub Types} &
-	  \multicolumn{1}{p{8cm}|}{List sub types of C types} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Type Hierarchy Sub Types &
+	  List sub types of C types
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Document Highlight} &
-	  \multicolumn{1}{p{8cm}|}{Highlight occurrences of all words OR only C library, Frama-C and user defined functions, variables, macros, types, ACSL types, ACSL terms and predicates} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Document Highlight &
+	  Highlight occurrences of all words OR only C library, Frama-C and user defined functions, variables, macros, types, ACSL types, ACSL terms and predicates
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Document Link} &
-	  \multicolumn{1}{p{8cm}|}{Shows links written inside C and ACSL comments and make them browsable} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Document Link &
+	  Shows links written inside C and ACSL comments and make them browsable
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Document Link Resolve} &
-	  \multicolumn{1}{p{8cm}|}{Related to Document Link} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Document Link Resolve &
+	  Related to Document Link
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Hover} &
-	  \multicolumn{1}{p{8cm}|}{Show C function contract, show C function type information and documentation if available} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Hover &
+	  Show C function contract, show C function type information and documentation if available
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Code Lens} &
-	  \multicolumn{1}{p{8cm}|}{Show C function signature} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Code Lens &
+	  Show C function signature
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Code Lens Refresh} &
-	  \multicolumn{1}{p{8cm}|}{Refresh C function signature if changes were made} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Code Lens Refresh &
+	  Refresh C function signature if changes were made
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Folding Range} &
-	  \multicolumn{1}{p{8cm}|}{Fold function contracts, functions, function descriptions, comments, ghost code} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Folding Range &
+	  Fold function contracts, functions, function descriptions, comments, ghost code
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Selection Range} &
-	  \multicolumn{1}{p{8cm}|}{Suggest selection range of function contracts, functions, function descriptions, comments, ghost code} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Selection Range &
+	  Suggest selection range of function contracts, functions, function descriptions, comments, ghost code
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Document Symbols} &
-	  \multicolumn{1}{p{8cm}|}{List (in the current file) symbols of C functions, variables, ACSL terms and predicates.} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Document Symbols &
+	  List (in the current file) symbols of C functions, variables, ACSL terms and predicates.
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Semantic Tokens} &
-	  \multicolumn{1}{p{8cm}|}{Request semantic tokens for C and ACSL keywords to provide additional color information.} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Semantic Tokens &
+	  Request semantic tokens for C and ACSL keywords to provide additional color information.
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Inline Value} &
-	  \multicolumn{1}{p{8cm}|}{Show, at the end of the line, the values of C variables in a line} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Inline Value &
+	  Show, at the end of the line, the values of C variables in a line
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Inline Value Refresh} &
-	  \multicolumn{1}{p{8cm}|}{Refresh the values of C variables in a line if changed} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Inline Value Refresh &
+	  Refresh the values of C variables in a line if changed
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Inlay Hint} &
-	  \multicolumn{1}{p{8cm}|}{No use cases found} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Inlay Hint &
+	  No use cases found
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Inlay Hint Resolve} &
-	  \multicolumn{1}{p{8cm}|}{No use cases found} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Inlay Hint Resolve &
+	  No use cases found
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Inlay Hint Refresh} &
-	  \multicolumn{1}{p{8cm}|}{No use cases found} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Inlay Hint Refresh &
+	  No use cases found
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Moniker} &
-	  \multicolumn{1}{p{8cm}|}{No uses cases found} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Moniker &
+	  No uses cases found
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Completion Proposals} &
-	  \multicolumn{1}{p{8cm}|}{Show completion item for ACSL : ACSL keywords completion (ensures, assigns, etc.), propose variables bound to the current file or workspace,C keyword completion.} &
-	  \multicolumn{1}{p{2cm}|}{Ongoing but disabled} &
+	Completion Proposals &
+	  Show completion item for ACSL : ACSL keywords completion (ensures, assigns, etc.), propose variables bound to the current file or workspace,C keyword completion.
+	  & Ongoing but disabled &
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Completion Item Resolve} &
-	  \multicolumn{1}{p{8cm}|}{Extend Completion Proposals feature} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Completion Item Resolve &
+	  Extend Completion Proposals feature
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Publish Diagnostics} &
-	  \multicolumn{1}{p{8cm}|}{Show compilation errors, warnings for C and ACSL code.} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Publish Diagnostics &
+	  Show compilation errors, warnings for C and ACSL code.
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Pull Diagnostics} &
-	  \multicolumn{1}{p{8cm}|}{Related to Publish Diagnostics} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Pull Diagnostics &
+	  Related to Publish Diagnostics
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Signature Help} &
-	  \multicolumn{1}{p{8cm}|}{Show C library, Frama-C and user defined function signatures when function name is typed} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Signature Help &
+	  Show C library, Frama-C and user defined function signatures when function name is typed
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Code Action} &
-	  \multicolumn{1}{p{8cm}|}{The server can provide code actions related to a diagnostic such as fixing includes, etc.} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Code Action &
+	  The server can provide code actions related to a diagnostic such as fixing includes, etc.
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Code Action Resolve} &
-	  \multicolumn{1}{p{8cm}|}{Related to Code Action} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Code Action Resolve &
+	  Related to Code Action
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Document Color} &
-	  \multicolumn{1}{p{8cm}|}{Show color of ANSI color codes in the C code if any (when printing colors in the terminal, etc.)} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Document Color &
+	  Show color of ANSI color codes in the C code if any (when printing colors in the terminal, etc.)
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Color Presentation} &
-	  \multicolumn{1}{p{8cm}|}{Related to Document Color} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Color Presentation &
+	  Related to Document Color
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Formatting} &
-	  \multicolumn{1}{p{8cm}|}{Fix indentations in C file for C and ACSL code.  Provide indentation levels for ACSL code. Carriage return after each semi-colon, spaces between symbols, arithmetic and logic operators.} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Formatting &
+	  Fix indentations in C file for C and ACSL code.  Provide indentation levels for ACSL code. Carriage return after each semi-colon, spaces between symbols, arithmetic and logic operators.
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Range Formatting} &
-	  \multicolumn{1}{p{8cm}|}{Fix indentations in C file for C and ACSL code.  Provide indentation levels for ACSL code. Carriage return after each semi-colon, spaces between symbols, arithmetic and logic operators for selected lines in the code.} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Range Formatting &
+	  Fix indentations in C file for C and ACSL code.  Provide indentation levels for ACSL code. Carriage return after each semi-colon, spaces between symbols, arithmetic and logic operators for selected lines in the code.
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{On type Formatting} &
-	  \multicolumn{1}{p{8cm}|}{Fix indentations in C file for C and ACSL code.  Provide indentation levels for ACSL code. Carriage return after each semi-colon, spaces between symbols, arithmetic and logic operators as user types according to formatting trigger characters provided by the server. Trigger characters being ";" and "\}"so that formatting is done after writing a line or a block.} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	On type Formatting &
+	  Fix indentations in C file for C and ACSL code.  Provide indentation levels for ACSL code. Carriage return after each semi-colon, spaces between symbols, arithmetic and logic operators as user types according to formatting trigger characters provided by the server. Trigger characters being ``;'' and ``\}'' so that formatting is done after writing a line or a block. &
+	  &
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Rename} &
-	  \multicolumn{1}{p{8cm}|}{Workspace-wide rename of a symbol (C functions, variables, macros, types, ACSL types, ACSL terms and predicates)} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Rename &
+	  Workspace-wide rename of a symbol (C functions, variables, macros, types, ACSL types, ACSL terms and predicates)
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Prepare Rename} &
-	  \multicolumn{1}{p{8cm}|}{Related to Rename} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Prepare Rename &
+	  Related to Rename
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Linked Editing Range} &
-	  \multicolumn{1}{p{8cm}|}{No use cases found yet} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Linked Editing Range &
+	  No use cases found yet
+	  & & 
 	  Yes \\ \hline
 	\multicolumn{4}{|l|}{Workspace features} \\ \hline
-	\multicolumn{1}{|l|}{Workspace Symbols} &
-	  \multicolumn{1}{p{8cm}|}{Helps users find and list symbols across a workspace based on search queries} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Workspace Symbols &
+	  Helps users find and list symbols across a workspace based on search queries
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Workspace Symbol Resolve} &
-	  \multicolumn{1}{p{8cm}|}{Related to Workspace Symbols} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Workspace Symbol Resolve &
+	  Related to Workspace Symbols
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Get Configuration} &
-	  \multicolumn{1}{p{8cm}|}{Get workspace settings: include paths, source files, macros} &
-	  \multicolumn{1}{p{2cm}|}{Implemented} &
+	Get Configuration &
+	  Get workspace settings: include paths, source files, macros
+	  & Implemented & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Did Change Configuration} &
-	  \multicolumn{1}{p{8cm}|}{Get configurations each time user changes them} &
-	  \multicolumn{1}{p{2cm}|}{Implemented} &
+	Did Change Configuration &
+	  Get configurations each time user changes them
+	  & Implemented & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Workspace Folders} &
-	  \multicolumn{1}{p{8cm}|}{Allow support of multiple roots folders} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Workspace Folders &
+	  Allow support of multiple roots folders
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Did Change Workspace Folders} &
-	  \multicolumn{1}{p{8cm}|}{Be notified each time a workspace configuration is modified} &
-	  \multicolumn{1}{p{2cm}|}{Implemented} &
+	Did Change Workspace Folders &
+	  Be notified each time a workspace folder structure is changed
+	  &   &
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Will Create Files} &
-	  \multicolumn{1}{p{8cm}|}{Get workspace edits which will be applied to workspace before the files are created} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Will Create Files &
+	  Get workspace edits which will be applied to workspace before the files are created
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Did Create Files} &
-	  \multicolumn{1}{p{8cm}|}{Get notified when files are created from within the client} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Did Create Files &
+	  Get notified when files are created from within the client
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Will Rename Files} &
-	  \multicolumn{1}{p{8cm}|}{Get notified of file renames before files are actually renamed as long as the rename is triggered from within the client either by a user action or by applying a workspace edit} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Will Rename Files &
+	  Get notified of file renames before files are actually renamed as long as the rename is triggered from within the client either by a user action or by applying a workspace edit
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Did Rename Files} &
-	  \multicolumn{1}{p{8cm}|}{Get notified when files are renamed from within the client} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Did Rename Files &
+	  Get notified when files are renamed from within the client
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Will Delete Files} &
-	  \multicolumn{1}{p{8cm}|}{Get notified of file deletes before deleting them} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Will Delete Files &
+	  Get notified of file deletes before deleting them
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Did Delete Files} &
-	  \multicolumn{1}{p{8cm}|}{Get notified when file are deleted} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Did Delete Files &
+	  Get notified when file are deleted
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Did Change Watched Files} &
-	  \multicolumn{1}{p{8cm}|}{Get notified when files outside the primary editing scope, such as makefiles or python/bash scripts related to the project} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Did Change Watched Files &
+	  Get notified when files outside the primary editing scope, such as makefiles or python/bash scripts related to the project
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Execute Command} &
-	  \multicolumn{1}{p{8cm}|}{Generate boilerplate code, a function contract skeleton} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Execute Command &
+	  Generate boilerplate code, a function contract skeleton
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Apply Edit} &
-	  \multicolumn{1}{p{8cm}|}{Automatically insert or update ACSL annotations in the code after a refactoring operation, ensuring that the formal specifications remain coherent with the modified code} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Apply Edit &
+	  Automatically insert or update ACSL annotations in the code after a refactoring operation, ensuring that the formal specifications remain coherent with the modified code
+	  & & 
 	  Yes \\ \hline
 	\multicolumn{4}{|l|}{Window features} \\ \hline
-	\multicolumn{1}{|l|}{Show Message Notification} &
-	  \multicolumn{1}{p{8cm}|}{Notify the user when a file is generated by one of the plug-ins (callgraph, metrics, ...)} &
-	  \multicolumn{1}{p{8cm}|}{Implemented for callgraph and metrics} &
+
+	Show Message Notification &
+	  Notify the user when a file is generated by one of the plug-ins (callgraph, metrics, ...)
+	  & Implemented for callgraph and metrics & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Show Message Request} &
-	  \multicolumn{1}{p{8cm}|}{If the user asked for the proof obligation of a pre-condition of a function, asks for which function call it should show the proof obligations)} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Show Message Request &
+	  If the user asked for the proof obligation of a pre-condition of a function, asks for which function call it should show the proof obligations
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Log Message} &
-	  \multicolumn{1}{p{8cm}|}{No use case found} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Log Message &
+	  No use case found
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Show Document} &
-	  \multicolumn{1}{p{8cm}|}{Show generated callgraph} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Show Document &
+	  Show generated callgraph
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Create Work Done Progress} &
-	  \multicolumn{1}{p{8cm}|}{Display proof verdict calculation status bar} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Create Work Done Progress &
+	  Display proof verdict calculation status bar
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Cancel a Work Done Progress} &
-	  \multicolumn{1}{p{8cm}|}{Related to work done progress} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Cancel a Work Done Progress &
+	  Related to work done progress
+	  & & 
 	  Yes \\ \hline
-	\multicolumn{1}{|l|}{Sent Telemetry} &
-	  \multicolumn{1}{p{8cm}|}{Enable the collection of usage and performance data to monitor server performance, analyze feature usage, track errors, and help development improvements} &
-	  \multicolumn{1}{p{2cm}|}{} &
+	Sent Telemetry &
+	  Enable the collection of usage and performance data to monitor server performance, analyze feature usage, track errors, and help development improvements
+	  & & 
 	  Yes \\ \hline
 	\caption{LSP features use cases}
 	\label{tab:lsp-features}
 \end{longtable}
 
 \textcolor{green}{tableau des capacités de vs code}
-\begin{longtable}{| p{2in} | p{2in} | p{2in} |}
+\begin{longtable}[H]{| p{2in} | p{2in} | p{2in} |}
 	\hline
 \multicolumn{1}{|p{2in}|}{\textbf{VS Code features}} &
   \multicolumn{1}{p{2in}|}{\textbf{Use cases}} &
   \textbf{Implementation status} \\ \hline
-\rowcolor[HTML]{329A9D} 
-\multicolumn{3}{|l|}{\cellcolor[HTML]{329A9D}{\color[HTML]{FFFFFF} Programmatic}} \\ \hline
+\multicolumn{3}{|l|}{Programmatic} \\ \hline
 \multicolumn{1}{|p{2in}|}{Provide Diagnostics} &
   \multicolumn{1}{p{2in}|}{Show compilation errors, warnings for C and ACSL code.} &
   Implemented \\ \hline
@@ -933,14 +1120,13 @@ In this enclosed figure is a listing of all LSP features, if they are handled by
 \multicolumn{1}{|p{2in}|}{Rename Symbols} &
   \multicolumn{1}{p{2in}|}{Rename all occurrences of a symbol, it should differentiate between functions, predicates, terms, variables and constants as they can have the same name.} &
    \\ \hline
-\rowcolor[HTML]{329A9D} 
-\multicolumn{3}{|l|}{\cellcolor[HTML]{329A9D}{\color[HTML]{FFFFFF} Declarative}} \\ \hline
+\multicolumn{3}{|l|}{Declarative} \\ \hline
 \multicolumn{1}{|p{2in}|}{Syntax highlighting} &
   \multicolumn{1}{p{2in}|}{} &
   Implemented \\ \hline
 \multicolumn{1}{|p{2in}|}{Snippet completion} &
   \multicolumn{1}{p{2in}|}{} &
-  Implemented \\ \hline
+   \\ \hline
 \multicolumn{1}{|p{2in}|}{Bracket matching} &
   \multicolumn{1}{p{2in}|}{} &
   Implemented \\ \hline
@@ -952,25 +1138,38 @@ In this enclosed figure is a listing of all LSP features, if they are handled by
   Implemented \\ \hline
 \multicolumn{1}{|p{2in}|}{Comment toggling} &
   \multicolumn{1}{p{2in}|}{} &
+  Implemented
    \\ \hline
 \multicolumn{1}{|p{2in}|}{Auto indentation} &
   \multicolumn{1}{p{2in}|}{} &
+  Implemented
    \\ \hline
 \multicolumn{1}{|p{2in}|}{Folding} &
   \multicolumn{1}{p{2in}|}{} &
+  Implemented
    \\ \hline
    \caption{VS Code Programmatic and Declarative Features}
    \label{tab:vscode-features}
 \end{longtable}
 
-\subsection{Illustration of the implementation}
+\section{Illustration of the implementation}
 % TODO : illustrer l'implémentation 
 \textcolor{red}{commenter les screenshots de chaque feature}
 
 \section{Future work}
 % TODO : taches restantes
-\textcolor{red}{tableau des features à implémenter}
+\begin{itemize}
+	\item[--] Enhance display of proof obligations: ask the user which function call's pre-condition to prove whenever proof obligations are requested on a pre-condition of a function definition
+	\item[--] Enhance declaration feature: find macros and find multiple declarations if they exist instead of the first one only
+	\item[--] Enhance definition feature: must be able to find Frama-C's standard library function definitions
+	\item[--] Implement display of proof verdict of annotation
+	\item[--] Implement autocompletion feature logic: necessary structures are provided but not the logic behind completion items searching
+	\item[--] WP diagnostics: if the user activates the configuration to enable WP diagnostics, shows WP diagnostics on top of the regular (kernel) diagnostics
+	\item[--] Enhance metrics feature by displaying results in new output
+	\item[--] Enhance callgraph feature by displaying browsable callgraph on the editor
+	\item[--] Implement a `server' mode for other editors chose communication methods are different from VS Code's
 
+\end{itemize}
 
 % TODO : annexes : 
 % architecture plug-in 

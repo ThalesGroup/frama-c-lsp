@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2023.6.19)  24 AUG 2024 22:55
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2023.6.19)  27 AUG 2024 15:32
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1023,12 +1023,12 @@ Package biblatex Info: Reference segment=0 on input line 87.
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-<img/UniversiteParisCite_EIDD_WEB.png, id=183, 537.00626pt x 100.375pt>
+<img/UniversiteParisCite_EIDD_WEB.png, id=187, 537.00626pt x 100.375pt>
 File: img/UniversiteParisCite_EIDD_WEB.png Graphic file (type png)
 <use img/UniversiteParisCite_EIDD_WEB.png>
 Package pdftex.def Info: img/UniversiteParisCite_EIDD_WEB.png  used on input line 116.
 (pdftex.def)             Requested size: 402.75371pt x 75.28105pt.
-<img/Thales-logo-1.png, id=185, 451.6875pt x 150.5625pt>
+<img/Thales-logo-1.png, id=189, 451.6875pt x 150.5625pt>
 File: img/Thales-logo-1.png Graphic file (type png)
 <use img/Thales-logo-1.png>
 Package pdftex.def Info: img/Thales-logo-1.png  used on input line 116.
@@ -1043,7 +1043,7 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 ) [1
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map} <./img/UniversiteParisCite_EIDD_WEB.png> <./img/Thales-Logo-1.png>] (./final_report_Djamila_Mohamed.toc
-LaTeX Font Info:    Trying to load font information for T1+cmtt on input line 33.
+LaTeX Font Info:    Trying to load font information for T1+cmtt on input line 27.
  (/usr/share/texlive/texmf-dist/tex/latex/base/t1cmtt.fd
 File: t1cmtt.fd 2019/12/16 v2.5j Standard LaTeX font definitions
 ))
@@ -1055,349 +1055,105 @@ pdfTeX warning (ext4): destination with the same identifier (name{page.}) has be
                    \relax 
 l.120 \newpage
                [2]
-<img/grep.png, id=249, 693.792pt x 393.8715pt>
+<img/acsl_example.png, id=255, 444.91219pt x 436.63126pt>
+File: img/acsl_example.png Graphic file (type png)
+<use img/acsl_example.png>
+Package pdftex.def Info: img/acsl_example.png  used on input line 163.
+(pdftex.def)             Requested size: 311.4364pt x 305.63979pt.
+ [1]
+<img/grep.png, id=267, 693.792pt x 393.8715pt>
 File: img/grep.png Graphic file (type png)
 <use img/grep.png>
-Package pdftex.def Info: img/grep.png  used on input line 156.
+Package pdftex.def Info: img/grep.png  used on input line 175.
 (pdftex.def)             Requested size: 485.65108pt x 275.70816pt.
 
-Overfull \hbox (1.95421pt too wide) in paragraph at lines 156--157
+Overfull \hbox (1.95421pt too wide) in paragraph at lines 175--176
  [][] 
  []
 
-[1] [2 <./img/grep.png>]
-<img/lsp_exchange_example.png, id=269, 886.31125pt x 367.3725pt>
+[2 <./img/acsl_example.png>] [3 <./img/grep.png>]
+<img/lsp_exchange_example.png, id=282, 886.31125pt x 367.3725pt>
 File: img/lsp_exchange_example.png Graphic file (type png)
 <use img/lsp_exchange_example.png>
-Package pdftex.def Info: img/lsp_exchange_example.png  used on input line 193.
+Package pdftex.def Info: img/lsp_exchange_example.png  used on input line 211.
 (pdftex.def)             Requested size: 354.51822pt x 146.94638pt.
 
-Overfull \hbox (57.05072pt too wide) in paragraph at lines 210--211
+Overfull \hbox (57.05072pt too wide) in paragraph at lines 228--229
 \T1/cmr/m/n/10 sav-ing, and clos-ing files. Ex-am-ples in-clude \T1/cmtt/m/n/10 textDocument/didOpen\T1/cmr/m/n/10 , \T1/cmtt/m/n/10 textDocument/didChange\T1/cmr/m/n/10 , and \T1/cmtt/m/n/10 textDocument/didSave\T1/cmr/m/n/10 . 
  []
 
 
-Overfull \hbox (4.13211pt too wide) in paragraph at lines 212--213
+Overfull \hbox (4.13211pt too wide) in paragraph at lines 230--231
 []\T1/cmr/m/n/10 Language Fea-tures: These fea-tures pro-vide language-specific fea-tures such as au-to-com-ple-tion, go-to-definition,
  []
 
 
-Overfull \hbox (13.117pt too wide) in paragraph at lines 212--213
+Overfull \hbox (13.117pt too wide) in paragraph at lines 230--231
 \T1/cmr/m/n/10 hover in-for-ma-tion, and find-references. Ex-am-ples in-clude \T1/cmtt/m/n/10 textDocument/completion\T1/cmr/m/n/10 , \T1/cmtt/m/n/10 textDocument/definition\T1/cmr/m/n/10 ,
  []
 
 
-Overfull \hbox (3.1546pt too wide) in paragraph at lines 228--228
+Overfull \hbox (3.1546pt too wide) in paragraph at lines 242--242
 []|[]| 
  []
 
 
-Overfull \hbox (3.1546pt too wide) in paragraph at lines 229--229
+Overfull \hbox (3.1546pt too wide) in paragraph at lines 243--243
 []|[]| 
  []
 
 
-Overfull \hbox (1.21063pt too wide) in paragraph at lines 230--230
+Overfull \hbox (1.21063pt too wide) in paragraph at lines 244--244
 []|[]| 
  []
 
 
-Overfull \hbox (1.21063pt too wide) in paragraph at lines 231--231
+Overfull \hbox (1.21063pt too wide) in paragraph at lines 245--245
 []|[]| 
  []
 
 
-Overfull \hbox (3.1546pt too wide) in paragraph at lines 232--232
+Overfull \hbox (3.1546pt too wide) in paragraph at lines 246--246
 []|[]| 
  []
 
 
-Overfull \hbox (1.21063pt too wide) in paragraph at lines 233--233
+Overfull \hbox (1.21063pt too wide) in paragraph at lines 247--247
 []|[]| 
  []
 
 
-Overfull \hbox (3.1546pt too wide) in paragraph at lines 234--234
+Overfull \hbox (3.1546pt too wide) in paragraph at lines 248--249
 []|[]| 
  []
 
 
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 235--235
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 250--250
 []|\T1/cmr/m/n/10 X| 
  []
 
 
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 235--235
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 250--250
 []|\T1/cmr/m/n/10 X| 
  []
 
 
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 235--235
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 250--250
 []|\T1/cmr/m/n/10 X| 
  []
 
 
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 235--235
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 250--250
 []|\T1/cmr/m/n/10 X| 
  []
 
 
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 235--235
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 250--250
 []|\T1/cmr/m/n/10 X| 
  []
 
 
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 235--235
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 235--235
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 236--236
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 236--236
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 237--237
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 237--237
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 237--237
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 237--237
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 237--237
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 237--237
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 237--237
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 238--238
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 238--238
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 238--238
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 238--238
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 238--238
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 238--238
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 238--238
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 239--239
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 239--239
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 239--239
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 239--239
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 239--239
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 239--239
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 239--239
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 240--240
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 240--240
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 240--240
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 240--240
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 240--240
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 240--240
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 241--241
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 241--241
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 241--241
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 241--241
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 241--241
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 241--241
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 242--242
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 242--242
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 242--242
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 242--242
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 242--242
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 243--243
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 243--243
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 243--243
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 244--244
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 245--245
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 246--246
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 247--247
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 248--248
-[]|\T1/cmr/m/n/10 X| 
- []
-
-
-Overfull \hbox (1.80771pt too wide) in paragraph at lines 249--249
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 250--250
 []|\T1/cmr/m/n/10 X| 
  []
 
@@ -1412,7 +1168,72 @@ Overfull \hbox (1.80771pt too wide) in paragraph at lines 251--251
  []
 
 
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 251--251
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
 Overfull \hbox (1.80771pt too wide) in paragraph at lines 252--252
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 252--252
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 252--252
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 252--252
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 252--252
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 252--252
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 252--252
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 253--253
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 253--253
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 253--253
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 253--253
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 253--253
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 253--253
 []|\T1/cmr/m/n/10 X| 
  []
 
@@ -1426,223 +1247,546 @@ Overfull \hbox (1.80771pt too wide) in paragraph at lines 254--254
 []|\T1/cmr/m/n/10 X| 
  []
 
-[3 <./img/lsp_exchange_example.png (PNG copy)>] [4] [5]
-<img/architecture.png, id=291, 1019.30812pt x 570.63188pt>
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 254--254
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 254--254
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 254--254
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 254--254
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 254--254
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 254--254
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 255--255
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 255--255
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 255--255
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 255--255
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 255--255
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 255--255
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 256--256
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 256--256
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 256--256
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 256--256
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 256--256
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 256--256
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 257--257
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 257--257
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 257--257
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 257--257
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 257--257
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 258--258
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 258--258
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 258--258
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 259--259
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 260--260
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 261--261
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 262--262
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 263--263
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 264--264
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 265--265
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 266--266
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 267--267
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 268--268
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+
+Overfull \hbox (1.80771pt too wide) in paragraph at lines 269--269
+[]|\T1/cmr/m/n/10 X| 
+ []
+
+[4 <./img/lsp_exchange_example.png (PNG copy)>] [5]
+<img/framac_architecture.png, id=303, 387.24675pt x 515.526pt>
+File: img/framac_architecture.png Graphic file (type png)
+<use img/framac_architecture.png>
+Package pdftex.def Info: img/framac_architecture.png  used on input line 304.
+(pdftex.def)             Requested size: 387.24579pt x 515.52475pt.
+ [6 <./img/framac_architecture.png>] [7] [8]
+<img/declare_cmd.png, id=379, 285.31593pt x 70.76437pt>
+File: img/declare_cmd.png Graphic file (type png)
+<use img/declare_cmd.png>
+Package pdftex.def Info: img/declare_cmd.png  used on input line 470.
+(pdftex.def)             Requested size: 199.71979pt x 49.53471pt.
+<img/setup_cmd.png, id=380, 342.5297pt x 88.07906pt>
+File: img/setup_cmd.png Graphic file (type png)
+<use img/setup_cmd.png>
+Package pdftex.def Info: img/setup_cmd.png  used on input line 476.
+(pdftex.def)             Requested size: 239.76915pt x 61.6549pt.
+<img/impl_cmd.png, id=381, 994.46532pt x 561.59813pt>
+File: img/impl_cmd.png Graphic file (type png)
+<use img/impl_cmd.png>
+Package pdftex.def Info: img/impl_cmd.png  used on input line 482.
+(pdftex.def)             Requested size: 397.77908pt x 224.63527pt.
+ [9 <./img/declare_cmd.png> <./img/setup_cmd.png>]
+<img/cmdline_seq_diag.png, id=396, 799.48688pt x 463.7325pt>
+File: img/cmdline_seq_diag.png Graphic file (type png)
+<use img/cmdline_seq_diag.png>
+Package pdftex.def Info: img/cmdline_seq_diag.png  used on input line 508.
+(pdftex.def)             Requested size: 559.637pt x 324.61052pt.
+
+Overfull \hbox (75.94012pt too wide) in paragraph at lines 508--510
+ [][] 
+ []
+
+[10 <./img/impl_cmd.png>]
+<img/handler_seq_diag.png, id=404, 903.375pt x 459.21562pt>
+File: img/handler_seq_diag.png Graphic file (type png)
+<use img/handler_seq_diag.png>
+Package pdftex.def Info: img/handler_seq_diag.png  used on input line 515.
+(pdftex.def)             Requested size: 451.6864pt x 229.60724pt.
+ [11 <./img/cmdline_seq_diag.png> <./img/handler_seq_diag.png>]
+<img/architecture.png, id=412, 1425.82687pt x 791.95876pt>
 File: img/architecture.png Graphic file (type png)
 <use img/architecture.png>
-Package pdftex.def Info: img/architecture.png  used on input line 398.
-(pdftex.def)             Requested size: 407.71602pt x 228.2487pt.
- [6]
-<img/vscode_subprocess_seq_diag.png, id=301, 751.30687pt x 360.59718pt>
+Package pdftex.def Info: img/architecture.png  used on input line 528.
+(pdftex.def)             Requested size: 427.75137pt x 237.58946pt.
+<img/vscode_subprocess_seq_diag.png, id=413, 751.30687pt x 360.59718pt>
 File: img/vscode_subprocess_seq_diag.png Graphic file (type png)
 <use img/vscode_subprocess_seq_diag.png>
-Package pdftex.def Info: img/vscode_subprocess_seq_diag.png  used on input line 420.
+Package pdftex.def Info: img/vscode_subprocess_seq_diag.png  used on input line 549.
 (pdftex.def)             Requested size: 450.7876pt x 216.35997pt.
- [7 <./img/architecture.png>]
-Overfull \hbox (88.13144pt too wide) in paragraph at lines 442--442
-[]|\T1/cmtt/m/n/10 frama-c test_files/test1.c -cpp-extra-args="-Itest_files/include_folder
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 442--442
-\T1/cmtt/m/n/10 -Itest_files/include_folder2" -lsp -lsp-debug=0
- []
-
-
-Overfull \hbox (224.59811pt too wide) in paragraph at lines 442--442
-\T1/cmtt/m/n/10 -lsp-declaration="/home/user/git/L1/T0304764/acsl_lsp/Acsl_lsp/server_v3/test_files/test1.c:88:8"| 
- []
-
-<img/declaration_result.png, id=310, 392.96812pt x 179.92218pt>
-File: img/declaration_result.png Graphic file (type png)
-<use img/declaration_result.png>
-Package pdftex.def Info: img/declaration_result.png  used on input line 443.
-(pdftex.def)             Requested size: 275.07579pt x 125.94466pt.
-<img/display_cil_result.png, id=311, 396.7322pt x 112.92188pt>
-File: img/display_cil_result.png Graphic file (type png)
-<use img/display_cil_result.png>
-Package pdftex.def Info: img/display_cil_result.png  used on input line 444.
-(pdftex.def)             Requested size: 277.71063pt x 79.04475pt.
-<img/callgraph_result.png, id=312, 402.00188pt x 166.37157pt>
-File: img/callgraph_result.png Graphic file (type png)
-<use img/callgraph_result.png>
-Package pdftex.def Info: img/callgraph_result.png  used on input line 445.
-(pdftex.def)             Requested size: 281.39938pt x 116.45929pt.
-<img/local_metrics_result.png, id=313, 399.74344pt x 121.20282pt>
-File: img/local_metrics_result.png Graphic file (type png)
-<use img/local_metrics_result.png>
-Package pdftex.def Info: img/local_metrics_result.png  used on input line 446.
-(pdftex.def)             Requested size: 279.81848pt x 84.84138pt.
-<img/global_metrics_result.png, id=314, 397.485pt x 124.21407pt>
-File: img/global_metrics_result.png Graphic file (type png)
-<use img/global_metrics_result.png>
-Package pdftex.def Info: img/global_metrics_result.png  used on input line 447.
-(pdftex.def)             Requested size: 278.2376pt x 86.94923pt.
-<img/po_result.png, id=315, 395.97937pt x 330.48468pt>
-File: img/po_result.png Graphic file (type png)
-<use img/po_result.png>
-Package pdftex.def Info: img/po_result.png  used on input line 448.
-(pdftex.def)             Requested size: 277.18367pt x 231.33769pt.
-[8 <./img/vscode_subprocess_seq_diag.png> <./img/declaration_result.png>]
+ [12 <./img/architecture.png>] [13 <./img/vscode_subprocess_seq_diag.png>]
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <10> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 455.
- [9 <./img/display_cil_result.png> <./img/callgraph_result.png> <./img/local_metrics_result.png> <./img/global_metrics_result.png> <./img/po_result.png>]
-<img/definition_result.png, id=334, 362.10281pt x 149.05687pt>
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 609.
+<img/definition_result.png, id=437, 362.10281pt x 149.05687pt>
 File: img/definition_result.png Graphic file (type png)
 <use img/definition_result.png>
-Package pdftex.def Info: img/definition_result.png  used on input line 467.
+Package pdftex.def Info: img/definition_result.png  used on input line 621.
 (pdftex.def)             Requested size: 253.47023pt x 104.3391pt.
+<img/declaration_result.png, id=438, 392.96812pt x 179.92218pt>
 File: img/declaration_result.png Graphic file (type png)
 <use img/declaration_result.png>
-Package pdftex.def Info: img/declaration_result.png  used on input line 468.
+Package pdftex.def Info: img/declaration_result.png  used on input line 622.
 (pdftex.def)             Requested size: 275.07579pt x 125.94466pt.
+<img/display_cil_result.png, id=439, 396.7322pt x 112.92188pt>
 File: img/display_cil_result.png Graphic file (type png)
 <use img/display_cil_result.png>
-Package pdftex.def Info: img/display_cil_result.png  used on input line 469.
+Package pdftex.def Info: img/display_cil_result.png  used on input line 623.
 (pdftex.def)             Requested size: 277.71063pt x 79.04475pt.
+<img/callgraph_result.png, id=440, 402.00188pt x 166.37157pt>
 File: img/callgraph_result.png Graphic file (type png)
 <use img/callgraph_result.png>
-Package pdftex.def Info: img/callgraph_result.png  used on input line 470.
+Package pdftex.def Info: img/callgraph_result.png  used on input line 624.
 (pdftex.def)             Requested size: 281.39938pt x 116.45929pt.
+<img/local_metrics_result.png, id=441, 399.74344pt x 121.20282pt>
 File: img/local_metrics_result.png Graphic file (type png)
 <use img/local_metrics_result.png>
-Package pdftex.def Info: img/local_metrics_result.png  used on input line 471.
+Package pdftex.def Info: img/local_metrics_result.png  used on input line 625.
 (pdftex.def)             Requested size: 279.81848pt x 84.84138pt.
+<img/global_metrics_result.png, id=442, 397.485pt x 124.21407pt>
 File: img/global_metrics_result.png Graphic file (type png)
 <use img/global_metrics_result.png>
-Package pdftex.def Info: img/global_metrics_result.png  used on input line 472.
+Package pdftex.def Info: img/global_metrics_result.png  used on input line 626.
 (pdftex.def)             Requested size: 278.2376pt x 86.94923pt.
+<img/po_result.png, id=443, 395.97937pt x 330.48468pt>
 File: img/po_result.png Graphic file (type png)
 <use img/po_result.png>
-Package pdftex.def Info: img/po_result.png  used on input line 473.
+Package pdftex.def Info: img/po_result.png  used on input line 627.
 (pdftex.def)             Requested size: 277.18367pt x 231.33769pt.
- [10 <./img/definition_result.png>] [11] [12]
-Underfull \hbox (badness 1275) in paragraph at lines 603--603
+<img/didsave_result.png, id=444, 515.67656pt x 132.495pt>
+File: img/didsave_result.png Graphic file (type png)
+<use img/didsave_result.png>
+Package pdftex.def Info: img/didsave_result.png  used on input line 629.
+(pdftex.def)             Requested size: 360.97113pt x 92.74585pt.
+ [14] [15 <./img/definition_result.png> <./img/declaration_result.png> <./img/display_cil_result.png> <./img/callgraph_result.png> <./img/local_metrics_result.png> <./img/global_metrics_result.png>] [16 <./img/po_result.png> <./img/didsave_result.png>] [17] [18]
+Underfull \hbox (badness 1275) in paragraph at lines 789--789
 []|\T1/cmr/m/n/10 Display CIL of
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 604--604
+Underfull \hbox (badness 10000) in paragraph at lines 790--790
 []|\T1/cmr/m/n/10 Show proof
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 604--604
+Underfull \hbox (badness 10000) in paragraph at lines 790--790
 \T1/cmr/m/n/10 obli-ga-tions
  []
 
 
-Underfull \hbox (badness 1122) in paragraph at lines 604--604
+Underfull \hbox (badness 1122) in paragraph at lines 790--790
 []|\T1/cmr/m/n/10 WP, Prop-erty, Filepath, Json,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 606--606
+Underfull \hbox (badness 10000) in paragraph at lines 792--792
 []|\T1/cmr/m/n/10 Compute Call-
  []
 
 
-Underfull \hbox (badness 1939) in paragraph at lines 812--812
-[]|\T1/cmr/m/n/10 Get workspace ed-its which will be ap-plied to
+Underfull \hbox (badness 10000) in paragraph at lines 802--802
+[]|\T1/cmr/bx/n/10 Implementation
  []
 
 
-Overfull \hbox (275.84619pt too wide) in alignment at lines 611--878
- [] [] [] [] 
+Underfull \hbox (badness 10000) in paragraph at lines 803--803
+[]|\T1/cmr/bx/n/10 Supported
  []
 
-[13] [14] [15]
-Underfull \hbox (badness 2961) in paragraph at lines 901--901
+
+Underfull \hbox (badness 10000) in paragraph at lines 803--803
+\T1/cmr/bx/n/10 by VS
+ []
+
+
+Underfull \hbox (badness 1546) in paragraph at lines 806--807
+\T1/cmr/m/n/10 macros, types, ACSL types, ACSL
+ []
+
+
+Underfull \hbox (badness 1546) in paragraph at lines 810--811
+\T1/cmr/m/n/10 macros, types, ACSL types, ACSL
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 815--815
+[]|\T1/cmr/m/n/10 Implemented (in-
+ []
+
+
+Underfull \hbox (badness 6220) in paragraph at lines 815--815
+\T1/cmr/m/n/10 cluded in go to
+ []
+
+
+Underfull \hbox (badness 2644) in paragraph at lines 818--819
+[]|\T1/cmr/m/n/10 Show im-ple-men-ta-tion of C li-brary,
+ []
+
+
+Underfull \hbox (badness 1546) in paragraph at lines 822--823
+\T1/cmr/m/n/10 macros, types, ACSL types, ACSL
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 845--845
+[]|\T1/cmr/m/n/10 Type Hi-er-ar-chy
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 849--849
+[]|\T1/cmr/m/n/10 Document High-
+ []
+
+
+Underfull \hbox (badness 2221) in paragraph at lines 850--851
+\T1/cmr/m/n/10 only C li-brary, Frama-C and user
+ []
+
+
+Underfull \hbox (badness 1043) in paragraph at lines 850--851
+\T1/cmr/m/n/10 de-fined func-tions, vari-ables, macros,
+ []
+
+
+Underfull \hbox (badness 5622) in paragraph at lines 874--875
+[]|\T1/cmr/m/n/10 Fold func-tion con-tracts, func-tions,
+ []
+
+
+Underfull \hbox (badness 8056) in paragraph at lines 893--893
+[]|\T1/cmr/m/n/10 Inline Value Re-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 913--913
+[]|\T1/cmr/m/n/10 Completion Pro-
+ []
+
+
+Underfull \hbox (badness 2050) in paragraph at lines 914--915
+[]|\T1/cmr/m/n/10 Show com-ple-tion item for ACSL :
+ []
+
+
+Underfull \hbox (badness 4024) in paragraph at lines 915--915
+[]|\T1/cmr/m/n/10 Ongoing but dis-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 917--917
+[]|\T1/cmr/m/n/10 Completion Item
+ []
+
+
+Underfull \hbox (badness 4872) in paragraph at lines 937--937
+[]|\T1/cmr/m/n/10 Code Ac-tion Re-
+ []
+
+
+Underfull \hbox (badness 3635) in paragraph at lines 957--957
+[]|\T1/cmr/m/n/10 On type For-mat-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 969--969
+[]|\T1/cmr/m/n/10 Linked Edit-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 974--974
+[]|\T1/cmr/m/n/10 Workspace Sym-
+ []
+
+
+Underfull \hbox (badness 4416) in paragraph at lines 987--988
+[]|\T1/cmr/m/n/10 Get con-fig-u-ra-tions each time user
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 994--994
+[]|\T1/cmr/m/n/10 Did Change
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1022--1022
+[]|\T1/cmr/m/n/10 Did Change
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1038--1038
+[]|\T1/cmr/m/n/10 Implemented for
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1038--1038
+\T1/cmr/m/n/10 call-graph and
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1056--1056
+[]|\T1/cmr/m/n/10 Cancel a Work
+ []
+
+[19] [20] [21]
+Underfull \hbox (badness 2961) in paragraph at lines 1088--1088
 []|\T1/cmr/m/n/10 Show def-i-ni-tion of C li-brary,
  []
 
 
-Underfull \hbox (badness 2359) in paragraph at lines 904--904
+Underfull \hbox (badness 2359) in paragraph at lines 1091--1091
 []|\T1/cmr/m/n/10 Show ref-er-ences of C li-brary,
  []
 
 
-Underfull \hbox (badness 6236) in paragraph at lines 907--907
+Underfull \hbox (badness 6236) in paragraph at lines 1094--1094
 \T1/cmr/m/n/10 macros, types, ACSL types,
  []
 
 
-Underfull \hbox (badness 7740) in paragraph at lines 909--909
+Underfull \hbox (badness 7740) in paragraph at lines 1096--1096
 []|\T1/cmr/m/n/10 Show all Sym-bol Def-i-ni-tions
  []
 
 
-Underfull \hbox (badness 3449) in paragraph at lines 913--913
+Underfull \hbox (badness 3449) in paragraph at lines 1100--1100
 \T1/cmr/m/n/10 source code within the open
  []
 
 
-Underfull \hbox (badness 1502) in paragraph at lines 915--915
+Underfull \hbox (badness 1502) in paragraph at lines 1102--1102
 []|\T1/cmr/m/n/10 Possible Ac-tions on Er-rors or
  []
 
 
-Underfull \hbox (badness 1264) in paragraph at lines 916--916
+Underfull \hbox (badness 1264) in paragraph at lines 1103--1103
 \T1/cmr/m/n/10 ACSL code, un-closed brack-ets
  []
 
 
-Underfull \hbox (badness 5331) in paragraph at lines 918--918
+Underfull \hbox (badness 5331) in paragraph at lines 1105--1105
 []|\T1/cmr/m/n/10 CodeLens - Show Ac-tion-able
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 918--918
+Underfull \hbox (badness 10000) in paragraph at lines 1105--1105
 \T1/cmr/m/n/10 Con-text In-for-ma-tion Within
  []
 
 
-Underfull \hbox (badness 1226) in paragraph at lines 930--930
+Underfull \hbox (badness 1226) in paragraph at lines 1117--1117
 []|\T1/cmr/m/n/10 Incrementally For-mat Code as
  []
 
 
-Underfull \hbox (badness 1509) in paragraph at lines 931--931
+Underfull \hbox (badness 1509) in paragraph at lines 1118--1118
 []|\T1/cmr/m/n/10 Same as above but code for-
  []
 
 
-Underfull \hbox (badness 3635) in paragraph at lines 934--934
+Underfull \hbox (badness 3635) in paragraph at lines 1121--1121
 []|\T1/cmr/m/n/10 Rename all oc-cur-rences of a
  []
 
 
-Underfull \hbox (badness 1577) in paragraph at lines 934--934
+Underfull \hbox (badness 1577) in paragraph at lines 1121--1121
 \T1/cmr/m/n/10 sym-bol, it should dif-fer-en-ti-ate
  []
 
 
-Underfull \hbox (badness 4479) in paragraph at lines 934--934
+Underfull \hbox (badness 4479) in paragraph at lines 1121--1121
 \T1/cmr/m/n/10 be-tween func-tions, pred-i-cates,
  []
 
-[16] 
+[22] [23] 
 AED: lastpage setting LastPage
-[17] (./final_report_Djamila_Mohamed.aux)
+[24] (./final_report_Djamila_Mohamed.aux)
 Package rerunfilecheck Info: File `final_report_Djamila_Mohamed.out' has not changed.
-(rerunfilecheck)             Checksum: A5E16B823241C726D4826082D3B8D501;6903.
+(rerunfilecheck)             Checksum: 6AB7BA65468A1B75DF2F2BE998E93D3F;7246.
 Package logreq Info: Writing requests to 'final_report_Djamila_Mohamed.run.xml'.
 \openout1 = `final_report_Djamila_Mohamed.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 34664 strings out of 478287
- 655709 string characters out of 5849289
- 1442290 words of memory out of 5000000
- 52227 multiletter control sequences out of 15000+600000
- 484381 words of font info for 66 fonts, out of 8000000 for 9000
+ 35084 strings out of 478287
+ 660444 string characters out of 5849289
+ 1676298 words of memory out of 5000000
+ 52556 multiletter control sequences out of 15000+600000
+ 486145 words of font info for 69 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 99i,13n,94p,843b,1933s stack positions out of 5000i,500n,10000p,200000b,80000s
-{/usr/share/texmf/fonts/enc/dvips/cm-super/cm-super-t1.enc}</usr/share/texmf/fonts/type1/public/cm-super/sfbx1000.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfbx1200.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfbx1440.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfbx1728.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm0600.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm0700.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm0800.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm1000.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm1200.pfb></usr/share/texmf/fonts/type1/public/cm-super/sftt1000.pfb>
-Output written on final_report_Djamila_Mohamed.pdf (19 pages, 573910 bytes).
+ 99i,12n,94p,924b,1933s stack positions out of 5000i,500n,10000p,200000b,80000s
+{/usr/share/texmf/fonts/enc/dvips/cm-super/cm-super-t1.enc}</usr/share/texmf/fonts/type1/public/cm-super/sfbx1000.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfbx1200.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfbx1440.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfbx1728.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm0600.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm0700.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm0800.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm1000.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm1200.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfti1000.pfb></usr/share/texmf/fonts/type1/public/cm-super/sftt0900.pfb></usr/share/texmf/fonts/type1/public/cm-super/sftt1000.pfb>
+Output written on final_report_Djamila_Mohamed.pdf (26 pages, 1107530 bytes).
 PDF statistics:
- 439 PDF objects out of 1000 (max. 8388607)
- 369 compressed objects within 4 object streams
- 81 named destinations out of 1000 (max. 500000)
- 430 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 605 PDF objects out of 1000 (max. 8388607)
+ 506 compressed objects within 6 object streams
+ 161 named destinations out of 1000 (max. 500000)
+ 478 words of extra memory for PDF output out of 10000 (max. 10000000)
 

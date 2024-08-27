@@ -3,43 +3,44 @@
 \contentsline {subsection}{\numberline {1.1}Thales DIS}{1}{subsection.1.1}%
 \contentsline {subsection}{\numberline {1.2}Context}{1}{subsection.1.2}%
 \contentsline {subsubsection}{\numberline {1.2.1}Frama-C}{1}{subsubsection.1.2.1}%
-\contentsline {subsubsection}{\numberline {1.2.2}Problem}{1}{subsubsection.1.2.2}%
-\contentsline {subsection}{\numberline {1.3}Work organization}{2}{subsection.1.3}%
-\contentsline {section}{\numberline {2}Background}{2}{section.2}%
-\contentsline {subsection}{\numberline {2.1}The Language Server Protocol}{2}{subsection.2.1}%
-\contentsline {subsubsection}{\numberline {2.1.1}Context}{2}{subsubsection.2.1.1}%
-\contentsline {subsubsection}{\numberline {2.1.2}LSP Requests}{3}{subsubsection.2.1.2}%
-\contentsline {subsubsection}{\numberline {2.1.3}LSP Capabilities}{3}{subsubsection.2.1.3}%
-\contentsline {subsubsection}{\numberline {2.1.4}Features}{3}{subsubsection.2.1.4}%
-\contentsline {subsection}{\numberline {2.2}Frama-C plugin development}{3}{subsection.2.2}%
-\contentsline {subsubsection}{\numberline {2.2.1}Overview of OCaml}{4}{subsubsection.2.2.1}%
-\contentsline {subsubsection}{\numberline {2.2.2}Environment Setup}{4}{subsubsection.2.2.2}%
-\contentsline {subsubsection}{\numberline {2.2.3}Understanding Frama-C’s Architecture}{4}{subsubsection.2.2.3}%
-\contentsline {subsubsection}{\numberline {2.2.4}Plug-in Registration}{5}{subsubsection.2.2.4}%
-\contentsline {subsubsection}{\numberline {2.2.5}Building with Dune}{5}{subsubsection.2.2.5}%
-\contentsline {subsubsection}{\numberline {2.2.6}Installing the Plug-in}{5}{subsubsection.2.2.6}%
-\contentsline {subsubsection}{\numberline {2.2.7}Useful plugins}{5}{subsubsection.2.2.7}%
-\contentsline {subsubsection}{\numberline {2.2.8}}{5}{subsubsection.2.2.8}%
-\contentsline {subsection}{\numberline {2.3}VS Code Extensions}{5}{subsection.2.3}%
-\contentsline {subsubsection}{\numberline {2.3.1}TypeScript extension organization}{6}{subsubsection.2.3.1}%
-\contentsline {subsubsection}{\numberline {2.3.2}Frama-C extensions}{6}{subsubsection.2.3.2}%
-\contentsline {subsubsection}{\numberline {2.3.3}VS Code IntelliSense}{6}{subsubsection.2.3.3}%
-\contentsline {section}{\numberline {3}Design Choices}{6}{section.3}%
-\contentsline {subsection}{\numberline {3.1}Language Server architecture}{6}{subsection.3.1}%
-\contentsline {subsection}{\numberline {3.2}Communication}{7}{subsection.3.2}%
-\contentsline {subsection}{\numberline {3.3}VS Code subprocess}{7}{subsection.3.3}%
-\contentsline {subsection}{\numberline {3.4}Handler}{8}{subsection.3.4}%
-\contentsline {subsubsection}{\numberline {3.4.1}Command Execution}{8}{subsubsection.3.4.1}%
-\contentsline {subsubsection}{\numberline {3.4.2}Example Workflow for \texttt {textDocument/definition}}{10}{subsubsection.3.4.2}%
-\contentsline {subsubsection}{\numberline {3.4.3}Custom Features}{10}{subsubsection.3.4.3}%
-\contentsline {subsection}{\numberline {3.5}A first approach on the server implementation}{11}{subsection.3.5}%
-\contentsline {subsection}{\numberline {3.6}plug-in installation}{11}{subsection.3.6}%
-\contentsline {section}{\numberline {4}Development}{11}{section.4}%
-\contentsline {subsection}{\numberline {4.1}Working example}{11}{subsection.4.1}%
-\contentsline {subsection}{\numberline {4.2}Project configurations}{11}{subsection.4.2}%
-\contentsline {subsection}{\numberline {4.3}`Go To Definition' feature}{12}{subsection.4.3}%
-\contentsline {subsection}{\numberline {4.4}File Synchronization \& Diagnostics}{12}{subsection.4.4}%
-\contentsline {subsection}{\numberline {4.5}File parsing}{13}{subsection.4.5}%
-\contentsline {section}{\numberline {5}LSP use cases with VS Code}{13}{section.5}%
-\contentsline {subsection}{\numberline {5.1}Illustration of the implementation}{17}{subsection.5.1}%
-\contentsline {section}{\numberline {6}Future work}{17}{section.6}%
+\contentsline {subsubsection}{\numberline {1.2.2}Problem}{2}{subsubsection.1.2.2}%
+\contentsline {subsection}{\numberline {1.3}Work organization}{3}{subsection.1.3}%
+\contentsline {section}{\numberline {2}Background}{3}{section.2}%
+\contentsline {subsection}{\numberline {2.1}The Language Server Protocol}{3}{subsection.2.1}%
+\contentsline {subsubsection}{\numberline {2.1.1}Context}{3}{subsubsection.2.1.1}%
+\contentsline {subsubsection}{\numberline {2.1.2}LSP Requests}{4}{subsubsection.2.1.2}%
+\contentsline {subsubsection}{\numberline {2.1.3}LSP Capabilities}{4}{subsubsection.2.1.3}%
+\contentsline {subsubsection}{\numberline {2.1.4}Features}{4}{subsubsection.2.1.4}%
+\contentsline {subsection}{\numberline {2.2}Frama-C plugin development}{5}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}VS Code Extensions}{8}{subsection.2.3}%
+\contentsline {subsubsection}{\numberline {2.3.1}TypeScript extension organization}{8}{subsubsection.2.3.1}%
+\contentsline {subsubsection}{\numberline {2.3.2}Frama-C extensions}{8}{subsubsection.2.3.2}%
+\contentsline {subsubsection}{\numberline {2.3.3}Overlay multiple extensions}{8}{subsubsection.2.3.3}%
+\contentsline {subsubsection}{\numberline {2.3.4}Language client implementation}{9}{subsubsection.2.3.4}%
+\contentsline {section}{\numberline {3}Design Choices}{10}{section.3}%
+\contentsline {subsection}{\numberline {3.1}File parsing}{10}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Language Server architecture}{10}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Communication}{12}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}VS Code subprocess}{12}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.5}Handler}{13}{subsection.3.5}%
+\contentsline {subsubsection}{\numberline {3.5.1}Command Execution}{13}{subsubsection.3.5.1}%
+\contentsline {subsubsection}{\numberline {3.5.2}Example Workflow for \texttt {textDocument/definition}}{14}{subsubsection.3.5.2}%
+\contentsline {subsubsection}{\numberline {3.5.3}Custom Features}{14}{subsubsection.3.5.3}%
+\contentsline {subsection}{\numberline {3.6}A first approach on the server implementation}{17}{subsection.3.6}%
+\contentsline {subsection}{\numberline {3.7}Plug-in installation}{17}{subsection.3.7}%
+\contentsline {section}{\numberline {4}Development}{17}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Working example ?}{17}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Project configurations}{17}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Description of ACSL LSP plug-in features}{18}{subsection.4.3}%
+\contentsline {subsubsection}{\numberline {4.3.1}Go To Definition}{18}{subsubsection.4.3.1}%
+\contentsline {subsubsection}{\numberline {4.3.2}Go To Declaration}{18}{subsubsection.4.3.2}%
+\contentsline {subsubsection}{\numberline {4.3.3}Display CIL}{18}{subsubsection.4.3.3}%
+\contentsline {subsubsection}{\numberline {4.3.4}Callgraph}{18}{subsubsection.4.3.4}%
+\contentsline {subsubsection}{\numberline {4.3.5}Local Metrics}{19}{subsubsection.4.3.5}%
+\contentsline {subsubsection}{\numberline {4.3.6}Global Metrics}{19}{subsubsection.4.3.6}%
+\contentsline {subsubsection}{\numberline {4.3.7}Proof Obligations}{19}{subsubsection.4.3.7}%
+\contentsline {subsubsection}{\numberline {4.3.8}Prove Annotation (not implemented)}{19}{subsubsection.4.3.8}%
+\contentsline {subsubsection}{\numberline {4.3.9}File Synchronization \& Diagnostics}{19}{subsubsection.4.3.9}%
+\contentsline {section}{\numberline {5}Appendix: LSP use cases with VS Code}{19}{section.5}%
+\contentsline {section}{\numberline {6}Illustration of the implementation}{24}{section.6}%
+\contentsline {section}{\numberline {7}Future work}{24}{section.7}%
