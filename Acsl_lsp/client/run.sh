@@ -3,6 +3,13 @@
 # acsl lsp doesn't support unicode characters
 # frama-c -acsl_lsp -no-unicode
 
-cd "$HOME/git/L1/T0304764/acsl_lsp/Acsl_lsp/server_v3/wrapper"
-# echo "run.sh : ACSL Language server launched"
-dune exec wrapper
+# cd $(frama-c -print-share-path)
+# cd ../..
+# chmod u+x acsl_lsp_launcher/acsl_lsp_launcher.exe
+# acsl_lsp_launcher/acsl_lsp_launcher.exe
+
+frama-c -lsp -lsp-debug=4 -lsp-handler
+
+
+
+

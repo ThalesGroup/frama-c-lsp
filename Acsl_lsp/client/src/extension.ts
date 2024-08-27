@@ -1,17 +1,12 @@
 import * as path from 'path';
-import { unescape } from 'querystring';
-import { workspace, ExtensionContext, commands, extensions, window, ViewColumn, TabInputWebview, TextEditor, Uri, languages, Position, Range } from 'vscode';
-import { DefinitionFeature } from 'vscode-languageclient/lib/common/definition';
+import { workspace, ExtensionContext, commands, extensions, window, ViewColumn, TabInputWebview, TextEditor, Uri, languages, Position, Range, env } from 'vscode';
+import * as fs from 'fs';
 
 import {
-	DidChangeConfigurationNotification,
 	LanguageClient,
 	LanguageClientOptions,
-	RequestType,
 	ServerOptions,
-	TextDocumentIdentifier,
 	TransportKind,
-	VersionedTextDocumentIdentifier
 } from 'vscode-languageclient/node';
 
 let client: LanguageClient;
@@ -37,12 +32,12 @@ export function activate(context: ExtensionContext) {
 	const serverOptions: ServerOptions = {
 		run: {
 			command: serverModuleRun,
-			transport: { kind: TransportKind.socket, port: 8001 },
+			transport: { kind: TransportKind.socket, port: 8005 },
 			options: { shell: true }
 		},
 		debug: {
 			command: serverModuleDebug,
-			transport: { kind: TransportKind.socket, port: 8001 },
+			transport: { kind: TransportKind.socket, port: 8005 },
 			options: { shell: true }
 		}
 	};
@@ -66,18 +61,16 @@ export function activate(context: ExtensionContext) {
 		clientOptions
 	);
 
-	const displayCILCommand = commands.registerCommand('vscodeacsl.displayCIL', async () => {
+	const displayCIL = commands.registerCommand('displayCIL', async () => {
 		try {
-			const res = await client.sendRequest('vscodeacsl/displayCIL');
-			let cilContent = JSON.stringify(res, null, 1);
-			cilContent = escapeCharacters(cilContent);
-			cilContent = cilContent.slice(1, cilContent.length - 1); // remove first and last quotes
-			// .replace("\\\\\\", ''); 
+			const res = await client.sendRequest('displayCIL', window.activeTextEditor.document.fileName);
+			const cilContent = JSON.parse(JSON.stringify(res, null, 1));
 
 			// create a new untitled document in a new tab
 			const newUri = Uri.parse('untitled:CIL Representation');
 			const document = await workspace.openTextDocument(newUri);
 			const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
+			await languages.setTextDocumentLanguage(document, 'acsl');
 
 			// delete previous content if any and set the content of the new document
 			editor.edit(editBuilder => {
@@ -87,7 +80,6 @@ export function activate(context: ExtensionContext) {
 				editBuilder.delete(fullRange);
 				editBuilder.insert(editor.selection.start, cilContent);
 			});
-			await languages.setTextDocumentLanguage(document, 'acsl');
 
 		} catch (err) {
 			window.showErrorMessage('Failed to fetch and display CIL data: ' + err.message);
@@ -95,9 +87,9 @@ export function activate(context: ExtensionContext) {
 		}
 	});
 	
-	const computeCGCommand = commands.registerCommand('vscodeacsl.computeCG', async () => {
+	const computeCG = commands.registerCommand('computeCG', async () => {
 		try {
-			client.sendNotification('vscodeacsl/computeCG');
+			await client.sendNotification('computeCG', window.activeTextEditor.document.fileName);
 
 		} catch (err) {
 			window.showErrorMessage('Failed to compute callgraph: ' + err.message);
@@ -105,22 +97,97 @@ export function activate(context: ExtensionContext) {
 		}
 	});
 
-	context.subscriptions.push(displayCILCommand, computeCGCommand);
+	const showPOVC = commands.registerCommand('showPOVC', async () => {
+		try {
+			const res = await client.sendRequest(
+				'showPOVC', 
+				[
+					window.activeTextEditor.document.fileName, 
+					window.activeTextEditor.selection.active
+				]
+			);
+			const wpResult = JSON.parse(JSON.stringify(res, null, 1));
+
+			// create a new untitled document in a new tab
+			const newUri = Uri.parse('untitled:Proof Obligation');
+			const document = await workspace.openTextDocument(newUri);
+			await languages.setTextDocumentLanguage(document, 'plaintext');
+			const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
+
+			// delete previous content if any and set the content of the new document
+			editor.edit(editBuilder => {
+				const start = new Position(0, 0);
+				const end = new Position(document.lineCount, 0);
+				const fullRange = new Range(start, end);
+				editBuilder.delete(fullRange);
+				editBuilder.insert(editor.selection.start, wpResult);
+			});
+
+		} catch (err) {
+			window.showErrorMessage('Failed to fetch and display WP proof obligation: ' + err.message);
+			console.error('Error fetching WP proof obligation:', err);
+		}
+	});
+
+	const showLocalMetrics = commands.registerCommand('showLocalMetrics', async () => {
+		try {
+			client.sendNotification('showLocalMetrics', window.activeTextEditor.document.fileName);
+
+		} catch (err) {
+			window.showErrorMessage('Failed to get local metrics: ' + err.message);
+			console.error('Error getting local metrics:', err);
+		}
+	});
+
+	const showGlobalMetrics = commands.registerCommand('showGlobalMetrics', async () => {
+		try {
+			client.sendNotification('showGlobalMetrics');
+
+		} catch (err) {
+			window.showErrorMessage('Failed to get global metrics: ' + err.message);
+			console.error('Error getting global metrics:', err);
+		}
+	});
+
+	const showCG = commands.registerCommand('showCG', async () => {
+        const panel = window.createWebviewPanel(
+            'pdfPreview', 
+            'PDF Preview', 
+            ViewColumn.Beside
+        );
+		console.log(Uri.file(window.activeTextEditor.document.uri.fsPath).toString());
+        const pdfFilePath = path.join((workspace.workspaceFolders[0].uri.fsPath), path.parse(window.activeTextEditor.document.uri.fsPath).name+".pdf");
+		console.log (pdfFilePath);
+        if (!fs.existsSync(pdfFilePath)) {
+            window.showErrorMessage('PDF file not found');
+            return;
+        }
+        const pdfFileUri = panel.webview.asWebviewUri(Uri.parse(pdfFilePath));
+		console.log (pdfFileUri.toString());
+        panel.webview.html = getWebviewContent(pdfFileUri);
+    });
+
+	context.subscriptions.push(displayCIL, computeCG, showPOVC, showGlobalMetrics, showLocalMetrics, showCG);
 
 	// Start the client. This will also launch the server
 	client.start();
 }
 
-function escapeCharacters(cCode: string): string {
-	const escapedCode = cCode
-		.replace(/\\\\\\/g, '')  // escape triple backslashes
-		.replace(/\\\\"/g, '"')    // escape double quotes
-		.replace(/(\\\\n)/g, '\n') // remove " \\n "
-		.replace(/\\\\r/g, '\r')   // escape carriage return characters
-		.replace(/\\\\t/g, '\t')   // escape tab characters
-		.replace(/\\\\f/g, '\f')   // escape form feed characters
-		.replace(/\\\\v/g, '\v');  // escape vertical tab characters
-	return escapedCode;
+function getWebviewContent(pdfFileUri: Uri): string {
+	const strpdf = pdfFileUri.toString();
+    return `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>PDF Preview</title>
+        </head>
+        <body style="margin: 0; padding: 0;">
+            <iframe src=${strpdf} type="application/pdf" width="100%" height="100%"></iframe>
+        </body>
+        </html>
+    `;
 }
 
 

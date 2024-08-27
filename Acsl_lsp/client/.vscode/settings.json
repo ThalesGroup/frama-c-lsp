@@ -7,7 +7,15 @@
 		"source.fixAll.eslint": "explicit"
 	},
 	"cSpell.words": [
+		"acsl",
+		"ACSL",
+		"callgraph",
+		"Callgraph",
 		"cpptools",
+		"frama",
+		"Frama",
+		"machdep",
+		"POVC",
 		"vscodeacsl"
 	],
 	"C_Cpp.codeFolding": "enabled",

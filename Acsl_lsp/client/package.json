@@ -2,13 +2,11 @@
     "name": "vscodeacsl",
     "displayName": "ACSL/C",
     "description": "Visual Studio Code Client for ACSL Language Server",
-    "author": "Your Name",
     "version": "1.0.0",
     "repository": {
         "type": "git",
-        "url": "https://github.com/your/repo"
+        "url": "https://bitbucket.gemalto.com/users/t0244734/repos/acsl_lsp/browse/Acsl_lsp"
     },
-    "publisher": "none",
     "categories": [
         "Programming Languages"
     ],
@@ -26,13 +24,39 @@
         "menus": {
             "editor/context": [
                 {
-                    "command": "vscodeacsl.displayCIL"
+                    "command": "displayCIL",
+                    "when": "resourceLangId == acsl"
                 },
                 {
-                    "command": "vscodeacsl.computeCG"
+                    "command": "computeCG",
+                    "when": "resourceLangId == acsl"
+                },
+                {
+                    "command": "showPOVC",
+                    "when": "resourceLangId == acsl"
+                },
+                {
+                    "command": "showGlobalMetrics",
+                    "when": "resourceLangId == acsl"
+                },
+                {
+                    "command": "showLocalMetrics",
+                    "when": "resourceLangId == acsl"
+                }
+            ],
+            "editor/title": [
+                {
+                    "command": "showCG",
+                    "when": "resourceLangId == acsl"
                 }
             ]
         },
+        "submenus": [
+            {
+                "id": "vscodeacsl.requires",
+                "label": "Show 'requires' POs"
+            }
+        ],
         "languages": [
             {
                 "id": "acsl",
@@ -64,18 +88,7 @@
                         "default": 1000,
                         "description": "Controls the maximum number of problems produced by the server."
                     },
-                    "vscodeacsl.trace.server": {
-                        "scope": "window",
-                        "type": "string",
-                        "enum": [
-                            "off",
-                            "messages",
-                            "verbose"
-                        ],
-                        "default": "verbose",
-                        "description": "Traces the communication between VS Code and the language server."
-                    },
-                    "vscodeacsl.trace.acslLsp": {
+                    "acslLsp": {
                         "scope": "window",
                         "type": "integer",
                         "enum": [
@@ -85,13 +98,14 @@
                             3,
                             4
                         ],
-                        "default": 0,
-                        "description": "Specify ACSL LSP debug messages level. (0 = highest, 4 = off)."
+                        "default": 4,
+                        "description": "Specify ACSL LSP debug messages level. (4 = lowest severity, 1 = highest, 0 = off)."
                     }
                 }
             },
+
             {
-                "title": "Kernel options",
+                "title": "Common",
                 "properties": {
                     "kernel.includePaths": {
                         "scope": "workspace",
@@ -99,7 +113,7 @@
                         "items": {
                             "type": "string"
                         },
-                        "description": "-cpp-extra-args: Adds C/C++ include paths for the project."
+                        "description": "Adds C/C++ include paths for the project."
                     },
                     "kernel.sourceFiles": {
                         "scope": "workspace",
@@ -107,7 +121,7 @@
                         "items": {
                             "type": "string"
                         },
-                        "description": "-cpp-extra-args: Specifies which source files must be parsed."
+                        "description": "Specifies which source files must be parsed."
                     },
                     "kernel.macros": {
                         "scope": "workspace",
@@ -115,119 +129,23 @@
                         "items": {
                             "type": "string"
                         },
-                        "description": "-cpp-extra-args: Adds macros."
-                    },
-                    "kernel.cc": {
-                        "scope": "workspace",
-                        "type": "boolean",
-                        "description": "-cpp-extra-args: adds -CC option",
-                        "default": false
-                    },
-                    "kernel.cppCommand": {
-                        "scope": "workspace",
-                        "type": "string",
-                        "description": "-cpp-command: specify behavior of option -cpp-command"
+                        "description": "Adds macros."
                     },
                     "kernel.machdep": {
                         "scope": "workspace",
                         "type": "string",
-                        "description": "Specify behavior of option -machdep"
-                    },
-                    "kernel.cppGnuLike": {
-                        "scope": "workspace",
-                        "type": "boolean",
-                        "description": "Specify behavior of option -cpp-frama-c-compliant",
-                        "default": false
-                    },
-                    "kernel.framacStdlib": {
-                        "scope": "workspace",
-                        "type": "boolean",
-                        "description": "Specify behavior of option -frama-c-stdlib",
-                        "default": true
+                        "description": "Specify machdep"
                     },
                     "kernel.keepUnusedSpecifiedFunctions": {
                         "scope": "workspace",
                         "type": "boolean",
-                        "description": "Specify behavior of option -keep-unused-specified-functions",
-                        "default": true
-                    },
-                    "kernel.keepUnusedTypes": {
-                        "scope": "workspace",
-                        "type": "boolean",
-                        "description": "Specify behavior of option -keep-unused-types",
+                        "description": "Keep unused specified functions",
                         "default": true
                     },
                     "kernel.aggressiveMerging": {
                         "scope": "workspace",
                         "type": "boolean",
-                        "description": "Specify behavior of option -aggressive-merging",
-                        "default": false
-                    },
-                    "kernel.generatedSpecCustom": {
-                        "scope": "workspace",
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "description": "Add key:value element to option -generated-spec-custom"
-                    },
-                    "kernel.continueAnnotError": {
-                        "scope": "workspace",
-                        "type": "boolean",
-                        "description": "Specify behavior of option -kernel-warn-key annot-error (formerly -continue-annot-error). Useful if you need more information on annotation errors.",
-                        "default": true
-                    },
-                    "kernel.origName": {
-                        "scope": "workspace",
-                        "type": "boolean",
-                        "description": "Specify behavior of option -orig-name",
-                        "default": false
-                    },
-                    "kernel.print": {
-                        "scope": "workspace",
-                        "type": "boolean",
-                        "description": "Specify behavior of option -print",
-                        "default": false
-                    },
-                    "kernel.annot": {
-                        "scope": "workspace",
-                        "type": "boolean",
-                        "description": "Specify behavior of option -annot",
-                        "default": false
-                    },
-                    "kernel.keepComments": {
-                        "scope": "workspace",
-                        "type": "boolean",
-                        "description": "Specify behavior of option -keep-comments",
-                        "default": false
-                    },
-                    "kernel.kernelLog": {
-                        "scope": "workspace",
-                        "type": "string",
-                        "description": "Specify behavior of option -kernel-log",
-                        "default": ""
-                    },
-                    "kernel.ocode": {
-                        "scope": "workspace",
-                        "type": "string",
-                        "description": "Specify behavior of option -ocode",
-                        "default": ""
-                    }
-                }
-            },
-            {
-                "title": "Wp",
-                "properties": {
-                    "wp.wpPruning": {
-                        "scope": "workspace",
-                        "type": "boolean",
-                        "description": "Specify behavior of option -wp-pruning",
-                        "default": true
-                    },
-                    "wp.wp": {
-                        "scope": "workspace",
-                        "type": "boolean",
-                        "description": "Specify behavior of option -wp",
+                        "description": "Merge function definitions modulo renaming",
                         "default": false
                     }
                 }
@@ -235,73 +153,160 @@
             {
                 "title": "Metrics",
                 "properties": {
-                    "metrics.metrics": {
+                    "metrics.output": {
                         "scope": "workspace",
-                        "type": "boolean",
-                        "description": "Specify behavior of option -metrics",
-                        "default": true
+                        "type": "string",
+                        "description": "Metrics output file (only works for global metrics, file metrics will generate metrics in a plaintext file with same name as the source file)",
+                        "default": ""
                     }
                 }
             },
             {
                 "title": "Callgraph",
                 "properties": {
-                    "callgraph.cg": {
+                    "callgraph.output": {
                         "scope": "workspace",
                         "type": "string",
-                        "description": "Specify behavior of option -cg",
+                        "description": "Callgraph output file (give file name without .dot extension)",
                         "default": ""
                     },
-                   "callgraph.cgRoots": {
+                    "callgraph.roots": {
                         "scope": "workspace",
                         "type": "array",
-                        "items":{
+                        "items": {
                             "type": "string"
                         },
-                        "description": "Specify behavior of option -cg-roots",
+                        "description": "If not empty, display only the functions of the callgraph reachable from the given functions",
                         "default": ""
                     },
-                    "callgraph.cgServices": {
+                    "callgraph.services": {
                         "scope": "workspace",
                         "type": "boolean",
-                        "description": "Specify behavior of option -cg-services",
+                        "description": "Compute and display services (groups of related functions which seem to provide common functionalities) from the callgraph",
                         "default": true
                     }
                 }
+            },
+            {
+                "title": "Prove annotations",
+                "properties": {
+                    "wp.rte": {
+                        "scope": "workspace",
+                        "type": "boolean",
+                        "description": "Generate RTE guards before WP",
+                        "default": false
+                    },
+                    "wp.prover": {
+                        "scope": "workspace",
+                        "type": "string",
+                        "default": "none",
+                        "description": "Submit proof obligations to prover(s): 'none' (no prover run), 'script' (replay all session scripts), 'tip' (replay or init scripts for failed goals), '<why3-prover>' (any Why-3 prover, (run 'frama-c -wp-detect' in a terminal to list available provers))"
+                    },
+                    "wp.timeout": {
+                        "scope": "workspace",
+                        "type": "integer",
+                        "default": 2,
+                        "description": "Set the timeout (in seconds) for provers (default: 2)"
+                    },
+                    "wp.session": {
+                        "scope": "workspace",
+                        "type": "string",
+                        "default": "",
+                        "description": "Set the plug-in session directory"
+                    }
+                }
+            },
+            {
+                "title": "Diagnostics",
+                "properties": {
+                    "diagnostics.wp": {
+                        "scope": "workspace",
+                        "type": "boolean",
+                        "description": "Enable WP diagnostics. (Not implemented yet)",
+                        "default": false
+                    }
+                }
+            },
+            {
+                "title": "Advanced options",
+                "properties": {
+                    "wp.pruning": {
+                        "scope": "workspace",
+                        "type": "boolean",
+                        "description": "Prune trivial branches. (set by default)",
+                        "default": true
+                    },
+                    "wp.checkMemoryModel": {
+                        "scope": "workspace",
+                        "type": "boolean",
+                        "description": "Insert memory model hypotheses in function contracts and check them on call.",
+                        "default": false
+                    },
+                    "wp.volatile": {
+                        "scope": "workspace",
+                        "type": "boolean",
+                        "description": "Sound modeling of volatile access. Disable to ignore volatile attributes.",
+                        "default": true
+                    },
+                    "kernel.generatedSpecCustom": {
+                        "scope": "workspace",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "Fine-tune missing specification generation by manually selecting modes for each clause (write it as [clause]:[mode]). Can be one of: frama-c, acsl, safe skip or the name of a custom registered mode. Do not use skip mode for assigns unless you know what you are doing! See Frama-C user manual for more information."
+                    }
+                }
             }
-],
-"commands": [
-    {
-        "command": "vscodeacsl.displayCIL",
-        "title": "Display CIL"
+        ],
+        "commands": [
+            {
+                "command": "displayCIL",
+                "title": "Display CIL"
+            },
+            {
+                "command": "computeCG",
+                "title": "Compute Callgraph"
+            },
+            {
+                "command": "showPOVC",
+                "title": "Proof Obligation(s) of annotation"
+            },
+            {
+                "command": "showGlobalMetrics",
+                "title": "Project Metrics"
+            },
+            {
+                "command": "showLocalMetrics",
+                "title": "File Metrics"
+            },
+            {
+                "command": "showCG",
+                "title": "Show Callgraph"
+            }
+        ]
     },
-    {
-        "command": "vscodeacsl.computeCG",
-        "title": "Compute Callgraph"
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -b",
+        "watch": "tsc -b -w",
+        "lint": "eslint ./src --ext .ts,.tsx",
+        "test": "sh ./scripts/e2e.sh"
+    },
+    "devDependencies": {
+        "@types/mocha": "^10.0.7",
+        "@types/node": "^18.19.44",
+        "@types/vscode": "^1.92.0",
+        "@typescript-eslint/eslint-plugin": "^7.18.0",
+        "@typescript-eslint/parser": "^7.18.0",
+        "eslint": "^8.57.0",
+        "minimatch": "^3.1.2",
+        "mocha": "^9.2.2",
+        "typescript": "^5.5.4"
+    },
+    "dependencies": {
+        "@types/vscode-webview": "^1.57.5",
+        "types": "^0.1.1",
+        "vscode-languageclient": "^9.0.1"
     }
-]
-},
-"scripts": {
-"vscode:prepublish": "npm run compile",
-"compile": "tsc -b",
-"watch": "tsc -b -w",
-"lint": "eslint ./src --ext .ts,.tsx",
-"test": "sh ./scripts/e2e.sh"
-},
-"devDependencies": {
-"@types/mocha": "^10.0.6",
-"@types/node": "^18.18.0",
-"@types/vscode": "^1.75.0",
-"@typescript-eslint/eslint-plugin": "^7.11.0",
-"@typescript-eslint/parser": "^7.11.0",
-"eslint": "^8.57.0",
-"minimatch": "^3.0.2",
-"mocha": "^9.2.1",
-"typescript": "^5.4.5"
-},
-"dependencies": {
-"@types/vscode-webview": "^1.57.5",
-"types": "^0.1.1",
-"vscode-languageclient": "^9.0.1"
-}
 }
