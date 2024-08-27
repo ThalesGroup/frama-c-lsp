@@ -83,7 +83,7 @@ int main()
   set_to_0(a, n);
   print_ints(a, n);
   az(i1, n);
-  print_string_const();ù
+  print_string_const();
 
   int z = test(2);
   return 0;

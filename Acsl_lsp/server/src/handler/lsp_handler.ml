@@ -132,7 +132,7 @@ let kernel_args () =
   if (!Configuration.global_params.aggressiveMerging) then add_arg " -aggressive-merging";
 
   add_arg " -kernel-warn-key annot-error=active";
-
+  add_arg " -no-unicode";
   !args
 
 let global_metrics_args () = 
