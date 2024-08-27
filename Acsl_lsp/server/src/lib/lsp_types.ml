@@ -1,6 +1,6 @@
 (* lsp types module *)
 type id_ = Int of int | Str of string | Null
-type lsp_result = RQ_RESULT of Json.json | NTF_RESULT of unit | EMPTY of unit
+type lsp_result = CONTENT of string | EMPTY of unit
 
 
 
@@ -2651,4 +2651,57 @@ module DidSaveTextDocumentParams = struct
       in
       { textDocument; text }
     | _ -> raise (Invalid_argument "Invalid JSON format for DidSaveTextDocumentParams")
+end
+
+module MessageType = struct
+  type t = Error | Warning | Info | Log | Debug 
+
+  let json_of_t (t : t) : Json.t =
+    match t with
+    | Error -> `Int 1
+    | Warning -> `Int 2
+    | Info -> `Int 3
+    | Log -> `Int 4
+    | Debug -> `Int 5
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Int 1 -> Error
+    | `Int 2 -> Warning
+    | `Int 3 -> Info
+    | `Int 4 -> Log
+    | `Int 5 -> Debug
+    | _ -> Info
+end
+
+module ShowMessageParams = struct
+  type t = {
+    type_: MessageType.t;
+    message: string
+  }
+
+  let create ~type_ ~message () = {type_; message}
+
+  let json_of_t (t : t) : Json.t = 
+    `Assoc [
+      "type", MessageType.json_of_t t.type_;
+      "message", `String t.message;
+    ]
+
+  let t_of_json (json : Json.t) : t =
+    match json with
+    | `Assoc fields ->
+      let type_ =
+        match List.assoc_opt "type" fields with
+        | Some json_kind -> MessageType.t_of_json json_kind
+        | _ -> raise (Invalid_argument "Invalid JSON format for ShowMessageParams: type")
+      in
+      let message =
+        match List.assoc "message" fields with
+        | `String s -> s
+        | _ -> raise (Invalid_argument "Invalid JSON format for ShowMessageParams: message")
+      in
+    { type_; message }
+    | _ -> raise (Invalid_argument "Invalid JSON format for ShowMessageParams")
+
 end

@@ -1,6 +1,6 @@
-#ifndef TEST_2_   
-#define TEST_2_
+#ifndef TEST_3_   
+#define TEST_3_
 
-float fx(float z);  
+int test(double x);  
 
-#endif // TEST_2_
+#endif // TEST_3_

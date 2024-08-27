@@ -1,39 +1,25 @@
 {
-    "framac.includePaths": [
+    "kernel.aggressiveMerging": false,
+    "kernel.includePaths": [
         "include_folder",
         "include_folder2"
     ],
-    "framac.macros": [
-        "MACRO1",
-        "MACRO2=5",
-        "\"MACRO3=6\""
-    ],
-    "framac.sourceFiles": [],
-    "vscodeacsl.trace.server": "messages",
-    "kernel.cppGnuLike": true,
-    "kernel.includePaths": [
-        "include_folder2",
-        "include_folder"
-    ],
+    "kernel.keepUnusedSpecifiedFunctions": true,
+    "kernel.machdep": "",
     "kernel.sourceFiles": [
         "test1.c",
+        "locale.c",
+        "include_folder2/locale.h",
         "folder1/test2.c"
     ],
-    "kernel.kernelWarnKey": true,
-    "kernel.origName": false,
-    "kernel.cc": false,
-    "kernel.print": false,
-    "kernel.unicode": false,
-    "kernel.keepComments": true,
-    "kernel.kernelLog": "",
-    "kernel.annot": true,
-    "kernel.ocode": "",
-    "kernel.framacStdlib": true,
-    "qed.wpPruning": false,
-    "callgraph.cg": "test1.dot",
-    "kernel.cppCommand": "",
-    "kernel.keepUnusedSpecifiedFunctions": true,
-    "metrics.metrics": true,
-    "wp.wp": false,
-    "wp.wpPruning": false,
+    "wp.checkMemoryModel": true,
+    "wp.volatile": false,
+    "metrics.output": "aa",
+    "vscodeacsl.maxNumberOfProblems": 100,
+    "acslLsp": 4,
+    "callgraph.output": "",
+    "callgraph.roots": [],
+    "wp.prover": "none",
+
 }
+    

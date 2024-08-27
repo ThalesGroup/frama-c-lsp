@@ -1,9 +1,6 @@
 #ifndef TEST_2_   
 #define TEST_2_
 
-    #if MACRO1
-    #else 
-    int test(double z);  
-    #endif
+int test(double x);  
 
 #endif // TEST_2_

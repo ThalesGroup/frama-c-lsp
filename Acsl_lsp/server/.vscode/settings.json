@@ -2,5 +2,22 @@
     "ocaml.sandbox": {
         "kind": "opam",
         "switch": "4.13.1_fc28"
-    }
+    },
+    "acslLsp": 3,
+    "kernel.aggressiveMerging": false,
+    "kernel.includePaths": [
+        "include_folder",
+        "include_folder2"
+    ],
+    "kernel.keepUnusedSpecifiedFunctions": true,
+    "kernel.sourceFiles": [
+        "test1.c"
+    ],
+    "callgraph.services": true,
+    "wp.rte": false,
+    "wp.timeout": 2,
+    "diagnostics.wp": false,
+    "wp.checkMemoryModel": false,
+    "wp.pruning": true,
+    "wp.volatile": true
 }

@@ -9,14 +9,11 @@
             },
 *)
 
-let initialize (req : Types.RequestMessage.t): Json.json = 
-    let req_json = (Types.RequestMessage.json_of_t req) in
-    let temp =  Utils.remove_newline (Utils.remove_quotes (Json.save_string (Json.field "rootPath" (Json.field "params" req_json)))) in
-    States.rootPath := States.(!rootPath) ^ temp;
-    Settings.Self.debug ~level:1 "rootPath = %s\n%!" States.(!rootPath);
+let initialize : Json.json = 
 
+    
     (* List.iter (fun x ->
-      Settings.Self.debug ~level:1 "warn category : %s\n%!" x
+      Lsp.Self.debug ~level:3 "warn category : %s\n%!" x
     ) PublishDiagnostics.evt_categories; *)
 
       let result = {|{
@@ -25,7 +22,7 @@ let initialize (req : Types.RequestMessage.t): Json.json =
         "result": {
           "capabilities": {
             "textDocumentSync": {
-              "openClose": true,
+              "openClose": false,
               "change": 0,
               "save": {
                 "includeText": false
