@@ -14,7 +14,7 @@
     ],
     "wp.checkMemoryModel": true,
     "wp.volatile": false,
-    "metrics.output": "aa",
+    "metrics.output": "",
     "vscodeacsl.maxNumberOfProblems": 100,
     "acslLsp": 4,
     "callgraph.output": "",

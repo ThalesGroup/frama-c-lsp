@@ -113,7 +113,7 @@ let diagnostics_handler (event : Log.event) =
       diag_list := (diagnostic 
         (loc)
         Lsp_types.DiagnosticSeverity.Error 
-        ((escape_unicode msg))
+        (Scanf.unescaped (escape_unicode (String.escaped msg)))
         event.evt_plugin
         )::!diag_list;
     end
@@ -124,7 +124,7 @@ let diagnostics_handler (event : Log.event) =
     diag_list :=  (diagnostic 
         (loc)
         Lsp_types.DiagnosticSeverity.Error 
-        ((escape_unicode msg))
+        (Scanf.unescaped (escape_unicode (String.escaped msg)))
         event.evt_plugin
         )::!diag_list
   | Log.Failure ->
@@ -132,7 +132,7 @@ let diagnostics_handler (event : Log.event) =
       diag_list :=  (diagnostic 
         (loc)
         Lsp_types.DiagnosticSeverity.Error 
-        ((escape_unicode msg))
+        (Scanf.unescaped (escape_unicode (String.escaped msg)))
         event.evt_plugin
         )::!diag_list
   | Log.Warning -> 
@@ -140,7 +140,7 @@ let diagnostics_handler (event : Log.event) =
     diag_list :=  (diagnostic 
         (loc)
         Lsp_types.DiagnosticSeverity.Warning 
-        ((escape_unicode msg))
+        (Scanf.unescaped (escape_unicode (String.escaped msg)))
         event.evt_plugin
         )::!diag_list;
 (* Lsp.Self.debug ~level:4 "diags handler warning : nb diags = %d\n%!" (List.length !diag_list); *)
@@ -152,7 +152,7 @@ let diagnostics_handler (event : Log.event) =
     diag_list := ( (diagnostic 
         (loc)
         Lsp_types.DiagnosticSeverity.Information 
-        ((escape_unicode msg))
+        (Scanf.unescaped (escape_unicode (String.escaped msg)))
         event.evt_plugin
         ))::!diag_list
   | Log.Feedback ->

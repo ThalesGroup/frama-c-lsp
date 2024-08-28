@@ -474,31 +474,31 @@ let notif_handler json_string server_sock =
     Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
     Lsp_types.CONTENT (execute_command command true ());
 
-    | "showGlobalMetrics" -> 
-      Lsp.Self.debug ~level:4 "global metrics\n%!";
-      let project_filename = if not (String.equal (!Configuration.global_params.metricsOutput) "") then (Filename.remove_extension !Configuration.global_params.metricsOutput) else "project_metrics" in
-      let command = "frama-c "^(source_files ())^(cpp_extra_args ())^(kernel_args ())^" -then"^(global_metrics_args ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-metrics=\""^(!rootPath)^"/"^project_filename^"\"" in
-      Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
-      Lsp_types.CONTENT (execute_command command false ());
+  | "showGlobalMetrics" -> 
+    Lsp.Self.debug ~level:4 "global metrics\n%!";
+    let project_filename = if not (String.equal (!Configuration.global_params.metricsOutput) "") then (Filename.remove_extension !Configuration.global_params.metricsOutput) else "project_metrics" in
+    let command = "frama-c "^(source_files ())^(cpp_extra_args ())^(kernel_args ())^" -then"^(global_metrics_args ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-metrics=\""^(!rootPath)^"/"^project_filename^"\"" in
+    Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
+    Lsp_types.CONTENT (execute_command command false ());
 
-    | "showLocalMetrics" -> 
-      Lsp.Self.debug ~level:4 "local metrics\n%!";
-      let file = match notif.params with 
-          | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
-          | _ -> Lsp.Self.debug ~level:3 "No params for metrics \n%!"; assert false
-        in
-      let command = "frama-c "^file^(cpp_extra_args ())^(kernel_args ())^" -then"^(local_metrics_args (Filename.remove_extension file) ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-metrics=\""^(Filename.remove_extension file)^"\"" in
-      Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
-      Lsp_types.CONTENT (execute_command command false ());
-    
-    | "computeCG" -> 
-      Lsp.Self.debug ~level:4 "computeCG\n%!";
-      let file = match notif.params with 
-          | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
-          | _ -> Lsp.Self.debug ~level:3 "No params for computeCG \n%!"; assert false
-        in
-      let command = "frama-c "^file^(cpp_extra_args ())^(kernel_args ())^" -then"^(callgraph_args (Filename.remove_extension file) ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-compute-cg=\""^(get_cg_output_file (Filename.remove_extension file) ())^"\"" in
-      Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
+  | "showLocalMetrics" -> 
+    Lsp.Self.debug ~level:4 "local metrics\n%!";
+    let file = match notif.params with 
+        | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
+        | _ -> Lsp.Self.debug ~level:3 "No params for metrics \n%!"; assert false
+      in
+    let command = "frama-c "^file^(cpp_extra_args ())^(kernel_args ())^" -then"^(local_metrics_args (Filename.remove_extension file) ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-metrics=\""^(Filename.remove_extension file)^"\"" in
+    Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
+    Lsp_types.CONTENT (execute_command command false ());
+  
+  | "computeCG" -> 
+    Lsp.Self.debug ~level:4 "computeCG\n%!";
+    let file = match notif.params with 
+        | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
+        | _ -> Lsp.Self.debug ~level:3 "No params for computeCG \n%!"; assert false
+      in
+    let command = "frama-c "^file^(cpp_extra_args ())^(kernel_args ())^" -then"^(callgraph_args (Filename.remove_extension file) ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-compute-cg=\""^(get_cg_output_file (Filename.remove_extension file) ())^"\"" in
+    Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
       Lsp_types.CONTENT (execute_command command false ());
 
   | "workspace/didChangeConfiguration" ->

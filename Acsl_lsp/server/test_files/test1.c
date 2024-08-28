@@ -40,7 +40,7 @@ int test(double x) {
 }
 
 void print_string_const(){
-  printf("strîng constant : %s\n", STRING_CONSTANT);
+  printf("string constant : %s\n", STRING_CONSTANT); 
 }
 
 /*@
@@ -81,7 +81,7 @@ int main()
 
   print_ints(a, n);
   set_to_0(a, n);
-  print_ints(a, n);
+  print_ints(a, -2);
   az(i1, n);
   print_string_const();
 
