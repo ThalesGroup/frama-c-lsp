@@ -6,8 +6,14 @@ Code adapted from https://github.com/microsoft/vscode-extension-samples/tree/mai
 
 This Language Server works for C and C header files. It has the following language features:
 - Go To Definition
+- Go To Declaration
+- Diagnostics
 
-It also includes an End-to-End test.
+Frama-C features : 
+- Display CIL
+- Compute Callgraph
+- Show Metrics
+- Show proof obligations
 
 ## Structure
 
