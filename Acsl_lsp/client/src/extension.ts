@@ -149,6 +149,7 @@ export function activate(context: ExtensionContext) {
 		}
 	});
 
+	// does not work 
 	const showCG = commands.registerCommand('showCG', async () => {
         const panel = window.createWebviewPanel(
             'pdfPreview', 
