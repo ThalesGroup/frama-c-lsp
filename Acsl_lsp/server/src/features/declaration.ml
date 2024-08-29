@@ -30,6 +30,12 @@ let glob_visitor symbol declarations = object
         if (String.equal symbol vi.vname) then 
         begin
           declarations := loc :: !declarations;
+          (* (match vi.vlogic_var_assoc with 
+          | Some lvar -> 
+            (match lvar.lv_origin with 
+            | Some _ -> declarations := loc :: !declarations;
+            | None -> ())
+          | None -> ()); *)
         end; 
         Cil.DoChildren
       

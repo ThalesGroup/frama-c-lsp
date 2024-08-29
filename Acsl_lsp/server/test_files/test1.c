@@ -8,7 +8,6 @@
 #define STRING_CONSTANT "ABCD"
 #define INTEGER_CONSTANT 2
 
-// extern int test(double x);
 
 /*@
   requires \valid(a+(0..n-1));
@@ -27,7 +26,7 @@ void set_to_0(int *a, size_t n)
     loop invariant
     \forall integer j;
       0 <= j < i ==> a[j] == 0;
-    loop assigns i, a[0..n-1]; // acsl comment example
+    loop assigns i, a[0..n-1];
     loop variant n-i;
 
   */
@@ -48,9 +47,9 @@ void print_string_const(){
 */
 void print_ints(int *a, size_t n)
 {
-  for (int i = 0; i < n; i++)
+  for (int k = 0; k < n; k++)
   {
-    printf("%d\t", a[i]);
+    printf("%d\t", a[k]);
   }
   printf("\n");
 }
