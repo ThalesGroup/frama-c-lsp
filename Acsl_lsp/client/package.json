@@ -14,7 +14,7 @@
         "acsl"
     ],
     "engines": {
-        "vscode": "^1.92.0"
+        "vscode": "^1.85.0"
     },
     "activationEvents": [
         "onLanguage:c"
