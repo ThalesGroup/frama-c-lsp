@@ -307,6 +307,6 @@
     "dependencies": {
         "@types/vscode-webview": "^1.57.5",
         "types": "^0.1.1",
-        "vscode-languageclient": "^9.0.1"
+        "vscode-languageclient": "^8.1.0"
     }
 }

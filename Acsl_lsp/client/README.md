@@ -21,7 +21,6 @@ Frama-C features :
 .
 ├── client // Language Client
 │   ├── src
-│   │   ├── test // End to End tests for Language Client / Server
 │   │   └── extension.ts // Language Client entry point
 └── package.json // The extension manifest.
 ```
@@ -34,3 +33,6 @@ Frama-C features :
 - Switch to the Run and Debug View in the Sidebar (Ctrl+Shift+D).
 - Select `Launch Client` from the drop down (if it is not already).
 - Press ▷ to run the launch config (F5).
+
+## Installation 
+Import the VSIX file present in this directory in VS Code
