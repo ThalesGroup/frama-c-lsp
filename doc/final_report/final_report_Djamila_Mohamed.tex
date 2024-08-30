@@ -74,7 +74,7 @@
 
 % Header and footer information
 \setlength\headheight{15pt}
-\fancyhead[L]{Thales DIS / EIDD} 
+\fancyhead[L]{Thales DIS} 
 \fancyhead[R]{Djamila Mohamed}
 \fancyhead[C]{\today}
 \fancyfoot[R]{\thepage}
@@ -125,52 +125,53 @@
 \pagenumbering{arabic}
 \section{Introduction}
 \subsection{Thales DIS}
-Thales Digital Identity and Security is the global business unit of Thales which operates in the field of secure software, providing biometric and encryption solutions. Within DIS is the Identity and Biometric Solutions business line which is in charge of digital identity (e.g.:\ cards and passports). 
+Thales Digital Identity and Security is the global business unit of Thales which operates in the field of secure software, providing biometric and encryption solutions. Within DIS is the Identity and Biometric Solutions (IBS) business line which is in charge of digital identity (e.g.:\ cards and passports). 
 
-The IBS BL is divided in three subunits: ID Documents Solutions (IDDS), Digital ID \& Verification Solutions and Public Security. I am assigned to the IDDS subunit as an intern software developer, under the supervision of Adel Djoudi, formal methods expert at Thales DIS.\@
-% TODO : talk about eal certification levels of common criteria
+The IBS business line is divided in three subunits: ID Documents Solutions, Digital ID \& Verification Solutions and Public Security. Activities described in this report have been conducted within the ID Documents and solutions subunit.
 
 \subsection{Context}
 \subsubsection{Frama-C}
-In IDDS, developers use program analyzers such as Frama-C\footnote{https://frama-c.com/html/overview.html}, a C source file analyzer developed by CEA and Inria\footnote{two prominent research institutions with overlapping goals in scientific advancement and technology innovation}. 
+In Thales DIS, developers use program analyzers such as Frama-C\footnote{https://frama-c.com/html/overview.html}.
 
-Frama-C is a toolkit for analyzing source code written in C. It combines various static and dynamic analysis methods into a single system, allowing different tools included in the suite to build on each other's results for enhanced accuracy.
+Frama-C is a toolkit for analyzing source code written in C developed by CEA and Inria. It combines various static and dynamic analysis methods into a single system.
 
-A key feature of Frama-C is its support for the ANSI/ISO C Specification Language (ACSL), a formal language designed for specifying the behavior of C programs. ACSL facilitates the precise expression of functional properties through function contracts. It enables both human-readable and machine-processable specifications, ensuring a detailed understanding of function behavior.
+A key feature of Frama-C is its support for the ANSI/ISO C Specification Language (ACSL), a formal language designed to specify the behavior of C programs. ACSL facilitates the precise expression of functional properties through function contracts. It enables both human-readable and machine-processable specifications, ensuring a detailed formal specification of function behavior.
 
-Frama-C's static analysis is oriented towards ensuring code correctness. Frama-C guarantees the identification of all possible runtime errors and validates adherence to specified functional requirements.
+ACSL specification is mainly expressed as function contracts that state preconditions and postconditions of functions. A function precondition must be satisfied when the function is called and a postcondition must be satisfied when the function terminates its execution.
 
-The collaborative framework of Frama-C enhances its analytical power, integrating various tools and allowing them to contribute to a comprehensive examination of code. Its modular and extensible design supports a wide range of analysis techniques, making it a good choice for ensuring code reliability and compliance to detailed functional specifications.
+Loop invariants are also needed to specify the expected behavior of loops without unrolling all loop iterations. Figure~\ref{fig:acsl-example} depicts a C function called set\_to\_0 that sets all elements of an array to 0 with its associated ACSL specification.
 
-To write specifications, developers use predicates and logic functions to construct function contracts. Figure~\ref{fig:acsl-example} describes a C function called set\_to\_0 that sets all elements of an array to 0.
+This is a simple example given for the sake of clarity. Advanced ACSL specification may use other constructs such as: predicates, logic functions, ghost code, ect. (c.f. reference to ACSL specification).
 
-Precondition (requires): The array a must be valid allocated pointer and have n elements.
+Precondition (line 14: requires): The pointer $a$ points to valid memory locations.
 
-Postcondition (ensures): After the function executes, all elements in the array a from index 0 to n-1 will be 0.
+Postcondition (line 17: ensures): After the function executes, all elements in the array $a$ from index 0 to n-1 will be 0.
 
-Loop Invariant 1:
+Postcondition (line 15: assigns): Memory locations modified by the function (function side effect on calling sites)
+
+Loop Invariant (line 26):
 \texttt{0 <= i <= n}: The loop variable i always remains within the bounds from 0 to n.
 
-Loop invariant 2: For every index j less than i, the element a[j] has already been set to 0.
+Loop invariant (line 27): For every index j less than i, at each loop iteration and at the end of the loop, the elements $a[j]$ are set to 0.
 
-Loop Variant: The expression n-i decreases with each iteration, ensuring loop termination.
+Loop Variant (line 31): The expression n-i decreases with each iteration, ensuring loop termination.
 
-Side Effects (assigns): The function modifies the array a and the loop variable i.
+Loop side effects (line 30: loop assigns ...): The loop modifies the content of array $a$ and variable $i$ that were declared outside of the loop scope.
 
 
-\begin{figure}[H]
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[scale=0.7]{img/acsl_example.png}
-	\caption{Example of ACSL specification for C function}
+	\caption{Example of ACSL specification for a C function}
 	\label{fig:acsl-example}
 \end{figure}
 
 \subsubsection{Problem}
-Frama-C currently lacks a dedicated integrated development environment (IDE) for editing and browsing C code and ACSL annotations, leading to significant inefficiencies in the development process. Writing ACSL specifications often requires manually searching through the Frama-C libraries to find the relevant functions and their definitions. This approach is inefficient.
+Frama-C currently lacks a dedicated integrated development environment (IDE) for editing and browsing C code and ACSL annotations. Writing ACSL specifications often requires manually searching through the C code and ACSL annotations to find relevant declarations and definitions of various terms.
 
-For those familiar with Frama-C, locating function definitions involves opening a terminal and use the \texttt{frama-c -print-share-path} command to identify the directory where Frama-C libraries are stored. Following this, the \texttt{grep} utility can be used to search for specific predicate definitions within these files. For example, the command \texttt{grep -r `predicate\_name' /path/to/frama-c/libraries} is used to recursively search for occurrences of \texttt{predicate\_name} within the directory. While this method can yield results, it requires manual navigation and is prone to inefficiencies, especially in large codebases with extensive libraries.
-Below is an example with the predicate \texttt{valid\_read\_string}.
-\begin{figure}[H]
+In practice, Frama-C users usually rely on a grep-like utility to search for predicate definitions within large code bases. For example, the command \texttt{grep -r `predicate\_name' /path/to/frama-c/libraries} may be used to recursively search for occurrences of \texttt{predicate\_name} among the Frama-C libraries. While this method can yield results, it requires manual navigation and is prone to inefficiencies, especially in large code bases with extensive libraries.
+Figure 2 shows an example with the predicate \texttt{valid\_read\_string}.
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[scale=0.7]{img/grep.png}
 	\caption{Example of searching predicate definition with grep}
@@ -179,24 +180,44 @@ Below is an example with the predicate \texttt{valid\_read\_string}.
 Searching through potentially large directories and files using grep is time-consuming, especially when dealing with complex libraries with numerous functions and predicates.
 This method relies heavily on manual effort and familiarity with command-line tools, which can be error-prone and inconvenient.
 
-The inefficiencies of the current method emphasize the necessity for a simpler solution. A Language Server Protocol (LSP) tailored for ACSL code would offer significant improvements by providing features such as real-time code browsing, automatic function and predicate lookup, contextual information, and integration with the editing environment. Such a tool would greatly enhance productivity by automating these tasks and reducing the reliance on cumbersome manual search processes.
+The lack of efficiencies of the current method emphasizes the necessity for a simpler solution. 
 
-Additionally, those unaccustomed to Frama-C and ACSL annotations can benefit from this solution for getting started and have a better understanding of the specification language.
+Microsoft has designed the Language Server Protocol (LSP) as a common standard to enrich integrated development environments (IDEs) with several language programming features.
 
-The goal of this project is to develop a software solution to offer language programming features for C/ACSL in IDEs including code navigation, completion suggestions, and interaction with Frama-C code analysis, to enhance validation and facilitate certification at EAL6/EAL7 levels of the Common Criteria.
+An LSP tailored for ACSL code would offer significant improvements by providing features such as code navigation, automatic function and predicate search, contextual information, and interaction between editing, parsing and analysis tools. Such a tool would greatly enhance productivity by automating these tasks and reducing the reliance on cumbersome manual search and code parsing processes.
+
+Additionally, those unaccustomed to Frama-C and ACSL annotations can benefit from this solution as user friendly environment to edit C and ACSL code and have a better understanding of the specification language.
+
+The goal of this project is to develop a software solution to offer language programming features for C/ACSL in IDEs including code navigation, completion suggestions, and interaction with Frama-C code analysis.
 
 
 \subsection{Work organization}
-% TODO : mettre le project plan sous forme d'histogramme
+The internship started in the end of march (20/03/2024) for a duration of five months. 
+It is divided in seven main tasks, as depicted in figure \ref{fig:work-org}.
+\begin{itemize}
+	\item[--] Bibliography: A period of research work was necessary to understand the challenges of the internship. A study of a work similar than the one described in this report was made to understand the subject \cite{nsl}.
+	\item[--] Proof of concept for 'Go To Definition' feature: A first minimal implementation was made to anticipate design choices for the architecture of the final implementation
+	\item[--] Refactoring of the communication protocol between OCaml-based Frama-C plugin and Node.js VS Code extension
+	\item[--] Refactoring of the Frama-C plugin architecture
+	\item[--] Implementation of other LSP features
+	\item[--] Implementation of Frama-C specific features
+	\item[--] Internship report
+\end{itemize}
+\begin{figure}[!htb]
+	\caption{Work organization of the internship}
+	\includegraphics[scale=0.4]{img/work_org.png}
+	\label{fig:work-org}
+\end{figure}
 
 \section{Background}
+\label{sec:background}
 \subsection{The Language Server Protocol}
 \subsubsection{Context}
-Developers working on large scale projects often need a code editing environment with the adequate tooling for the languages they use in their workspace. Multiple solutions such as Eclipse or IntelliJ IDEA exist for Java projects, as well as other popular programming languages. But the complexity of developing one tool for one language and one specific editor is tedious as it forces developers to implement the same language programming features for every code editor with each programming language. To overcome these, a solution was developed: the Language Server Protocol (LSP)\footnote{https://microsoft.github.io/language-server-protocol/overviews/lsp/overview/}.
+Developers working on large scale projects often need a code editing environment with the adequate tooling for the languages they use in their workspace. Multiple solutions such as Eclipse or IntelliJ IDEA exist for Java projects, as well as other popular programming languages. But the complexity of developing one tool for one language and one specific editor is tedious as it forces developers to implement the same language programming features for every code editor with each programming language. To overcome these, a solution was developed: the LSP\footnote{https://microsoft.github.io/language-server-protocol/overviews/lsp/overview/}.
 
-The Language Server Protocol (LSP) operates through a structured communication system between the client (such as an IDE or code editor) and the server (which provides language-specific features). This communication is facilitated by various types of messages and methods that define the interactions between the client and server.
+The LSP operates through a structured communication system between the client (such as an IDE or code editor) and the server (which provides language-specific features). This communication is facilitated by various types of messages and methods that define the interactions between the client and server.
 
-The language Server Protocol (LSP) is built on top of the \href{https://www.jsonrpc.org/specification}{JSON-RPC protocol}, a remote procedure call protocol that uses JSON as data format.
+It is built on top of the \href{https://www.jsonrpc.org/specification}{JSON-RPC protocol}, a remote procedure call protocol that uses JSON as data format.
 It permits a communication between a client and a server.
 
 Figure 2 illustrates an example of usage of the LSP, it demonstrates the data exchanges between the development tool and the language server.
@@ -206,10 +227,10 @@ Figure 2 illustrates an example of usage of the LSP, it demonstrates the data ex
 Request Message: A request message is sent by the client to ask the server to perform a specific action. Each request is associated with a particular method, which determines the type of operation being requested. For example, methods like `textDocument/completion' request code completion suggestions, while `textDocument/definition' asks for the location of a symbol's definition. These requests expect a response from the server, which will either provide the requested data or indicate an error.
 
 Notification Message: Notification messages are used by the client to inform the server of events or changes in the editor, such as opening, modifying, or closing a document. Unlike request messages, notifications do not expect a response. They keep the server updated on the current state of the workspace. Methods associated with notifications include `textDocument/didOpen', `textDocument/didChange', and `textDocument/didClose'.
-\begin{figure}[H]
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[scale=0.4]{img/lsp_exchange_example.png}
-	\caption{Language Server Protocol sequence diagram: example of an interaction flow between client and server}
+	\caption{LSP sequence diagram: example of an interaction flow between client and server}
 \end{figure}
 \subsubsection{LSP Capabilities}\label{sec:lsp-capabilities}
 The LSP defines sets of features named `capabilities'. LSP capabilities are boolean values transported in a JSON request that each party declares when the extension is launched.
@@ -272,7 +293,7 @@ Table \ref{tab:lsp-features} is a listing of all LSP features and the use cases 
 \end{longtable}
 
 \subsection{Frama-C plugin development}
-This document provides a brief overview of the key aspects of developing a Frama-C plug-in, including OCaml’s module system and the process of registration, building, and installing a plug-in using Dune.
+This document provides a brief overview of the key aspects of developing a Frama-C plugin, including OCaml’s module system and the process of registration, building, and installing a plugin using Dune.
 
 \paragraph*{Overview of OCaml}
 OCaml is a functional programming language with a rich type system. It organizes code into modules, which can be used to encapsulate and manage related functionalities. Key features of OCaml’s module system include:
@@ -288,28 +309,28 @@ OCaml's type system helps ensure the correctness of complex static analysis task
 \begin{itemize}
     \item[--] Frama-C Installation: Ensure Frama-C is installed. The minimum required is version 28.0.
     \item[--] OCaml Toolchain: Install the OCaml toolchain, including tools like \texttt{opam}, \texttt{ocamlbuild}, \texttt{ocamllsp} and \texttt{ocamlfind}.
-    \item[--] It is necessary to have the Frama-C user manual\footnote{https://frama-c.com/download/frama-c-user-manual.pdf} Frama-C plug-in development guide\footnote{https://frama-c.com/download/frama-c-plugin-development-guide.pdf} beside.
+    \item[--] It is necessary to have the Frama-C user manual \cite{frama_c_user_manual} Frama-C plugin development guide \cite{frama_c_plugin_guide} beside.
 \end{itemize}
 
 \paragraph*{Understanding Frama-C’s Architecture}
 Figure \ref{fig:framac-archi} shows how the Frama-C modules are organized.
 \begin{itemize}
     \item[--] Frama-C Kernel: Provides essential services such as Abstract Syntax Tree (AST) management, project handling, and results storage, the kernel services are the main modules we will work with.
-    \item[--] Existing plug-ins: Depending on the analysis goals, the plugin may need to interact with specific Frama-C modules like CFG or WP. For instance, a plugin designed to analyze the control flow of a program will use the CFG module to traverse and manipulate the CFG.
-    \item[--] API Documentation: The Frama-C API provides an online API where we can browse each plug-in's library and better understand its functions
+    \item[--] Existing plugins: Depending on the analysis goals, the plugin may need to interact with specific Frama-C modules like CFG or WP. For instance, a plugin designed to analyze the control flow of a program will use the CFG module to traverse and manipulate the CFG.
+    \item[--] API Documentation: The Frama-C API provides an online API where we can browse each plugin's library and better understand its functions
 \end{itemize}
 
-\begin{figure}[H]
+\begin{figure}[!htb]
 	\centering
-	\includegraphics[]{img/framac_architecture.png}
+	\includegraphics[scale=0.5]{img/framac_architecture.png}
 	\caption{Frama-C Architecture Design}
 	\label{fig:framac-archi}
 \end{figure}
 
 \paragraph*{Plug-in Registration}
-To register a Frama-C plug-in, a file that defines the API of the plugin \texttt{plugin-name.ml} is created. The typical registration involves defining a module with plug-in details and using \texttt{Plugin.Register} to integrate the plug-in with the Frama-C system.
+To register a Frama-C plugin, a file that defines the API of the plugin \texttt{plugin-name.ml} is created. The typical registration involves defining a module with plugin details and using \texttt{Plugin.Register} to integrate the plugin with the Frama-C system.
 In our case it would be: 
-\begin{lstlisting}
+\begin{lstlisting} % todo : 
 	module Self = Plugin.Register 
 		(struct
 			let name = "ACSL LSP"
@@ -318,14 +339,14 @@ In our case it would be:
 		end)
 \end{lstlisting}
 
-We set the plug-in's entry point with the line:
+We set the plugin's entry point with the line:
 \begin{lstlisting}
 	let () = Db.Main.extend run
 \end{lstlisting}
-Here, Db.Main.extend is used to integrate the plug-in's function `run' into Frama-C's main execution process. The entry point is the starting point of the program's execution, where `run' manages the plug-in's options and starts its operations within the Frama-C environment.
+Here, Db.Main.extend is used to integrate the plugin's function `run' into Frama-C's main execution process. The entry point is the starting point of the program's execution, where `run' manages the plugin's options and starts its operations within the Frama-C environment.
 
 \paragraph*{Building with Dune}
-Dune\footnote{https://dune.build/} is a build system for OCaml projects that simplifies the build process. To build a Frama-C plug-in using Dune:
+Dune\footnote{https://dune.build/} is a build system for OCaml projects that simplifies the build process. To build a Frama-C plugin using Dune:
 
 \begin{itemize}
     \item[--] To initiate a project we create a \texttt{dune-project} file to define the project settings:
@@ -374,12 +395,12 @@ Dune\footnote{https://dune.build/} is a build system for OCaml projects that sim
 \end{lstlisting}
 
 \begin{itemize}
-    \item[--] Build the plug-in with \texttt{dune build}, which compiles the plug-in and manages dependencies.
+    \item[--] Build the plugin with \texttt{dune build}, which compiles the plugin and manages dependencies.
 \end{itemize}
 
 \paragraph*{Installing the Plug-in}
-After building, the plug-in is installed using the command: \texttt{dune install}
-This command places the plug-in in a directory where Frama-C can find and use it. We verify that the plug-in is installed by running \texttt{frama-c -lsp} and expect no error messages.
+After building, the plugin is installed using the command: \texttt{dune install}
+This command places the plugin in a directory where Frama-C can find and use it. We verify that the plugin is installed by running \texttt{frama-c -lsp} and expect no error messages.
 
 % \textcolor{green}{describe working example, comment on crée un plugin, dune (librairies, entry point)}
 
@@ -388,16 +409,17 @@ This command places the plug-in in a directory where Frama-C can find and use it
 % \textcolor{green}{parler de l'invariant : un seul ast par projet}
 
 \paragraph*{Useful plugins}
-The following plug-ins are the ones we will be focusing on in our development process:
+The following plugins are the ones we will be focusing on in our development process:
 
-\textbf{Control Flow Graph (CFG)}: The CFG plug-in is central to performing control flow analysis in Frama-C. It allows the construction and manipulation of control flow graphs, which represent all possible paths of execution in a program. Plugins that need to analyze or transform the control flow of a program rely heavily on this module.
+\textbf{Control Flow Graph (CFG)}: The CFG plugin is central to performing control flow analysis in Frama-C. It allows the construction and manipulation of control flow graphs, which represent all possible paths of execution in a program. Plugins that need to analyze or transform the control flow of a program rely heavily on this module.
 
 \textbf{Deductive Verification (WP)}: The WP plugin is used to generate verification conditions using the weakest precondition calculus. These conditions are then checked to ensure that the program adheres to its formal specification, typically expressed in ACSL (ANSI/ISO C Specification Language). This module is crucial for plugins aimed at formal verification or proof-based analysis.
 
 \textbf{Metrics}: This module computes various code metrics, such as cyclomatic complexity and lines of code. These metrics are often used to assess the quality and maintainability of the code, making this module useful for plugins focused on code quality analysis.
 
 \paragraph*{Frama-C invariants}
-Frama-C plug-in developers must respect certain invariants, particularly when interacting with the AST. The AST must remain consistent and uncorrupted, as it is central to all analyses. Modifications to the AST should be minimal and carefully managed to avoid disrupting other plug-ins. 
+\label{sec:framac-inv}
+Frama-C plugin developers must respect certain invariants, particularly when interacting with the AST. The AST must remain consistent and uncorrupted, as it is central to all analyses. Modifications to the AST should be minimal and carefully managed to avoid disrupting other plugins. 
 The following invariant ---as will be explained later--- is important in our case: \textit{``An AST must never be modified inside a project.''}. 
 
 % \subsubsection{Steps in Developing a Plugin}
@@ -420,7 +442,7 @@ The following invariant ---as will be explained later--- is important in our cas
 % \subsubsection{Supporting Tools and Resources for Plugin Development}
 % Frama-C offers a comprehensive set of tools and resources to assist developers in creating high-quality plugins:
 
-% \textbf{API Documentation}: The Frama-C API provides an online API where we can browse each plug-in's library and better understand its functions.
+% \textbf{API Documentation}: The Frama-C API provides an online API where we can browse each plugin's library and better understand its functions.
 
 % \textbf{Plugin Guide}: Frama-C provides a tutorial for developing a new plugin, serving as a starting point that includes basic setup and interaction with the Frama-C Kernel library.
 
@@ -428,18 +450,27 @@ The following invariant ---as will be explained later--- is important in our cas
 
 \subsection{VS Code Extensions}
 
-\subsubsection{TypeScript extension organization}
-The TypeScript extension is organized with various configuration files and directories. Key components include language-configuration.json for defining a part of the declarative language features, tsconfig.json for TypeScript compiler settings, and package.json for extension configuration. The src directory contains the TypeScript source code that launches the language client, while directories like `node\_modules' and `out' manage dependencies and compiled outputs.
+\subsubsection{VS Code extension organization}
+The VS Code extension is organized with various configuration files and directories. Key components include language-configuration.json for defining a part of the declarative language features, tsconfig.json for TypeScript compiler settings, and package.json for extension configuration. The src directory contains the TypeScript source code that launches the language client, while directories like `node\_modules' and `out' manage dependencies and compiled outputs.
 
-The architecture of VS Code extensions is based on a client-server model, which aligns perfectly with the Language Server Protocol. VS Code provides an API with TypeScript libraries for developing different types of extensions, particularly, language extensions. 
+The architecture of VS Code extensions is based on a client-server model, which aligns perfectly with the LSP. VS Code provides an API with TypeScript libraries for developing different types of extensions, particularly, language extensions. 
 A language extension offers declarative (e.g.\: syntax highlighting, bracket autoclosing) and programmatic (e.g.\: hover information, jump to definition) language features. 
+
+\paragraph*{Installation} 
+The extension is installed by importing the VSIX file located in the client code of the project, as shown in figure \ref{fig:ext-install}. The full path to the VSIX file must be provided.
+\begin{figure}[!htb]
+	\centering
+	\caption{Install VS Code extension}
+	\includegraphics[scale=0.7]{img/ext_install.png}
+	\label{fig:ext-install}
+\end{figure}
 
 \subsubsection{Frama-C extensions} 
 \label{sec:framac-vscode-ext}
 Very few VS Code extensions for Frama-C exist in the marketplace\footnote{The Visual Studio marketplace where VS Code extensions can be installed}.
-The only extensions related to Frama-C are for ACSL syntax coloring made by an independent developer\footnote{https://github.com/MisterZurg}. 
+The only extensions related to Frama-C are for ACSL syntax highlighting made by an independent developer\footnote{https://github.com/MisterZurg}. 
 
-The first one, `ACSL-lite'\footnote{https://github.com/MisterZurg/acsl-lite} removes syntax coloring for C code and adds coloring for ACSL annotations, but it has no other feature. The drawback of this extension is that it removes entirely the coloring for C when we also need it. 
+The first one, `ACSL-lite'\footnote{https://github.com/MisterZurg/acsl-lite} removes syntax highlighting for C code and adds coloring for ACSL annotations, but it has no other feature. The drawback of this extension is that it removes entirely the coloring for C when we also need it. 
 
 The second one `ACSL:\@ ANSI/ISO C Specification Language'\footnote{https://github.com/MisterZurg/acsl-ansi-iso-c-specification-language} has coloring for both ACSL and C. But there are a few fixes to make.
 
@@ -457,26 +488,28 @@ To develop the VS Code extension language client, the process began with a sampl
 
 The first step involved modifying the sample code to align the extension's functionality with the target language. This included adjusting project configurations to ensure proper interaction between the language server and the client, enabling the correct recognition and processing of the language's syntax and structure.
 
-For syntax highlighting, TextMate (TM) language grammars were integrated, allowing VS Code to apply syntax coloring. This required defining patterns and scopes within a .tmLanguage file to highlight various syntax elements such as keywords, strings, and comments. The existing syntax coloring for ACSL (ACSL-lite) code---as mentioned in \ref{sec:framac-vscode-ext}--- was extracted, fixed, enhanced and combined to C syntax coloring of official VS Code extension for C and C++\footnote{https://github.com/microsoft/vscode/blob/main/extensions/cpp/syntaxes/c.tmLanguage.json} 
+For syntax highlighting, TextMate (TM) language grammars were integrated, allowing VS Code to apply syntax highlighting. This required defining patterns and scopes within a .tmLanguage file to highlight various syntax elements such as keywords, strings, and comments. The existing syntax highlighting for ACSL (ACSL-lite) code---as mentioned in \ref{sec:framac-vscode-ext}--- was extracted, fixed, enhanced and combined to C syntax highlighting of official VS Code extension for C and C++\footnote{https://github.com/microsoft/vscode/blob/main/extensions/cpp/syntaxes/c.tmLanguage.json} 
 
 In addition, a language configuration file was provided by the sample code to define language-specific behaviors, including comment styles, bracket matching, and auto-closing pairs.
+
+Table \ref{tab:vscode-features} lists all programmatic and declarative language features supported by VS Code, and their implementation status on the server side.
 
 \paragraph*{VS Code commands}
 VS Code commands are custom VS Code-specific features that can be registered for any extension. Commands are declared in the configuration file in the `commands' section (package.json)(fig. \ref{fig:declare-command}). Then they must be set up for a specified menu of the editor (fig. \ref{fig:set-command}) in section `menus' of package.json and must be implemented and registered in the main entry point (extension.ts) in function `activate()' (fig. \ref{fig:register-command}).
 
-\begin{figure}[H]
+\begin{figure}[!htb]
 	\centering
 	\caption{Example of command declaration in package.json}
 	\includegraphics[scale=0.7]{img/declare_cmd.png}
 	\label{fig:declare-command}
 \end{figure}
-\begin{figure}[H]
+\begin{figure}[!htb]
 	\centering
 	\caption{Example of command set up in package.json}
 	\includegraphics[scale=0.7]{img/setup_cmd.png}
 	\label{fig:set-command}
 \end{figure}
-\begin{figure}[H]
+\begin{figure}[!htb]
 	\centering
 	\caption{Example of command implementation in extension.ts}
 	\includegraphics[scale=0.4]{img/impl_cmd.png}
@@ -489,7 +522,7 @@ We choose to name the command the same name as the method called inside.
 
 \section{Design Choices}
 \subsection {File parsing}
-In order to use the Frama-C module's functions, the plug-in converts the source code files into their C Intermediate Language (CIL) representation, which provides a detailed hierarchical structure of the source code. It captures the syntactic elements and relationships within the code, for deeper analysis and processing. This representation allows the server to efficiently navigate and manipulate the code, supporting features like `Go To Definition' and other code navigation tools.
+In order to use the Frama-C module's functions, the plugin converts the source code files into their C Intermediate Language (CIL) representation, which provides a detailed hierarchical structure of the source code. It captures the syntactic elements and relationships within the code, for deeper analysis and processing. This representation allows the server to efficiently navigate and manipulate the code, supporting features like `Go To Definition' and other code navigation tools.
 
 The system is designed to handle the parsing of both single and multiple source code files. Regardless of the number of files being parsed, the resulting ASTs from each file are merged into a single one. This merging process is crucial as it simplifies the analysis and manipulation of the code, providing a unified structure that the server can work with.
 
@@ -498,35 +531,35 @@ When dealing with large codebases, users often face the challenge of working wit
 Users must ensure that all necessary source files are included in the parsing process. If a user fails to specify a source file that is needed for certain features, such as Go To Definition, they may not function correctly. It is therefore the responsibility of the user to provide all the relevant files.
 
 \subsection{Language Server architecture}
-The server was implemented as a Frama-C plug-in to fully exploit the advanced parsing and analysis capabilities at our disposal in the Frama-C framework.
+The server was implemented as a Frama-C plugin to fully exploit its advanced parsing and analysis capabilities.
 
-The plug-in operates in two distinct modes: command line mode and handler mode. In command line mode as represented in figure \ref{fig:cmdline-seq}, the plug-in functions independently of an editor, allowing for non-LSP usage. In this mode, the results are returned directly in the terminal as a JSON string. However, users must be cautious when combining options, as certain combinations may lead to errors or unintended results. Handler mode as depicted in figure \ref{fig:handler-seq}, on the other hand, enables LSP functionality. In this mode, the plug-in connects to a server process that listens on a specified port and initiates an infinite loop where a handler manages incoming and outgoing requests. The commands executed are determined by the handler in accordance with the user's workspace configurations.
+The plugin operates in two distinct modes: command line mode and handler mode. In command line mode as represented in figure \ref{fig:cmdline-seq}, the plugin functions independently of an editor, allowing for non-LSP usage. In this mode, the results are returned directly in the terminal as a JSON string. However, users must be cautious when combining options, as certain combinations may lead to errors or unintended results. Handler mode as depicted in figure \ref{fig:handler-seq}, on the other hand, enables LSP functionality. In this mode, the plugin connects to a server process that listens on a specified port and initiates an infinite loop where a handler manages incoming and outgoing requests. The commands executed are determined by the handler in accordance with the user's workspace configurations.
 
-\begin{figure}[H]
+\begin{figure}[!htb]
 	\centering
-	\caption{LSP plug-in example of command line usage sequence diagram}
+	\caption{LSP plugin example of command line usage sequence diagram}
 	\includegraphics[scale=0.7]{img/cmdline_seq_diag.png}
 	\label{fig:cmdline-seq}
 \end{figure}
 
-\begin{figure}[H]
+\begin{figure}[!htb]
 	\centering
-	\caption{LSP plug-in example of handler mode usage sequence diagram}
+	\caption{LSP plugin example of handler mode usage sequence diagram}
 	\includegraphics[scale=0.5]{img/handler_seq_diag.png}
 	\label{fig:handler-seq}
 \end{figure}
 
-The plug-in consists of four components: 
+The plugin consists of four components: 
 \begin{itemize}
-	\item[--] \textbf{Cmdline\_parameters}: Registers plug-in, defines the plug-in's command line options and the actions associated with them according to their values.
+	\item[--] \textbf{Cmdline\_parameters}: Registers plugin, defines the plugin's command line options and the actions associated with them according to their values.
 	\item[--] \textbf{Handler}: Contains the code that connects to the editor, the main loop that handles requests, and stores the user's workspace configurations (sent by the editor).
 	\item[--] \textbf{Lib}: OCaml modules that implement the LSP types.
-	\item[--] \textbf{Features}: Contains the main features, functions interacting with the AST and other plug-ins to provide results.
+	\item[--] \textbf{Features}: Contains the main features, functions interacting with the AST and other plugins to provide results.
 \end{itemize}
-\begin{figure}[H]
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[scale=0.3]{img/architecture.png}
-	\caption{Architecture of the plug-in}
+	\caption{Architecture of the plugin}
 \end{figure}
 
 \subsection{Communication}
@@ -544,7 +577,7 @@ Once connected, the two processes can exchange messages. This setup ensures smoo
 
 This setup is specific to how VS Code manages extensions. Other editors might handle this connection differently, with varying approaches to managing server processes and communication channels.
 Only one socket can connect to the VS Code subprocess, meaning that, if another entity were to connect to that port while it is running, its connection will be refused.
-\begin{figure}[H]
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[scale=0.6]{img/vscode_subprocess_seq_diag.png}
 	\caption{VS Code extension execution and first request exchanges between language client and server}
@@ -558,11 +591,11 @@ The handler first initializes the server capabilities, which define what the ser
 
 \subsubsection{Command Execution}
 
-For each LSP request (e.g., \texttt{textDocument/definition}, \texttt{textDocument/declaration}), the handler constructs a command line to invoke Frama-C with the appropriate options and parameters. These commands are built based on the request's content, such as file paths, line numbers, and character positions and also the current workspace, files being edited, and various global and local parameters (like include paths, macros, other frama-c plug-in options, etc.). The handler then executes the command and processes the output, which it sends back to the client as a response.
+For each LSP request (e.g., \texttt{textDocument/definition}, \texttt{textDocument/declaration}), the handler constructs a command line to invoke Frama-C with the appropriate options and parameters. These commands are built based on the request's content, such as file paths, line numbers, and character positions and also the current workspace, files being edited, and various global and local parameters (like include paths, macros, other frama-c plugin options, etc.). The handler then executes the command and processes the output, which it sends back to the client as a response.
 
 If an error occurs during the execution of a command, the handler catches the exception and returns an appropriate LSP error response.
 
-When the result of a file parsing must be used by another plug-in (e.g.: Callgraph, Metrics)
+When the result of a file parsing must be used by another plugin (e.g.: Callgraph, Metrics)
 Figure \ref{tab:json-result} below is a table listing an example of Frama-C command for each feature.
 
 \begin{longtable}[H]{|l|p{10cm}|}
@@ -630,7 +663,7 @@ Figure \ref{tab:json-result} below is a table listing an example of JSON result 
 	\caption{Example of corresponding JSON result for each feature}
     \label{tab:json-result}
 \end{longtable}
-\textcolor{green}{TODO : options de notre plugin, celles qui peuvent pas s'activer en meme temps}
+% \textcolor{green}{TODO : options de notre plugin, celles qui peuvent pas s'activer en meme temps}
 
 \begin{longtable}[H]{|p{3cm}|p{2.3cm}|p{8cm}|p{1.3cm}|}
 	\hline
@@ -638,7 +671,7 @@ Figure \ref{tab:json-result} below is a table listing an example of JSON result 
 	\textbf{Type}  & 
 	\textbf{Description} &
 	\textbf{Default} \\ \hline
-	-lsp				& boolean		& Enables LSP plug-in		& Off \\ \hline
+	-lsp				& boolean		& Enables LSP plugin		& Off \\ \hline
 	-lsp-handler		& boolean		& Enables handler mode for LSP, (only to be used when launching the language server for LSP)		& Off \\ \hline
 	-lsp-cmdline		& boolean		& Enables command line mode for LSP IF handler mode is activated, not to be used outside the LSP context			 & On \\ \hline
 	-lsp-id				& integer		& Id of the request, required if LSP handler mode is activated		& 0 \\ \hline
@@ -651,36 +684,24 @@ Figure \ref{tab:json-result} below is a table listing an example of JSON result 
 	-lsp-display-cil	& boolean		& If activated, sends the prettified CIL Ast of the parsed file 			 & Off \\ \hline
 	-lsp-metrics		& string		& If specified, writes metrics inside the file. If only one file was parsed, outputs the metrics of that file, if multiple files were given, outputs the combined metrics of those files. 			 & ``'' \\ \hline
 	-lsp-show-povc		& string		& File, line and character where the user requested the proof obligation(s). If the user wants the obligations of a pre-condition, they must send the location of the desired function call 			 & ``'' \\ \hline
-	\caption{List of Frama-C LSP plug-in options}
+	\caption{List of Frama-C LSP plugin options}
 	\label{tab:lsp-options}
 \end{longtable}
 
 \subsection{A first approach on the server implementation}
-In the context of Frama-C, an execution instance, whether initiated via the command line or through a function call within the Frama-C library, is referred to as a session. Initially, we considered implementing the server directly as a Frama-C plug-in, where the main loop responsible for handling Language Server Protocol (LSP) requests would be executed within this plug-in. This approach would handle all LSP requests into a single, continuous session.
+In the context of Frama-C, an execution instance, whether initiated via the command line or through a function call within the Frama-C library, is referred to as a session. Initially, we considered implementing the server directly as a Frama-C plugin, where the main loop responsible for handling LSP requests would be executed within this plugin. This approach would handle all LSP requests into a single, continuous session.
 
-However, this design presented a significant drawback: when Frama-C encounters a syntax error during file parsing, the entire session enters an error state. Given that a session in this context would persist until the server either crashes or the client terminates it, the error state would persist indefinitely. This is problematic because even if the user corrects the error in the code, the session---and consequently the server---would remain in the error state.
+However, this design presented a significant drawback: when Frama-C encounters a syntax error during file parsing, the entire session enters an error state.
+As mentioned in \ref{sec:framac-inv}, if the AST is parsed again in the same session, it becomes corrupted.
+Given that a session in this context would persist until the server either crashes or the client terminates it, the error state would persist indefinitely. This is problematic because even if the user corrects the error in the code, the session---and consequently the server---would remain in the error state.
 
 Terminating the session as a response to an error is not a viable solution, as it would lead to the server's shutdown. This, in turn, would cause the client to disconnect, leading to a crash of the extension. Consequently, the user would need to manually restart the extension, which is an undesirable outcome. To avoid such disruptions and maintain a seamless user experience, it is imperative that the server architecture be designed to handle errors more gracefully without necessitating a session termination.
 
-\subsection{Plug-in installation}
-% TODO : 
-% - choix de la methode de communication : sockets OK
-% - choix du serveur en tant que plug-in frama-c OK
-% - parler de la premiere approche avec le plug-in qui contient la boucle principale directement puis expliquer pourquoi cette solution ne marchait pas
-% - choix de l'architecture du plug-in
-
-
-% - ajouter une sous section pour les features et les détailler, parler des fonctionnalités non LSP, fonctionnailté VS Code (colo syntaxique)
-
 \section{Development}
 
-\subsection{Working example ?}
-
 \subsection{Project configurations}
+The user has the possibility to specify configuration values, for instance the names of the source files being processed, include paths and macros. 
 
-% \textcolor{green}{tableau feature/parsing local (.h ou .c) ou global (spécifié par user ou par defaut que les fichiers .c)}
-
-% \textcolor{red}{tableau de chaque feature et sa ligne de commande frama-c (usage de -then et -then-last) faire le lien avec les configs}
 Table \ref{tab:features-options} lists all client configurations that are supported by the language server. They must have the same name for every client implementation.
 
 % \textcolor{green}{listing de toutes les options, leur organisation}
@@ -713,11 +734,7 @@ Table \ref{tab:features-options} lists all client configurations that are suppor
 	\label{tab:features-options}
 \end{longtable}
 
-% \textcolor{green}{tableau feature/module api frama-c utilisé}
-\textcolor{red}{tableau algo principal de chaque feature}
-% \textcolor{green}{tableau des capacités du serveur -> LSP features use cases}
-
-\subsection{Description of ACSL LSP plug-in features}
+\subsection{Standard LSP features}
 \subsubsection{Go To Definition}
 The `Go To Definition' feature allows developers to easily navigate to the definition of symbols within their code. 
 
@@ -740,28 +757,8 @@ The process of finding declarations is the same algorithm as finding definitions
 	\item[--] An additional visitor is used to find variable declarations within a file. It visits the AST for l-values\footnote{L-values are nodes in the AST that are not functions, expressions or constants}.
 	\item[--] If multiple declarations exist in header files, it will only send back the declaration that is located in the first header file included.
 	\item[--] If a variable is declared twice (one globally and one inside a function), no declaration is returned
-	\item[--] The plug-in has the ability to send multiple declarations but it was omitted as Frama-C doesn't provide multiple declaration locations.
+	\item[--] The plugin has the ability to send multiple declarations but it was omitted as Frama-C doesn't provide multiple declaration locations.
 \end{itemize}
-
-\subsubsection{Display CIL}
-
-\subsubsection{Callgraph}
-This feature is designed to compute and visualize the function call relationships within a given C source code. This feature generates a callgraph that maps out which functions call which other functions, providing a graphical representation of the code’s structure. The callgraph can be helpful for understanding the control flow and dependencies within the program, especially in complex codebases.
-
-Implementation Overview:
-The computeCG method, defined in the client handles the generation of the callgraph. It starts by extracting the relevant file from the parameters provided by the LSP (Language Server Protocol) notification. The plug-in then constructs a command to invoke Frama-C, passing the necessary file paths and configuration options, including arguments specific to callgraph computation (callgraph\_args). This command directs Frama-C to analyze the code and produce a .dot file that describes the callgraph in Graphviz format.
-
-On the client side, the computeCG command is registered to trigger the callgraph computation. When invoked, this command sends a notification to the Frama-C language server, passing the filename of the currently active document in the editor. The notification is sent using client.sendNotification, which initiates the process on the server.
-
-This feature allows the user to generate a visual representation of the code's function calls, making it easier to identify key functions, understand dependencies, and determine the impact of potential changes. For example, if a developer wants to modify a core function, they can use the callgraph to see all the other functions that depend on it, allowing them to plan the changes more effectively. The generated .pdf file provides a clear representation of the callgraph.
-
-\subsubsection{Local Metrics}
-
-\subsubsection{Global Metrics}
-
-\subsubsection{Proof Obligations}
-
-\subsubsection{Prove Annotation (not implemented)}
 
 \subsubsection{File Synchronization \& Diagnostics}
 File synchronization is a key feature of the LSP\@. Requests can by sent by the editing tool to notify document opening, changing and saving actions performed by the user. 
@@ -776,18 +773,69 @@ The listener is a Frama-C function that reports any event emitted by Frama-C whi
 This feature is only implemented for single file parsing and diagnostics are computed only when the file is saved. No diagnostics are published for multiple file parsing, which means we do not know if those files are in state of error. So the user has to make sure the source files they provided have no errors.
 
 
+\subsection{Non-standard LSP features}
+Here is a description of features specific to Frama-C that are not specified by the LSP. To enable these features, they must be registered in the client, in the same way we did with VS Code.
 
-\section{Appendix: LSP use cases with VS Code}
+\subsubsection{Display CIL}
+This feature is designed to fetch and display the CIL representation of a C code file within the VS Code editor. This feature provides developers with a lower-level, intermediate view of the code, which is useful for understanding how the code is transformed and processed by Frama-C. It is particularly useful for developers who need to get an overview the intermediate representation of their C code, which is helpful for debugging. For example, when working on software verification projects, understanding the CIL can help in identifying how high-level constructs are lowered and managed internally by Frama-C. The possibility to see this representation directly in VS Code, with syntax highlighting, makes it easier to navigate and analyze it.
+
+On the client side, the displayCIL command is registered to allow users to request the CIL representation of the currently active document by right-clicking on the editor and selecting the `Display CIL' menu. When triggered, this command sends a request to the Frama-C language server, passing the active document's filename.
+
+The server-side logic for displayCIL begins by constructing and executing a Frama-C command that includes options for generating the CIL and identifying the request by its ID. If successful, the server retrieves the AST of the code, converts it into a pretty-printed string representing the CIL, and sends this result back to the client.
+
+Upon receiving the CIL data, the VS Code client creates a new untitled document in the editor, displays the CIL content in a new tab, and sets the document's language to ACSL for appropriate syntax highlighting. This allows the developer to view and analyze the CIL representation directly within the editor. If any errors occur during the process, they are reported back to the user through an error message, and the details are logged for debugging.
+
+Figure \ref{fig:displaycil} shows CIL representation in the right tab of the source code in the left tab.
+\begin{figure}[!htb]
+	\centering
+	\caption{Example of execution of `Display CIL' in VS Code}
+	\includegraphics[scale=0.4]{img/displaycil.png}
+	\label{fig:displaycil}
+\end{figure}
+
+\subsubsection{Callgraph}
+This feature is designed to compute and visualize the function call relationships within a given C source code. This feature generates a callgraph that maps out which functions call which other functions, providing a graphical representation of the code’s structure. The callgraph can be helpful for understanding the control flow and dependencies within the program, especially in complex codebases. It makes it easier to identify key functions, understand dependencies, and determine the impact of potential changes. For example, if a developer wants to modify a core function, they can use the callgraph to see all the other functions that depend on it, allowing them to plan the changes more effectively. The generated .pdf file provides a clear representation of the callgraph.
+
+The `computeCG' method, defined in the client handles the generation of the callgraph. It starts by extracting the relevant file from the parameters provided by the LSP notification. The plugin then constructs a command to invoke Frama-C, passing the necessary file paths and configuration options, including arguments specific to callgraph computation (callgraph\_args). This command directs Frama-C to analyze the code and produce a .dot file that describes the callgraph in Graphviz format.
+
+On the client side, the `computeCG' command is registered to trigger the callgraph computation. When invoked, this command sends a notification to the Frama-C language server, passing the filename of the currently active document in the editor. The notification is sent using client.sendNotification, which initiates the process on the server.
+
+\subsubsection{Metrics}
+The metrics feature of the Frama-C plugin enables the calculation and retrieval of both global and local metrics for a C project, providing developers with insights into the code’s complexity, structure, and other relevant details. It is integrated into the Frama-C language server and is accessible through the VS Code client.
+
+On the VS Code client side, two commands are registered: showLocalMetrics and showGlobalMetrics. These commands allow users to request either local metrics for the currently active file or global metrics for the entire project (files specified by the user or all source files in the workspace folder). When these commands are invoked, they send notifications to the Frama-C language server.
+
+The server processes these requests by constructing and executing Frama-C commands with appropriate arguments. For global metrics, the command analyzes the entire project and stores the results in a specified file, while for local metrics, the command focuses on the active file. The results are saved as text files, typically named after a hard-coded name (global) or the name of the file being analyzed (local).
+
+Once the metrics are calculated, the server notifies the client, indicating that the files have been generated. If any issues occur during the process, they are communicated back to the user through error messages.
+
+\subsubsection{Proof Obligations}
+This feature provides users the possibility to inspect specific proof obligations related to functions in their code, within the context of ACSL annotations. If a developer is working on a critical section of code and needs to verify that all preconditions and assertions are properly addressed. Using the proof obligations feature, the developer can quickly spot the exact proof obligations generated by ACSL annotations for a particular function. By reviewing these obligations in VS Code, the developer can ensure that the necessary proofs are in place.
+
+On the VS Code client side, the showPOVC command is registered, enabling users to request proof obligations for the currently selected function or code location in the editor. When the command is invoked, it sends the file name and cursor position to the Frama-C language server.
+
+The server processes this request by extracting relevant proof obligations from the specified location in the code. The Frama-C command is constructed with additional source files if the target file is a header file. The server then filters proof obligations based on their position in the file and returns the results to the client. If proof obligations are found, they are formatted as a JSON response.
+
+On the client side, the response is parsed and displayed in a new editor tab within VS Code. The proof obligations are presented in a plaintext format, allowing the developer to review the conditions and assertions that must be proven for the correctness of the code.
+
+
+
+% \subsubsection{Prove Annotation (not implemented)}
+
+
+
+
+\section{LSP use cases with VS Code}
 % TODO : mettre en annexe les tableaux
 In this enclosed figure is a listing of all LSP features, if they are handled by VS Code, and their implementation status on the server side.
-\begin{longtable}[H]{|p{1in}|p{2in}|l|l|}
+\begin{longtable}[H]{|p{3cm}|p{4cm}|p{4cm}|l|}
 	\hline
 	\textbf{Feature}                             & \textbf{Related Frama-C API modules}        & \textbf{Main algorithm} & \textbf{Parsing mode} \\ \hline
 	Go To Declaration   & Cil, Visitor, Filepath, File, Ast, Json & Tree traversal of AST & Global \\ \hline
 	Go To Definition    & Cil, Visitor, Filepath, File, Ast, Json & Tree traversal of AST & Global \\ \hline
 	Diagnostics         & Filepath, File, Log, Json               & Log event listener & Local  \\ \hline
 	Display CIL of file & Ast, Printer, Pretty\_utils, Json       & Get computed AST           & Local  \\ \hline
-	Show proof obligations (POs) of annotation(s)/file & WP, Property, Filepath, Json, Pretty\_utils & List traversal generated POs          & Local                 \\ \hline
+	Show proof obligations (POs) of annotation(s)/file & WP, Property, Filepath, Json, Pretty\_utils & List traversal of generated proof obligations          & Local                 \\ \hline
 	Show proof verdict  &                                         & List traversal & Local  \\ \hline
 	Compute Callgraph   & Callgraph                               & Get computed Callgraph           & Local  \\ \hline
 	Show Metrics        & Metrics                                 & Get metrics result           & Local  \\ \hline
@@ -1034,7 +1082,7 @@ In this enclosed figure is a listing of all LSP features, if they are handled by
 	\multicolumn{4}{|l|}{Window features} \\ \hline
 
 	Show Message Notification &
-	  Notify the user when a file is generated by one of the plug-ins (callgraph, metrics, ...)
+	  Notify the user when a file is generated by one of the plugins (callgraph, metrics, ...)
 	  & Implemented for callgraph and metrics & 
 	  Yes \\ \hline
 	Show Message Request &
@@ -1065,7 +1113,7 @@ In this enclosed figure is a listing of all LSP features, if they are handled by
 	\label{tab:lsp-features}
 \end{longtable}
 
-\textcolor{green}{tableau des capacités de vs code}
+% \textcolor{green}{tableau des capacités de vs code}
 \begin{longtable}[H]{| p{2in} | p{2in} | p{2in} |}
 	\hline
 \multicolumn{1}{|p{2in}|}{\textbf{VS Code features}} &
@@ -1153,29 +1201,36 @@ In this enclosed figure is a listing of all LSP features, if they are handled by
 \end{longtable}
 
 \section{Illustration of the implementation}
-% TODO : illustrer l'implémentation 
-\textcolor{red}{commenter les screenshots de chaque feature}
+% TODO : screenshots
+\section{Conclusion}
+\paragraph*{Results \& Feedback}
+Our main 
 
-\section{Future work}
-% TODO : taches restantes
+\paragraph*{Future work}
 \begin{itemize}
+	% Features
 	\item[--] Enhance display of proof obligations: ask the user which function call's pre-condition to prove whenever proof obligations are requested on a pre-condition of a function definition
-	\item[--] Enhance declaration feature: find macros and find multiple declarations if they exist instead of the first one only
+	\item[--] Enhance declaration feature: find macros and find multiple declarations if they exist, return declarations within the right scope instead of all variables with the same name.
 	\item[--] Enhance definition feature: must be able to find Frama-C's standard library function definitions
 	\item[--] Implement display of proof verdict of annotation
 	\item[--] Implement autocompletion feature logic: necessary structures are provided but not the logic behind completion items searching
-	\item[--] WP diagnostics: if the user activates the configuration to enable WP diagnostics, shows WP diagnostics on top of the regular (kernel) diagnostics
-	\item[--] Enhance metrics feature by displaying results in new output
+	\item[--] Enhance WP diagnostics: if the user activates the configuration to enable WP diagnostics, shows WP diagnostics on top of the regular (kernel) diagnostics
+	\item[--] Enhance metrics feature by displaying results in new output console
 	\item[--] Enhance callgraph feature by displaying browsable callgraph on the editor
 	\item[--] Implement a `server' mode for other editors chose communication methods are different from VS Code's
+	\item[--] Implement hover feature for ACSL keywords
 
+	% optimization  
+	\item[--] Implement request processing for large files
+	\item[--] Implement request queue with ability to cancel requests 
 \end{itemize}
 
-% TODO : annexes : 
-% architecture plug-in 
-% acsllite
-% acslext2
-% 
+\paragraph*{Internship review}
+I have learned a lot etc etc
+% TODO : annexes , biblio
+
+\appendix 
+\printbibliography[heading=bibintoc]
 
 \end{singlespace}
 \end{document}

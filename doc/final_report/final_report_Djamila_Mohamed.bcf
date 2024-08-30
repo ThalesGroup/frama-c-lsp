@@ -2344,6 +2344,12 @@
     <bcf:datasource type="file" datatype="bibtex" glob="false">bibliography.bib</bcf:datasource>
   </bcf:bibdata>
   <bcf:section number="0">
+    <bcf:citekey order="1">nsl</bcf:citekey>
+    <bcf:citekey order="2">frama_c_user_manual</bcf:citekey>
+    <bcf:citekey order="3">frama_c_plugin_guide</bcf:citekey>
+    <bcf:citekey order="4">nsl</bcf:citekey>
+    <bcf:citekey order="5">frama_c_user_manual</bcf:citekey>
+    <bcf:citekey order="6">frama_c_plugin_guide</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="none">
@@ -2352,4 +2358,13 @@
     </bcf:sort>
   </bcf:sortingtemplate>
   <!-- DATALISTS -->
+  <bcf:datalist section="0"
+                name="none/global//global/global"
+                type="entry"
+                sortingtemplatename="none"
+                sortingnamekeytemplatename="global"
+                labelprefix=""
+                uniquenametemplatename="global"
+                labelalphanametemplatename="global">
+  </bcf:datalist>
 </bcf:controlfile>

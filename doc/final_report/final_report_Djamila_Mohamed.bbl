@@ -16,5 +16,149 @@
   {}
 \endgroup
 
+
+\refsection{0}
+  \datalist[entry]{none/global//global/global}
+    \entry{nsl}{thesis}{}
+      \name{author}{1}{}{%
+        {{hash=c0a1a4baa9909c17c8e7f10160bfdc3d}{%
+           family={Sander},
+           familyi={S\bibinitperiod},
+           given={Yannik},
+           giveni={Y\bibinitperiod}}}%
+      }
+      \list{institution}{2}{%
+        {KTH, School of Electrical Engineering}%
+        {Computer Science (EECS)}%
+      }
+      \strng{namehash}{c0a1a4baa9909c17c8e7f10160bfdc3d}
+      \strng{fullhash}{c0a1a4baa9909c17c8e7f10160bfdc3d}
+      \strng{bibnamehash}{c0a1a4baa9909c17c8e7f10160bfdc3d}
+      \strng{authorbibnamehash}{c0a1a4baa9909c17c8e7f10160bfdc3d}
+      \strng{authornamehash}{c0a1a4baa9909c17c8e7f10160bfdc3d}
+      \strng{authorfullhash}{c0a1a4baa9909c17c8e7f10160bfdc3d}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Design and Implementation of the Language Server Protocol for the Nickel Language}
+      \field{type}{mathesis}
+      \field{year}{2022}
+      \verb{urlraw}
+      \verb https://kth.diva-portal.org/smash/get/diva2:1732389/FULLTEXT01.pdf
+      \endverb
+      \verb{url}
+      \verb https://kth.diva-portal.org/smash/get/diva2:1732389/FULLTEXT01.pdf
+      \endverb
+    \endentry
+    \entry{frama_c_user_manual}{manual}{}
+      \name{author}{8}{}{%
+        {{hash=e7d2995f12dd03a9e0e0e447af733dce}{%
+           family={Correnson},
+           familyi={C\bibinitperiod},
+           given={Loïc},
+           giveni={L\bibinitperiod}}}%
+        {{hash=8e9e8e18e2e7c987b55fe919338b1d37}{%
+           family={Cuoq},
+           familyi={C\bibinitperiod},
+           given={Pascal},
+           giveni={P\bibinitperiod}}}%
+        {{hash=cdd1d46ab3faac6ad2784378f68ac66a}{%
+           family={Kirchner},
+           familyi={K\bibinitperiod},
+           given={Florent},
+           giveni={F\bibinitperiod}}}%
+        {{hash=5104b7b6b3d495c5a7c5d4a2ea19a9ac}{%
+           family={Maroneze},
+           familyi={M\bibinitperiod},
+           given={André},
+           giveni={A\bibinitperiod}}}%
+        {{hash=1d811f94b93378413c393021641cc848}{%
+           family={Prevosto},
+           familyi={P\bibinitperiod},
+           given={Virgile},
+           giveni={V\bibinitperiod}}}%
+        {{hash=97b6cc14f05b96ec24ca02371edd8bd3}{%
+           family={Puccetti},
+           familyi={P\bibinitperiod},
+           given={Armand},
+           giveni={A\bibinitperiod}}}%
+        {{hash=d40140b9e92d81036f8b95651db78a8b}{%
+           family={Signoles},
+           familyi={S\bibinitperiod},
+           given={Julien},
+           giveni={J\bibinitperiod}}}%
+        {{hash=e1eb440840b0c40776f25e9850f19dda}{%
+           family={Yakobowski},
+           familyi={Y\bibinitperiod},
+           given={Boris},
+           giveni={B\bibinitperiod}}}%
+      }
+      \strng{namehash}{5f55034006dfb2f8b72d574c7e77bcd7}
+      \strng{fullhash}{fb367df47e33c25697e3a31198bc1bf1}
+      \strng{bibnamehash}{5f55034006dfb2f8b72d574c7e77bcd7}
+      \strng{authorbibnamehash}{5f55034006dfb2f8b72d574c7e77bcd7}
+      \strng{authornamehash}{5f55034006dfb2f8b72d574c7e77bcd7}
+      \strng{authorfullhash}{fb367df47e33c25697e3a31198bc1bf1}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Frama-C User Manual}
+      \verb{urlraw}
+      \verb http://frama-c.com/download/frama-c-user-manual.pdf
+      \endverb
+      \verb{url}
+      \verb http://frama-c.com/download/frama-c-user-manual.pdf
+      \endverb
+    \endentry
+    \entry{frama_c_plugin_guide}{manual}{}
+      \name{author}{5}{}{%
+        {{hash=d40140b9e92d81036f8b95651db78a8b}{%
+           family={Signoles},
+           familyi={S\bibinitperiod},
+           given={Julien},
+           giveni={J\bibinitperiod}}}%
+        {{hash=381b5f21fbd4a4fb00d7f84c002241c8}{%
+           family={Antignac},
+           familyi={A\bibinitperiod},
+           given={Thibaud},
+           giveni={T\bibinitperiod}}}%
+        {{hash=e7d2995f12dd03a9e0e0e447af733dce}{%
+           family={Correnson},
+           familyi={C\bibinitperiod},
+           given={Loïc},
+           giveni={L\bibinitperiod}}}%
+        {{hash=0ddf2297cd1a16147f76b6e2fba8456d}{%
+           family={Lemerre},
+           familyi={L\bibinitperiod},
+           given={Matthieu},
+           giveni={M\bibinitperiod}}}%
+        {{hash=1d811f94b93378413c393021641cc848}{%
+           family={Prevosto},
+           familyi={P\bibinitperiod},
+           given={Virgile},
+           giveni={V\bibinitperiod}}}%
+      }
+      \strng{namehash}{1010539e752190b3a4ea77d3695d7c58}
+      \strng{fullhash}{9daa77e7abfefbcfa59e25e8930f9b59}
+      \strng{bibnamehash}{1010539e752190b3a4ea77d3695d7c58}
+      \strng{authorbibnamehash}{1010539e752190b3a4ea77d3695d7c58}
+      \strng{authornamehash}{1010539e752190b3a4ea77d3695d7c58}
+      \strng{authorfullhash}{9daa77e7abfefbcfa59e25e8930f9b59}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Frama-C Plug-in Development Guide}
+      \verb{urlraw}
+      \verb http://frama-c.com/download/frama-c-plugin-development-guide.pdf
+      \endverb
+      \verb{url}
+      \verb http://frama-c.com/download/frama-c-plugin-development-guide.pdf
+      \endverb
+    \endentry
+  \enddatalist
+\endrefsection
 \endinput
 
