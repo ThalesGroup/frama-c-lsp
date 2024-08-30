@@ -1,25 +1,18 @@
 {
     "kernel.aggressiveMerging": false,
-    "kernel.includePaths": [
-        "include_folder",
-        "include_folder2"
-    ],
     "kernel.keepUnusedSpecifiedFunctions": true,
     "kernel.machdep": "",
     "kernel.sourceFiles": [
-        "test1.c",
-        "locale.c",
-        "include_folder2/locale.h",
-        "folder1/test2.c"
+        "test1.c"
     ],
     "wp.checkMemoryModel": true,
     "wp.volatile": false,
     "metrics.output": "",
     "vscodeacsl.maxNumberOfProblems": 100,
-    "acslLsp": 4,
+    "acslLsp": 3,
     "callgraph.output": "",
     "callgraph.roots": [],
-    "wp.prover": "none",
+    "wp.prover": "none"
 
 }
     

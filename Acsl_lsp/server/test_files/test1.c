@@ -1,8 +1,6 @@
 #include <stddef.h>
 #include <stdio.h>
-#include <ctype.h>
-#include "test3.h"
-#include "test1.h"
+#include "ctype.h"
 #include "test2.h"
 
 #define STRING_CONSTANT "ABCD"
@@ -34,9 +32,7 @@ void set_to_0(int *a, size_t n)
     a[i] = 0;
 }
 
-int test(double x) {
-  return x + 1231;
-}
+
 
 void print_string_const(){
   printf("string constant : %s\n", STRING_CONSTANT); 
