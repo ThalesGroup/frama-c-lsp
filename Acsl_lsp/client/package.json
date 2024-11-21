@@ -2,7 +2,7 @@
     "name": "vscodeacsl",
     "displayName": "ACSL/C",
     "description": "Visual Studio Code Client for ACSL Language Server",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "repository": {
         "type": "git",
         "url": "https://bitbucket.gemalto.com/users/t0244734/repos/acsl_lsp/browse/Acsl_lsp"
@@ -11,7 +11,9 @@
         "Programming Languages"
     ],
     "keywords": [
-        "acsl"
+        "acsl",
+        "c",
+        "frama-c"
     ],
     "engines": {
         "vscode": "^1.85.0"
@@ -68,7 +70,11 @@
                     ".c",
                     ".h"
                 ],
-                "configuration": "./syntax/language-configuration.json"
+                "configuration": "./syntax/language-configuration.json",
+                "icon": {
+                    "light": "./images/logo-frama-c.png",
+                    "dark": "./images/logo-fc.jpg"
+                  }
             }
         ],
         "grammars": [
@@ -91,19 +97,12 @@
                     "acslLsp": {
                         "scope": "window",
                         "type": "integer",
-                        "enum": [
-                            0,
-                            1,
-                            2,
-                            3,
-                            4
-                        ],
+                        "enum": [0, 1, 2, 3, 4],
                         "default": 4,
                         "description": "Specify ACSL LSP debug messages level. (4 = lowest severity, 1 = highest, 0 = off)."
                     }
                 }
             },
-
             {
                 "title": "Common",
                 "properties": {
