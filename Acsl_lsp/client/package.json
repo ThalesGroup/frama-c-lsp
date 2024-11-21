@@ -19,7 +19,7 @@
         "vscode": "^1.85.0"
     },
     "activationEvents": [
-        "onLanguage:c"
+        "onLanguage:acsl"
     ],
     "main": "./out/extension",
     "contributes": {
@@ -73,7 +73,7 @@
                 "configuration": "./syntax/language-configuration.json",
                 "icon": {
                     "light": "./images/logo-frama-c.png",
-                    "dark": "./images/logo-fc.jpg"
+                    "dark": "./images/logo-frama-c.png"
                   }
             }
         ],
