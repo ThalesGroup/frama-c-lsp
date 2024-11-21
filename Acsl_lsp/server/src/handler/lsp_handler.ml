@@ -98,7 +98,7 @@ let wp_diags () =
 
 let cpp_extra_args () = 
   let includePaths = 
-    List.map (fun x -> "-I"^(!rootPath^"/"^(Filename.basename x))) (!Configuration.global_params.includePaths)
+    List.map (fun x -> "-I"^(!rootPath^"/"^(x))) (!Configuration.global_params.includePaths)
   in
   let macros = List.map (fun x -> "-D"^x) (!Configuration.global_params.macros) in
   let res = " -cpp-extra-args=\""^(String.concat " " includePaths)^(String.concat " " macros)^"\"" in 
@@ -106,7 +106,7 @@ let cpp_extra_args () =
 
 let cpp_extra_args_acsl () = 
   let includePaths = 
-    List.map (fun x -> "-I"^(!rootPath^"/"^(Filename.basename x))) (!Configuration.global_params.includePaths)
+    List.map (fun x -> "-I"^(!rootPath^"/"^(x))) (!Configuration.global_params.includePaths)
   in
   let macros = List.map (fun x -> "-D"^x) (!Configuration.global_params.macros) in
   let res = "\""^(String.concat " " includePaths)^(String.concat " " macros)^"\"" in 
