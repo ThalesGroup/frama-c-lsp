@@ -3,6 +3,7 @@
 **/*.map
 .gitignore
 **/tsconfig.json
+**/tsconfig.tsbuildinfo
 **/tsconfig.base.json
 contributing.md
 .travis.yml

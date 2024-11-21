@@ -68,14 +68,14 @@
                     ".c",
                     ".h"
                 ],
-                "configuration": "./language-configuration.json"
+                "configuration": "./syntax/language-configuration.json"
             }
         ],
         "grammars": [
             {
                 "language": "acsl",
                 "scopeName": "source.acsl",
-                "path": "./syntaxes/acsl.tmLanguage.json"
+                "path": "./syntax/acsl.tmLanguage.json"
             }
         ],
         "configuration": [
