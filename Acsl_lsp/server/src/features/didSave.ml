@@ -184,10 +184,20 @@ let handle filename : Json.json =
     (* Project.set_current (Project.create "didSave"); *)
     Kernel.Unicode.off ();
     File.init_from_c_files [_file];
-    (publishDiagnostics_notification !diag_list filename)
+    match !diag_list with
+    | [] -> (publishDiagnostics_notification !diag_list filename)
+    | elem :: _l ->
+        if (List.length !diag_list) < 100 then (publishDiagnostics_notification !diag_list filename)
+        else (publishDiagnostics_notification [elem] filename)
+
   with
   | _exn ->
     (* Lsp.Self.debug ~level:4 "DidSave error :  %s, Backtrace : %s\n%!" (Printexc.exn_slot_name _exn) (Printexc.get_backtrace ()); *)
-      (publishDiagnostics_notification !diag_list filename)
+    match !diag_list with
+    | [] -> (publishDiagnostics_notification !diag_list filename)
+    | elem :: _l ->
+        if (List.length !diag_list) < 100 then (publishDiagnostics_notification !diag_list filename)
+        else (publishDiagnostics_notification [elem] filename)
+
   
 

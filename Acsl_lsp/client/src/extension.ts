@@ -61,6 +61,7 @@ export function activate(context: ExtensionContext) {
 		clientOptions
 	);
 
+	/*
 	const displayCIL = commands.registerCommand('displayCIL', async () => {
 		try {
 			const res = await client.sendRequest('displayCIL', window.activeTextEditor.document.fileName);
@@ -86,7 +87,18 @@ export function activate(context: ExtensionContext) {
 			console.error('Error fetching CIL data:', err);
 		}
 	});
-	
+	*/
+
+	const displayCIL = commands.registerCommand('displayCIL', async () => {
+		try {
+			await client.sendNotification('displayCIL', window.activeTextEditor.document.fileName);
+
+		} catch (err) {
+			window.showErrorMessage('Failed to compute displayCIL: ' + err.message);
+			console.error('Error computing displayCIL:', err);
+		}
+	});
+
 	const computeCG = commands.registerCommand('computeCG', async () => {
 		try {
 			await client.sendNotification('computeCG', window.activeTextEditor.document.fileName);

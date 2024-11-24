@@ -85,10 +85,12 @@ module Root_path = Self.String
   let default = ""
 end)
 
-module Display_CIL = Self.False
+module Display_CIL = Self.String
 (struct
   let option_name = "-lsp-display-cil"
   let help = "send back the ast of the current file to editor"
+  let arg_name = "filename without extension"
+  let default = ""
 end)
 
 module Compute_CG = Self.String
@@ -121,11 +123,46 @@ let maxPendingRequests = 20
 let defaultProtocolType = 0
 let addr = Unix.inet_addr_of_string "127.0.0.1"
 
-let send_request plugin_sock response =
-  let response_str = Printf.sprintf "Content-Length: %d\r\n\r\n%s" (String.length response) response in
-  let response_bytes = Bytes.of_string response_str in
-  let sent = Unix.send plugin_sock (response_bytes) 0 (String.length response_str) [] in
-  Self.debug ~level:4 "size : %d content : %s\n%!" sent response_str
+let send_response plugin_sock response =
+      let response_str = Printf.sprintf "Content-Length: %d\r\n\r\n%s" (String.length response) response in
+      let response_bytes = Bytes.of_string response_str in
+      let sent = Unix.send plugin_sock (response_bytes) 0 (String.length response_str) [] in
+      Self.debug ~level:4 "size : %d content : %s\n%!" sent response_str
+
+type lsp_feature = 
+  | DidSave_feature
+  | DidClose_feature
+  | FindDefinition_feature
+  | FindDeclaration_feature
+  | ComputeCIL_feature
+  | ComputeCallGraph_feature
+  | ComputeMetrics_feature
+  | ComputeProofObligation_feature
+
+let is_active_DidSave () = not (String.equal (Did_save.get ()) "")
+let is_active_DidClose () = not (String.equal (Did_close.get ()) "")
+let is_active_FindDefinition () = not (String.equal (Find_def.get ()) "")
+let is_active_FindDeclaration () = not (String.equal (Find_decl.get ()) "")
+let is_active_ComputeCIL () = not (String.equal (Display_CIL.get ()) "")
+let is_active_ComputeCallGraph () = not (String.equal (Compute_CG.get ()) "")
+let is_active_ComputeMetrics () = not (String.equal (Show_metrics.get ()) "")
+let is_active_ComputeProofObligation () = not (String.equal (Show_POVC.get ()) "")
+
+
+let get_active_option () =
+  let active_options = ref [] in
+  if is_active_DidSave () then active_options := DidSave_feature :: !active_options;
+  if is_active_DidClose () then active_options := DidClose_feature :: !active_options;
+  if is_active_FindDefinition () then active_options := FindDefinition_feature :: !active_options;
+  if is_active_FindDeclaration () then active_options := FindDeclaration_feature :: !active_options;
+  if is_active_ComputeCIL () then active_options := ComputeCIL_feature :: !active_options;
+  if is_active_ComputeCallGraph () then active_options := ComputeCallGraph_feature :: !active_options;
+  if is_active_ComputeMetrics () then active_options := ComputeMetrics_feature :: !active_options;
+  if is_active_ComputeProofObligation () then active_options := ComputeProofObligation_feature :: !active_options;
+  match !active_options with
+  [] -> raise (Failure "No option specified")
+  | [opt] -> opt
+  | _ -> raise (Failure "Only one option can be specified at once")
 
 
 let run () = 
@@ -145,133 +182,82 @@ let run () =
       let framac_share = Utils.file_str Fc_config.datadir in
       Kernel.Share.set (Fc_config.datadir);
       let share = Kernel.Share.get () in
-      Filepath.add_symbolic_dir framac_share share; 
-
-        if not (String.equal (Did_save.get ()) "") then
-          (
-            (* ignore (Stdlib.raise (Failure "Settings : did save")); *)
-            (* let data = Json.save_string (PublishDiagnostics.handle (Filepath.Normalized.to_pretty_string (List.nth (Kernel.Files.get ()) 0))) in *)
-            let data = Json.save_string (DidSave.handle (Did_save.get ())) in
-            match Cmdline_opt.get () with
-            | false -> Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
-              ignore (send_request plugin_sock data)
-            | true -> ignore (Lsp.Self.result "JSON result : %s\n%!" data) ;
-              
-          );
-
-        (* if not (String.equal (Did_open.get ()) "") then
-          (
-            let data = Json.save_string (DidOpen.handle (Did_open.get ())) in
-            match Cmdline_opt.get () with
-            | false -> Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
-              ignore (send_request plugin_sock data)
-            | true -> ignore (Lsp.Self.result "JSON result : %s\n%!" data) ;
-          ); *)
-
-        if not (String.equal (Did_close.get ()) "") then
-          (
-            let data = Json.save_string (DidClose.handle (Did_close.get ())) in
-            match Cmdline_opt.get () with
-            | false -> Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
-              ignore (send_request plugin_sock data)
-            | true -> ignore (Lsp.Self.result "JSON result : %s\n%!" data) ;
-          ); 
-
-        if not (String.equal (Find_def.get ()) "") then
-          (
-            let req_info = String.split_on_char ':' (Find_def.get ()) in 
-            let int_id = (Id.get ()) in 
-            let data = Json.save_string (Definition.find int_id (List.nth req_info 0) (Stdlib.int_of_string (List.nth req_info 1)) (Stdlib.int_of_string (List.nth req_info 2))) in
-            match Cmdline_opt.get () with
-            | false -> Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
-              ignore (send_request plugin_sock data)
-            | true -> ignore (Lsp.Self.result "JSON result : %s\n%!" data) ;
-          );
-        
-        if not (String.equal (Find_decl.get ()) "") then
-          (
-            let req_info = String.split_on_char ':' (Find_decl.get ()) in 
-            let int_id = (Id.get ()) in 
-            let data = Json.save_string (Declaration.find int_id (List.nth req_info 0) (Stdlib.int_of_string (List.nth req_info 1)) (Stdlib.int_of_string (List.nth req_info 2))) in
-            match Cmdline_opt.get () with
-            | false -> Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
-              ignore (send_request plugin_sock data)
-            | true -> ignore (Lsp.Self.result "JSON result : %s\n%!" data) ;
-          );
-        
-        if (Display_CIL.get ()) then 
-          (
-            let data = Json.save_string (DisplayCIL.displayCIL (Id.get ())) in
-            match Cmdline_opt.get () with
-            | false -> Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
-              ignore (send_request plugin_sock data)
-            | true -> ignore (Lsp.Self.result "JSON result : %s\n%!" data) ;
-          );
-
-          if not (String.equal (Compute_CG.get ()) "") then 
-          (
-            ignore (Sys.command ("dot -Tpdf "^(Compute_CG.get ())^".dot -o "^(Compute_CG.get ())^".pdf"));
-            Lsp.Self.debug ~level:2 ("Generated %s.dot and %s.pdf files") (Compute_CG.get ()) (Compute_CG.get ());
-            let data = Json.save_string 
-              (Lsp_types.NotificationMessage.json_of_t 
-                (Lsp_types.NotificationMessage.create 
-                  ~jsonrpc:"2.0" 
-                  ~method_:"window/showMessage"
-                  ~params: (Lsp_types.ShowMessageParams.json_of_t 
-                    (Lsp_types.ShowMessageParams.create 
-                      ~type_: Lsp_types.MessageType.Info
-                      ~message: ("Computed callgraph successfully, files generated : "^(Compute_CG.get ())^".dot and "^(Compute_CG.get ())^".pdf")
-                      ()
-                    )
-                  )
+      Filepath.add_symbolic_dir framac_share share;
+      let feature = get_active_option () in
+      let data = 
+      match feature with
+      | DidSave_feature -> 
+        let data = Json.save_string (DidSave.handle (Did_save.get ())) in
+        data
+      | DidClose_feature ->
+        let data = Json.save_string (DidClose.handle (Did_close.get ())) in
+        data
+      | FindDefinition_feature ->
+        let req_info = String.split_on_char ':' (Find_def.get ()) in 
+        let int_id = (Id.get ()) in 
+        let data = Json.save_string (Definition.find int_id (List.nth req_info 0) (Stdlib.int_of_string (List.nth req_info 1)) (Stdlib.int_of_string (List.nth req_info 2))) in
+        data
+      | FindDeclaration_feature ->
+        let req_info = String.split_on_char ':' (Find_decl.get ()) in 
+        let int_id = (Id.get ()) in 
+        let data = Json.save_string (Declaration.find int_id (List.nth req_info 0) (Stdlib.int_of_string (List.nth req_info 1)) (Stdlib.int_of_string (List.nth req_info 2))) in
+        data
+      | ComputeCIL_feature -> 
+        (* let data = Json.save_string (DisplayCIL.displayCIL (Id.get ())) in
+        data *)
+        let data = Json.save_string 
+        (Lsp_types.NotificationMessage.json_of_t 
+          (Lsp_types.NotificationMessage.create 
+            ~jsonrpc:"2.0" 
+            ~method_:"window/showMessage" 
+            ~params: (Lsp_types.ShowMessageParams.json_of_t 
+              (Lsp_types.ShowMessageParams.create 
+                ~type_: Lsp_types.MessageType.Info
+                ~message: (Printf.sprintf "Calculated CIL successfully, file generated : %s_fc.c" (Display_CIL.get ()))
+                ()
+              )
+            )
+            ()
+          )
+        ) in
+        data
+      | ComputeCallGraph_feature ->
+        ignore (Sys.command ("dot -Tpdf "^(Compute_CG.get ())^".dot -o "^(Compute_CG.get ())^".pdf"));
+        Lsp.Self.debug ~level:2 ("Generated %s.dot and %s.pdf files") (Compute_CG.get ()) (Compute_CG.get ());
+        let data = Json.save_string 
+          (Lsp_types.NotificationMessage.json_of_t 
+            (Lsp_types.NotificationMessage.create 
+              ~jsonrpc:"2.0" 
+              ~method_:"window/showMessage"
+              ~params: (Lsp_types.ShowMessageParams.json_of_t 
+                (Lsp_types.ShowMessageParams.create 
+                  ~type_: Lsp_types.MessageType.Info
+                  ~message: ("Computed callgraph successfully, files generated : "^(Compute_CG.get ())^".dot and "^(Compute_CG.get ())^".pdf")
                   ()
                 )
-              ) in
-
-            match Cmdline_opt.get () with
-            | false -> Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
-              ignore (send_request plugin_sock data)
-            | true -> ignore (Lsp.Self.result "JSON result : %s\n%!" data) ;
-          );  
-
-        if not (String.equal (Show_metrics.get ()) "") then 
-          (
-            let data = Json.save_string 
-              (Lsp_types.NotificationMessage.json_of_t 
-                (Lsp_types.NotificationMessage.create 
-                  ~jsonrpc:"2.0" 
-                  ~method_:"window/showMessage" 
-                  ~params: (Lsp_types.ShowMessageParams.json_of_t 
-                    (Lsp_types.ShowMessageParams.create 
-                      ~type_: Lsp_types.MessageType.Info
-                      ~message: (Printf.sprintf "Calculated metrics successfully, file generated : %s.txt" (Show_metrics.get ()))
-                      ()
-                    )
-                  )
-                  ()
-                )
-              ) in
-            match Cmdline_opt.get () with
-            | false -> Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
-              ignore (send_request plugin_sock data)
-            | true -> ignore (Lsp.Self.result "JSON result : %s\n%!" data) ;
-            Lsp.Self.debug ~level:2 "Calculated metrics successfully, file generated : %s.txt" (Show_metrics.get ())
-          );  
-
-        (* if not (String.equal (Acsl_wp.get ()) "") then 
-          (
-            (* let id = Id.get () in  *)
-            let file = Acsl_wp.get () in 
-            let data = Json.save_string (AcslWp.handle file) in
-  
-            match Cmdline_opt.get () with
-            | false -> Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
-              ignore (send_request plugin_sock data)
-            | true -> ignore (Lsp.Self.result "JSON result : %s\n%!" data) ;
-          );  *)
-
-      if not (String.equal (Show_POVC.get ()) "") then 
-        (
+              )
+              ()
+            )
+          ) in
+          data
+      | ComputeMetrics_feature ->
+        let data = Json.save_string 
+        (Lsp_types.NotificationMessage.json_of_t 
+          (Lsp_types.NotificationMessage.create 
+            ~jsonrpc:"2.0" 
+            ~method_:"window/showMessage" 
+            ~params: (Lsp_types.ShowMessageParams.json_of_t 
+              (Lsp_types.ShowMessageParams.create 
+                ~type_: Lsp_types.MessageType.Info
+                ~message: (Printf.sprintf "Calculated metrics successfully, file generated : %s.txt" (Show_metrics.get ()))
+                ()
+              )
+            )
+            ()
+          )
+        ) in
+        data
+      | ComputeProofObligation_feature ->
           let req_info = String.split_on_char ':' (Show_POVC.get ()) in 
           let id = Id.get () in 
           let file = List.nth req_info 0 in 
@@ -289,12 +275,19 @@ let run () =
             )
             ()
           )) in
-          match Cmdline_opt.get () with
-          | false -> Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
-            ignore (send_request plugin_sock data)
-          | true -> ignore (Lsp.Self.result "JSON result : %s\n%!" data) ;
-        ); 
-        
+          data
+
+        (* if not (String.equal (Acsl_wp.get ()) "") then 
+          (
+            (* let id = Id.get () in  *)
+            let file = Acsl_wp.get () in 
+            let data = Json.save_string (AcslWp.handle file) in
+  
+            match Cmdline_opt.get () with
+            | false -> Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
+              ignore (send_response plugin_sock data)
+            | true -> ignore (Lsp.Self.result "JSON result : %s\n%!" data) ;
+          );  *)        
 
       (* if not (String.equal (Find_comp.get ()) "") then
         (
@@ -303,10 +296,15 @@ let run () =
           let data = Json.save_string (Completion.completion_items int_id (List.nth req_info 0) (Stdlib.int_of_string (List.nth req_info 1)) (Stdlib.int_of_string (List.nth req_info 2))) in
           match Cmdline_opt.get () with
           | false -> Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
-            ignore (send_request plugin_sock data)
+            ignore (send_response plugin_sock data)
           | true -> ignore (Lsp.Self.result "JSON result : %s\n%!" data) ;
         ); *)
-
+      in
+      match Cmdline_opt.get () with
+      | false -> Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
+        ignore (send_response plugin_sock data)
+      | true -> ignore (Lsp.Self.result "JSON result : %s\n%!" data)
+  
   with exn ->
     Self.debug ~level:2 "Error while processing request : %s, Backtrace : %s\n%!" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
     (* Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac)); *)
@@ -323,7 +321,7 @@ let run () =
       )) in
       match Cmdline_opt.get () with
       | false -> Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
-        ignore (send_request plugin_sock data)
+        ignore (send_response plugin_sock data)
       | true -> ignore (Lsp.Self.result "JSON result : %s\n%!" data) ;
   )
 

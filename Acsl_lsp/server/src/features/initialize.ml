@@ -24,9 +24,7 @@ let initialize : Json.json =
             "textDocumentSync": {
               "openClose": false,
               "change": 0,
-              "save": {
-                "includeText": false
-              }
+              "save": { "includeText": false }
             },
             "definitionProvider": true,
             "declarationProvider": true,

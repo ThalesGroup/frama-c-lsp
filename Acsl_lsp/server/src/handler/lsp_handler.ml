@@ -98,17 +98,17 @@ let wp_diags () =
 
 let cpp_extra_args () = 
   let includePaths = 
-    List.map (fun x -> "-I"^(!rootPath^"/"^(x))) (!Configuration.global_params.includePaths)
+    List.map (fun x -> " -I"^(!rootPath^"/"^(x))) (!Configuration.global_params.includePaths)
   in
-  let macros = List.map (fun x -> "-D"^x) (!Configuration.global_params.macros) in
+  let macros = List.map (fun x -> " -D"^x) (!Configuration.global_params.macros) in
   let res = " -cpp-extra-args=\""^(String.concat " " includePaths)^(String.concat " " macros)^"\"" in 
   res
 
 let cpp_extra_args_acsl () = 
   let includePaths = 
-    List.map (fun x -> "-I"^(!rootPath^"/"^(x))) (!Configuration.global_params.includePaths)
+    List.map (fun x -> " -I"^(!rootPath^"/"^(x))) (!Configuration.global_params.includePaths)
   in
-  let macros = List.map (fun x -> "-D"^x) (!Configuration.global_params.macros) in
+  let macros = List.map (fun x -> " -D"^x) (!Configuration.global_params.macros) in
   let res = "\""^(String.concat " " includePaths)^(String.concat " " macros)^"\"" in 
   res
 
@@ -148,16 +148,6 @@ let global_metrics_args () =
   if not_empty (!Configuration.global_params.metricsOutput) then 
       add_arg (" -metrics-output=\""^(!rootPath)^"/"^(Filename.remove_extension !Configuration.global_params.metricsOutput)^".txt\"") 
   else add_arg (" -metrics-output=\"project_metrics.txt\"");
-  !args 
-
-let local_metrics_args file () = 
-  let args = ref "" in
-  let add_arg arg = 
-    args := !args^arg 
-  in
-  add_arg " -metrics";
-  add_arg " -metrics-by-function";
-  add_arg (" -metrics-output=\""^file^".txt\"");
   !args 
 
 let callgraph_args file () = 
@@ -301,11 +291,9 @@ let rq_handler json_string =
         "result": {
           "capabilities": {
             "textDocumentSync": {
-              "openClose": true,
+              "openClose": false,
               "change": 0,
-              "save": {
-                "includeText": false
-              }
+              "save": { "includeText": false }
             },
             "definitionProvider": true,
             "declarationProvider": true,
@@ -331,7 +319,7 @@ let rq_handler json_string =
         | None -> Lsp.Self.debug ~level:3 "No definition params \n%!"; assert false
       in
       let uri = params.textDocument.uri in 
-      let _file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
+      let src_file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
       let line = params.position.line in 
       let ch = params.position.character in
       let files_to_parse = 
@@ -339,7 +327,11 @@ let rq_handler json_string =
           | "" -> String.concat " " (Utils.get_workspace_files !rootPath)
           | _ -> (source_files ())
         in
-      let command = "frama-c "^files_to_parse^" "^(cpp_extra_args ())^(kernel_args ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-id=\""^(Stdlib.string_of_int (Utils.id_to_int request.id))^"\" -lsp-root-path=\""^(!rootPath)^"\" -lsp-definition="^_file^":"^(Stdlib.string_of_int line)^":"^(Stdlib.string_of_int ch) in
+      (* let command = "frama-c "^files_to_parse^" "^(cpp_extra_args ())^(kernel_args ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-id=\""^(Stdlib.string_of_int (Utils.id_to_int request.id))^"\" -lsp-root-path=\""^(!rootPath)^"\" -lsp-definition="^_file^":"^(Stdlib.string_of_int line)^":"^(Stdlib.string_of_int ch) in *)
+      let command = Printf.sprintf "frama-c %s %s %s -then -lsp -lsp-no-cmdline -lsp-debug=%s -lsp-id=\"%s\" -lsp-root-path=\"%s\" -lsp-definition=%s:%s:%s"
+      files_to_parse (cpp_extra_args ()) (kernel_args ())
+      (debug ()) (Stdlib.string_of_int (Utils.id_to_int request.id)) (!rootPath)
+      src_file (Stdlib.string_of_int line) (Stdlib.string_of_int ch) in
       Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
       let data = execute_command command false ~id:request.id () in
       Lsp_types.CONTENT data;
@@ -365,17 +357,20 @@ let rq_handler json_string =
       Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
       let data = execute_command command false ~id:request.id () in
       Lsp_types.CONTENT (data);
-
+(*
     | "displayCIL" -> 
       Lsp.Self.debug ~level:4 "displayCIL\n%!";
       let file = match request.params with 
         | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
         | _ -> Lsp.Self.debug ~level:3 "No params for displayCIL \n%!"; assert false
       in
-      let command = "frama-c "^file^(cpp_extra_args ())^(kernel_args ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-display-cil -lsp-id=\""^(Stdlib.string_of_int (Utils.id_to_int request.id))^"\"" in
+      (* let command = "frama-c "^file^(cpp_extra_args ())^(kernel_args ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-display-cil -lsp-id=\""^(Stdlib.string_of_int (Utils.id_to_int request.id))^"\"" in *)
+      let command = Printf.sprintf "frama-c %s %s %s -then -lsp -lsp-no-cmdline -lsp-debug=%s -lsp-display-cil -lsp-id=\"%s\""
+      file (cpp_extra_args ()) (kernel_args ())
+      (debug ()) (Stdlib.string_of_int (Utils.id_to_int request.id)) in
       Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
       Lsp_types.CONTENT (execute_command command false ~id:request.id ());
-    
+*)    
     | "showPOVC" -> (* show proof obligation of specific function *)
       Lsp.Self.debug ~level:4 "showPOVC, %d\n%!" (Utils.id_to_int request.id);
       let (file, line, ch) = match request.params with 
@@ -477,17 +472,34 @@ let notif_handler json_string server_sock =
   | "showGlobalMetrics" -> 
     Lsp.Self.debug ~level:4 "global metrics\n%!";
     let project_filename = if not (String.equal (!Configuration.global_params.metricsOutput) "") then (Filename.remove_extension !Configuration.global_params.metricsOutput) else "project_metrics" in
-    let command = "frama-c "^(source_files ())^(cpp_extra_args ())^(kernel_args ())^" -then"^(global_metrics_args ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-metrics=\""^(!rootPath)^"/"^project_filename^"\"" in
+    let command = Printf.sprintf "frama-c %s %s %s -then %s -then -lsp -lsp-no-cmdline -lsp-debug=%s -lsp-metrics=\"%s/%s\""
+    (source_files ()) (cpp_extra_args ()) (kernel_args ()) (global_metrics_args ()) (debug ()) (!rootPath) project_filename in
     Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
     Lsp_types.CONTENT (execute_command command false ());
+
+  | "displayCIL" -> 
+      Lsp.Self.debug ~level:4 "displayCIL\n%!";
+      let file = match notif.params with 
+        | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
+        | _ -> Lsp.Self.debug ~level:3 "No params for displayCIL \n%!"; assert false
+      in
+      let command = Printf.sprintf "frama-c %s %s %s -then -print -no-unicode -ocode \"%s_fc.c\" -lsp -lsp-no-cmdline -lsp-debug=%s -lsp-display-cil=\"%s\""
+      file (cpp_extra_args ()) (kernel_args ())
+      (Filename.remove_extension file)
+      (debug ())
+      (Filename.remove_extension file) in
+      Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
+      Lsp_types.CONTENT (execute_command command false ());
 
   | "showLocalMetrics" -> 
     Lsp.Self.debug ~level:4 "local metrics\n%!";
     let file = match notif.params with 
         | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
         | _ -> Lsp.Self.debug ~level:3 "No params for metrics \n%!"; assert false
-      in
-    let command = "frama-c "^file^(cpp_extra_args ())^(kernel_args ())^" -then"^(local_metrics_args (Filename.remove_extension file) ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-metrics=\""^(Filename.remove_extension file)^"\"" in
+    in
+    let command = Printf.sprintf "frama-c %s %s %s -then -metrics -metrics-by-function -metrics-output=\"%s.txt\" -then -lsp -lsp-no-cmdline -lsp-debug=%s -lsp-metrics=\"%s\""
+    file (cpp_extra_args ()) (kernel_args ())
+    (Filename.remove_extension file) (debug ()) (Filename.remove_extension file) in
     Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
     Lsp_types.CONTENT (execute_command command false ());
   
@@ -496,7 +508,7 @@ let notif_handler json_string server_sock =
     let file = match notif.params with 
         | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
         | _ -> Lsp.Self.debug ~level:3 "No params for computeCG \n%!"; assert false
-      in
+    in
     let command = "frama-c "^file^(cpp_extra_args ())^(kernel_args ())^" -then"^(callgraph_args (Filename.remove_extension file) ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-compute-cg=\""^(get_cg_output_file (Filename.remove_extension file) ())^"\"" in
     Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
       Lsp_types.CONTENT (execute_command command false ());

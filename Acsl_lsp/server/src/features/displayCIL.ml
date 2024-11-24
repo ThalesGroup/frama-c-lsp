@@ -1,4 +1,4 @@
-let displayCIL id : Json.json = 
+(* let displayCIL id : Json.json = 
   try 
     let ast = (Ast.get ()) in
     let pretty_ast = (Pretty_utils.to_string (Printer.pp_file) ast) in
@@ -9,7 +9,7 @@ let displayCIL id : Json.json =
       ~result:result
       ()
     )
-      in
+    in
     response;
   with Ast.Bad_Initialization msg ->
     Lsp_types.ResponseError.json_of_t (Lsp_types.ResponseError.create
@@ -18,3 +18,4 @@ let displayCIL id : Json.json =
       ()
     )
 
+*)
