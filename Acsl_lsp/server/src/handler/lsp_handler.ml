@@ -101,7 +101,7 @@ let cpp_extra_args () =
     List.map (fun x -> " -I"^(!rootPath^"/"^(x))) (!Configuration.global_params.includePaths)
   in
   let macros = List.map (fun x -> " -D"^x) (!Configuration.global_params.macros) in
-  let res = " -cpp-extra-args=\""^(String.concat " " includePaths)^(String.concat " " macros)^"\"" in 
+  let res = " -cpp-extra-args=\" -CC "^(String.concat " " includePaths)^(String.concat " " macros)^"\"" in 
   res
 
 let cpp_extra_args_acsl () = 
@@ -490,6 +490,20 @@ let notif_handler json_string server_sock =
       (Filename.remove_extension file) in
       Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
       Lsp_types.CONTENT (execute_command command false ());
+
+  | "displayCIL_noannot" -> 
+        Lsp.Self.debug ~level:4 "displayCIL_noannot\n%!";
+        let file = match notif.params with 
+          | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
+          | _ -> Lsp.Self.debug ~level:3 "No params for displayCIL \n%!"; assert false
+        in
+        let command = Printf.sprintf "frama-c %s %s %s -then -print -no-unicode -ocode \"%s_fc.c\" -no-annot -keep-comments -lsp -lsp-no-cmdline -lsp-debug=%s -lsp-display-cil=\"%s\""
+        file (cpp_extra_args ()) (kernel_args ())
+        (Filename.remove_extension file)
+        (debug ())
+        (Filename.remove_extension file) in
+        Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
+        Lsp_types.CONTENT (execute_command command false ());
 
   | "showLocalMetrics" -> 
     Lsp.Self.debug ~level:4 "local metrics\n%!";

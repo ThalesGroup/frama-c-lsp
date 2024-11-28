@@ -30,6 +30,10 @@
                     "when": "resourceLangId == acsl"
                 },
                 {
+                    "command": "displayCIL_noannot",
+                    "when": "resourceLangId == acsl"
+                },
+                {
                     "command": "computeCG",
                     "when": "resourceLangId == acsl"
                 },
@@ -262,6 +266,10 @@
             {
                 "command": "displayCIL",
                 "title": "Display CIL"
+            },
+            {
+                "command": "displayCIL_noannot",
+                "title": "Display CIL with No annotations"
             },
             {
                 "command": "computeCG",

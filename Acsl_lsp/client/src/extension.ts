@@ -99,6 +99,16 @@ export function activate(context: ExtensionContext) {
 		}
 	});
 
+	const displayCIL_noannot = commands.registerCommand('displayCIL_noannot', async () => {
+		try {
+			await client.sendNotification('displayCIL_noannot', window.activeTextEditor.document.fileName);
+
+		} catch (err) {
+			window.showErrorMessage('Failed to compute displayCIL_noannot: ' + err.message);
+			console.error('Error computing displayCIL_noannot:', err);
+		}
+	});
+
 	const computeCG = commands.registerCommand('computeCG', async () => {
 		try {
 			await client.sendNotification('computeCG', window.activeTextEditor.document.fileName);
@@ -180,7 +190,7 @@ export function activate(context: ExtensionContext) {
         panel.webview.html = getWebviewContent(pdfFileUri);
     });
 
-	context.subscriptions.push(displayCIL, computeCG, showPOVC, showGlobalMetrics, showLocalMetrics, showCG);
+	context.subscriptions.push(displayCIL, displayCIL_noannot, computeCG, showPOVC, showGlobalMetrics, showLocalMetrics, showCG);
 
 	// Start the client. This will also launch the server
 	client.start();
