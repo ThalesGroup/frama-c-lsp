@@ -467,7 +467,7 @@ let notif_handler json_string server_sock =
     let file_name = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
     if String.ends_with ~suffix:".c" file_name then
       begin
-      let command = "frama-c"^(cpp_extra_args ())^(kernel_args ())^" -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-did-save=" ^ file_names in
+      let command = "frama-c"^(cpp_extra_args ())^(kernel_args ())^" -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-did-save=" ^ file_name in
       Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
       Lsp_types.CONTENT (execute_command command true ());
       end
