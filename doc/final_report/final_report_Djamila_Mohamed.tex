@@ -765,7 +765,11 @@ File synchronization is a key feature of the LSP\@. Requests can by sent by the 
 A single file parsing is performed each time a file is opened or saved. We add a Frama-C Kernel event listener to catch any error or warning raised by the Frama-C parser and we store them inside a JSON block.
 All diagnostics are published to the editor and displayed to the user in the form of squiggles and listed in the `Problems' view of the editor.
 
-There are two types of diagnostics: warnings and errors. Warnings are raised in case an ACSL annotation is not formed properly or when an unknown function is called. Errors are raised when there is a syntax error in the C code preventing the parser to finish (which are fatal errors). In the latter case, normally, any Frama-C session stops, but we ensure that diagnostics are sent either in case the parsing succeeds or fails. So we send them just before the exception aborts fatally.
+There are two types of diagnostics: warnings and errors.
+Warnings are raised in case an ACSL annotation is not formed properly or when an unknown function is called.
+Errors are raised when there is a syntax error in the C code preventing the parser to finish (which are fatal errors).
+In the latter case, normally, any Frama-C session stops, but we ensure that diagnostics are sent either in case the parsing succeeds or fails.
+So we send them just before the exception aborts fatally.
 In case the parsing succeeds without any messages, the diagnostics are cleared in the editor.
 
 The listener is a Frama-C function that reports any event emitted by Frama-C while parsing. From those events we can extract their source, their message and their kind (whether it is an error, a warning a feedback, etc.).

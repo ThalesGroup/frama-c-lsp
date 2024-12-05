@@ -464,10 +464,14 @@ let notif_handler json_string server_sock =
       | None -> assert false
     in
     let uri = params.textDocument.uri in 
-    let _file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
-    let command = "frama-c"^(cpp_extra_args ())^(kernel_args ())^" -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-did-save=" ^ _file in
-    Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
-    Lsp_types.CONTENT (execute_command command true ());
+    let file_name = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
+    if String.ends_with ~suffix:".c" file_name then
+      begin
+      let command = "frama-c"^(cpp_extra_args ())^(kernel_args ())^" -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-did-save=" ^ file_names in
+      Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
+      Lsp_types.CONTENT (execute_command command true ());
+      end
+    else Lsp_types.EMPTY ()
 
   | "showGlobalMetrics" -> 
     Lsp.Self.debug ~level:4 "global metrics\n%!";
