@@ -129,6 +129,10 @@ let send_response plugin_sock response =
       let sent = Unix.send plugin_sock (response_bytes) 0 (String.length response_str) [] in
       Self.debug ~level:4 "size : %d content : %s\n%!" sent response_str
 
+let send_response_list plugin_sock response_list =
+  let response_list = List.rev response_list in
+  List.iter (send_response plugin_sock) response_list
+
 type lsp_feature = 
   | DidSave_feature
   | DidClose_feature
@@ -187,21 +191,21 @@ let run () =
       let data = 
       match feature with
       | DidSave_feature -> 
-        let data = Json.save_string (DidSave.handle (Did_save.get ())) in
+        let data = List.map Json.save_string (DidSave.handle (Did_save.get ())) in
         data
       | DidClose_feature ->
         let data = Json.save_string (DidClose.handle (Did_close.get ())) in
-        data
+        data :: []
       | FindDefinition_feature ->
         let req_info = String.split_on_char ':' (Find_def.get ()) in 
         let int_id = (Id.get ()) in 
         let data = Json.save_string (Definition.find int_id (List.nth req_info 0) (Stdlib.int_of_string (List.nth req_info 1)) (Stdlib.int_of_string (List.nth req_info 2))) in
-        data
+        data :: []
       | FindDeclaration_feature ->
         let req_info = String.split_on_char ':' (Find_decl.get ()) in 
         let int_id = (Id.get ()) in 
         let data = Json.save_string (Declaration.find int_id (List.nth req_info 0) (Stdlib.int_of_string (List.nth req_info 1)) (Stdlib.int_of_string (List.nth req_info 2))) in
-        data
+        data :: []
       | ComputeCIL_feature -> 
         (* let data = Json.save_string (DisplayCIL.displayCIL (Id.get ())) in
         data *)
@@ -220,7 +224,7 @@ let run () =
             ()
           )
         ) in
-        data
+        data :: []
       | ComputeCallGraph_feature ->
         ignore (Sys.command ("dot -Tpdf "^(Compute_CG.get ())^".dot -o "^(Compute_CG.get ())^".pdf"));
         Lsp.Self.debug ~level:2 ("Generated %s.dot and %s.pdf files") (Compute_CG.get ()) (Compute_CG.get ());
@@ -239,7 +243,7 @@ let run () =
               ()
             )
           ) in
-          data
+          data :: []
       | ComputeMetrics_feature ->
         let data = Json.save_string 
         (Lsp_types.NotificationMessage.json_of_t 
@@ -256,7 +260,7 @@ let run () =
             ()
           )
         ) in
-        data
+        data :: []
       | ComputeProofObligation_feature ->
           let req_info = String.split_on_char ':' (Show_POVC.get ()) in 
           let id = Id.get () in 
@@ -275,7 +279,7 @@ let run () =
             )
             ()
           )) in
-          data
+          data :: []
 
         (* if not (String.equal (Acsl_wp.get ()) "") then 
           (
@@ -302,8 +306,8 @@ let run () =
       in
       match Cmdline_opt.get () with
       | false -> Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
-        ignore (send_response plugin_sock data)
-      | true -> ignore (Lsp.Self.result "JSON result : %s\n%!" data)
+        ignore (send_response_list plugin_sock data)
+      | true -> List.iter (Lsp.Self.result "JSON result : %s\n%!" ) data
   
   with exn ->
     Self.debug ~level:2 "Error while processing request : %s, Backtrace : %s\n%!" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
@@ -319,10 +323,11 @@ let run () =
         )
         ()
       )) in
+      let data = data :: [] in
       match Cmdline_opt.get () with
       | false -> Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
-        ignore (send_response plugin_sock data)
-      | true -> ignore (Lsp.Self.result "JSON result : %s\n%!" data) ;
+        ignore (send_response_list plugin_sock data)
+      | true -> List.iter (Lsp.Self.result "JSON result : %s\n%!" ) data
   )
 
 

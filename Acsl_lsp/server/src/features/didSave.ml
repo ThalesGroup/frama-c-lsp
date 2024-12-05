@@ -1,7 +1,9 @@
 
 
 let file = ref ""
-let diag_list = ref []
+module StringMap = Map.Make(String)
+
+let diag_map = ref StringMap.empty
 
 let warn_categories = 
   List.map (fun x -> 
@@ -15,7 +17,6 @@ let is_a_warn_category cat : bool =
   ) warn_categories;
   !res
 
-
 let publishResult id result : Json.json = 
   Lsp_types.ResponseMessage.json_of_t(
     Lsp_types.ResponseMessage.create 
@@ -25,19 +26,18 @@ let publishResult id result : Json.json =
       ()
     )
 
-let publishDiagnostics_notification dlist filename: Json.json = 
-    Lsp_types.NotificationMessage.json_of_t (
-      Lsp_types.NotificationMessage.create
-        ~jsonrpc:"2.0"
-        ~method_:"textDocument/publishDiagnostics"
-        ~params:(Lsp_types.PublishDiagnosticsParams.json_of_t 
-        (Lsp_types.PublishDiagnosticsParams.create
-            ~uri:(filename)
-            ~diagnostics:dlist
-            ()
-        ))
-        ()
-    )
+let publishDiagnostics_notification filename dlist accumulated_list : Json.json list =
+  let dlist = match dlist with
+    | [] -> dlist
+    | elem :: _l ->
+      if (List.length dlist) < 100 then dlist
+      else [elem]
+  in
+  let notification_params = Lsp_types.PublishDiagnosticsParams.create ~uri:filename ~diagnostics:dlist () in
+  let notification_params_json = Lsp_types.PublishDiagnosticsParams.json_of_t notification_params in
+  let notification_message = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"textDocument/publishDiagnostics" ~params:notification_params_json () in
+  let notification_message_json = Lsp_types.NotificationMessage.json_of_t notification_message in
+  notification_message_json :: accumulated_list
 
 let clear_diagnostics_no_uri = 
   Lsp_types.NotificationMessage.json_of_t (
@@ -71,12 +71,7 @@ let clear_diagnostics filename =
     )
 
 let diagnostic loc severity msg source = 
-  Lsp_types.Diagnostic.create 
-    ~range:(Utils.get_lsp_range loc)
-    ~severity:severity
-    ~message:msg
-    ~source:source
-    ()
+  Lsp_types.Diagnostic.create ~range:(Utils.get_lsp_range loc) ~severity:severity ~message:msg ~source:source ()
 
 let escape_double_quotes str = 
   let regex = Str.regexp {|[\"]|} in
@@ -102,62 +97,45 @@ let diagnostics_handler (event : Log.event) =
       publish_to := Filepath.normalize !file;
       Utils.dummyLoc (Filepath.normalize !file))
   in
+  let diag_list = StringMap.find_opt !publish_to !diag_map in
+  let diag_list = match diag_list with
+    | None -> []
+    | Some l -> l
+  in
   if (Utils.contains msg ~suffix:"syntax error" 
     || Utils.contains msg ~suffix:"There were parsing errors in"
     || Utils.contains msg ~suffix:"User Error"
     || Utils.contains msg ~suffix:"invalid user input"
     || Utils.contains msg ~suffix:"Invalid symbol"
     || Utils.contains msg ~suffix:"before or at token"
-  ) then 
-    begin
-      diag_list := (diagnostic 
-        (loc)
-        Lsp_types.DiagnosticSeverity.Error 
-        (Scanf.unescaped (escape_unicode (String.escaped msg)))
-        event.evt_plugin
-        )::!diag_list;
-    end
+  ) then
+    let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
+    diag_map := StringMap.add !publish_to (diag :: diag_list) !diag_map
   else
   match event.evt_kind with 
   | Log.Error ->  
     Lsp.Self.debug ~level:4 "Error\n%!";
-    diag_list :=  (diagnostic 
-        (loc)
-        Lsp_types.DiagnosticSeverity.Error 
-        (Scanf.unescaped (escape_unicode (String.escaped msg)))
-        event.evt_plugin
-        )::!diag_list
+    let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
+    diag_map := StringMap.add !publish_to (diag :: diag_list) !diag_map
   | Log.Failure ->
-      Lsp.Self.debug ~level:4 "Failure\n%!";
-      diag_list :=  (diagnostic 
-        (loc)
-        Lsp_types.DiagnosticSeverity.Error 
-        (Scanf.unescaped (escape_unicode (String.escaped msg)))
-        event.evt_plugin
-        )::!diag_list
+    Lsp.Self.debug ~level:4 "Failure\n%!";
+    let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
+    diag_map := StringMap.add !publish_to (diag :: diag_list) !diag_map
   | Log.Warning -> 
     Lsp.Self.debug ~level:4 "Warning\n%!";
-    diag_list :=  (diagnostic 
-        (loc)
-        Lsp_types.DiagnosticSeverity.Warning 
-        (Scanf.unescaped (escape_unicode (String.escaped msg)))
-        event.evt_plugin
-        )::!diag_list;
-(* Lsp.Self.debug ~level:4 "diags handler warning : nb diags = %d\n%!" (List.length !diag_list); *)
-
+    let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Warning (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
+    diag_map := StringMap.add !publish_to (diag :: diag_list) !diag_map
+    (* Lsp.Self.debug ~level:4 "diags handler warning : nb diags = %d\n%!" (List.length !diag_list); *)
   | Log.Result -> 
     Lsp.Self.debug ~level:4 "Result\n%!";
   | Log.Debug -> 
     Lsp.Self.debug ~level:4 "Debug\n%!";
-    diag_list := ( (diagnostic 
-        (loc)
-        Lsp_types.DiagnosticSeverity.Information 
-        (Scanf.unescaped (escape_unicode (String.escaped msg)))
-        event.evt_plugin
-        ))::!diag_list
+    let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Information (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
+    diag_map := StringMap.add !publish_to (diag :: diag_list) !diag_map
   | Log.Feedback ->
     Lsp.Self.debug ~level:4 "Feedback\n%!";
-      ()
+    let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Information (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
+    diag_map := StringMap.add !publish_to (diag :: diag_list) !diag_map
 
 let remove_file_scheme uri =
   let regex = Str.regexp {|file://|} in
@@ -172,7 +150,7 @@ let remove_newline str =
   ignore (Str.search_forward regex str 0);
   Str.matched_string str
 
-let handle filename : Json.json = 
+let handle filename : Json.json list = 
   Log.add_listener ~plugin:"kernel" (diagnostics_handler);
   Lsp.Self.debug ~level:4 "kernel listener added\n%!";
 
@@ -184,20 +162,12 @@ let handle filename : Json.json =
     (* Project.set_current (Project.create "didSave"); *)
     Kernel.Unicode.off ();
     File.init_from_c_files [_file];
-    match !diag_list with
-    | [] -> (publishDiagnostics_notification !diag_list filename)
-    | elem :: _l ->
-        if (List.length !diag_list) < 100 then (publishDiagnostics_notification !diag_list filename)
-        else (publishDiagnostics_notification [elem] filename)
+    StringMap.fold publishDiagnostics_notification !diag_map []
 
   with
   | _exn ->
     (* Lsp.Self.debug ~level:4 "DidSave error :  %s, Backtrace : %s\n%!" (Printexc.exn_slot_name _exn) (Printexc.get_backtrace ()); *)
-    match !diag_list with
-    | [] -> (publishDiagnostics_notification !diag_list filename)
-    | elem :: _l ->
-        if (List.length !diag_list) < 100 then (publishDiagnostics_notification !diag_list filename)
-        else (publishDiagnostics_notification [elem] filename)
+    StringMap.fold publishDiagnostics_notification !diag_map []
 
   
 

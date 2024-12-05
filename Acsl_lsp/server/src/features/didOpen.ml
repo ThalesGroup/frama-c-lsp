@@ -109,7 +109,7 @@ let diagnostics_handler (event : Log.event) =
     || Utils.contains msg ~suffix:"before or at token"
   ) then 
     begin
-      diag_list := (diagnostic 
+      diag_list := (diagnostic
         (loc)
         Lsp_types.DiagnosticSeverity.Error 
         (escape_double_quotes (escape_unicode msg))
@@ -120,7 +120,7 @@ let diagnostics_handler (event : Log.event) =
   match event.evt_kind with 
   | Log.Error ->  
     Lsp.Self.debug ~level:4 "Error\n%!";
-    diag_list :=  (diagnostic 
+    diag_list :=  (diagnostic
         (loc)
         Lsp_types.DiagnosticSeverity.Error 
         (escape_double_quotes (escape_unicode msg))
@@ -148,7 +148,7 @@ let diagnostics_handler (event : Log.event) =
     Lsp.Self.debug ~level:4 "Result\n%!";
   | Log.Debug -> 
     Lsp.Self.debug ~level:4 "Debug\n%!";
-    diag_list := ( (diagnostic 
+    diag_list := ( (diagnostic
         (loc)
         Lsp_types.DiagnosticSeverity.Information 
         (escape_double_quotes (escape_unicode msg))
