@@ -133,10 +133,11 @@ let diagnostics_handler (event : Log.event) =
     let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Information (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
     diag_map := StringMap.add !publish_to (diag :: diag_list) !diag_map
   | Log.Feedback ->
-    Lsp.Self.debug ~level:4 "Feedback\n%!";
+    Lsp.Self.debug ~level:4 "Feedback\n%!"
+    (*
     let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Information (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
     diag_map := StringMap.add !publish_to (diag :: diag_list) !diag_map
-
+    *)
 let remove_file_scheme uri =
   let regex = Str.regexp {|file://|} in
   Str.global_replace regex "" uri
@@ -153,6 +154,8 @@ let remove_newline str =
 let handle filename : Json.json list = 
   Log.add_listener ~plugin:"kernel" (diagnostics_handler);
   Lsp.Self.debug ~level:4 "kernel listener added\n%!";
+  Log.add_listener ~plugin:"wp" (diagnostics_handler);
+  Lsp.Self.debug ~level:4 "wp listener added\n%!";
 
   file := filename;
   let filepath = Filepath.Normalized.of_string filename in

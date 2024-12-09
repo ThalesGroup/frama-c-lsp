@@ -41,21 +41,19 @@ let handle_request server_sock =
       match response with 
       | CONTENT string_json -> 
         Lsp.Self.debug ~level:3 "Sending to client : %s\n\n%!" string_json;
-        send_request server_sock (string_json); 
+        let string_json_list = Str.split (Str.regexp ":::") string_json in
+        List.iter (send_request server_sock) (string_json_list); 
       | EMPTY _ -> ()
     with exn -> 
       Lsp.Self.debug ~level:3 "Could not handle the previous request : %s, %s\n" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ())
       
 
 let connect () =
-
   (* vs code / wrapper communication *)
   Lsp.Self.debug ~level:4 "Connecting on port %d\n%!" server_port;
   let (ic, oc) = Unix.open_connection (Unix.ADDR_INET (addr, server_port)) in 
   Lsp.Self.debug ~level:4 "Connected on port %d\n%!" server_port;
-
   let server_sock = Unix.descr_of_in_channel ic in
-
   while true do
     handle_request server_sock;
     flush oc;

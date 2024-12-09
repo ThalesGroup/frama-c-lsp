@@ -45,50 +45,6 @@ let shutdown_error (req : Lsp_types.RequestMessage.t) : Json.json =
   
 let receivedShutdown = ref false
 let rootPath = ref ""
-
-
-let is_result json_string = 
-  try
-    let json = Json.load_string json_string in
-    match json with
-    | `Assoc fields ->
-      (List.exists (fun (key, _) -> key = "result") fields)
-    | _ -> Lsp.Self.debug ~level:3 "no result\n%!"; false
-  with
-  | Json.Error _ -> false
-
-let is_error json_string = 
-  try
-    let json = Json.load_string json_string in
-    match json with
-    | `Assoc fields ->
-      (List.exists (fun (key, _) -> key = "error") fields)
-    | _ -> Lsp.Self.debug ~level:3 "no error\n%!"; false
-
-  with
-  | Json.Error _ -> false
-
-let is_notif json_string =
-  try
-    let json = Json.load_string json_string in
-    match json with
-    | `Assoc fields ->
-      not (List.exists (fun (key, _) -> key = "id") fields)
-    | _ -> Lsp.Self.debug ~level:3 "no notif\n%!"; false
-
-  with
-  | Json.Error _ -> false
-
-let is_request json_string =
-  try
-    let json = Json.load_string json_string in
-    match json with
-    | `Assoc fields ->
-      (List.exists (fun (key, _) -> key = "id") fields)
-    | _ -> Lsp.Self.debug ~level:3 "no request\n%!"; false
-
-  with
-  | Json.Error _ -> false
   
 let debug () = 
   Stdlib.string_of_int !Configuration.global_params.acslLsp
@@ -245,17 +201,9 @@ let execute_command command didSave ?id () =
   | true -> 
     Lsp.Self.debug ~level:2 "Error while executing frama-c command\n%!";
     (* Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac)); *)
-    let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t 
-      (Lsp_types.ResponseMessage.create 
-        ~jsonrpc:"2.0" 
-        ~id:response_id
-        ~error: (Lsp_types.ResponseError.create
-          ~code:(-32603)
-          ~message:!msg
-          ()
-        )
-        ()
-      )) in
+    let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:!msg () in
+    let lsp_message = (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:response_id ~error: lsp_error_message ()) in
+    let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_message) in
     Unix.close wrapper_sock;
     data
   | false ->
@@ -266,7 +214,7 @@ let execute_command command didSave ?id () =
     let request_str = (Bytes.to_string buffer) in
     (* Lsp.Self.debug ~level:4 "accept\n%!"; *)
     ignore (Unix.close_process_in ic);
-    let _bytes_read = Unix.recv plugin_sock buffer 0 (Bytes.length buffer) [] in 
+    (* let _bytes_read = Unix.recv plugin_sock buffer 0 (Bytes.length buffer) [] in *) 
     (* Lsp.Self.debug ~level:4 "recv\n%!"; *)
     Unix.close plugin_sock;
     Unix.close wrapper_sock;
@@ -426,12 +374,8 @@ let notif_handler json_string server_sock =
   | "initialized" -> 
     Lsp.Self.debug ~level:4 "initialized\n%!";
     send_request server_sock (Json.save_string Configuration.request_configurations);
-    Lsp_types.CONTENT (Json.save_string (
-      registerCapabilityRequest 
-      (registrationParams 
-        ([registration "workspace/didChangeConfiguration"])
-      );
-    ))
+    let lsp_message = registerCapabilityRequest (registrationParams ([registration "workspace/didChangeConfiguration"])) in
+    Lsp_types.CONTENT (Json.save_string (lsp_message))
 
   (* | "textDocument/didOpen" ->
     Lsp.Self.debug ~level:4 "didOpen\n%!";
@@ -541,16 +485,15 @@ let notif_handler json_string server_sock =
 
 
 
-let result_handler json_string = 
-  let json = Json.load_string json_string in 
-  let request = Lsp_types.ResponseMessage.t_of_json json in 
-  let result = match request.result with 
+let result_handler json_string =
+  let json = Json.load_string json_string in
+  let request = Lsp_types.ResponseMessage.t_of_json json in
+  let result = match request.result with
     | Some r -> r
     | None -> Lsp.Self.debug ~level:3 "No result \n%!"; assert false
-  in 
-
+  in
   let id = request.id in
-  match id with 
+  match id with
   | Lsp_types.Str "ask_configs" -> (* if the result is request_configurations *)
     Configuration.save_configs (result);
     Lsp_types.EMPTY ();
@@ -566,31 +509,38 @@ let error_handler json_string =
     | Some err -> err 
     | None -> Lsp.Self.debug ~level:3 "No error \n%!"; assert false
   in 
-  Lsp_types.ResponseError.json_of_t (error)
+  Lsp_types.CONTENT (Json.save_string (Lsp_types.ResponseError.json_of_t (error)))
 
 let handle (json_string : string) server_sock : Lsp_types.lsp_result = 
   (* if !receivedShutdown then 
     Lsp_types.CONTENT (Shutdown.shutdown_error (Lsp_types.RequestMessage.t_of_json (Json.load_string json_string))) else  *)
-  if (is_result json_string) then (* todo : how to do this with a match with *)
-    begin
-      Lsp.Self.debug ~level:4 "result_handler\n%!";
-      result_handler json_string 
-    end
-  else if (is_error json_string) then 
-    begin
-      Lsp.Self.debug ~level:4 "error_handler\n%!";
-      Lsp_types.CONTENT (Json.save_string (error_handler json_string))
-    end
-  else if (is_notif json_string) then 
-    begin
-      Lsp.Self.debug ~level:4 "notif_handler\n%!";
-      (* Lsp.Self.debug ~level: "Received from client : %s\n%!" json_string; *)
-      notif_handler json_string server_sock
-    end
-  else if (is_request json_string) then 
-    begin
-      Lsp.Self.debug ~level:4 "rq_handler\n%!";
-      rq_handler json_string
-    end
-  else 
-    raise (Failure "Unknown request")
+  try
+    let json = Json.load_string json_string in
+    match json with
+    | `Assoc fields ->
+      if (List.exists (fun (key, _) -> key = "result") fields) then
+        begin
+          Lsp.Self.debug ~level:4 "result_handler\n%!";
+          result_handler json_string 
+        end
+      else if (List.exists (fun (key, _) -> key = "error") fields) then 
+        begin
+          Lsp.Self.debug ~level:4 "error_handler\n%!";
+          error_handler json_string
+        end
+      else if (not (List.exists (fun (key, _) -> key = "id") fields)) then 
+        begin
+          Lsp.Self.debug ~level:4 "notif_handler\n%!";
+          notif_handler json_string server_sock
+        end
+      else if (List.exists (fun (key, _) -> key = "id") fields) then 
+        begin
+          Lsp.Self.debug ~level:4 "rq_handler\n%!";
+          rq_handler json_string
+        end
+      else
+        raise (Failure "Unknown request")
+    | _ -> Lsp.Self.debug ~level:3 "no result\n%!"; raise (Failure "Unknown request")
+  with
+  | Json.Error _ -> raise (Failure "Unknown request")
+    

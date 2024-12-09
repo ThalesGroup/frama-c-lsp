@@ -131,8 +131,9 @@ let send_response plugin_sock response =
 
 let send_response_list plugin_sock response_list =
   let response_list = List.rev response_list in
-  List.iter (send_response plugin_sock) response_list
-
+  let response = String.concat ":::" response_list in
+  send_response plugin_sock response
+ 
 type lsp_feature = 
   | DidSave_feature
   | DidClose_feature
@@ -170,11 +171,11 @@ let get_active_option () =
 
 
 let run () = 
-  if Enabled.get () then 
+  if Enabled.get () then
   (
-    if Handler_opt.get () then 
+    if Handler_opt.get () then
       (
-            (* Lsp.Self.debug ~level:3 "Running LSP Handler\n%!"; *)
+        Lsp.Self.debug ~level:3 "Running LSP Handler\n%!";
         try
             Start_server.connect ()
         with exn ->
@@ -207,59 +208,21 @@ let run () =
         let data = Json.save_string (Declaration.find int_id (List.nth req_info 0) (Stdlib.int_of_string (List.nth req_info 1)) (Stdlib.int_of_string (List.nth req_info 2))) in
         data :: []
       | ComputeCIL_feature -> 
-        (* let data = Json.save_string (DisplayCIL.displayCIL (Id.get ())) in
-        data *)
-        let data = Json.save_string 
-        (Lsp_types.NotificationMessage.json_of_t 
-          (Lsp_types.NotificationMessage.create 
-            ~jsonrpc:"2.0" 
-            ~method_:"window/showMessage" 
-            ~params: (Lsp_types.ShowMessageParams.json_of_t 
-              (Lsp_types.ShowMessageParams.create 
-                ~type_: Lsp_types.MessageType.Info
-                ~message: (Printf.sprintf "Calculated CIL successfully, file generated : %s_fc.c" (Display_CIL.get ()))
-                ()
-              )
-            )
-            ()
-          )
-        ) in
+        let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Calculated CIL successfully, file generated : %s_fc.c" (Display_CIL.get ())) () in
+        let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
+        let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
         data :: []
       | ComputeCallGraph_feature ->
         ignore (Sys.command ("dot -Tpdf "^(Compute_CG.get ())^".dot -o "^(Compute_CG.get ())^".pdf"));
         Lsp.Self.debug ~level:2 ("Generated %s.dot and %s.pdf files") (Compute_CG.get ()) (Compute_CG.get ());
-        let data = Json.save_string 
-          (Lsp_types.NotificationMessage.json_of_t 
-            (Lsp_types.NotificationMessage.create 
-              ~jsonrpc:"2.0" 
-              ~method_:"window/showMessage"
-              ~params: (Lsp_types.ShowMessageParams.json_of_t 
-                (Lsp_types.ShowMessageParams.create 
-                  ~type_: Lsp_types.MessageType.Info
-                  ~message: ("Computed callgraph successfully, files generated : "^(Compute_CG.get ())^".dot and "^(Compute_CG.get ())^".pdf")
-                  ()
-                )
-              )
-              ()
-            )
-          ) in
-          data :: []
+        let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: ("Computed callgraph successfully, files generated : "^(Compute_CG.get ())^".dot and "^(Compute_CG.get ())^".pdf") () in
+        let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
+        let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
+        data :: []
       | ComputeMetrics_feature ->
-        let data = Json.save_string 
-        (Lsp_types.NotificationMessage.json_of_t 
-          (Lsp_types.NotificationMessage.create 
-            ~jsonrpc:"2.0" 
-            ~method_:"window/showMessage" 
-            ~params: (Lsp_types.ShowMessageParams.json_of_t 
-              (Lsp_types.ShowMessageParams.create 
-                ~type_: Lsp_types.MessageType.Info
-                ~message: (Printf.sprintf "Calculated metrics successfully, file generated : %s.txt" (Show_metrics.get ()))
-                ()
-              )
-            )
-            ()
-          )
-        ) in
+        let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Calculated metrics successfully, file generated : %s.txt" (Show_metrics.get ())) () in
+        let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
+        let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
         data :: []
       | ComputeProofObligation_feature ->
           let req_info = String.split_on_char ':' (Show_POVC.get ()) in 
@@ -268,19 +231,14 @@ let run () =
           let line = Stdlib.int_of_string (List.nth req_info 1) in
           let ch = Stdlib.int_of_string (List.nth req_info 2) in
           let result = ShowPOVC.get_property (Root_path.get ()) file line ch in
-          let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t 
-          (Lsp_types.ResponseMessage.create 
-            ~jsonrpc:"2.0" 
-            ~id: (Lsp_types.Int id)
-            ~result:(
-              match result with 
-              | `String "" -> (`String "No proof obligations")
-              | _ -> result
-            )
-            ()
-          )) in
+          let result_msg =
+            match result with 
+          | `String "" -> (`String "No proof obligations")
+          | _ -> result
+          in
+          let lsp_message = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id: (Lsp_types.Int id) ~result:result_msg () in
+          let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_message) in
           data :: []
-
         (* if not (String.equal (Acsl_wp.get ()) "") then 
           (
             (* let id = Id.get () in  *)
@@ -312,17 +270,9 @@ let run () =
   with exn ->
     Self.debug ~level:2 "Error while processing request : %s, Backtrace : %s\n%!" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
     (* Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac)); *)
-      let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t 
-      (Lsp_types.ResponseMessage.create 
-        ~jsonrpc:"2.0" 
-        ~id:(Lsp_types.Str "frama_c_error")
-        ~error: (Lsp_types.ResponseError.create
-          ~code:(-32603)
-          ~message:(Printexc.get_backtrace ())
-          ()
-        )
-        ()
-      )) in
+      let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:(Printexc.get_backtrace ()) () in
+      let lsp_message = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Str "frama_c_error") ~error: lsp_error_message () in 
+      let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_message) in
       let data = data :: [] in
       match Cmdline_opt.get () with
       | false -> Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
