@@ -1,7 +1,7 @@
 let server_port = 8005
 let wrapper_port = 8006
-let maxContLenBufSize = 50
-let maxPendingRequests = 20
+(* let maxContLenBufSize = 50 *)
+(* let maxPendingRequests = 20 *)
 let defaultProtocolType = 0
 let addr = Unix.inet_addr_of_string "127.0.0.1"
 let getnumber str = 
