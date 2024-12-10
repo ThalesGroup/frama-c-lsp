@@ -4,6 +4,15 @@ let wrapper_port = 8006
 (* let maxPendingRequests = 20 *)
 let defaultProtocolType = 0
 let addr = Unix.inet_addr_of_string "127.0.0.1"
+
+
+
+module StringMap = Map.Make(String)
+
+let diag_map : Lsp_types.Diagnostic.t list StringMap.t ref = ref StringMap.empty
+
+
+
 let getnumber str = 
   let regex = Str.regexp {|[0-9]+|} in 
   ignore (Str.search_forward regex str 0);

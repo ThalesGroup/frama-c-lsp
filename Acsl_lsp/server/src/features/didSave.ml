@@ -1,9 +1,6 @@
 
 
 let file = ref ""
-module StringMap = Map.Make(String)
-
-let diag_map = ref StringMap.empty
 
 let warn_categories = 
   List.map (fun x -> 
@@ -45,14 +42,7 @@ let clear_diagnostics_no_uri =
       ~jsonrpc:"2.0"
       ~method_:"textDocument/publishDiagnostics"
       ~params:(Lsp_types.PublishDiagnosticsParams.json_of_t 
-      (Lsp_types.PublishDiagnosticsParams.create
-          ~uri:("")
-          ~diagnostics:(
-            []
-          )
-          ()
-      ))
-      ()
+      (Lsp_types.PublishDiagnosticsParams.create ~uri:("") ~diagnostics:([]) ())) ()
   )
 let clear_diagnostics filename = 
     Lsp_types.NotificationMessage.json_of_t (
@@ -97,7 +87,7 @@ let diagnostics_handler (event : Log.event) =
       publish_to := Filepath.normalize !file;
       Utils.dummyLoc (Filepath.normalize !file))
   in
-  let diag_list = StringMap.find_opt !publish_to !diag_map in
+  let diag_list = Start_server.StringMap.find_opt !publish_to !Start_server.diag_map in
   let diag_list = match diag_list with
     | None -> []
     | Some l -> l
@@ -110,33 +100,33 @@ let diagnostics_handler (event : Log.event) =
     || Utils.contains msg ~suffix:"before or at token"
   ) then
     let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
-    diag_map := StringMap.add !publish_to (diag :: diag_list) !diag_map
+    Start_server.diag_map := Start_server.StringMap.add !publish_to (diag :: diag_list) !Start_server.diag_map
   else
   match event.evt_kind with 
   | Log.Error ->  
     Lsp.Self.debug ~level:4 "Error\n%!";
     let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
-    diag_map := StringMap.add !publish_to (diag :: diag_list) !diag_map
+    Start_server.diag_map := Start_server.StringMap.add !publish_to (diag :: diag_list) !Start_server.diag_map
   | Log.Failure ->
     Lsp.Self.debug ~level:4 "Failure\n%!";
     let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
-    diag_map := StringMap.add !publish_to (diag :: diag_list) !diag_map
+    Start_server.diag_map := Start_server.StringMap.add !publish_to (diag :: diag_list) !Start_server.diag_map
   | Log.Warning -> 
     Lsp.Self.debug ~level:4 "Warning\n%!";
     let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Warning (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
-    diag_map := StringMap.add !publish_to (diag :: diag_list) !diag_map
+    Start_server.diag_map := Start_server.StringMap.add !publish_to (diag :: diag_list) !Start_server.diag_map
     (* Lsp.Self.debug ~level:4 "diags handler warning : nb diags = %d\n%!" (List.length !diag_list); *)
   | Log.Result -> 
     Lsp.Self.debug ~level:4 "Result\n%!";
   | Log.Debug -> 
     Lsp.Self.debug ~level:4 "Debug\n%!";
     let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Information (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
-    diag_map := StringMap.add !publish_to (diag :: diag_list) !diag_map
+    Start_server.diag_map := Start_server.StringMap.add !publish_to (diag :: diag_list) !Start_server.diag_map
   | Log.Feedback ->
     Lsp.Self.debug ~level:4 "Feedback\n%!"
     (*
     let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Information (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
-    diag_map := StringMap.add !publish_to (diag :: diag_list) !diag_map
+    Start_server.diag_map := Start_server.StringMap.add !publish_to (diag :: diag_list) !Start_server.diag_map
     *)
 let remove_file_scheme uri =
   let regex = Str.regexp {|file://|} in
@@ -165,12 +155,12 @@ let handle filename : Json.json list =
     (* Project.set_current (Project.create "didSave"); *)
     Kernel.Unicode.off ();
     File.init_from_c_files [_file];
-    StringMap.fold publishDiagnostics_notification !diag_map []
+    Start_server.StringMap.fold publishDiagnostics_notification !Start_server.diag_map []
 
   with
   | _exn ->
     (* Lsp.Self.debug ~level:4 "DidSave error :  %s, Backtrace : %s\n%!" (Printexc.exn_slot_name _exn) (Printexc.get_backtrace ()); *)
-    StringMap.fold publishDiagnostics_notification !diag_map []
+    Start_server.StringMap.fold publishDiagnostics_notification !Start_server.diag_map []
 
   
 
