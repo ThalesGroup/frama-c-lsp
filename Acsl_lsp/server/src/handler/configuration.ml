@@ -116,15 +116,11 @@ let global_params = ref
   ())
 
 let request_configurations : Json.json = 
-  
-  Lsp_types.RequestMessage.json_of_t 
-  (Lsp_types.RequestMessage.create 
-    ~jsonrpc:"2.0" 
-    ~id:(Lsp_types.Str ("ask_configs")) 
-    ~method_:"workspace/configuration" 
-    ~params:( Json.load_string sections)
-    ())
-  
+  let json_params = (Json.load_string sections) in
+  let lsp_notification = (Lsp_types.RequestMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Str ("ask_configs")) ~method_:"workspace/configuration" ~params:json_params ()) in
+  let json_notification = Lsp_types.RequestMessage.json_of_t lsp_notification in
+  json_notification
+
 let save_configs (result:  Json.json) = 
   (* note : result arguments must be in the same order as in the configuration request *)
   match result with

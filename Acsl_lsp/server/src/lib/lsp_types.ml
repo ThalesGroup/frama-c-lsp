@@ -1609,11 +1609,13 @@ module Diagnostic = struct
         match List.assoc_opt "code" fields with
         | Some (`Int i) -> Some (Int i)
         | Some (`String s) -> Some (Str s)
+        | Some (`Null) -> None
         | None -> None
         | _ -> raise (Invalid_argument "Invalid JSON format for Diagnostic: code")
       in
       let codeDescription =
         match List.assoc_opt "codeDescription" fields with
+        | Some (`Null) -> None
         | Some json -> Some (CodeDescription.t_of_json json)
         | None -> None
       in
@@ -1631,17 +1633,20 @@ module Diagnostic = struct
       let tags =
         match List.assoc_opt "tags" fields with
         | Some (`List tags_json) -> Some (List.map DiagnosticTag.t_of_json tags_json)
+        | Some (`Null) -> None
         | None -> None
         | _ -> raise (Invalid_argument "Invalid JSON format for Diagnostic: tags")
       in
       let relatedInformation =
         match List.assoc_opt "relatedInformation" fields with
         | Some (`List infos_json) -> Some (List.map DiagnosticRelatedInformation.t_of_json infos_json)
+        | Some (`Null) -> None
         | None -> None
         | _ -> raise (Invalid_argument "Invalid JSON format for Diagnostic: relatedInformation")
       in
       let data =
         match List.assoc_opt "data" fields with
+        | Some (`Null) -> None
         | Some json -> Some json
         | None -> None
       in

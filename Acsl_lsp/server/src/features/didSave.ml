@@ -14,14 +14,9 @@ let is_a_warn_category cat : bool =
   ) warn_categories;
   !res
 
-let publishResult id result : Json.json = 
-  Lsp_types.ResponseMessage.json_of_t(
-    Lsp_types.ResponseMessage.create 
-    ~jsonrpc:"2.0"
-    ~id:(Lsp_types.Int id)
-    ~result:(`String result)
-      ()
-    )
+let publishResult id result : Json.json =
+  let lsp_message = (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:(`String result) ()) in
+  Lsp_types.ResponseMessage.json_of_t lsp_message
 
 let publishDiagnostics_notification filename dlist accumulated_list : Json.json list =
   let dlist = match dlist with
@@ -30,35 +25,21 @@ let publishDiagnostics_notification filename dlist accumulated_list : Json.json 
       if (List.length dlist) < 100 then dlist
       else [elem]
   in
-  let notification_params = Lsp_types.PublishDiagnosticsParams.create ~uri:filename ~diagnostics:dlist () in
-  let notification_params_json = Lsp_types.PublishDiagnosticsParams.json_of_t notification_params in
-  let notification_message = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"textDocument/publishDiagnostics" ~params:notification_params_json () in
-  let notification_message_json = Lsp_types.NotificationMessage.json_of_t notification_message in
-  notification_message_json :: accumulated_list
+  let lsp_notification_params = Lsp_types.PublishDiagnosticsParams.create ~uri:filename ~diagnostics:dlist () in
+  let json_notification_params = Lsp_types.PublishDiagnosticsParams.json_of_t lsp_notification_params in
+  let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"textDocument/publishDiagnostics" ~params:json_notification_params () in
+  let json_notification = Lsp_types.NotificationMessage.json_of_t lsp_notification in
+  json_notification :: accumulated_list
 
-let clear_diagnostics_no_uri = 
-  Lsp_types.NotificationMessage.json_of_t (
-    Lsp_types.NotificationMessage.create
-      ~jsonrpc:"2.0"
-      ~method_:"textDocument/publishDiagnostics"
-      ~params:(Lsp_types.PublishDiagnosticsParams.json_of_t 
-      (Lsp_types.PublishDiagnosticsParams.create ~uri:("") ~diagnostics:([]) ())) ()
-  )
+let clear_diagnostics_no_uri =
+  let lsp_notification_params = (Lsp_types.PublishDiagnosticsParams.create ~uri:("") ~diagnostics:([]) ()) in
+  let lsp_notification = (Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"textDocument/publishDiagnostics" ~params:(Lsp_types.PublishDiagnosticsParams.json_of_t lsp_notification_params) ()) in
+  Lsp_types.NotificationMessage.json_of_t lsp_notification
+
 let clear_diagnostics filename = 
-    Lsp_types.NotificationMessage.json_of_t (
-      Lsp_types.NotificationMessage.create
-        ~jsonrpc:"2.0"
-        ~method_:"textDocument/publishDiagnostics"
-        ~params:(Lsp_types.PublishDiagnosticsParams.json_of_t 
-        (Lsp_types.PublishDiagnosticsParams.create
-            ~uri:(Utils.file_str (Filepath.Normalized.of_string (Filepath.normalize filename)))
-            ~diagnostics:(
-              []
-            )
-            ()
-        ))
-        ()
-    )
+  let lsp_notification_params = (Lsp_types.PublishDiagnosticsParams.create ~uri:(Utils.file_str (Filepath.Normalized.of_string (Filepath.normalize filename))) ~diagnostics:([]) ()) in
+  let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"textDocument/publishDiagnostics" ~params:(Lsp_types.PublishDiagnosticsParams.json_of_t lsp_notification_params) () in
+  Lsp_types.NotificationMessage.json_of_t lsp_notification
 
 let diagnostic loc severity msg source = 
   Lsp_types.Diagnostic.create ~range:(Utils.get_lsp_range loc) ~severity:severity ~message:msg ~source:source ()

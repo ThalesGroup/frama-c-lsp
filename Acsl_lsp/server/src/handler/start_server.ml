@@ -24,6 +24,33 @@ let send_request server_sock response =
   let sent = Unix.send server_sock response_bytes 0 (Bytes.length response_bytes) [] in
   Lsp.Self.debug ~level:4 "Size of sent content : %d\n%!" sent
 
+let update_empty_diagnostics string_json =
+  let json_result = Json.load_string string_json in
+  try
+    let lsp_notification = Lsp_types.NotificationMessage.t_of_json json_result in
+    if lsp_notification.method_ = "textDocument/publishDiagnostics" then
+      let json_params = lsp_notification.params in
+      match json_params with
+        | Some params ->
+          let params = Lsp_types.PublishDiagnosticsParams.t_of_json params in
+          let file_uri = params.uri in
+          diag_map := StringMap.add file_uri [] !diag_map;
+          Lsp.Self.debug ~level:4 "Updated map for  %s" file_uri
+        | None -> Lsp.Self.debug ~level:4 "Updated map for  1"; ()
+    else Lsp.Self.debug ~level:4 "Updated map for  2"; ()
+  with  exn -> 
+    Lsp.Self.debug ~level:3 "Could not handle the previous request : %s, %s\n" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ())
+
+let clear_diagnostics_notification file_uri = 
+  let lsp_message = (Lsp_types.PublishDiagnosticsParams.create ~uri:file_uri ~diagnostics:([]) ()) in
+  let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"textDocument/publishDiagnostics" ~params:(Lsp_types.PublishDiagnosticsParams.json_of_t lsp_message) () in
+  Lsp_types.NotificationMessage.json_of_t lsp_notification  
+
+let send_empty_diagnostics server_sock uri _diag_list =
+  let json_notification = clear_diagnostics_notification uri in
+  send_request server_sock (Json.save_string json_notification)
+
+
 let readcontlen sock : string = 
   let contlenbuf = Bytes.create 1 in
   let res = ref "" in 
@@ -51,6 +78,8 @@ let handle_request server_sock =
       | CONTENT string_json -> 
         Lsp.Self.debug ~level:3 "Sending to client : %s\n\n%!" string_json;
         let string_json_list = Str.split (Str.regexp ":::") string_json in
+        List.iter update_empty_diagnostics string_json_list;
+        StringMap.iter (send_empty_diagnostics server_sock) !diag_map;        
         List.iter (send_request server_sock) (string_json_list); 
       | EMPTY _ -> ()
     with exn -> 
