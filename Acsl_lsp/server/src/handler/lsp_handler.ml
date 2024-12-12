@@ -169,8 +169,17 @@ let readcontlen sock : string =
   ignore (Unix.read sock contlenbuf 0 1); (* consume remaining "\r\n" from request header *) (* note : why 1 ? *)
   !res
 
+let rec had_errors_in_channel ic =
+  try
+    let msg = Stdlib.input_line ic in
+    Lsp.Self.debug "\t%s\n%!" (msg);
+    if (Utils.contains msg ~suffix: "FRAMA-C EXIT CODE: 0") then false
+    else had_errors_in_channel ic
+  with End_of_file -> Lsp.Self.debug "\n%!"; true
+
+
 let execute_command command didSave ?id () = 
-  let had_errors = ref false in 
+  let had_errors = ref true in 
   let msg = ref "" in
   let response_id : Lsp_types.id_ = match id with 
     | Some id -> id
@@ -183,20 +192,7 @@ let execute_command command didSave ?id () =
   (* Lsp.Self.debug ~level:4 "after bind\n%!"; *)
   Unix.listen wrapper_sock 100;
   let ic = Unix.open_process_in command in
-  ignore 
-  (try 
-    while true do
-      msg := Stdlib.input_line ic;
-      Lsp.Self.debug "\t%s\n%!" (!msg);
-      if (Utils.contains !msg ~suffix:"syntax error" 
-        || Utils.contains !msg ~suffix:"There were parsing errors in"
-        || Utils.contains !msg ~suffix:"User Error"
-        || Utils.contains !msg ~suffix:"invalid user input"
-        || Utils.contains !msg ~suffix:"Invalid symbol"
-        || Utils.contains !msg ~suffix:"before or at token"
-      ) then had_errors := true;
-    done;
-  with End_of_file -> Lsp.Self.debug ~level:4 "\n%!";);
+  had_errors := had_errors_in_channel ic;
   (* Lsp.Self.debug ~level:4 "before accept\n%!"; *)
   match !had_errors && (not didSave) with 
   | true -> 
@@ -277,7 +273,7 @@ let rq_handler json_string =
           | _ -> (source_files ())
         in
       (* let command = "frama-c "^files_to_parse^" "^(cpp_extra_args ())^(kernel_args ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-id=\""^(Stdlib.string_of_int (Utils.id_to_int request.id))^"\" -lsp-root-path=\""^(!rootPath)^"\" -lsp-definition="^_file^":"^(Stdlib.string_of_int line)^":"^(Stdlib.string_of_int ch) in *)
-      let command = Printf.sprintf "frama-c %s %s %s -then -lsp -lsp-no-cmdline -lsp-debug=%s -lsp-id=\"%s\" -lsp-root-path=\"%s\" -lsp-definition=%s:%s:%s"
+      let command = Printf.sprintf "frama-c %s %s %s -then -lsp -lsp-no-cmdline -lsp-debug=%s -lsp-id=\"%s\" -lsp-root-path=\"%s\" -lsp-definition=%s:%s:%s ; echo \"FRAMA-C EXIT CODE: $?\" "
       files_to_parse (cpp_extra_args ()) (kernel_args ())
       (debug ()) (Stdlib.string_of_int (Utils.id_to_int request.id)) (!rootPath)
       src_file (Stdlib.string_of_int line) (Stdlib.string_of_int ch) in
@@ -302,7 +298,7 @@ let rq_handler json_string =
           | _ -> (source_files ())
         in
       
-      let command = "frama-c "^files_to_parse^" "^(cpp_extra_args ())^(kernel_args ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-id=\""^(Stdlib.string_of_int (Utils.id_to_int request.id))^"\" -lsp-root-path=\""^(!rootPath)^"\" -lsp-declaration="^_file^":"^(Stdlib.string_of_int line)^":"^(Stdlib.string_of_int ch) in
+      let command = "frama-c "^files_to_parse^" "^(cpp_extra_args ())^(kernel_args ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-id=\""^(Stdlib.string_of_int (Utils.id_to_int request.id))^"\" -lsp-root-path=\""^(!rootPath)^"\" -lsp-declaration="^_file^":"^(Stdlib.string_of_int line)^":"^(Stdlib.string_of_int ch) ^ " ; echo \"FRAMA-C EXIT CODE: $?\"" in
       Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
       let data = execute_command command false ~id:request.id () in
       Lsp_types.CONTENT (data);
@@ -339,7 +335,7 @@ let rq_handler json_string =
         | false -> [file])
       in
       
-      let command = "frama-c "^files^(cpp_extra_args ())^(kernel_args ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-id=\""^(Stdlib.string_of_int (Utils.id_to_int request.id))^"\" -lsp-root-path=\""^(!rootPath)^"\" -lsp-show-povc=\""^file^":"^line^":"^ch^"\""^(wp_args ()) in
+      let command = "frama-c "^files^(cpp_extra_args ())^(kernel_args ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-id=\""^(Stdlib.string_of_int (Utils.id_to_int request.id))^"\" -lsp-root-path=\""^(!rootPath)^"\" -lsp-show-povc=\""^file^":"^line^":"^ch^"\""^(wp_args ()) ^ " ; echo \"FRAMA-C EXIT CODE: $?\"" in
       Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
       Lsp_types.CONTENT (execute_command command false ~id:request.id ());
 
@@ -353,7 +349,7 @@ let rq_handler json_string =
       let file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
       let line = Stdlib.string_of_int params.position.line in 
       let ch = Stdlib.string_of_int params.position.character in 
-      let command = "frama-c -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-id=\""^(Stdlib.string_of_int (Utils.id_to_int request.id))^"\" -lsp-completion=\""^file^":"^line^":"^ch^"\"" in
+      let command = "frama-c -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-id=\""^(Stdlib.string_of_int (Utils.id_to_int request.id))^"\" -lsp-completion=\""^file^":"^line^":"^ch^"\"" ^ " ; echo \"FRAMA-C EXIT CODE: $?\"" in
       Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
       Lsp_types.CONTENT (execute_command command false ~id:request.id ());
 
@@ -398,7 +394,7 @@ let notif_handler json_string server_sock =
     in
     let uri = params.textDocument.uri in 
     let _file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
-    let command = "frama-c -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-did-close=" ^ _file in
+    let command = "frama-c -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-did-close=" ^ _file ^ " ; echo \"FRAMA-C EXIT CODE: $?\"" in
     Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
     Lsp_types.CONTENT (execute_command command false ());
 
@@ -412,7 +408,7 @@ let notif_handler json_string server_sock =
     let file_name = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
     if String.ends_with ~suffix:".c" file_name then
       begin
-      let command = "frama-c"^(cpp_extra_args ())^(kernel_args ())^" -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-did-save=" ^ file_name in
+      let command = "frama-c"^(cpp_extra_args ())^(kernel_args ())^" -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-did-save=" ^ file_name ^ " ; echo \"FRAMA-C EXIT CODE: $?\"" in
       Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
       Lsp_types.CONTENT (execute_command command true ());
       end
@@ -421,7 +417,7 @@ let notif_handler json_string server_sock =
   | "showGlobalMetrics" -> 
     Lsp.Self.debug ~level:4 "global metrics\n%!";
     let project_filename = if not (String.equal (!Configuration.global_params.metricsOutput) "") then (Filename.remove_extension !Configuration.global_params.metricsOutput) else "project_metrics" in
-    let command = Printf.sprintf "frama-c %s %s %s -then %s -then -lsp -lsp-no-cmdline -lsp-debug=%s -lsp-metrics=\"%s/%s\""
+    let command = Printf.sprintf "frama-c %s %s %s -then %s -then -lsp -lsp-no-cmdline -lsp-debug=%s -lsp-metrics=\"%s/%s\" ; echo \"FRAMA-C EXIT CODE: $?\""
     (source_files ()) (cpp_extra_args ()) (kernel_args ()) (global_metrics_args ()) (debug ()) (!rootPath) project_filename in
     Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
     Lsp_types.CONTENT (execute_command command false ());
@@ -432,7 +428,7 @@ let notif_handler json_string server_sock =
         | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
         | _ -> Lsp.Self.debug ~level:3 "No params for displayCIL \n%!"; assert false
       in
-      let command = Printf.sprintf "frama-c %s %s %s -then -print -no-unicode -ocode \"%s_fc.c\" -lsp -lsp-no-cmdline -lsp-debug=%s -lsp-display-cil=\"%s\""
+      let command = Printf.sprintf "frama-c %s %s %s -then -print -no-unicode -ocode \"%s_fc.c\" -lsp -lsp-no-cmdline -lsp-debug=%s -lsp-display-cil=\"%s\" ; echo \"FRAMA-C EXIT CODE: $?\""
       file (cpp_extra_args ()) (kernel_args ())
       (Filename.remove_extension file)
       (debug ())
@@ -446,7 +442,7 @@ let notif_handler json_string server_sock =
           | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
           | _ -> Lsp.Self.debug ~level:3 "No params for displayCIL \n%!"; assert false
         in
-        let command = Printf.sprintf "frama-c %s %s %s -then -print -no-unicode -ocode \"%s_fc.c\" -no-annot -keep-comments -lsp -lsp-no-cmdline -lsp-debug=%s -lsp-display-cil=\"%s\""
+        let command = Printf.sprintf "frama-c %s %s %s -then -print -no-unicode -ocode \"%s_fc.c\" -no-annot -keep-comments -lsp -lsp-no-cmdline -lsp-debug=%s -lsp-display-cil=\"%s\" ; echo \"FRAMA-C EXIT CODE: $?\""
         file (cpp_extra_args ()) (kernel_args ())
         (Filename.remove_extension file)
         (debug ())
@@ -460,7 +456,7 @@ let notif_handler json_string server_sock =
         | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
         | _ -> Lsp.Self.debug ~level:3 "No params for metrics \n%!"; assert false
     in
-    let command = Printf.sprintf "frama-c %s %s %s -then -metrics -metrics-by-function -metrics-output=\"%s.txt\" -then -lsp -lsp-no-cmdline -lsp-debug=%s -lsp-metrics=\"%s\""
+    let command = Printf.sprintf "frama-c %s %s %s -then -metrics -metrics-by-function -metrics-output=\"%s.txt\" -then -lsp -lsp-no-cmdline -lsp-debug=%s -lsp-metrics=\"%s\" ; echo \"FRAMA-C EXIT CODE: $?\""
     file (cpp_extra_args ()) (kernel_args ())
     (Filename.remove_extension file) (debug ()) (Filename.remove_extension file) in
     Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
@@ -472,7 +468,7 @@ let notif_handler json_string server_sock =
         | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
         | _ -> Lsp.Self.debug ~level:3 "No params for computeCG \n%!"; assert false
     in
-    let command = "frama-c "^file^(cpp_extra_args ())^(kernel_args ())^" -then"^(callgraph_args (Filename.remove_extension file) ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-compute-cg=\""^(get_cg_output_file (Filename.remove_extension file) ())^"\"" in
+    let command = "frama-c "^file^(cpp_extra_args ())^(kernel_args ())^" -then"^(callgraph_args (Filename.remove_extension file) ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-compute-cg=\""^(get_cg_output_file (Filename.remove_extension file) ())^"\" ; echo \"FRAMA-C EXIT CODE: $?\"" in
     Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
       Lsp_types.CONTENT (execute_command command false ());
 

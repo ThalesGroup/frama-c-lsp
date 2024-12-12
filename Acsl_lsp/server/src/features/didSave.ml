@@ -136,6 +136,8 @@ let handle filename : Json.json list =
     (* Project.set_current (Project.create "didSave"); *)
     Kernel.Unicode.off ();
     File.init_from_c_files [_file];
+    let generator = Wp.Generator.create() in
+    let _proof_obligations = generator#compute_main() in
     Start_server.StringMap.fold publishDiagnostics_notification !Start_server.diag_map []
 
   with

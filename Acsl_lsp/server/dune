@@ -19,6 +19,7 @@
 		frama-c-wp.core
 		frama-c-metrics.core
 		frama-c-callgraph.core
+		frama-c-uncast.core
 	)
 )
 
