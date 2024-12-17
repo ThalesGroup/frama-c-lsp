@@ -80,8 +80,11 @@ let diagnostics_handler (event : Log.event) =
     || Utils.contains msg ~suffix:"Invalid symbol"
     || Utils.contains msg ~suffix:"before or at token"
   ) then
+    (
+    Lsp.Self.debug ~level:4 "Error caught \n%!";
     let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
     Start_server.diag_map := Start_server.StringMap.add !publish_to (diag :: diag_list) !Start_server.diag_map
+    )
   else
   match event.evt_kind with 
   | Log.Error ->  
@@ -136,8 +139,11 @@ let handle filename : Json.json list =
     (* Project.set_current (Project.create "didSave"); *)
     Kernel.Unicode.off ();
     File.init_from_c_files [_file];
-    let generator = Wp.Generator.create() in
+    (* Ast.compute(); *)
+    let generator = Wp.Generator.create() in 
     let _proof_obligations = generator#compute_main() in
+    (* let model = Wp.WpContext.get_model () in
+    Wp.WpRTE.generate_all model; *)
     Start_server.StringMap.fold publishDiagnostics_notification !Start_server.diag_map []
 
   with

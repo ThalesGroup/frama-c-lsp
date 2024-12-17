@@ -88,7 +88,7 @@ let kernel_args () =
   if (not (!Configuration.global_params.keepUnusedSpecifiedFunctions)) then add_arg " -remove-unused-specified-functions";
   if (!Configuration.global_params.aggressiveMerging) then add_arg " -aggressive-merging";
 
-  add_arg " -kernel-warn-key annot-error=active";
+  add_arg " -kernel-warn-key annot-error=active ";
   add_arg " -no-unicode";
   !args
 
@@ -408,7 +408,7 @@ let notif_handler json_string server_sock =
     let file_name = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
     if String.ends_with ~suffix:".c" file_name then
       begin
-      let command = "frama-c"^(cpp_extra_args ())^(kernel_args ())^" -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-did-save=" ^ file_name ^ " ; echo \"FRAMA-C EXIT CODE: $?\"" in
+      let command = "frama-c " ^ (cpp_extra_args ())^(kernel_args ())^" -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-did-save=" ^ file_name ^ " ; echo \"FRAMA-C EXIT CODE: $?\"" in
       Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
       Lsp_types.CONTENT (execute_command command true ());
       end
