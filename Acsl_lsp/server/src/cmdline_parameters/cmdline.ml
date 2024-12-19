@@ -1,5 +1,8 @@
 module Self = Lsp.Self
 
+let plugin_sock = (Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0)
+
+let () = Parameter_customize.do_not_projectify ()
 module Enabled = Self.False
 (struct
   let option_name = "-lsp"
@@ -15,13 +18,11 @@ end)
 
 end) *)
 
-module Did_save = Self.String (* filename *)
+let () = Parameter_customize.do_not_projectify ()
+module Did_save = Self.False (* filename *)
 (struct
   let option_name = "-lsp-did-save"
-  let help = "did save. provide source file here instead of providing it to frama-c directly."
-  let arg_name = "file"
-  let default = ""
-
+  let help = "Publish diagnostics each time a file is saved"
 end)
 
 module Did_close = Self.String (* filename *)
@@ -30,15 +31,16 @@ module Did_close = Self.String (* filename *)
   let help = "didClose request"
   let arg_name = "file"
   let default = ""
-
 end)
 
+let () = Parameter_customize.do_not_projectify ()
 module Handler_opt = Self.False
 (struct
   let option_name = "-lsp-handler"
   let help = "activates handler mode (useful for editors), off by default"
 end)
 
+let () = Parameter_customize.do_not_projectify ()
 module Cmdline_opt = Self.True
 (struct
   let option_name = "-lsp-cmdline"
@@ -144,7 +146,7 @@ type lsp_feature =
   | ComputeMetrics_feature
   | ComputeProofObligation_feature
 
-let is_active_DidSave () = not (String.equal (Did_save.get ()) "")
+let is_active_DidSave () = (Did_save.get ())
 let is_active_DidClose () = not (String.equal (Did_close.get ()) "")
 let is_active_FindDefinition () = not (String.equal (Find_def.get ()) "")
 let is_active_FindDeclaration () = not (String.equal (Find_decl.get ()) "")
@@ -165,10 +167,31 @@ let get_active_option () =
   if is_active_ComputeMetrics () then active_options := ComputeMetrics_feature :: !active_options;
   if is_active_ComputeProofObligation () then active_options := ComputeProofObligation_feature :: !active_options;
   match !active_options with
-  [] -> raise (Failure "No option specified")
-  | [opt] -> opt
+  [] -> None
+  | [opt] -> Some opt
   | _ -> raise (Failure "Only one option can be specified at once")
 
+
+
+let set_listerners () =
+    Log.add_listener ~plugin:"kernel" (DidSave.diagnostics_handler);
+    Lsp.Self.debug ~level:4 "kernel listener added\n%!";
+    Log.add_listener ~plugin:"wp" (DidSave.diagnostics_handler);
+    Lsp.Self.debug ~level:4 "wp listener added\n%!"
+
+let send_dignostics exn =
+  if Enabled.get () then
+    (
+    Self.debug ~level:2 "Error while processing request : %s, Backtrace : %s\n%!" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
+    let data = Start_server.StringMap.fold DidSave.publishDiagnostics_notification !Start_server.diag_map [] in
+    let data = List.map Json.save_string (data) in
+    match Cmdline_opt.get () with
+      | false ->
+        Self.debug ~level:2 "Output results in case of failure !!!";
+        Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
+        ignore (send_response_list plugin_sock data)
+      | true -> List.iter (Lsp.Self.result "JSON result : %s\n%!" ) data
+    )
 
 let run () = 
   if Enabled.get () then
@@ -182,8 +205,7 @@ let run () =
           Lsp.Self.debug ~level:1 "There was an error in the server %s:\n Backtrace : %s\n%!" (Printexc.to_string exn) (Printexc.get_backtrace ())
       )
     else
-    let plugin_sock = (Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0) in
-    try 
+    (* try *)
       let framac_share = Utils.file_str Fc_config.datadir in
       Kernel.Share.set (Fc_config.datadir);
       let share = Kernel.Share.get () in
@@ -191,40 +213,40 @@ let run () =
       let feature = get_active_option () in
       let data = 
       match feature with
-      | DidSave_feature -> 
-        let data = List.map Json.save_string (DidSave.handle (Did_save.get ())) in
+      | Some DidSave_feature -> 
+        let data = List.map Json.save_string (DidSave.handle ()) in
         data
-      | DidClose_feature ->
+      | Some DidClose_feature ->
         let data = Json.save_string (DidClose.handle (Did_close.get ())) in
         data :: []
-      | FindDefinition_feature ->
+      | Some FindDefinition_feature ->
         let req_info = String.split_on_char ':' (Find_def.get ()) in 
         let int_id = (Id.get ()) in 
         let data = Json.save_string (Definition.find int_id (List.nth req_info 0) (Stdlib.int_of_string (List.nth req_info 1)) (Stdlib.int_of_string (List.nth req_info 2))) in
         data :: []
-      | FindDeclaration_feature ->
+      | Some FindDeclaration_feature ->
         let req_info = String.split_on_char ':' (Find_decl.get ()) in 
         let int_id = (Id.get ()) in 
         let data = Json.save_string (Declaration.find int_id (List.nth req_info 0) (Stdlib.int_of_string (List.nth req_info 1)) (Stdlib.int_of_string (List.nth req_info 2))) in
         data :: []
-      | ComputeCIL_feature -> 
+      | Some ComputeCIL_feature -> 
         let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Calculated CIL successfully, file generated : %s_fc.c" (Display_CIL.get ())) () in
         let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
         let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
         data :: []
-      | ComputeCallGraph_feature ->
+      | Some ComputeCallGraph_feature ->
         ignore (Sys.command ("dot -Tpdf "^(Compute_CG.get ())^".dot -o "^(Compute_CG.get ())^".pdf"));
         Lsp.Self.debug ~level:2 ("Generated %s.dot and %s.pdf files") (Compute_CG.get ()) (Compute_CG.get ());
         let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: ("Computed callgraph successfully, files generated : "^(Compute_CG.get ())^".dot and "^(Compute_CG.get ())^".pdf") () in
         let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
         let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
         data :: []
-      | ComputeMetrics_feature ->
+      | Some ComputeMetrics_feature ->
         let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Calculated metrics successfully, file generated : %s.txt" (Show_metrics.get ())) () in
         let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
         let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
         data :: []
-      | ComputeProofObligation_feature ->
+      | Some ComputeProofObligation_feature ->
           let req_info = String.split_on_char ':' (Show_POVC.get ()) in 
           let id = Id.get () in 
           let file = List.nth req_info 0 in 
@@ -239,6 +261,7 @@ let run () =
           let lsp_message = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id: (Lsp_types.Int id) ~result:result_msg () in
           let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_message) in
           data :: []
+        | None -> []
         (* if not (String.equal (Acsl_wp.get ()) "") then 
           (
             (* let id = Id.get () in  *)
@@ -262,24 +285,29 @@ let run () =
           | true -> ignore (Lsp.Self.result "JSON result : %s\n%!" data) ;
         ); *)
       in
-      match Cmdline_opt.get () with
-      | false -> Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
+      match data, (Cmdline_opt.get ()) with
+      | [], _ -> Self.debug ~level:2 "LSP activated !!!";
+      | data, false ->
+        Self.debug ~level:2 "Output results !!!";
+        Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
         ignore (send_response_list plugin_sock data)
-      | true -> List.iter (Lsp.Self.result "JSON result : %s\n%!" ) data
+      | data, true -> List.iter (Lsp.Self.result "JSON result : %s\n%!" ) data
   
-  with exn ->
-    Self.debug ~level:2 "Error while processing request : %s, Backtrace : %s\n%!" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
-    (* Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac)); *)
-      let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:(Printexc.get_backtrace ()) () in
-      let lsp_message = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Str "frama_c_error") ~error: lsp_error_message () in 
-      let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_message) in
-      let data = data :: [] in
-      match Cmdline_opt.get () with
-      | false -> Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
-        ignore (send_response_list plugin_sock data)
-      | true -> List.iter (Lsp.Self.result "JSON result : %s\n%!" ) data
+  (* with exn -> *)
+      (* Self.debug ~level:2 "Error while processing request : %s, Backtrace : %s\n%!" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ()); *)
+      (* let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:(Printexc.get_backtrace ()) () in *)
+      (* let lsp_message = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Str "frama_c_error") ~error: lsp_error_message () in *) 
+      (* let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_message) in *)
+      (* let data = data :: [] in *)
+      (* match Cmdline_opt.get () with *)
+      (* | false -> Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac)); *)
+      (* ignore (send_response_list plugin_sock data) *)
+      (* | true -> *)
+      (* List.iter (Lsp.Self.result "JSON result : %s\n%!" ) data *)
   )
 
-
 (* let () = Db.Main.extend run *)
-let () = Boot.Main.extend run
+let () = 
+Frama_c_kernel.Cmdline.run_after_extended_stage set_listerners;
+Frama_c_kernel.Cmdline.at_error_exit send_dignostics;
+Boot.Main.extend run

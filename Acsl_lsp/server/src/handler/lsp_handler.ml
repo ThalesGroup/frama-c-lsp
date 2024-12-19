@@ -88,8 +88,9 @@ let kernel_args () =
   if (not (!Configuration.global_params.keepUnusedSpecifiedFunctions)) then add_arg " -remove-unused-specified-functions";
   if (!Configuration.global_params.aggressiveMerging) then add_arg " -aggressive-merging";
 
-  add_arg " -kernel-warn-key annot-error=active ";
+  add_arg " -kernel-warn-key annot-error=active  -kernel-warn-key too-large-array=active";
   add_arg " -no-unicode";
+  add_arg " -inline-calls @inline -remove-inlined @inline ";
   !args
 
 let global_metrics_args () = 
@@ -204,8 +205,12 @@ let execute_command command didSave ?id () =
     Unix.close wrapper_sock;
     data
   | false ->
-    let (plugin_sock, _) = Unix.accept wrapper_sock in
-    let data_size = getnumber (readcontlen plugin_sock) in 
+    Lsp.Self.debug ~level:2 "Error while executing frama-c command 0 \n%!";
+    let (plugin_sock, _) = 
+    try Unix.accept wrapper_sock
+    with _ -> raise (Failure "Syntax error 1") 
+    in
+    let data_size = getnumber (readcontlen plugin_sock) in
     let buffer = Bytes.make data_size '0' in
     let _req_data_len = Unix.read plugin_sock buffer 0 data_size in
     let request_str = (Bytes.to_string buffer) in
@@ -329,13 +334,19 @@ let rq_handler json_string =
           | _ -> Lsp.Self.debug ~level:3 "No params for showPOVC \n%!"; assert false
         in
       (* additionnal source files if the parsed file is a header file *)
-      let files = 
-        String.concat " " (match (String.ends_with ~suffix:".h" file) with
+      let _files = 
+        String.concat " " 
+        (match (String.ends_with ~suffix:".h" file) with
         | true -> file::(Utils.get_corr_cfile (!rootPath) file); 
         | false -> [file])
       in
-      
-      let command = "frama-c "^files^(cpp_extra_args ())^(kernel_args ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-id=\""^(Stdlib.string_of_int (Utils.id_to_int request.id))^"\" -lsp-root-path=\""^(!rootPath)^"\" -lsp-show-povc=\""^file^":"^line^":"^ch^"\""^(wp_args ()) ^ " ; echo \"FRAMA-C EXIT CODE: $?\"" in
+      let files_to_parse =
+        match (String.ends_with ~suffix:".c" file), source_files () with
+          | true, _ -> file
+          | _, "" -> file
+          | _, _ -> (source_files ())
+      in
+      let command = "frama-c "^files_to_parse^(cpp_extra_args ())^(kernel_args ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-id=\""^(Stdlib.string_of_int (Utils.id_to_int request.id))^"\" -lsp-root-path=\""^(!rootPath)^"\" -lsp-show-povc=\""^file^":"^line^":"^ch^"\""^(wp_args ()) ^ " ; echo \"FRAMA-C EXIT CODE: $?\"" in
       Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
       Lsp_types.CONTENT (execute_command command false ~id:request.id ());
 
@@ -408,7 +419,7 @@ let notif_handler json_string server_sock =
     let file_name = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
     if String.ends_with ~suffix:".c" file_name then
       begin
-      let command = "frama-c " ^ (cpp_extra_args ())^(kernel_args ())^" -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-did-save=" ^ file_name ^ " ; echo \"FRAMA-C EXIT CODE: $?\"" in
+      let command = "frama-c -lsp -lsp-no-cmdline -lsp-debug="^(debug ()) ^ " " ^ file_name ^ " " ^ (cpp_extra_args ())^(kernel_args ())^" -uncast -then-last -wp -wp-rte -wp-prop @assigns -wp-gen -wp-no-simpl -wp-no-let -wp-no-filter -wp-no-core -wp-no-pruning -wp-no-clean -wp-no-ground -wp-no-extensional -wp-no-reduce -wp-no-parasite -wp-no-init-summarize-array -wp-no-simplify-is-cint -wp-no-simplify-land-mask -wp-no-prenex -wp-no-simplify-forall -wp-no-simplify-type -wp-bound-forall-unfolding 1 -lsp-did-save ; echo \"FRAMA-C EXIT CODE: $?\"" in
       Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
       Lsp_types.CONTENT (execute_command command true ());
       end

@@ -22,7 +22,7 @@ let publishDiagnostics_notification filename dlist accumulated_list : Json.json 
   let dlist = match dlist with
     | [] -> dlist
     | elem :: _l ->
-      if (List.length dlist) < 100 then dlist
+      if (List.length dlist) < 20 then dlist
       else [elem]
   in
   let lsp_notification_params = Lsp_types.PublishDiagnosticsParams.create ~uri:filename ~diagnostics:dlist () in
@@ -95,10 +95,14 @@ let diagnostics_handler (event : Log.event) =
     Lsp.Self.debug ~level:4 "Failure\n%!";
     let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
     Start_server.diag_map := Start_server.StringMap.add !publish_to (diag :: diag_list) !Start_server.diag_map
-  | Log.Warning -> 
+  | Log.Warning ->
+    if (Utils.contains msg ~suffix:"Memory model hypotheses") then ()
+    else if (Utils.contains msg ~suffix:"Missing RTE guards") then ()
+    else (
     Lsp.Self.debug ~level:4 "Warning\n%!";
     let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Warning (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
     Start_server.diag_map := Start_server.StringMap.add !publish_to (diag :: diag_list) !Start_server.diag_map
+    )
     (* Lsp.Self.debug ~level:4 "diags handler warning : nb diags = %d\n%!" (List.length !diag_list); *)
   | Log.Result -> 
     Lsp.Self.debug ~level:4 "Result\n%!";
@@ -125,31 +129,36 @@ let remove_newline str =
   ignore (Str.search_forward regex str 0);
   Str.matched_string str
 
-let handle filename : Json.json list = 
+let handle () : Json.json list =
+  Start_server.StringMap.fold publishDiagnostics_notification !Start_server.diag_map []
+
+  (*
   Log.add_listener ~plugin:"kernel" (diagnostics_handler);
   Lsp.Self.debug ~level:4 "kernel listener added\n%!";
   Log.add_listener ~plugin:"wp" (diagnostics_handler);
   Lsp.Self.debug ~level:4 "wp listener added\n%!";
+  *)
 
-  file := filename;
-  let filepath = Filepath.Normalized.of_string filename in
-  let _file = File.from_filename (filepath) in 
-  Kernel.Files.unsafe_set [filepath];
-  try
+  (* file := filename; *)
+  (* let filepath = Filepath.Normalized.of_string filename in *)
+  (* let _file = File.from_filename (filepath) in *)
+  (* Kernel.Files.unsafe_set [filepath]; *)
+  (* try *)
     (* Project.set_current (Project.create "didSave"); *)
-    Kernel.Unicode.off ();
-    File.init_from_c_files [_file];
+    (* Kernel.Unicode.off (); *)
+    (* File.init_from_c_files [_file]; *)
     (* Ast.compute(); *)
-    let generator = Wp.Generator.create() in 
-    let _proof_obligations = generator#compute_main() in
-    (* let model = Wp.WpContext.get_model () in
-    Wp.WpRTE.generate_all model; *)
-    Start_server.StringMap.fold publishDiagnostics_notification !Start_server.diag_map []
+    (* Wp.Wp_parameters.RTE.on (); *)
+    (* Wp.Wp_parameters.RTE.mark_as_computed (); *)
+    (* let factory_setup = Wp.Generator.user_setup () in *)
+    (* let generator = Wp.Generator.create ~setup:factory_setup () in *)
+    (* let _proof_obligations = generator#compute_main() in *)
+    (* Start_server.StringMap.fold publishDiagnostics_notification !Start_server.diag_map [] *)
 
-  with
-  | _exn ->
+  (* with *)
+  (* | _exn -> *)
     (* Lsp.Self.debug ~level:4 "DidSave error :  %s, Backtrace : %s\n%!" (Printexc.exn_slot_name _exn) (Printexc.get_backtrace ()); *)
-    Start_server.StringMap.fold publishDiagnostics_notification !Start_server.diag_map []
+    (* Start_server.StringMap.fold publishDiagnostics_notification !Start_server.diag_map [] *)
 
   
 
