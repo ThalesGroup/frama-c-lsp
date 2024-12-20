@@ -8,6 +8,66 @@
                 "labelDetailsSupport": false
               }
             }, *)
+
+
+module KernelOpt = struct
+type t = {
+  includePaths: string list;
+  }
+let string_of_t (_options : t) : string = ""
+end
+
+module WpOpt = struct
+  type t = {
+    rte: bool;
+  }
+  let string_of_t (_options : t) : string = ""
+end
+
+module MetacslOpt = struct
+  type t = {
+    no_simpl: bool;
+  }
+  let string_of_t (_options : t) : string = ""
+end
+
+module UncastOpt = struct
+  type t = {
+  endianness: string;
+  }
+  let string_of_t (_options : t) : string = ""
+end
+
+module LspOpt = struct
+  type t = {
+  feature: string;
+  }
+  let string_of_t (_options : t) : string = ""
+end
+
+
+module Command = struct
+  type t = {
+  verbose: int;
+  files : string list;
+  kernel : KernelOpt.t;
+  wp : WpOpt.t option;
+  metacsl : MetacslOpt.t option;
+  uncast : UncastOpt.t option;
+  lsp : LspOpt.t option;
+  }
+  let create ~verbose ~kernel ~files ?wp ?metacsl ?uncast ?lsp () : t = { verbose; files; kernel; wp; metacsl; uncast; lsp }
+  let string_of_t (options : t) : string =
+    let file_names = String.concat " " options.files in
+    let debug_level = Stdlib.string_of_int options.verbose in
+    let common_opt = Printf.sprintf "frama-c %s -lsp -lsp-no-cmdline -lsp-debug=%s" file_names debug_level in
+    match options.uncast, options.wp, options.metacsl, options.lsp with
+    | None, None, None, None -> Printf.sprintf "%s %s" common_opt (KernelOpt.string_of_t options.kernel)
+    | Some u, None, None, Some l -> Printf.sprintf "%s %s %s -then-last %s" common_opt (KernelOpt.string_of_t options.kernel) (UncastOpt.string_of_t u) (LspOpt.string_of_t l)
+    | _, _, _, _ -> ""
+end
+
+
 let registerCapabilityRequest json = 
   Lsp_types.RequestMessage.json_of_t (Lsp_types.RequestMessage.create
     ~jsonrpc:"2.0"
@@ -277,7 +337,6 @@ let rq_handler json_string =
           | "" -> String.concat " " (Utils.get_workspace_files !rootPath)
           | _ -> (source_files ())
         in
-      (* let command = "frama-c "^files_to_parse^" "^(cpp_extra_args ())^(kernel_args ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-id=\""^(Stdlib.string_of_int (Utils.id_to_int request.id))^"\" -lsp-root-path=\""^(!rootPath)^"\" -lsp-definition="^_file^":"^(Stdlib.string_of_int line)^":"^(Stdlib.string_of_int ch) in *)
       let command = Printf.sprintf "frama-c %s %s %s -then -lsp -lsp-no-cmdline -lsp-debug=%s -lsp-id=\"%s\" -lsp-root-path=\"%s\" -lsp-definition=%s:%s:%s ; echo \"FRAMA-C EXIT CODE: $?\" "
       files_to_parse (cpp_extra_args ()) (kernel_args ())
       (debug ()) (Stdlib.string_of_int (Utils.id_to_int request.id)) (!rootPath)
