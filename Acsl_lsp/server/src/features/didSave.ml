@@ -19,17 +19,18 @@ let publishResult id result : Json.json =
   Lsp_types.ResponseMessage.json_of_t lsp_message
 
 let publishDiagnostics_notification filename dlist accumulated_list : Json.json list =
-  let dlist = match dlist with
-    | [] -> dlist
+  match dlist with
+    | [] -> []
     | elem :: _l ->
-      if (List.length dlist) < 20 then dlist
-      else [elem]
-  in
-  let lsp_notification_params = Lsp_types.PublishDiagnosticsParams.create ~uri:filename ~diagnostics:dlist () in
-  let json_notification_params = Lsp_types.PublishDiagnosticsParams.json_of_t lsp_notification_params in
-  let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"textDocument/publishDiagnostics" ~params:json_notification_params () in
-  let json_notification = Lsp_types.NotificationMessage.json_of_t lsp_notification in
-  json_notification :: accumulated_list
+      let dlist =
+        if (List.length dlist) < 20 then dlist
+        else [elem]
+      in
+      let lsp_notification_params = Lsp_types.PublishDiagnosticsParams.create ~uri:filename ~diagnostics:dlist () in
+      let json_notification_params = Lsp_types.PublishDiagnosticsParams.json_of_t lsp_notification_params in
+      let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"textDocument/publishDiagnostics" ~params:json_notification_params () in
+      let json_notification = Lsp_types.NotificationMessage.json_of_t lsp_notification in
+      json_notification :: accumulated_list
 
 let clear_diagnostics_no_uri =
   let lsp_notification_params = (Lsp_types.PublishDiagnosticsParams.create ~uri:("") ~diagnostics:([]) ()) in
@@ -130,7 +131,17 @@ let remove_newline str =
   Str.matched_string str
 
 let handle () : Json.json list =
-  Start_server.StringMap.fold publishDiagnostics_notification !Start_server.diag_map []
+  if Start_server.StringMap.is_empty !Start_server.diag_map then
+    (
+    Lsp.Self.debug ~level:2 "Updated Diagnostics !\n%!";
+    let lsp_notification_params = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Updated diagnostics !") () in
+    let json_notification_params = Lsp_types.ShowMessageParams.json_of_t lsp_notification_params in
+    let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params:json_notification_params () in
+    let json_notification = Lsp_types.NotificationMessage.json_of_t lsp_notification in
+    [json_notification]
+    )
+  else
+    Start_server.StringMap.fold publishDiagnostics_notification !Start_server.diag_map []
 
   (*
   Log.add_listener ~plugin:"kernel" (diagnostics_handler);

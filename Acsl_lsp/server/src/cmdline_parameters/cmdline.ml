@@ -135,20 +135,20 @@ let send_response_list plugin_sock response_list =
   let response_list = List.rev response_list in
   let response = String.concat ":::" response_list in
   send_response plugin_sock response
- 
-type lsp_feature = 
-  | DidSave_feature
-  | DidClose_feature
-  | FindDefinition_feature
-  | FindDeclaration_feature
-  | ComputeCIL_feature
-  | ComputeCallGraph_feature
-  | ComputeMetrics_feature
-  | ComputeProofObligation_feature
 
 let is_active_DidSave () = (Did_save.get ())
 let is_active_DidClose () = not (String.equal (Did_close.get ()) "")
-let is_active_FindDefinition () = not (String.equal (Find_def.get ()) "")
+let get_FindDefinition_args () = 
+  let args = Find_def.get () in
+  if not (String.trim args = "") then
+    (
+    let req_info = String.split_on_char ':' (Find_def.get ()) in
+    let file = (List.nth req_info 0) in
+    let line = (Stdlib.int_of_string (List.nth req_info 1)) in
+    let ch = (Stdlib.int_of_string (List.nth req_info 2)) in
+    Some (Id.get (), file, line, ch)
+    )
+  else None
 let is_active_FindDeclaration () = not (String.equal (Find_decl.get ()) "")
 let is_active_ComputeCIL () = not (String.equal (Display_CIL.get ()) "")
 let is_active_ComputeCallGraph () = not (String.equal (Compute_CG.get ()) "")
@@ -158,14 +158,17 @@ let is_active_ComputeProofObligation () = not (String.equal (Show_POVC.get ()) "
 
 let get_active_option () =
   let active_options = ref [] in
-  if is_active_DidSave () then active_options := DidSave_feature :: !active_options;
-  if is_active_DidClose () then active_options := DidClose_feature :: !active_options;
-  if is_active_FindDefinition () then active_options := FindDefinition_feature :: !active_options;
-  if is_active_FindDeclaration () then active_options := FindDeclaration_feature :: !active_options;
-  if is_active_ComputeCIL () then active_options := ComputeCIL_feature :: !active_options;
-  if is_active_ComputeCallGraph () then active_options := ComputeCallGraph_feature :: !active_options;
-  if is_active_ComputeMetrics () then active_options := ComputeMetrics_feature :: !active_options;
-  if is_active_ComputeProofObligation () then active_options := ComputeProofObligation_feature :: !active_options;
+  if is_active_DidSave () then active_options := Lsp_handler.DidSave_feature :: !active_options;
+  if is_active_DidClose () then active_options := Lsp_handler.DidClose_feature :: !active_options;
+  (match get_FindDefinition_args () with
+  | None -> ()
+  | Some (id, file, line, ch) -> active_options := Lsp_handler.FindDefinition_feature(id, file, line, ch) :: !active_options
+  );
+  if is_active_FindDeclaration () then active_options := Lsp_handler.FindDeclaration_feature :: !active_options;
+  if is_active_ComputeCIL () then active_options := Lsp_handler.ComputeCIL_feature :: !active_options;
+  if is_active_ComputeCallGraph () then active_options := Lsp_handler.ComputeCallGraph_feature :: !active_options;
+  if is_active_ComputeMetrics () then active_options := Lsp_handler.ComputeMetrics_feature :: !active_options;
+  if is_active_ComputeProofObligation () then active_options := Lsp_handler.ComputeProofObligation_feature :: !active_options;
   match !active_options with
   [] -> None
   | [opt] -> Some opt
@@ -213,40 +216,41 @@ let run () =
       let feature = get_active_option () in
       let data = 
       match feature with
-      | Some DidSave_feature -> 
+      | Some Lsp_handler.DidSave_feature -> 
         let data = List.map Json.save_string (DidSave.handle ()) in
         data
-      | Some DidClose_feature ->
+      | Some Lsp_handler.DidClose_feature ->
         let data = Json.save_string (DidClose.handle (Did_close.get ())) in
         data :: []
-      | Some FindDefinition_feature ->
-        let req_info = String.split_on_char ':' (Find_def.get ()) in 
-        let int_id = (Id.get ()) in 
-        let data = Json.save_string (Definition.find int_id (List.nth req_info 0) (Stdlib.int_of_string (List.nth req_info 1)) (Stdlib.int_of_string (List.nth req_info 2))) in
+      | Some Lsp_handler.FindDefinition_feature(id, file, line, ch) ->
+        (* let req_info = String.split_on_char ':' (Find_def.get ()) in *)
+        (* let int_id = (Id.get ()) in *)
+        (* let data = Json.save_string (Definition.find int_id (List.nth req_info 0) (Stdlib.int_of_string (List.nth req_info 1)) (Stdlib.int_of_string (List.nth req_info 2))) in *)
+        let data = Json.save_string (Definition.find id file line ch) in
         data :: []
-      | Some FindDeclaration_feature ->
+      | Some Lsp_handler.FindDeclaration_feature ->
         let req_info = String.split_on_char ':' (Find_decl.get ()) in 
         let int_id = (Id.get ()) in 
         let data = Json.save_string (Declaration.find int_id (List.nth req_info 0) (Stdlib.int_of_string (List.nth req_info 1)) (Stdlib.int_of_string (List.nth req_info 2))) in
         data :: []
-      | Some ComputeCIL_feature -> 
+      | Some Lsp_handler.ComputeCIL_feature -> 
         let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Calculated CIL successfully, file generated : %s_fc.c" (Display_CIL.get ())) () in
         let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
         let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
         data :: []
-      | Some ComputeCallGraph_feature ->
+      | Some Lsp_handler.ComputeCallGraph_feature ->
         ignore (Sys.command ("dot -Tpdf "^(Compute_CG.get ())^".dot -o "^(Compute_CG.get ())^".pdf"));
         Lsp.Self.debug ~level:2 ("Generated %s.dot and %s.pdf files") (Compute_CG.get ()) (Compute_CG.get ());
         let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: ("Computed callgraph successfully, files generated : "^(Compute_CG.get ())^".dot and "^(Compute_CG.get ())^".pdf") () in
         let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
         let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
         data :: []
-      | Some ComputeMetrics_feature ->
+      | Some Lsp_handler.ComputeMetrics_feature ->
         let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Calculated metrics successfully, file generated : %s.txt" (Show_metrics.get ())) () in
         let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
         let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
         data :: []
-      | Some ComputeProofObligation_feature ->
+      | Some Lsp_handler.ComputeProofObligation_feature ->
           let req_info = String.split_on_char ':' (Show_POVC.get ()) in 
           let id = Id.get () in 
           let file = List.nth req_info 0 in 
