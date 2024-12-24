@@ -138,6 +138,10 @@ let send_response_list plugin_sock response_list =
 
 let is_active_DidSave () = (Did_save.get ())
 let is_active_DidClose () = not (String.equal (Did_close.get ()) "")
+let get_DidClose_args () =
+  let args = Did_close.get () in
+  if not (String.trim args = "") then Some (args)
+  else None
 let get_FindDefinition_args () = 
   let args = Find_def.get () in
   if not (String.trim args = "") then
@@ -149,26 +153,57 @@ let get_FindDefinition_args () =
     Some (Id.get (), file, line, ch)
     )
   else None
-let is_active_FindDeclaration () = not (String.equal (Find_decl.get ()) "")
+let get_FindDeclaration_args () = 
+  let args = Find_decl.get () in
+  if not (String.trim args = "") then
+    (
+    let req_info = String.split_on_char ':' (Find_decl.get ()) in
+    let file = (List.nth req_info 0) in
+    let line = (Stdlib.int_of_string (List.nth req_info 1)) in
+    let ch = (Stdlib.int_of_string (List.nth req_info 2)) in
+    Some (Id.get (), file, line, ch)
+    )
+  else None
 let is_active_ComputeCIL () = not (String.equal (Display_CIL.get ()) "")
 let is_active_ComputeCallGraph () = not (String.equal (Compute_CG.get ()) "")
 let is_active_ComputeMetrics () = not (String.equal (Show_metrics.get ()) "")
-let is_active_ComputeProofObligation () = not (String.equal (Show_POVC.get ()) "")
+let get_ComputeProofObligation_args () =
+  let args = Show_POVC.get () in
+  if not (String.trim args = "") then
+    (
+    let req_info = String.split_on_char ':' (Show_POVC.get ()) in
+    let file = (List.nth req_info 0) in
+    let line = (Stdlib.int_of_string (List.nth req_info 1)) in
+    let ch = (Stdlib.int_of_string (List.nth req_info 2)) in
+    Some (Root_path.get (), Id.get (), file, line, ch)
+    )
+  else None
 
 
 let get_active_option () =
   let active_options = ref [] in
   if is_active_DidSave () then active_options := Lsp_handler.DidSave_feature :: !active_options;
-  if is_active_DidClose () then active_options := Lsp_handler.DidClose_feature :: !active_options;
+  (*
+  (match get_DidClose_args () with
+  | None -> ()
+  | Some (file) -> active_options := Lsp_handler.DidClose_feature(file) :: !active_options
+  );
+  *)
   (match get_FindDefinition_args () with
   | None -> ()
   | Some (id, file, line, ch) -> active_options := Lsp_handler.FindDefinition_feature(id, file, line, ch) :: !active_options
   );
-  if is_active_FindDeclaration () then active_options := Lsp_handler.FindDeclaration_feature :: !active_options;
+  (match get_FindDeclaration_args () with
+  | None -> ()
+  | Some (id, file, line, ch) -> active_options := Lsp_handler.FindDeclaration_feature(id, file, line, ch) :: !active_options
+  );
   if is_active_ComputeCIL () then active_options := Lsp_handler.ComputeCIL_feature :: !active_options;
   if is_active_ComputeCallGraph () then active_options := Lsp_handler.ComputeCallGraph_feature :: !active_options;
   if is_active_ComputeMetrics () then active_options := Lsp_handler.ComputeMetrics_feature :: !active_options;
-  if is_active_ComputeProofObligation () then active_options := Lsp_handler.ComputeProofObligation_feature :: !active_options;
+  (match get_ComputeProofObligation_args () with
+  | None -> ()
+  | Some (root_path, id, file, line, ch) -> active_options := Lsp_handler.ComputeProofObligation_feature(root_path, id, file, line, ch) :: !active_options
+  );
   match !active_options with
   [] -> None
   | [opt] -> Some opt
@@ -219,19 +254,16 @@ let run () =
       | Some Lsp_handler.DidSave_feature -> 
         let data = List.map Json.save_string (DidSave.handle ()) in
         data
-      | Some Lsp_handler.DidClose_feature ->
-        let data = Json.save_string (DidClose.handle (Did_close.get ())) in
+        (*
+      | Some Lsp_handler.DidClose_feature(file) ->
+        let data = Json.save_string (DidClose.handle (file)) in
         data :: []
+        *)
       | Some Lsp_handler.FindDefinition_feature(id, file, line, ch) ->
-        (* let req_info = String.split_on_char ':' (Find_def.get ()) in *)
-        (* let int_id = (Id.get ()) in *)
-        (* let data = Json.save_string (Definition.find int_id (List.nth req_info 0) (Stdlib.int_of_string (List.nth req_info 1)) (Stdlib.int_of_string (List.nth req_info 2))) in *)
         let data = Json.save_string (Definition.find id file line ch) in
         data :: []
-      | Some Lsp_handler.FindDeclaration_feature ->
-        let req_info = String.split_on_char ':' (Find_decl.get ()) in 
-        let int_id = (Id.get ()) in 
-        let data = Json.save_string (Declaration.find int_id (List.nth req_info 0) (Stdlib.int_of_string (List.nth req_info 1)) (Stdlib.int_of_string (List.nth req_info 2))) in
+      | Some Lsp_handler.FindDeclaration_feature(id, file, line, ch) ->
+        let data = Json.save_string (Declaration.find id file line ch) in
         data :: []
       | Some Lsp_handler.ComputeCIL_feature -> 
         let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Calculated CIL successfully, file generated : %s_fc.c" (Display_CIL.get ())) () in
@@ -250,19 +282,14 @@ let run () =
         let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
         let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
         data :: []
-      | Some Lsp_handler.ComputeProofObligation_feature ->
-          let req_info = String.split_on_char ':' (Show_POVC.get ()) in 
-          let id = Id.get () in 
-          let file = List.nth req_info 0 in 
-          let line = Stdlib.int_of_string (List.nth req_info 1) in
-          let ch = Stdlib.int_of_string (List.nth req_info 2) in
-          let result = ShowPOVC.get_property (Root_path.get ()) file line ch in
+      | Some Lsp_handler.ComputeProofObligation_feature(root_path, id, file, line, ch) ->
+          let result = ShowPOVC.get_property root_path file line ch in
           let result_msg =
             match result with 
           | `String "" -> (`String "No proof obligations")
           | _ -> result
           in
-          let lsp_message = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id: (Lsp_types.Int id) ~result:result_msg () in
+          let lsp_message = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:result_msg () in
           let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_message) in
           data :: []
         | None -> []

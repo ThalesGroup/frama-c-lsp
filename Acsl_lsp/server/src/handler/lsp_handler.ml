@@ -14,13 +14,13 @@ let rootPath = ref ""
 
 type lsp_feature = 
   | DidSave_feature
-  | DidClose_feature
+  (*| DidClose_feature of (string) *)
   | FindDefinition_feature of (int * string * int * int)
-  | FindDeclaration_feature
+  | FindDeclaration_feature of (int * string * int * int)
   | ComputeCIL_feature
   | ComputeCallGraph_feature
   | ComputeMetrics_feature
-  | ComputeProofObligation_feature
+  | ComputeProofObligation_feature of (string * int * string * int * int)
 
 
 module KernelOpt = struct
@@ -73,26 +73,30 @@ module WpOpt = struct
   type t = {
     wp: bool;
     wp_rte: bool;
-    wp_prop: string list;
+    wp_prop: string list option;
     wp_fct: string list;
     wp_gen: bool;
     wp_pruning: bool;
     wp_check_memory_model: bool;
     wp_no_volatile: bool;
-    wp_prover: string;
+    wp_prover: string list;
     wp_timeout: int;
     wp_session: string
   }
-  let create () = {
+  let create ?wp_prop ?wp_prover () = {
     wp = true;
     wp_rte = !Configuration.global_params.wpRte;
-    wp_prop = ["@assigns"];
+    wp_prop = wp_prop;
     wp_fct = [];
     wp_gen = true;
     wp_pruning = !Configuration.global_params.wpPruning;
     wp_check_memory_model = !Configuration.global_params.wpCheckMemoryModel;
     wp_no_volatile = !Configuration.global_params.wpVolatile;
-    wp_prover = !Configuration.global_params.wpProver;
+    wp_prover = (
+      match wp_prover with
+      | None -> [!Configuration.global_params.wpProver];
+      | Some p -> p
+    );
     wp_timeout = !Configuration.global_params.wpTimeout;
     wp_session = !Configuration.global_params.wpSession
   }
@@ -100,14 +104,14 @@ module WpOpt = struct
     let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in
     let option_if_true b opt = if b then (opt) else "" in
     let wp_opt = option_if_true options.wp "-wp" in
-    let wp_prop_opt = option_if_not_empty_string (String.concat "," options.wp_prop) "-wp-prop " in
+    let wp_prop_opt = match options.wp_prop with | None -> "" | Some p -> option_if_not_empty_string (String.concat "," p) "-wp-prop " in
     let wp_fct_opt = option_if_not_empty_string (String.concat "," options.wp_fct) "-wp-fct " in
     let wp_gen_opt = option_if_true options.wp "-wp-gen" in
     let wp_rte_opt = option_if_true options.wp_rte "-wp-rte" in
     let wp_pruning_opt = option_if_true options.wp_pruning "-wp-no-pruning" in
     let wp_check_memory_model_opt = option_if_true options.wp_check_memory_model "-wp-model \"Typed+var+int+float\" -wp-check-memory-model" in
     let wp_no_volatile_opt = option_if_true options.wp_no_volatile "-wp-no-volatile" in
-    let wp_prover_opt = option_if_not_empty_string options.wp_prover "-wp-prover " in
+    let wp_prover_opt = option_if_not_empty_string (String.concat "," options.wp_prover) "-wp-prover " in
     let wp_timeout_opt = Printf.sprintf "-wp-timeout %d" options.wp_timeout in
     let wp_session_opt = option_if_not_empty_string options.wp_session "-wp-session " in
     Printf.sprintf "%s %s %s %s %s %s %s %s %s %s %s" wp_opt wp_prop_opt wp_fct_opt wp_gen_opt wp_rte_opt wp_pruning_opt wp_check_memory_model_opt wp_no_volatile_opt wp_prover_opt wp_timeout_opt wp_session_opt
@@ -168,6 +172,25 @@ module UncastOpt = struct
     Printf.sprintf "%s %s %s %s" uncast_opt uncast_endianness_opt uncast_lshift_as_mul_opt uncast_rshift_as_div_opt
 end
 
+module MetricsOpt = struct
+  type t = {
+    metrics : bool;
+    metrics_by_function: bool;
+    metrics_output: string;
+  }
+  let create () = {
+    metrics = true;
+    metrics_by_function = true;
+    metrics_output = !Configuration.global_params.metricsOutput
+  }
+  let string_of_t (options : t) : string =
+    let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in
+    let option_if_true b opt = if b then (opt) else "" in
+    let _metrics_opt = option_if_true options.metrics "-metrics " in
+    let _metrics_opt = option_if_true options.metrics_by_function "-metrics-by-function" in
+    let _metrics_output = option_if_not_empty_string options.metrics_output "-metrics-output " in ""
+end
+
 
 module LspOpt = struct
   type t = lsp_feature
@@ -175,29 +198,37 @@ module LspOpt = struct
   let string_of_t (feature : t) : string =
     match feature with
     | DidSave_feature -> "-lsp-did-save"
-    | DidClose_feature -> "-lsp-did-close"
-    | FindDefinition_feature(id, file, line, column) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-definition=%s:%d:%d -lsp-find-definition" id file line column
-    | FindDeclaration_feature -> "-lsp-find-declaration"
+    (* | DidClose_feature (file) -> Printf.sprintf "-lsp-did-close=%s" file *)
+    | FindDefinition_feature (id, file, line, column) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-definition=%s:%d:%d" id file line column
+    | FindDeclaration_feature (id, file, line, column) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-declaration=%s:%d:%d" id file line column
     | ComputeCIL_feature -> "-lsp-display-cil"
     | ComputeCallGraph_feature -> "-lsp-compute-cg"
     | ComputeMetrics_feature -> "-lsp-metrics"
-    | ComputeProofObligation_feature -> "-lsp-show-povc"
+    | ComputeProofObligation_feature (root_path, id, file, line, column) -> Printf.sprintf "-lsp-root-path=\"%s\" -lsp-id=\"%d\" -lsp-show-povc=%s:%d:%d" root_path id file line column
 end
 
 
 module Command = struct
   type t = {
   verbose: int;
-  files : string list;
-  kernel : KernelOpt.t;
+  files : string list option;
+  kernel : KernelOpt.t option;
   wp : WpOpt.t option;
   metacsl : MetacslOpt.t option;
   uncast : UncastOpt.t option;
   lsp : LspOpt.t;
   }
-  let create ~kernel ~files ?wp ?metacsl ?uncast ~lsp () : t = {
+  let create ?kernel ?files ?wp ?metacsl ?uncast ~lsp () : t = {
     verbose = !Configuration.global_params.acslLsp;
-    files = files;
+    files = (match kernel, files with
+      | None, _ -> None
+      | _, Some _ -> files;
+      | _, None -> 
+        let sourceFiles = List.map (fun x -> (!rootPath)^"/"^x) (!Configuration.global_params.sourceFiles) in
+        match sourceFiles with
+        | [] -> Some (Utils.get_workspace_files !rootPath)
+        | _ -> Some (sourceFiles)
+    );
     kernel = kernel;
     wp = wp;
     metacsl = metacsl;
@@ -206,15 +237,15 @@ module Command = struct
   }
   let string_of_t (options : t) : string =
     let option_if_not_empty_string s opt = if not (String.trim s = "") then (s ^ " " ^ opt) else "" in
-    let file_names = String.concat " " options.files in
+    let file_names = match options.files with None -> "" | Some f -> String.concat " " f in
     let debug_level = Stdlib.string_of_int options.verbose in
     let common_opt = Printf.sprintf "frama-c -lsp -lsp-no-cmdline -lsp-debug=%s %s" debug_level file_names in
-    let kernel_opt = KernelOpt.string_of_t options.kernel in
+    let kernel_opt = match options.kernel with None -> "" | Some k -> KernelOpt.string_of_t k in
     let uncast_opt = match options.uncast with None -> "" | Some u -> option_if_not_empty_string (UncastOpt.string_of_t u) "-then-last" in
     let wp_opt = match options.wp with None -> "" | Some w -> option_if_not_empty_string (WpOpt.string_of_t w) "" in
     let metacsl_opt = match options.metacsl with None -> "" | Some m -> option_if_not_empty_string (MetacslOpt.string_of_t m) "-then-last" in
     let lsp_opt = option_if_not_empty_string (LspOpt.string_of_t options.lsp) "" in
-    Printf.sprintf "%s %s %s %s %s -then %s ; echo \"FRAMA-C EXIT CODE: $?\"" common_opt kernel_opt uncast_opt metacsl_opt wp_opt lsp_opt
+    Printf.sprintf "%s %s %s %s %s %s ; echo \"FRAMA-C EXIT CODE: $?\"" common_opt kernel_opt uncast_opt metacsl_opt wp_opt lsp_opt
 end
 
 
@@ -346,52 +377,77 @@ let rec had_errors_in_channel ic =
   with End_of_file -> Lsp.Self.debug "\n%!"; true
 
 
-let execute_command command didSave ?id () = 
-  let had_errors = ref true in 
-  let msg = ref "" in
-  let response_id : Lsp_types.id_ = match id with 
-    | Some id -> id
-    | None -> (Lsp_types.Str "frama_c_error")
-  in
-  (* Lsp.Self.debug ~level:4 "before wrapper sock\n%!"; *)
+let execute_command command feature = 
   let wrapper_sock = Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in 
-  (* Lsp.Self.debug ~level:4 "after wrapper sock\n%!"; *)
   Unix.bind wrapper_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, 8006));
-  (* Lsp.Self.debug ~level:4 "after bind\n%!"; *)
   Unix.listen wrapper_sock 100;
   let ic = Unix.open_process_in command in
-  had_errors := had_errors_in_channel ic;
-  (* Lsp.Self.debug ~level:4 "before accept\n%!"; *)
-  match !had_errors, didSave with 
-  | true, false ->
-    Lsp.Self.debug ~level:2 "Error while executing frama-c command\n%!";
-    (* Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac)); *)
-    let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:!msg () in
-    let lsp_message = (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:response_id ~error: lsp_error_message ()) in
-    let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_message) in
-    Unix.close wrapper_sock;
-    data
-  | false, false ->
-      Lsp.Self.debug ~level:2 "No Error while executing frama-c command\n%!";
-      let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "No problem found !") () in
+  let frama_c_exit_with_errors = had_errors_in_channel ic in
+  match frama_c_exit_with_errors with
+  | true ->
+    (
+    match feature with
+    | DidSave_feature ->
+      Lsp.Self.debug ~level:2 "Executed frama-c command\n%!";
+      let (plugin_sock, _) = Unix.accept wrapper_sock in
+      let data_size = getnumber (readcontlen plugin_sock) in
+      let buffer = Bytes.make data_size '0' in
+      let _req_data_len = Unix.read plugin_sock buffer 0 data_size in
+      let request_str = (Bytes.to_string buffer) in
+      ignore (Unix.close_process_in ic);
+      Unix.close plugin_sock;
+      Unix.close wrapper_sock;
+      request_str
+
+    | FindDefinition_feature (id, _file, _line, _column)
+    | FindDeclaration_feature (id, _file, _line, _column)
+    | ComputeProofObligation_feature (_, id, _file, _line, _column) ->
+      Lsp.Self.debug ~level:2 "Error while executing frama-c command\n%!";
+      let msg = Printf.sprintf "Frama-C Error ! Check OUTPUT !" in
+      let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:msg () in
+      let lsp_message = (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~error:lsp_error_message ()) in
+      let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_message) in
+      Unix.close wrapper_sock;
+      data
+
+    | ComputeCIL_feature
+    | ComputeCallGraph_feature
+    | ComputeMetrics_feature ->
+      let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Error ~message: "Frama-c error ! Check OUTPUT !" () in
       let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
       let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
       Unix.close wrapper_sock;
-      data  
-  | _, true ->
-    Lsp.Self.debug ~level:2 "Error while executing frama-c command 0 \n%!";
-    let (plugin_sock, _) = Unix.accept wrapper_sock in
-    let data_size = getnumber (readcontlen plugin_sock) in
-    let buffer = Bytes.make data_size '0' in
-    let _req_data_len = Unix.read plugin_sock buffer 0 data_size in
-    let request_str = (Bytes.to_string buffer) in
-    (* Lsp.Self.debug ~level:4 "accept\n%!"; *)
-    ignore (Unix.close_process_in ic);
-    (* let _bytes_read = Unix.recv plugin_sock buffer 0 (Bytes.length buffer) [] in *) 
-    (* Lsp.Self.debug ~level:4 "recv\n%!"; *)
-    Unix.close plugin_sock;
-    Unix.close wrapper_sock;
-    request_str
+      data
+    )
+  | false ->
+    (
+    match feature with
+      | DidSave_feature
+      | FindDefinition_feature (_, _, _, _)
+      | FindDeclaration_feature (_, _, _, _)
+      | ComputeProofObligation_feature (_, _, _, _, _) ->
+        Lsp.Self.debug ~level:2 "Executed frama-c command\n%!";
+        let (plugin_sock, _) = Unix.accept wrapper_sock in
+        let data_size = getnumber (readcontlen plugin_sock) in
+        let buffer = Bytes.make data_size '0' in
+        let _req_data_len = Unix.read plugin_sock buffer 0 data_size in
+        let request_str = (Bytes.to_string buffer) in
+        ignore (Unix.close_process_in ic);
+        Unix.close plugin_sock;
+        Unix.close wrapper_sock;
+        request_str
+      | ComputeCIL_feature
+      | ComputeCallGraph_feature
+      | ComputeMetrics_feature ->
+        Lsp.Self.debug ~level:2 "No Error after executing frama-c command\n%!";
+        let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Successful operation !") () in
+        let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
+        let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
+        Unix.close wrapper_sock;
+        data
+    )
+
+
 
 let capabilities_str = {|{
   "jsonrpc": "2.0",
@@ -441,21 +497,13 @@ let rq_handler json_string =
       let src_file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
       let line = params.position.line in 
       let ch = params.position.character in
-      let files_to_parse = 
-        match source_files () with 
-          | "" -> String.concat " " (Utils.get_workspace_files !rootPath)
-          | _ -> (source_files ())
-        in
       let kernel_opt = KernelOpt.create () in
-      let lsp_opt = LspOpt.create (FindDefinition_feature ((Utils.id_to_int request.id), src_file, line, ch)) in
-      let command = Command.create ~kernel:kernel_opt ~files:[files_to_parse] ~lsp:lsp_opt () in
+      let feature = FindDefinition_feature ((Utils.id_to_int request.id), src_file, line, ch) in
+      let lsp_opt = LspOpt.create (feature) in
+      let command = Command.create ~kernel:kernel_opt ~lsp:lsp_opt () in
       let command_str = (Command.string_of_t command) in
-      (* let command = Printf.sprintf "frama-c %s %s %s -then -lsp -lsp-no-cmdline -lsp-debug=%s -lsp-id=\"%s\" -lsp-root-path=\"%s\" -lsp-definition=%s:%s:%s ; echo \"FRAMA-C EXIT CODE: $?\" "
-      files_to_parse (cpp_extra_args ()) (kernel_args ())
-      (debug ()) (Stdlib.string_of_int (Utils.id_to_int request.id)) (!rootPath)
-      src_file (Stdlib.string_of_int line) (Stdlib.string_of_int ch) in *)
       Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
-      let data = execute_command command_str false ~id:request.id () in
+      let data = execute_command command_str feature in
       Lsp_types.CONTENT data;
       
     | "textDocument/declaration" -> 
@@ -465,21 +513,21 @@ let rq_handler json_string =
         | None -> Lsp.Self.debug ~level:3 "No declaration params \n%!"; assert false
       in
       let uri = params.textDocument.uri in 
-      let _file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
+      let src_file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
       let line = params.position.line in 
       let ch = params.position.character in
-
-      let files_to_parse = 
-        match source_files () with 
-          | "" -> String.concat " " (Utils.get_workspace_files !rootPath)
-          | _ -> (source_files ())
-        in
-      let command = "frama-c "^files_to_parse^" "^(cpp_extra_args ())^(kernel_args ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-id=\""^(Stdlib.string_of_int (Utils.id_to_int request.id))^"\" -lsp-root-path=\""^(!rootPath)^"\" -lsp-declaration="^_file^":"^(Stdlib.string_of_int line)^":"^(Stdlib.string_of_int ch) ^ " ; echo \"FRAMA-C EXIT CODE: $?\"" in
-      Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
-      let data = execute_command command false ~id:request.id () in
+      let kernel_opt = KernelOpt.create () in
+      let feature = FindDeclaration_feature ((Utils.id_to_int request.id), src_file, line, ch) in
+      let lsp_opt = LspOpt.create (feature) in
+      let command = Command.create ~kernel:kernel_opt ~lsp:lsp_opt () in
+      let command_str = (Command.string_of_t command) in
+      Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
+      let data = execute_command command_str feature in
       Lsp_types.CONTENT (data);
+
     | "showPOVC" -> (* show proof obligation of specific function *)
-      Lsp.Self.debug ~level:4 "showPOVC, %d\n%!" (Utils.id_to_int request.id);
+      let id = (Utils.id_to_int request.id) in
+      Lsp.Self.debug ~level:4 "showPOVC, %d\n%!" id;
       let (file, line, ch) = match request.params with 
           | Some `List 
             [`List 
@@ -487,46 +535,43 @@ let rq_handler json_string =
                 "line", `Int l;
                 "character", `Int c;
               ]]] -> 
-            (Utils.remove_newline (Utils.remove_quotes (f)), Stdlib.string_of_int(l), Stdlib.string_of_int(c))
+            (Utils.remove_newline (Utils.remove_quotes (f)), l, c)
           | _ -> Lsp.Self.debug ~level:3 "No params for showPOVC \n%!"; assert false
         in
       (* additionnal source files if the parsed file is a header file *)
-      let _files = 
-        String.concat " " 
-        (match (String.ends_with ~suffix:".h" file) with
-        | true -> file::(Utils.get_corr_cfile (!rootPath) file); 
-        | false -> [file])
+      let kernel_opt = KernelOpt.create () in
+      let uncast_opt = UncastOpt.create () in
+      let wp_opt = WpOpt.create () in
+      let feature = ComputeProofObligation_feature (!rootPath, id, file, line, ch) in
+      let lsp_opt = LspOpt.create (feature) in
+      let command = 
+        match (String.ends_with ~suffix:".c" file) with
+        | true -> Command.create ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
+        | false -> Command.create ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
       in
-      let files_to_parse =
-        match (String.ends_with ~suffix:".c" file), source_files () with
-          | true, _ -> file
-          | _, "" -> file
-          | _, _ -> (source_files ())
-      in
-      let command = "frama-c "^files_to_parse^(cpp_extra_args ())^(kernel_args ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-id=\""^(Stdlib.string_of_int (Utils.id_to_int request.id))^"\" -lsp-root-path=\""^(!rootPath)^"\" -lsp-show-povc=\""^file^":"^line^":"^ch^"\""^(wp_args ()) ^ " ; echo \"FRAMA-C EXIT CODE: $?\"" in
-      Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
-      Lsp_types.CONTENT (execute_command command false ~id:request.id ());
-
+      let command_str = (Command.string_of_t command) in
+      Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
+      Lsp_types.CONTENT (execute_command command_str feature);
+(*
     | "textDocument/completion" -> 
       Lsp.Self.debug ~level:4 "completion\n%!";
       let params = match request.params with 
         | Some p -> Lsp_types.CompletionParams.t_of_json p
         | None -> Lsp.Self.debug ~level:3 "No completion params \n%!"; assert false
       in
-      let uri = params.textDocument.uri in 
+      let uri = params.textDocument.uri in
       let file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
-      let line = Stdlib.string_of_int params.position.line in 
-      let ch = Stdlib.string_of_int params.position.character in 
+      let line = Stdlib.string_of_int params.position.line in
+      let ch = Stdlib.string_of_int params.position.character in
       let command = "frama-c -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-id=\""^(Stdlib.string_of_int (Utils.id_to_int request.id))^"\" -lsp-completion=\""^file^":"^line^":"^ch^"\"" ^ " ; echo \"FRAMA-C EXIT CODE: $?\"" in
       Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
       Lsp_types.CONTENT (execute_command command false ~id:request.id ());
-
+*)
     | "shutdown" -> receivedShutdown := true; 
       Lsp_types.CONTENT (Json.save_string (shutdown request));
     | _ -> 
       Lsp_types.CONTENT (Json.save_string `Null)
   with exn ->  
-    Lsp.Self.debug ~level:3 "Request error \n%!";
     Lsp.Self.debug ~level:3 "Backtrace : %s\n" (Printexc.get_backtrace ());
     Lsp_types.CONTENT (Json.save_string (Utils.make_error (Printexc.to_string (exn)) (Utils.id_to_int id)))
 
@@ -542,7 +587,8 @@ let notif_handler json_string server_sock =
     let lsp_message = registerCapabilityRequest (registrationParams ([registration "workspace/didChangeConfiguration"])) in
     Lsp_types.CONTENT (Json.save_string (lsp_message))
 
-  (* | "textDocument/didOpen" ->
+    (*
+  | "textDocument/didOpen" ->
     Lsp.Self.debug ~level:4 "didOpen\n%!";
     let params = match notif.params with 
       | Some p -> Lsp_types.DidOpenTextDocumentParams.t_of_json p
@@ -554,6 +600,7 @@ let notif_handler json_string server_sock =
     Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
     Lsp_types.CONTENT ((execute_command command false)); *)
 
+    (*
   | "textDocument/didClose" ->
     Lsp.Self.debug ~level:4 "didClose\n%!";
     let params = match notif.params with 
@@ -561,10 +608,14 @@ let notif_handler json_string server_sock =
       | None -> assert false
     in
     let uri = params.textDocument.uri in 
-    let _file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
-    let command = "frama-c -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-did-close=" ^ _file ^ " ; echo \"FRAMA-C EXIT CODE: $?\"" in
-    Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
-    Lsp_types.CONTENT (execute_command command false ());
+    let src_file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
+    let lsp_opt = LspOpt.create (DidClose_feature(src_file)) in
+    let command = Command.create ~lsp:lsp_opt () in
+    let command_str = (Command.string_of_t command) in
+    (* let command = "frama-c -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-did-close=" ^ src_file ^ " ; echo \"FRAMA-C EXIT CODE: $?\"" in *)
+    Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
+    Lsp_types.CONTENT (execute_command command_str false ());
+    *)
 
   | "textDocument/didSave" ->
     Lsp.Self.debug ~level:4 "didSave\n%!";
@@ -578,24 +629,37 @@ let notif_handler json_string server_sock =
       begin
         let kernel_opt = KernelOpt.create () in
         let uncast_opt = UncastOpt.create () in
-        let wp_opt = WpOpt.create () in
+        let wp_opt = WpOpt.create ~wp_prop:["@assigns"] ~wp_prover:["none"] () in
         let metacsl_opt = MetacslOpt.create () in
-        let lsp_opt = LspOpt.create (DidSave_feature) in
+        let feature = DidSave_feature in
+        let lsp_opt = LspOpt.create (feature) in
         let command = Command.create ~kernel:kernel_opt ~files:[file_name] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt () in
         let command_str = (Command.string_of_t command) in
-        (* let command = "frama-c -lsp -lsp-no-cmdline -lsp-debug="^(debug ()) ^ " " ^ file_name ^ " " ^ (cpp_extra_args ())^(kernel_args ())^" -uncast -then-last -wp -wp-rte -wp-prop @assigns -wp-gen -wp-no-simpl -wp-no-let -wp-no-filter -wp-no-core -wp-no-pruning -wp-no-clean -wp-no-ground -wp-no-extensional -wp-no-reduce -wp-no-parasite -wp-no-init-summarize-array -wp-no-simplify-is-cint -wp-no-simplify-land-mask -wp-no-prenex -wp-no-simplify-forall -wp-no-simplify-type -wp-bound-forall-unfolding 1 -lsp-did-save ; echo \"FRAMA-C EXIT CODE: $?\"" in *)
         Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
-        Lsp_types.CONTENT (execute_command command_str true ());
+        Lsp_types.CONTENT (execute_command command_str feature);
       end
-    else Lsp_types.EMPTY ()
+    else 
+      begin
+        let kernel_opt = KernelOpt.create () in
+        let uncast_opt = UncastOpt.create () in
+        let feature = DidSave_feature in
+        let lsp_opt = LspOpt.create (feature) in
+        let command = Command.create ~kernel:kernel_opt ~uncast:uncast_opt ~lsp:lsp_opt () in
+        let command_str = (Command.string_of_t command) in
+        Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
+        Lsp_types.CONTENT (execute_command command_str feature);
+      end
 
   | "showGlobalMetrics" -> 
     Lsp.Self.debug ~level:4 "global metrics\n%!";
     let project_filename = if not (String.equal (!Configuration.global_params.metricsOutput) "") then (Filename.remove_extension !Configuration.global_params.metricsOutput) else "project_metrics" in
+    let _kernel_opt = KernelOpt.create () in
+    let _metric_opt = MetricsOpt.create () in
+    let feature = ComputeMetrics_feature in
     let command = Printf.sprintf "frama-c %s %s %s -then %s -then -lsp -lsp-no-cmdline -lsp-debug=%s -lsp-metrics=\"%s/%s\" ; echo \"FRAMA-C EXIT CODE: $?\""
     (source_files ()) (cpp_extra_args ()) (kernel_args ()) (global_metrics_args ()) (debug ()) (!rootPath) project_filename in
     Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
-    Lsp_types.CONTENT (execute_command command false ());
+    Lsp_types.CONTENT (execute_command command feature);
 
   | "displayCIL" -> 
       Lsp.Self.debug ~level:4 "displayCIL\n%!";
@@ -603,13 +667,14 @@ let notif_handler json_string server_sock =
         | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
         | _ -> Lsp.Self.debug ~level:3 "No params for displayCIL \n%!"; assert false
       in
+      let feature = ComputeCIL_feature in    
       let command = Printf.sprintf "frama-c %s %s %s -then -print -no-unicode -ocode \"%s_fc.c\" -lsp -lsp-no-cmdline -lsp-debug=%s -lsp-display-cil=\"%s\" ; echo \"FRAMA-C EXIT CODE: $?\""
       file (cpp_extra_args ()) (kernel_args ())
       (Filename.remove_extension file)
       (debug ())
       (Filename.remove_extension file) in
       Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
-      Lsp_types.CONTENT (execute_command command false ());
+      Lsp_types.CONTENT (execute_command command feature);
 
   | "displayCIL_noannot" -> 
         Lsp.Self.debug ~level:4 "displayCIL_noannot\n%!";
@@ -617,13 +682,14 @@ let notif_handler json_string server_sock =
           | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
           | _ -> Lsp.Self.debug ~level:3 "No params for displayCIL \n%!"; assert false
         in
+        let feature = ComputeCIL_feature in
         let command = Printf.sprintf "frama-c %s %s %s -then -print -no-unicode -ocode \"%s_fc.c\" -no-annot -keep-comments -lsp -lsp-no-cmdline -lsp-debug=%s -lsp-display-cil=\"%s\" ; echo \"FRAMA-C EXIT CODE: $?\""
         file (cpp_extra_args ()) (kernel_args ())
         (Filename.remove_extension file)
         (debug ())
         (Filename.remove_extension file) in
         Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
-        Lsp_types.CONTENT (execute_command command false ());
+        Lsp_types.CONTENT (execute_command command feature);
 
   | "showLocalMetrics" -> 
     Lsp.Self.debug ~level:4 "local metrics\n%!";
@@ -631,11 +697,12 @@ let notif_handler json_string server_sock =
         | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
         | _ -> Lsp.Self.debug ~level:3 "No params for metrics \n%!"; assert false
     in
+    let feature = ComputeMetrics_feature in
     let command = Printf.sprintf "frama-c %s %s %s -then -metrics -metrics-by-function -metrics-output=\"%s.txt\" -then -lsp -lsp-no-cmdline -lsp-debug=%s -lsp-metrics=\"%s\" ; echo \"FRAMA-C EXIT CODE: $?\""
     file (cpp_extra_args ()) (kernel_args ())
     (Filename.remove_extension file) (debug ()) (Filename.remove_extension file) in
     Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
-    Lsp_types.CONTENT (execute_command command false ());
+    Lsp_types.CONTENT (execute_command command feature)
   
   | "computeCG" -> 
     Lsp.Self.debug ~level:4 "computeCG\n%!";
@@ -643,14 +710,16 @@ let notif_handler json_string server_sock =
         | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
         | _ -> Lsp.Self.debug ~level:3 "No params for computeCG \n%!"; assert false
     in
+    let feature = ComputeCallGraph_feature in
     let command = "frama-c "^file^(cpp_extra_args ())^(kernel_args ())^" -then"^(callgraph_args (Filename.remove_extension file) ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-compute-cg=\""^(get_cg_output_file (Filename.remove_extension file) ())^"\" ; echo \"FRAMA-C EXIT CODE: $?\"" in
     Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
-      Lsp_types.CONTENT (execute_command command false ());
+    Lsp_types.CONTENT (execute_command command feature)
 
+    (*
   | "workspace/didChangeConfiguration" ->
     Lsp.Self.debug ~level:4 "didChangeConfiguration\n%!";
     Lsp_types.CONTENT (Json.save_string (Configuration.request_configurations));
-
+  *)
   | "exit" -> if !receivedShutdown then Unix._exit 0 else Unix._exit 1
   | _ -> 
       Lsp_types.EMPTY ()

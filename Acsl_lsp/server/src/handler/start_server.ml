@@ -9,6 +9,37 @@ let addr = Unix.inet_addr_of_string "127.0.0.1"
 
 module StringMap = Map.Make(String)
 
+(*
+module StringLoc = struct
+  type t = string * Log.event
+
+  let compare (x0, y0) (x1 , y1) : (string * Log.event) -> (string * Log.event) -> int =
+    match String.compare x0 x1 with
+      | 0 ->
+        let msg_0 = y0.evt_message in
+        let msg_1 = y1.evt_message in
+        (match String.compare msg_0 msg_1 with
+          | 0 ->
+            let src_0 = y0.evt_source in
+            let src_1 = y1.evt_source in
+            (match src_0, src_1 with
+            | None, None -> 0
+            | None, Some _ -> -1
+            | Some _, None -> 1
+            | Some pos_0, Some pos_1 ->
+              (match Stdlib.compare pos_0.pos_lnum pos_1.pos_lnum with
+                | 0 -> (match Stdlib.compare pos_0.pos_bol pos_1.pos_bol with
+                        | 0 -> Stdlib.compare pos_0.pos_cnum pos_1.pos_cnum 
+                        | c -> c)
+                | c -> c))
+          | c -> c)
+      | c -> c
+end
+
+module StringLocMap = Map.Make(StringLoc)
+*)
+
+
 let diag_map : Lsp_types.Diagnostic.t list StringMap.t ref = ref StringMap.empty
 
 
