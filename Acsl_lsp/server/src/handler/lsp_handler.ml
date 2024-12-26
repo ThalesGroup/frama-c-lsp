@@ -178,17 +178,74 @@ module MetricsOpt = struct
     metrics_by_function: bool;
     metrics_output: string;
   }
-  let create () = {
+  let create ?file () = {
     metrics = true;
     metrics_by_function = true;
-    metrics_output = !Configuration.global_params.metricsOutput
+    metrics_output = (match file with
+    | None -> (if not (String.trim !Configuration.global_params.metricsOutput = "") then !Configuration.global_params.metricsOutput else ".frama-c/fc_metrics.txt")
+    | Some f -> Printf.sprintf ".frama-c/fc_%s.txt" f)
   }
   let string_of_t (options : t) : string =
     let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in
     let option_if_true b opt = if b then (opt) else "" in
-    let _metrics_opt = option_if_true options.metrics "-metrics " in
-    let _metrics_opt = option_if_true options.metrics_by_function "-metrics-by-function" in
-    let _metrics_output = option_if_not_empty_string options.metrics_output "-metrics-output " in ""
+    let metrics_opt = option_if_true options.metrics "-metrics " in
+    let metrics_by_function_opt = option_if_true options.metrics_by_function "-metrics-by-function" in
+    let metrics_output_opt = option_if_not_empty_string options.metrics_output "-metrics-output " in
+    Printf.sprintf "%s %s %s" metrics_opt metrics_by_function_opt metrics_output_opt
+end
+
+
+module PprintOpt = struct
+  type t = {
+    print : bool;
+    no_unicode : bool;
+    ocode : string;
+    no_annot : bool;
+    keep_comments : bool
+  }
+  let create ~file ?no_annot () = {
+    print = true;
+    no_unicode = true;
+    ocode = Printf.sprintf ".frama-c/fc_%s.c" file;
+    no_annot = (match no_annot with None -> false | Some v -> v);
+    keep_comments = false;
+  }
+  let string_of_t (options : t) : string =
+    let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in
+    let option_if_true b opt = if b then (opt) else "" in
+    let print_opt = option_if_true options.print "-print " in
+    let no_unicode_opt = option_if_true options.no_unicode "-no-unicode " in
+    let ocode_opt = option_if_not_empty_string options.ocode "-ocode " in
+    let no_annot_opt = option_if_true options.no_annot "-no-annot " in
+    let keep_comments_opt = option_if_true options.keep_comments "-keep-comments" in
+    Printf.sprintf "%s %s %s %s %s" print_opt no_unicode_opt ocode_opt no_annot_opt keep_comments_opt
+end
+
+module CgOpt = struct
+  type t = {
+    cg : string;
+    cg_roots : string list;
+    cg_services : bool;
+    cg_no_services : bool;
+    cmd : string;
+  }
+  let create ?file () : t = 
+    let ofile = (match file with None -> !Configuration.global_params.cgOutput | Some f -> Printf.sprintf ".frama-c/fc_%s.dot" f) in
+    {
+    cg = ofile;
+    cg_roots = !Configuration.global_params.cgRoots;
+    cg_services = !Configuration.global_params.cgServices;
+    cg_no_services = not !Configuration.global_params.cgServices;
+    cmd = Printf.sprintf "dot -Tpdf %s -o %s.pdf" ofile ofile;
+    }
+  let string_of_t (options : t) : string =
+    let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in
+    let option_if_true b opt = if b then (opt) else "" in
+    let cg_opt = option_if_not_empty_string options.cg "-cg " in
+    let cg_roots_opt = option_if_not_empty_string (String.concat "," options.cg_roots) "-cg-roots=" in
+    let cg_services_opt = option_if_true options.cg_services "-cg-services" in
+    let cg_no_services_opt = option_if_true options.cg_no_services "-cg-no-services" in
+    Printf.sprintf "%s %s %s %s" cg_opt cg_roots_opt cg_services_opt cg_no_services_opt
 end
 
 
@@ -201,9 +258,9 @@ module LspOpt = struct
     (* | DidClose_feature (file) -> Printf.sprintf "-lsp-did-close=%s" file *)
     | FindDefinition_feature (id, file, line, column) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-definition=%s:%d:%d" id file line column
     | FindDeclaration_feature (id, file, line, column) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-declaration=%s:%d:%d" id file line column
-    | ComputeCIL_feature -> "-lsp-display-cil"
-    | ComputeCallGraph_feature -> "-lsp-compute-cg"
-    | ComputeMetrics_feature -> "-lsp-metrics"
+    | ComputeCIL_feature -> ""
+    | ComputeCallGraph_feature -> ""
+    | ComputeMetrics_feature -> ""
     | ComputeProofObligation_feature (root_path, id, file, line, column) -> Printf.sprintf "-lsp-root-path=\"%s\" -lsp-id=\"%d\" -lsp-show-povc=%s:%d:%d" root_path id file line column
 end
 
@@ -216,9 +273,12 @@ module Command = struct
   wp : WpOpt.t option;
   metacsl : MetacslOpt.t option;
   uncast : UncastOpt.t option;
-  lsp : LspOpt.t;
+  metrics : MetricsOpt.t option;
+  pprint : PprintOpt.t option;
+  cg : CgOpt.t option;
+  lsp : LspOpt.t option;
   }
-  let create ?kernel ?files ?wp ?metacsl ?uncast ~lsp () : t = {
+  let create ?kernel ?files ?wp ?metacsl ?uncast ?metrics ?pprint ?cg ?lsp () : t = {
     verbose = !Configuration.global_params.acslLsp;
     files = (match kernel, files with
       | None, _ -> None
@@ -233,6 +293,9 @@ module Command = struct
     wp = wp;
     metacsl = metacsl;
     uncast = uncast;
+    metrics = metrics;
+    pprint = pprint;
+    cg = cg;
     lsp = lsp
   }
   let string_of_t (options : t) : string =
@@ -243,10 +306,17 @@ module Command = struct
     let kernel_opt = match options.kernel with None -> "" | Some k -> KernelOpt.string_of_t k in
     let uncast_opt = match options.uncast with None -> "" | Some u -> option_if_not_empty_string (UncastOpt.string_of_t u) "-then-last" in
     let wp_opt = match options.wp with None -> "" | Some w -> option_if_not_empty_string (WpOpt.string_of_t w) "" in
+    let metrics_opt = match options.metrics with None -> "" | Some m -> option_if_not_empty_string (MetricsOpt.string_of_t m) "" in
+    let pprint_opt = match options.pprint with None -> "" | Some p -> option_if_not_empty_string (PprintOpt.string_of_t p) "" in
     let metacsl_opt = match options.metacsl with None -> "" | Some m -> option_if_not_empty_string (MetacslOpt.string_of_t m) "-then-last" in
-    let lsp_opt = option_if_not_empty_string (LspOpt.string_of_t options.lsp) "" in
-    Printf.sprintf "%s %s %s %s %s %s ; echo \"FRAMA-C EXIT CODE: $?\"" common_opt kernel_opt uncast_opt metacsl_opt wp_opt lsp_opt
-end
+    let cg_opt = match options.cg with None -> "" | Some c -> option_if_not_empty_string (CgOpt.string_of_t c) "" in
+    let lsp_opt = match options.lsp with None -> "" | Some l -> option_if_not_empty_string (LspOpt.string_of_t l) "" in
+    let frama_c_cmd = Printf.sprintf "%s %s %s %s %s %s %s %s %s" common_opt kernel_opt uncast_opt metacsl_opt wp_opt metrics_opt pprint_opt cg_opt lsp_opt in
+    let exit_value_cmd = "echo \"FRAMA-C EXIT CODE: $?\"" in
+    let session_dir_cmd = "mkdir -p .frama-c" in
+    let cg_cmd = match options.cg with None -> "" | Some c -> Printf.sprintf "%s" c.cmd in
+    Printf.sprintf "%s; %s; %s; %s" session_dir_cmd frama_c_cmd exit_value_cmd cg_cmd
+  end
 
 
 let registerCapabilityRequest json =
@@ -652,14 +722,13 @@ let notif_handler json_string server_sock =
 
   | "showGlobalMetrics" -> 
     Lsp.Self.debug ~level:4 "global metrics\n%!";
-    let project_filename = if not (String.equal (!Configuration.global_params.metricsOutput) "") then (Filename.remove_extension !Configuration.global_params.metricsOutput) else "project_metrics" in
-    let _kernel_opt = KernelOpt.create () in
-    let _metric_opt = MetricsOpt.create () in
+    let kernel_opt = KernelOpt.create () in
+    let metrics_opt = MetricsOpt.create () in
     let feature = ComputeMetrics_feature in
-    let command = Printf.sprintf "frama-c %s %s %s -then %s -then -lsp -lsp-no-cmdline -lsp-debug=%s -lsp-metrics=\"%s/%s\" ; echo \"FRAMA-C EXIT CODE: $?\""
-    (source_files ()) (cpp_extra_args ()) (kernel_args ()) (global_metrics_args ()) (debug ()) (!rootPath) project_filename in
-    Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
-    Lsp_types.CONTENT (execute_command command feature);
+    let command = Command.create ~kernel:kernel_opt ~metrics:metrics_opt () in
+    let command_str = (Command.string_of_t command) in
+    Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
+    Lsp_types.CONTENT (execute_command command_str feature);
 
   | "displayCIL" -> 
       Lsp.Self.debug ~level:4 "displayCIL\n%!";
@@ -667,14 +736,14 @@ let notif_handler json_string server_sock =
         | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
         | _ -> Lsp.Self.debug ~level:3 "No params for displayCIL \n%!"; assert false
       in
-      let feature = ComputeCIL_feature in    
-      let command = Printf.sprintf "frama-c %s %s %s -then -print -no-unicode -ocode \"%s_fc.c\" -lsp -lsp-no-cmdline -lsp-debug=%s -lsp-display-cil=\"%s\" ; echo \"FRAMA-C EXIT CODE: $?\""
-      file (cpp_extra_args ()) (kernel_args ())
-      (Filename.remove_extension file)
-      (debug ())
-      (Filename.remove_extension file) in
-      Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
-      Lsp_types.CONTENT (execute_command command feature);
+      let feature = ComputeCIL_feature in
+      let kernel_opt = KernelOpt.create () in
+      let file_basename = (Filename.remove_extension (Filename.basename (String.trim file))) in
+      let pprint_opt = PprintOpt.create ~file:file_basename () in
+      let command = Command.create ~kernel:kernel_opt ~files:[file] ~pprint:pprint_opt () in
+      let command_str = (Command.string_of_t command) in
+      Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
+      Lsp_types.CONTENT (execute_command command_str feature);
 
   | "displayCIL_noannot" -> 
         Lsp.Self.debug ~level:4 "displayCIL_noannot\n%!";
@@ -683,13 +752,13 @@ let notif_handler json_string server_sock =
           | _ -> Lsp.Self.debug ~level:3 "No params for displayCIL \n%!"; assert false
         in
         let feature = ComputeCIL_feature in
-        let command = Printf.sprintf "frama-c %s %s %s -then -print -no-unicode -ocode \"%s_fc.c\" -no-annot -keep-comments -lsp -lsp-no-cmdline -lsp-debug=%s -lsp-display-cil=\"%s\" ; echo \"FRAMA-C EXIT CODE: $?\""
-        file (cpp_extra_args ()) (kernel_args ())
-        (Filename.remove_extension file)
-        (debug ())
-        (Filename.remove_extension file) in
-        Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
-        Lsp_types.CONTENT (execute_command command feature);
+        let kernel_opt = KernelOpt.create () in
+        let file_basename = (Filename.remove_extension (Filename.basename (String.trim file))) in
+        let pprint_opt = PprintOpt.create ~file:file_basename ~no_annot:true () in
+        let command = Command.create ~kernel:kernel_opt ~files:[file] ~pprint:pprint_opt () in
+        let command_str = (Command.string_of_t command) in
+        Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
+        Lsp_types.CONTENT (execute_command command_str feature);
 
   | "showLocalMetrics" -> 
     Lsp.Self.debug ~level:4 "local metrics\n%!";
@@ -697,12 +766,14 @@ let notif_handler json_string server_sock =
         | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
         | _ -> Lsp.Self.debug ~level:3 "No params for metrics \n%!"; assert false
     in
+    let file_basename = (Filename.remove_extension (Filename.basename (String.trim file))) in
     let feature = ComputeMetrics_feature in
-    let command = Printf.sprintf "frama-c %s %s %s -then -metrics -metrics-by-function -metrics-output=\"%s.txt\" -then -lsp -lsp-no-cmdline -lsp-debug=%s -lsp-metrics=\"%s\" ; echo \"FRAMA-C EXIT CODE: $?\""
-    file (cpp_extra_args ()) (kernel_args ())
-    (Filename.remove_extension file) (debug ()) (Filename.remove_extension file) in
-    Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
-    Lsp_types.CONTENT (execute_command command feature)
+    let kernel_opt = KernelOpt.create () in
+    let metrics_opt = MetricsOpt.create ~file:file_basename () in
+    let command = Command.create ~kernel:kernel_opt ~files:[file] ~metrics:metrics_opt () in
+    let command_str = (Command.string_of_t command) in
+    Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
+    Lsp_types.CONTENT (execute_command command_str feature)
   
   | "computeCG" -> 
     Lsp.Self.debug ~level:4 "computeCG\n%!";
@@ -711,9 +782,15 @@ let notif_handler json_string server_sock =
         | _ -> Lsp.Self.debug ~level:3 "No params for computeCG \n%!"; assert false
     in
     let feature = ComputeCallGraph_feature in
-    let command = "frama-c "^file^(cpp_extra_args ())^(kernel_args ())^" -then"^(callgraph_args (Filename.remove_extension file) ())^" -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-compute-cg=\""^(get_cg_output_file (Filename.remove_extension file) ())^"\" ; echo \"FRAMA-C EXIT CODE: $?\"" in
-    Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
-    Lsp_types.CONTENT (execute_command command feature)
+    let file_basename = (Filename.remove_extension (Filename.basename (String.trim file))) in
+    let kernel_opt = KernelOpt.create () in
+    let cg_opt = CgOpt.create ~file:file_basename () in
+    let command = Command.create ~kernel:kernel_opt ~files:[file] ~cg:cg_opt () in
+    let command_str = (Command.string_of_t command) in
+    (* let command = "frama-c "^file^(cpp_extra_args ())^(kernel_args ())^" -then"^(callgraph_args (Filename.remove_extension file) ())^
+    " -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-compute-cg=\""^(get_cg_output_file (Filename.remove_extension file) ())^"\" ; echo \"FRAMA-C EXIT CODE: $?\"" in *)
+    Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
+    Lsp_types.CONTENT (execute_command command_str feature)
 
     (*
   | "workspace/didChangeConfiguration" ->

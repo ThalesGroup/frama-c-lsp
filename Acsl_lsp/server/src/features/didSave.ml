@@ -18,19 +18,29 @@ let publishResult id result : Json.json =
   let lsp_message = (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:(`String result) ()) in
   Lsp_types.ResponseMessage.json_of_t lsp_message
 
-let publishDiagnostics_notification filename dlist accumulated_list : Json.json list =
+
+let rec remove_duplicate_diagnostics dlist =
   match dlist with
-    | [] -> []
-    | elem :: _l ->
-      let dlist =
-        if (List.length dlist) < 20 then dlist
-        else [elem]
-      in
-      let lsp_notification_params = Lsp_types.PublishDiagnosticsParams.create ~uri:filename ~diagnostics:dlist () in
-      let json_notification_params = Lsp_types.PublishDiagnosticsParams.json_of_t lsp_notification_params in
-      let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"textDocument/publishDiagnostics" ~params:json_notification_params () in
-      let json_notification = Lsp_types.NotificationMessage.json_of_t lsp_notification in
-      json_notification :: accumulated_list
+  | [] -> []
+  | elem :: l when (List.mem elem l) -> (remove_duplicate_diagnostics l)
+  | elem :: l -> elem :: (remove_duplicate_diagnostics l)
+
+
+let rec extract_hd_elems dlist nb res =
+  match dlist with
+    | [] -> res
+    | elem :: l when (nb > 0) -> extract_hd_elems l (nb - 1) (elem :: res)
+    | _ -> res
+
+
+let publishDiagnostics_notification filename dlist accumulated_list : Json.json list =
+  let dlist = remove_duplicate_diagnostics dlist in
+  let dlist = extract_hd_elems dlist 20 [] in
+  let lsp_notification_params = Lsp_types.PublishDiagnosticsParams.create ~uri:filename ~diagnostics:dlist () in
+  let json_notification_params = Lsp_types.PublishDiagnosticsParams.json_of_t lsp_notification_params in
+  let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"textDocument/publishDiagnostics" ~params:json_notification_params () in
+  let json_notification = Lsp_types.NotificationMessage.json_of_t lsp_notification in
+  json_notification :: accumulated_list
 
 let clear_diagnostics_no_uri =
   let lsp_notification_params = (Lsp_types.PublishDiagnosticsParams.create ~uri:("") ~diagnostics:([]) ()) in

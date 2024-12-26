@@ -179,7 +179,10 @@ export function activate(context: ExtensionContext) {
             ViewColumn.Beside
         );
 		console.log(Uri.file(window.activeTextEditor.document.uri.fsPath).toString());
-        const pdfFilePath = path.join((workspace.workspaceFolders[0].uri.fsPath), path.parse(window.activeTextEditor.document.uri.fsPath).name+".pdf");
+        //const pdfFilePath = path.join((workspace.workspaceFolders[0].uri.fsPath), path.parse(window.activeTextEditor.document.uri.fsPath).name+".pdf");
+		const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+		const filePath = window.activeTextEditor.document.uri.fsPath;
+		const pdfFilePath = path.join(workspacePath, ".frama-c/"+path.basename(filePath, path.extname(filePath))+"dot.pdf");
 		console.log (pdfFilePath);
         if (!fs.existsSync(pdfFilePath)) {
             window.showErrorMessage('PDF file not found');
