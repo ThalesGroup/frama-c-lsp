@@ -1,18 +1,8 @@
 
-
-(* "completionProvider": {
-              "triggerCharacters": [],
-              "allCommitCharacters": [],
-              "resolveProvider": false,
-              "completionItem": {
-                "labelDetailsSupport": false
-              }
-            }, *)
-
-
 let rootPath = ref ""
+let receivedShutdown = ref false
 
-type lsp_feature = 
+type lsp_feature =
   | DidSave_feature
   (*| DidClose_feature of (string) *)
   | FindDefinition_feature of (int * string * int * int)
@@ -81,14 +71,16 @@ module WpOpt = struct
     wp_no_volatile: bool;
     wp_prover: string list;
     wp_timeout: int;
-    wp_session: string
+    wp_session: string;
+    wp_smoke_tests: bool;
+    wp_smoke_timeout: int
   }
-  let create ?wp_prop ?wp_prover () = {
+  let create ?wp_prop ?wp_prover ?wp_smoke_tests ?wp_gen () = {
     wp = true;
     wp_rte = !Configuration.global_params.wpRte;
     wp_prop = wp_prop;
     wp_fct = [];
-    wp_gen = true;
+    wp_gen = (match wp_gen with None -> true | Some s -> s);
     wp_pruning = !Configuration.global_params.wpPruning;
     wp_check_memory_model = !Configuration.global_params.wpCheckMemoryModel;
     wp_no_volatile = !Configuration.global_params.wpVolatile;
@@ -98,7 +90,9 @@ module WpOpt = struct
       | Some p -> p
     );
     wp_timeout = !Configuration.global_params.wpTimeout;
-    wp_session = !Configuration.global_params.wpSession
+    wp_session = !Configuration.global_params.wpSession;
+    wp_smoke_tests = (match wp_smoke_tests with None -> false | Some s -> s);
+    wp_smoke_timeout = 3
   }
   let string_of_t (options : t) : string =
     let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in
@@ -114,7 +108,9 @@ module WpOpt = struct
     let wp_prover_opt = option_if_not_empty_string (String.concat "," options.wp_prover) "-wp-prover " in
     let wp_timeout_opt = Printf.sprintf "-wp-timeout %d" options.wp_timeout in
     let wp_session_opt = option_if_not_empty_string options.wp_session "-wp-session " in
-    Printf.sprintf "%s %s %s %s %s %s %s %s %s %s %s" wp_opt wp_prop_opt wp_fct_opt wp_gen_opt wp_rte_opt wp_pruning_opt wp_check_memory_model_opt wp_no_volatile_opt wp_prover_opt wp_timeout_opt wp_session_opt
+    let wp_smoke_tests_opt = option_if_true options.wp_smoke_tests "-wp-smoke-tests " in
+    let wp_smoke_timeout_opt = option_if_not_empty_string (Stdlib.string_of_int options.wp_smoke_timeout) "-wp-smoke-timeout " in
+    Printf.sprintf "%s %s %s %s %s %s %s %s %s %s %s %s %s" wp_opt wp_prop_opt wp_fct_opt wp_gen_opt wp_rte_opt wp_pruning_opt wp_check_memory_model_opt wp_no_volatile_opt wp_prover_opt wp_timeout_opt wp_session_opt wp_smoke_tests_opt wp_smoke_timeout_opt
 end
 
 module MetacslOpt = struct
@@ -319,100 +315,6 @@ module Command = struct
   end
 
 
-let registerCapabilityRequest json =
-  let msg = Lsp_types.RequestMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Str "register_capability") ~method_:"client/registerCapability" ~params:json () in
-  Lsp_types.RequestMessage.json_of_t (msg)
-
-let registration method_ = Lsp_types.Registration.create ~id:"registration" ~method_:method_ ()
-
-let registrationParams registrations =
-  let msg = Lsp_types.RegistrationParams.create ~registrations:registrations () in
-  Lsp_types.RegistrationParams.json_of_t (msg)
-
-let shutdown (req : Lsp_types.RequestMessage.t) : Json.json =
-  Lsp_types.ResponseMessage.json_of_t (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:req.id ~result:`Null ())
-
-let shutdown_error (req : Lsp_types.RequestMessage.t) : Json.json = 
-  let error_msg = Lsp_types.ResponseError.create ~code:(-32600) ~message:"Invalid request received after shutdown" () in
-  let msg = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:req.id ~error:(error_msg) () in
-  Lsp_types.ResponseMessage.json_of_t (msg)
-  
-let receivedShutdown = ref false
-  
-let debug () = Stdlib.string_of_int !Configuration.global_params.acslLsp
-
-let wp_diags () = !Configuration.global_params.diagnosticsWp
-
-let cpp_extra_args () = 
-  let includePaths = List.map (fun x -> " -I"^(!rootPath^"/"^(x))) (!Configuration.global_params.includePaths) in
-  let macros = List.map (fun x -> " -D"^x) (!Configuration.global_params.macros) in
-  let res = " -cpp-extra-args=\" -CC "^(String.concat " " includePaths)^(String.concat " " macros)^"\"" in
-  res
-
-let cpp_extra_args_acsl () = 
-  let includePaths = List.map (fun x -> " -I"^(!rootPath^"/"^(x))) (!Configuration.global_params.includePaths) in
-  let macros = List.map (fun x -> " -D"^x) (!Configuration.global_params.macros) in
-  let res = "\""^(String.concat " " includePaths)^(String.concat " " macros)^"\"" in
-  res
-
-let source_files () =
-  let sourceFiles = List.map (fun x -> (!rootPath)^"/"^x) (!Configuration.global_params.sourceFiles) in
-  (String.concat " " sourceFiles)
-  
-let kernel_args () = 
-  let args = ref "" in
-  let add_arg arg = args := !args^arg in
-  let not_empty s = not (String.equal s "") in
-  if not_empty (!Configuration.global_params.machdep) then add_arg (" -machdep=\""^(!Configuration.global_params.machdep)^"\"");
-  let generatedSpecCustom = String.concat "," (!Configuration.global_params.generatedSpecCustom) in
-  if not_empty generatedSpecCustom then add_arg (" -generated-spec-custom=\""^generatedSpecCustom^"\"");
-  if (not (!Configuration.global_params.keepUnusedSpecifiedFunctions)) then add_arg " -remove-unused-specified-functions";
-  if (!Configuration.global_params.aggressiveMerging) then add_arg " -aggressive-merging";
-  add_arg " -kernel-warn-key annot-error=active  -kernel-warn-key too-large-array=active";
-  add_arg " -no-unicode";
-  add_arg " -inline-calls @inline -remove-inlined @inline ";
-  !args
-
-let global_metrics_args () = 
-  let args = ref "" in
-  let add_arg arg = args := !args^arg in
-  let not_empty s = not (String.equal s "") in
-  add_arg " -metrics";
-  add_arg " -metrics-by-function";
-  if not_empty (!Configuration.global_params.metricsOutput)
-    then add_arg (" -metrics-output=\""^(!rootPath)^"/"^(Filename.remove_extension !Configuration.global_params.metricsOutput)^".txt\"")
-    else add_arg (" -metrics-output=\"project_metrics.txt\"");
-  !args 
-
-let callgraph_args file () = 
-  let args = ref "" in
-  let add_arg arg = args := !args^arg in
-  let not_empty s = not (String.equal s "") in
-  if not_empty (!Configuration.global_params.cgOutput) then add_arg (" -cg=\""^(!rootPath^"/"^(!Configuration.global_params.cgOutput))^".dot\"") else add_arg (" -cg=\""^file^".dot\"");
-  (* 'key:value' args *)
-  let cgRoots = String.concat "," (!Configuration.global_params.cgRoots) in
-  if not_empty cgRoots then add_arg (" -cg-roots=\""^cgRoots^"\"");
-  if (!Configuration.global_params.cgServices) then add_arg " -cg-services" else add_arg " -cg-no-services";
-  !args
-
-let get_cg_output_file file () = 
-  let not_empty s = not (String.equal s "") in
-  if not_empty (!Configuration.global_params.cgOutput) then ((!rootPath^"/"^(!Configuration.global_params.cgOutput))) else file
-
-let wp_args () = 
-  let args = ref "" in
-  let add_arg arg = args := !args^arg in
-  let not_empty s = not (String.equal s "") in
-  add_arg " -wp";
-  add_arg " -wp-gen";
-  if (!Configuration.global_params.wpRte) then add_arg " -wp-rte";
-  if not (!Configuration.global_params.wpPruning) then add_arg " -wp-no-pruning";
-  if (!Configuration.global_params.wpCheckMemoryModel) then add_arg " -wp-check-memory-model";
-  if (!Configuration.global_params.wpVolatile) then add_arg " -wp-volatile";
-  if not_empty (!Configuration.global_params.wpProver) then add_arg (" -wp-prover=\""^(!Configuration.global_params.wpProver)^"\"");
-  if not_empty (!Configuration.global_params.wpSession) then add_arg (" -wp-session=\""^(!Configuration.global_params.wpSession)^"\"");
-  add_arg (" -wp-timeout=\""^Stdlib.string_of_int(!Configuration.global_params.wpTimeout)^"\"");
-  !args
 
 let getnumber str = 
   let regex = Str.regexp {|[0-9]+|} in 
@@ -518,6 +420,14 @@ let execute_command command feature =
     )
 
 
+    (* "completionProvider": {
+              "triggerCharacters": [],
+              "allCommitCharacters": [],
+              "resolveProvider": false,
+              "completionItem": {
+                "labelDetailsSupport": false
+              }
+            }, *)
 
 let capabilities_str = {|{
   "jsonrpc": "2.0",
@@ -637,8 +547,9 @@ let rq_handler json_string =
       Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
       Lsp_types.CONTENT (execute_command command false ~id:request.id ());
 *)
-    | "shutdown" -> receivedShutdown := true; 
-      Lsp_types.CONTENT (Json.save_string (shutdown request));
+    | "shutdown" -> receivedShutdown := true;
+      let lsp_response = Lsp_types.ResponseMessage.json_of_t (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:request.id ~result:`Null ()) in
+      Lsp_types.CONTENT (Json.save_string lsp_response);
     | _ -> 
       Lsp_types.CONTENT (Json.save_string `Null)
   with exn ->  
@@ -654,8 +565,12 @@ let notif_handler json_string server_sock =
   | "initialized" -> 
     Lsp.Self.debug ~level:4 "initialized\n%!";
     send_request server_sock (Json.save_string Configuration.request_configurations);
-    let lsp_message = registerCapabilityRequest (registrationParams ([registration "workspace/didChangeConfiguration"])) in
-    Lsp_types.CONTENT (Json.save_string (lsp_message))
+    let registrations = [Lsp_types.Registration.create ~id:"registration" ~method_:"workspace/didChangeConfiguration" ()] in
+    let lsp_registration_param = Lsp_types.RegistrationParams.create ~registrations:registrations () in
+    let json_registration_params = Lsp_types.RegistrationParams.json_of_t lsp_registration_param in
+    let lsp_request = Lsp_types.RequestMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Str "register_capability") ~method_:"client/registerCapability" ~params:json_registration_params () in
+    let json_request = Lsp_types.RequestMessage.json_of_t lsp_request in
+    Lsp_types.CONTENT (Json.save_string (json_request))
 
     (*
   | "textDocument/didOpen" ->
@@ -699,7 +614,7 @@ let notif_handler json_string server_sock =
       begin
         let kernel_opt = KernelOpt.create () in
         let uncast_opt = UncastOpt.create () in
-        let wp_opt = WpOpt.create ~wp_prop:["@assigns"] ~wp_prover:["none"] () in
+        let wp_opt = WpOpt.create ~wp_prop:["smoke"] ~wp_prover:["alt-ergo"] ~wp_smoke_tests:true ~wp_gen:false () in
         let metacsl_opt = MetacslOpt.create () in
         let feature = DidSave_feature in
         let lsp_opt = LspOpt.create (feature) in
@@ -787,8 +702,6 @@ let notif_handler json_string server_sock =
     let cg_opt = CgOpt.create ~file:file_basename () in
     let command = Command.create ~kernel:kernel_opt ~files:[file] ~cg:cg_opt () in
     let command_str = (Command.string_of_t command) in
-    (* let command = "frama-c "^file^(cpp_extra_args ())^(kernel_args ())^" -then"^(callgraph_args (Filename.remove_extension file) ())^
-    " -then -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-compute-cg=\""^(get_cg_output_file (Filename.remove_extension file) ())^"\" ; echo \"FRAMA-C EXIT CODE: $?\"" in *)
     Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
     Lsp_types.CONTENT (execute_command command_str feature)
 
@@ -830,8 +743,6 @@ let error_handler json_string =
   Lsp_types.CONTENT (Json.save_string (Lsp_types.ResponseError.json_of_t (error)))
 
 let handle (json_string : string) server_sock : Lsp_types.lsp_result = 
-  (* if !receivedShutdown then 
-    Lsp_types.CONTENT (Shutdown.shutdown_error (Lsp_types.RequestMessage.t_of_json (Json.load_string json_string))) else  *)
   try
     let json = Json.load_string json_string in
     match json with

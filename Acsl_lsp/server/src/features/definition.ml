@@ -138,24 +138,21 @@ let retrieve_location (pos : Filepath.position) =
   | Some loc -> loc
   | None -> (pos,pos) 
 
-let find id definitionFile line ch : Json.json =
+let find id definitionFile line ch : string =
   let pos = Utils.to_filepath_position definitionFile line ch in
-  
   try 
-  let (pos1, pos2) = retrieve_location pos in
-
-  if pos1 = pos2 then 
-    Lsp_types.ResponseMessage.json_of_t (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:`Null ())
-  else
-    Lsp_types.ResponseMessage.json_of_t (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:
-      (Lsp_types.Location.json_of_t
-        (Lsp_types.Location.create 
-          (Filepath.normalize (Filepath.Normalized.to_pretty_string pos1.pos_path))
-          (Lsp_types.Range.create (Lsp_types.Position.create (pos1.pos_lnum - 1) (pos1.pos_cnum - pos1.pos_bol))
-            (Lsp_types.Position.create (pos2.pos_lnum - 1) (pos2.pos_cnum - pos2.pos_bol))
-          )
-        )
-      )
-      ()
-    )
-  with exn -> Utils.make_error (Printexc.to_string (exn)) (id)
+    let (pos1, pos2) = retrieve_location pos in
+    if pos1 = pos2 then 
+      let lsp_response = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:`Null () in
+      let json_response = Lsp_types.ResponseMessage.json_of_t lsp_response in
+      Json.save_string json_response
+    else
+      let lsp_position_1 = Lsp_types.Position.create (pos1.pos_lnum - 1) (pos1.pos_cnum - pos1.pos_bol) in
+      let lsp_position_2 = Lsp_types.Position.create (pos2.pos_lnum - 1) (pos2.pos_cnum - pos2.pos_bol) in
+      let lsp_range = Lsp_types.Range.create lsp_position_1 lsp_position_2 in
+      let lsp_location = Lsp_types.Location.create (Filepath.normalize (Filepath.Normalized.to_pretty_string pos1.pos_path)) lsp_range in
+      let json_location = Lsp_types.Location.json_of_t lsp_location in
+      let lsp_response = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:json_location () in
+      let json_response = Lsp_types.ResponseMessage.json_of_t lsp_response in
+      Json.save_string json_response
+  with exn -> Json.save_string (Utils.make_error (Printexc.to_string (exn)) (id))

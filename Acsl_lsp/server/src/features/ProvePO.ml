@@ -28,8 +28,8 @@ let is_position_between (line_check, char_check) (line1, char1) (line2, char2) =
 
 let get_property rootPath id file line ch : string =
   let proof_oblgs = ref [] in
-  Wp.Wpo.iter_on_goals (fun po ->
-    let (start,end_) = Property.location (Wp.Wpo.get_target po) in
+  let pprint_goal po = 
+    let (start,end_) = Property.location (Wp.Wpo.get_property po) in
     let po_file = Filepath.Normalized.to_pretty_string start.pos_path in
     let line1 = start.pos_lnum in 
     let line2 = end_.pos_lnum in 
@@ -37,11 +37,11 @@ let get_property rootPath id file line ch : string =
     let char2 = end_.pos_cnum - end_.pos_bol in 
     (* Lsp.Self.debug ~level:4 "po_file %s, begin : %d:%d, end : %d:%d,\ncurr_file : cursor : %d:%d\n%!" (rootPath^"/"^po_file) line1 char1 line2 char2 (line+1) ch; *)
     if (
-        (String.equal file (rootPath^"/"^po_file)) 
+        (String.equal file (rootPath^"/"^po_file))
         && is_position_between (line+1,ch) (line1, char1) (line2,char2)
-        && (Wp.WpPropId.is_requires (Wp.Wpo.get_target po))
-      ) 
-    then 
+        && (Wp.WpPropId.is_requires (Wp.Wpo.get_property po))
+      )
+    then
       proof_oblgs := (Pretty_utils.to_string (Wp.Wpo.pp_goal) po) :: !proof_oblgs
     else if (
           (String.equal file (rootPath^"/"^po_file)) 
@@ -49,10 +49,12 @@ let get_property rootPath id file line ch : string =
         ) 
     then 
       proof_oblgs := (Pretty_utils.to_string (Wp.Wpo.pp_goal) po) :: !proof_oblgs
-  );
+  in
+    
+  Wp.Wpo.iter_on_goals pprint_goal;
   let result = Json.of_string (String.concat "\n----------------------------\n" !proof_oblgs) in
   let result_msg =
-    match result with 
+    match result with
   | `String "" -> (`String "No proof obligations")
   | _ -> result
   in
