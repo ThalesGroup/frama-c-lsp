@@ -185,7 +185,7 @@ export function activate(context: ExtensionContext) {
 		const pdfFilePath = path.join(workspacePath, ".frama-c/"+path.basename(filePath, path.extname(filePath))+"dot.pdf");
 		console.log (pdfFilePath);
         if (!fs.existsSync(pdfFilePath)) {
-            window.showErrorMessage('PDF file not found');
+            window.showErrorMessage('PDF file'+ pdfFilePath +'not found');
             return;
         }
         const pdfFileUri = panel.webview.asWebviewUri(Uri.parse(pdfFilePath));
