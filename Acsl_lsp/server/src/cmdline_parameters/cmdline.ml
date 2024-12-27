@@ -97,6 +97,14 @@ module Show_POVC = Self.String
   let default = ""
 end)
 
+module Prove = Self.String
+(struct
+  let option_name = "-lsp-prove"
+  let help = "send back the proof status"
+  let arg_name = "file:fct:prop"
+  let default = ""
+end)
+
 let wrapper_port_framac = 8006
 let maxContLenBufSize = 50
 let maxPendingRequests = 20
@@ -151,6 +159,17 @@ let get_ComputeProofObligation_args () =
     )
   else None
 
+let get_Prove_args () =
+    let args = Prove.get () in
+    if not (String.trim args = "") then
+      (
+      let req_info = String.split_on_char ':' (Prove.get ()) in
+      let file = (List.nth req_info 0) in
+      let fct = (List.nth req_info 1) in
+      let prop = (List.nth req_info 2) in
+      Some (Root_path.get (), Id.get (), file, fct, prop)
+      )
+    else None
 
 let get_active_option () =
   let active_options = ref [] in
@@ -172,6 +191,10 @@ let get_active_option () =
   (match get_ComputeProofObligation_args () with
   | None -> ()
   | Some (root_path, id, file, line, ch) -> active_options := Lsp_handler.ComputeProofObligation_feature(root_path, id, file, line, ch) :: !active_options
+  );
+  (match get_Prove_args () with
+  | None -> ()
+  | Some (root_path, id, file, fct, prop) -> active_options := Lsp_handler.Prove_feature(root_path, id, file, fct, prop) :: !active_options
   );
   match !active_options with
   [] -> None
@@ -228,6 +251,7 @@ let run () =
       | Some Lsp_handler.ComputeCallGraph_feature -> []
       | Some Lsp_handler.ComputeMetrics_feature -> []
       | Some Lsp_handler.ComputeProofObligation_feature(root_path, id, file, line, ch) -> [(ShowPOVC.get_property root_path id file line ch)]
+      | Some Lsp_handler.Prove_feature(root_path, id, file, fct, prop) -> [(ProvePO.get_property_status root_path id file fct prop)]
       | None -> []
       in
       match data, (Cmdline_opt.get ()) with
