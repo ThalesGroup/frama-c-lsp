@@ -2,6 +2,8 @@
 let rootPath = ref ""
 let receivedShutdown = ref false
 
+let pid_list = ref []
+
 type lsp_feature =
   | DidSave_feature
   (*| DidClose_feature of (string) *)
@@ -349,12 +351,23 @@ let rec had_errors_in_channel ic =
   with End_of_file -> Lsp.Self.debug "\n%!"; true
 
 
-let execute_command command feature = 
+let execute_command command feature =
+  let pid = Unix.fork () in
+  if not (pid = 0) then (
+    pid_list := pid :: !pid_list;
+    Lsp.Self.debug ~level:2 "Request sent to Frama-C !\n%!";
+    let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Request sent to Frama-C !") () in
+    let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
+    let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
+    data, pid
+  )
+  else (
   let wrapper_sock = Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in 
   Unix.bind wrapper_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, 8006));
   Unix.listen wrapper_sock 100;
   let ic = Unix.open_process_in command in
   let frama_c_exit_with_errors = had_errors_in_channel ic in
+  Lsp.Self.debug ~level:2 "Read ic completed !!!\n%!";
   match frama_c_exit_with_errors with
   | true ->
     (
@@ -369,7 +382,7 @@ let execute_command command feature =
       ignore (Unix.close_process_in ic);
       Unix.close plugin_sock;
       Unix.close wrapper_sock;
-      request_str
+      request_str, pid
 
     | FindDefinition_feature (id, _file, _line, _column)
     | FindDeclaration_feature (id, _file, _line, _column)
@@ -380,7 +393,7 @@ let execute_command command feature =
       let lsp_message = (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~error:lsp_error_message ()) in
       let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_message) in
       Unix.close wrapper_sock;
-      data
+      data, pid
 
     | ComputeCIL_feature
     | ComputeCallGraph_feature
@@ -389,7 +402,7 @@ let execute_command command feature =
       let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
       let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
       Unix.close wrapper_sock;
-      data
+      data, pid
     )
   | false ->
     (
@@ -407,7 +420,7 @@ let execute_command command feature =
         ignore (Unix.close_process_in ic);
         Unix.close plugin_sock;
         Unix.close wrapper_sock;
-        request_str
+        request_str, pid
       | ComputeCIL_feature
       | ComputeCallGraph_feature
       | ComputeMetrics_feature ->
@@ -416,8 +429,8 @@ let execute_command command feature =
         let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
         let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
         Unix.close wrapper_sock;
-        data
-    )
+        data, pid
+    ))
 
 
     (* "completionProvider": {
@@ -466,7 +479,7 @@ let rq_handler json_string =
       let req_json = (Lsp_types.RequestMessage.json_of_t request) in
       let temp = Utils.remove_newline (Utils.remove_quotes (Json.save_string (Json.field "rootPath" (Json.field "params" req_json)))) in
       rootPath := temp;
-      Lsp_types.CONTENT (capabilities_str);
+      Lsp_types.CONTENT (capabilities_str), 1;
     | "textDocument/definition" -> 
       Lsp.Self.debug ~level:4 "definition\n%!";
       let params = match request.params with 
@@ -483,8 +496,8 @@ let rq_handler json_string =
       let command = Command.create ~kernel:kernel_opt ~lsp:lsp_opt () in
       let command_str = (Command.string_of_t command) in
       Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
-      let data = execute_command command_str feature in
-      Lsp_types.CONTENT data;
+      let data, pid = execute_command command_str feature in
+      Lsp_types.CONTENT data, pid;
       
     | "textDocument/declaration" -> 
       Lsp.Self.debug ~level:4 "declaration\n%!";
@@ -502,8 +515,8 @@ let rq_handler json_string =
       let command = Command.create ~kernel:kernel_opt ~lsp:lsp_opt () in
       let command_str = (Command.string_of_t command) in
       Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
-      let data = execute_command command_str feature in
-      Lsp_types.CONTENT (data);
+      let data, pid = execute_command command_str feature in
+      Lsp_types.CONTENT (data), pid;
 
     | "showPOVC" -> (* show proof obligation of specific function *)
       let id = (Utils.id_to_int request.id) in
@@ -531,7 +544,8 @@ let rq_handler json_string =
       in
       let command_str = (Command.string_of_t command) in
       Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
-      Lsp_types.CONTENT (execute_command command_str feature);
+      let data, pid = execute_command command_str feature in
+      Lsp_types.CONTENT (data), pid;
 (*
     | "textDocument/completion" -> 
       Lsp.Self.debug ~level:4 "completion\n%!";
@@ -549,12 +563,12 @@ let rq_handler json_string =
 *)
     | "shutdown" -> receivedShutdown := true;
       let lsp_response = Lsp_types.ResponseMessage.json_of_t (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:request.id ~result:`Null ()) in
-      Lsp_types.CONTENT (Json.save_string lsp_response);
+      Lsp_types.CONTENT (Json.save_string lsp_response), 1;
     | _ -> 
-      Lsp_types.CONTENT (Json.save_string `Null)
+      Lsp_types.CONTENT (Json.save_string `Null), 1
   with exn ->  
     Lsp.Self.debug ~level:3 "Backtrace : %s\n" (Printexc.get_backtrace ());
-    Lsp_types.CONTENT (Json.save_string (Utils.make_error (Printexc.to_string (exn)) (Utils.id_to_int id)))
+    Lsp_types.CONTENT (Json.save_string (Utils.make_error (Printexc.to_string (exn)) (Utils.id_to_int id))), 1
 
 
 let notif_handler json_string server_sock =
@@ -570,7 +584,8 @@ let notif_handler json_string server_sock =
     let json_registration_params = Lsp_types.RegistrationParams.json_of_t lsp_registration_param in
     let lsp_request = Lsp_types.RequestMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Str "register_capability") ~method_:"client/registerCapability" ~params:json_registration_params () in
     let json_request = Lsp_types.RequestMessage.json_of_t lsp_request in
-    Lsp_types.CONTENT (Json.save_string (json_request))
+    let data = Json.save_string (json_request) in
+    Lsp_types.CONTENT (data), 1
 
     (*
   | "textDocument/didOpen" ->
@@ -621,7 +636,8 @@ let notif_handler json_string server_sock =
         let command = Command.create ~kernel:kernel_opt ~files:[file_name] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt () in
         let command_str = (Command.string_of_t command) in
         Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
-        Lsp_types.CONTENT (execute_command command_str feature);
+        let data, pid = execute_command command_str feature in
+        Lsp_types.CONTENT (data), pid;
       end
     else 
       begin
@@ -632,7 +648,8 @@ let notif_handler json_string server_sock =
         let command = Command.create ~kernel:kernel_opt ~uncast:uncast_opt ~lsp:lsp_opt () in
         let command_str = (Command.string_of_t command) in
         Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
-        Lsp_types.CONTENT (execute_command command_str feature);
+        let data, pid = execute_command command_str feature in
+        Lsp_types.CONTENT (data), pid
       end
 
   | "showGlobalMetrics" -> 
@@ -643,7 +660,8 @@ let notif_handler json_string server_sock =
     let command = Command.create ~kernel:kernel_opt ~metrics:metrics_opt () in
     let command_str = (Command.string_of_t command) in
     Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
-    Lsp_types.CONTENT (execute_command command_str feature);
+    let data, pid = execute_command command_str feature in
+    Lsp_types.CONTENT (data), pid;
 
   | "displayCIL" -> 
       Lsp.Self.debug ~level:4 "displayCIL\n%!";
@@ -658,7 +676,8 @@ let notif_handler json_string server_sock =
       let command = Command.create ~kernel:kernel_opt ~files:[file] ~pprint:pprint_opt () in
       let command_str = (Command.string_of_t command) in
       Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
-      Lsp_types.CONTENT (execute_command command_str feature);
+      let data, pid = execute_command command_str feature in
+      Lsp_types.CONTENT (data), pid;
 
   | "displayCIL_noannot" -> 
         Lsp.Self.debug ~level:4 "displayCIL_noannot\n%!";
@@ -673,7 +692,8 @@ let notif_handler json_string server_sock =
         let command = Command.create ~kernel:kernel_opt ~files:[file] ~pprint:pprint_opt () in
         let command_str = (Command.string_of_t command) in
         Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
-        Lsp_types.CONTENT (execute_command command_str feature);
+        let data, pid = execute_command command_str feature in
+        Lsp_types.CONTENT (data), pid;
 
   | "showLocalMetrics" -> 
     Lsp.Self.debug ~level:4 "local metrics\n%!";
@@ -688,7 +708,8 @@ let notif_handler json_string server_sock =
     let command = Command.create ~kernel:kernel_opt ~files:[file] ~metrics:metrics_opt () in
     let command_str = (Command.string_of_t command) in
     Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
-    Lsp_types.CONTENT (execute_command command_str feature)
+    let data, pid = execute_command command_str feature in
+    Lsp_types.CONTENT (data), pid
   
   | "computeCG" -> 
     Lsp.Self.debug ~level:4 "computeCG\n%!";
@@ -703,16 +724,17 @@ let notif_handler json_string server_sock =
     let command = Command.create ~kernel:kernel_opt ~files:[file] ~cg:cg_opt () in
     let command_str = (Command.string_of_t command) in
     Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
-    Lsp_types.CONTENT (execute_command command_str feature)
+    let data, pid = execute_command command_str feature in
+    Lsp_types.CONTENT (data), pid
 
-    (*
   | "workspace/didChangeConfiguration" ->
     Lsp.Self.debug ~level:4 "didChangeConfiguration\n%!";
-    Lsp_types.CONTENT (Json.save_string (Configuration.request_configurations));
-  *)
+    let data = Json.save_string (Configuration.request_configurations) in
+    Lsp_types.CONTENT (data), 1;
+
   | "exit" -> if !receivedShutdown then Unix._exit 0 else Unix._exit 1
   | _ -> 
-      Lsp_types.EMPTY ()
+      Lsp_types.EMPTY (), 1
 
 
 
@@ -727,9 +749,9 @@ let result_handler json_string =
   match id with
   | Lsp_types.Str "ask_configs" -> (* if the result is request_configurations *)
     Configuration.save_configs (result);
-    Lsp_types.EMPTY ();
+    Lsp_types.EMPTY (), 1;
   | _ -> 
-    Lsp_types.EMPTY ()
+    Lsp_types.EMPTY (), 1
 
 (* todo : implement client error handling with different error codes *)
 let error_handler json_string = 
@@ -740,9 +762,10 @@ let error_handler json_string =
     | Some err -> err 
     | None -> Lsp.Self.debug ~level:3 "No error \n%!"; assert false
   in 
-  Lsp_types.CONTENT (Json.save_string (Lsp_types.ResponseError.json_of_t (error)))
+  let data = Json.save_string (Lsp_types.ResponseError.json_of_t (error)) in
+  Lsp_types.CONTENT (data), 1
 
-let handle (json_string : string) server_sock : Lsp_types.lsp_result = 
+let handle (json_string : string) server_sock : (Lsp_types.lsp_result * int) =
   try
     let json = Json.load_string json_string in
     match json with

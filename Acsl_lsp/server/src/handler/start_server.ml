@@ -5,8 +5,6 @@ let wrapper_port = 8006
 let defaultProtocolType = 0
 let addr = Unix.inet_addr_of_string "127.0.0.1"
 
-
-
 module StringMap = Map.Make(String)
 
 (*
@@ -111,17 +109,23 @@ let handle_request server_sock =
       let _req_data_len = Unix.read server_sock data_buf 0 data_size in
       let request_str = (Bytes.to_string data_buf) in
       Lsp.Self.debug ~level:3 "Received from client : %s\n\n%!" request_str;
-      let response : Lsp_types.lsp_result = Lsp_handler.handle request_str server_sock in
-      match response with 
-      | CONTENT string_json -> 
+      let (response, pid) : (Lsp_types.lsp_result * int) = Lsp_handler.handle request_str server_sock in
+      match response with
+      | CONTENT string_json ->
         Lsp.Self.debug ~level:3 "Sending to client : %s\n\n%!" string_json;
         let string_json_list = Str.split (Str.regexp ":::") string_json in
         List.iter update_empty_diagnostics string_json_list;
-        StringMap.iter (send_empty_diagnostics server_sock) !diag_map;        
-        List.iter (send_request server_sock) (string_json_list); 
-      | EMPTY _ -> ()
-    with exn -> 
-      Lsp.Self.debug ~level:3 "Could not handle the previous request : %s, %s\n" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ())
+        StringMap.iter (send_empty_diagnostics server_sock) !diag_map;
+        List.iter (send_request server_sock) (string_json_list);
+        pid
+      | EMPTY _ -> pid
+    with exn ->
+      Lsp.Self.debug ~level:3 "Server is busy : %s, %s\n" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
+      let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Error ~message: "Server is busy !" () in
+      let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
+      let json_notification = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
+      send_request server_sock json_notification;
+      Unix._exit 0
       
 
 let connect () =
@@ -131,6 +135,9 @@ let connect () =
   Lsp.Self.debug ~level:4 "Connected on port %d\n%!" server_port;
   let server_sock = Unix.descr_of_in_channel ic in
   while true do
-    handle_request server_sock;
+    let pid = handle_request server_sock in
     flush oc;
+    if (pid = 0) then Unix._exit 0
+    else if (pid = 1) then ()
+    else ignore (Unix.waitpid [Unix.WNOHANG] (-1))
   done;
