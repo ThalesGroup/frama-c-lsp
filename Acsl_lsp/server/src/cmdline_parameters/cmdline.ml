@@ -25,6 +25,7 @@ module Did_save = Self.False (* filename *)
   let help = "Publish diagnostics each time a file is saved"
 end)
 
+(*
 module Did_close = Self.String (* filename *)
 (struct
   let option_name = "-lsp-did-close"
@@ -32,6 +33,7 @@ module Did_close = Self.String (* filename *)
   let arg_name = "file"
   let default = ""
 end)
+ *)
 
 let () = Parameter_customize.do_not_projectify ()
 module Handler_opt = Self.False
@@ -87,35 +89,11 @@ module Root_path = Self.String
   let default = ""
 end)
 
-module Display_CIL = Self.String
-(struct
-  let option_name = "-lsp-display-cil"
-  let help = "send back the ast of the current file to editor"
-  let arg_name = "filename without extension"
-  let default = ""
-end)
-
-module Compute_CG = Self.String
-(struct
-  let option_name = "-lsp-compute-cg"
-  let help = "send back the callgraph of the current file to the editor"
-  let arg_name = "filename without extension"
-  let default = ""
-end)
-
 module Show_POVC = Self.String
 (struct
   let option_name = "-lsp-show-povc"
   let help = "send back the povc of the located property"
   let arg_name = "file:line:character"
-  let default = ""
-end)
-
-module Show_metrics = Self.String
-(struct
-  let option_name = "-lsp-metrics"
-  let help = "send metrics"
-  let arg_name = "filename without extension"
   let default = ""
 end)
 
@@ -137,11 +115,7 @@ let send_response_list plugin_sock response_list =
   send_response plugin_sock response
 
 let is_active_DidSave () = (Did_save.get ())
-let is_active_DidClose () = not (String.equal (Did_close.get ()) "")
-let get_DidClose_args () =
-  let args = Did_close.get () in
-  if not (String.trim args = "") then Some (args)
-  else None
+
 let get_FindDefinition_args () = 
   let args = Find_def.get () in
   if not (String.trim args = "") then
@@ -164,9 +138,7 @@ let get_FindDeclaration_args () =
     Some (Id.get (), file, line, ch)
     )
   else None
-let is_active_ComputeCIL () = not (String.equal (Display_CIL.get ()) "")
-let is_active_ComputeCallGraph () = not (String.equal (Compute_CG.get ()) "")
-let is_active_ComputeMetrics () = not (String.equal (Show_metrics.get ()) "")
+
 let get_ComputeProofObligation_args () =
   let args = Show_POVC.get () in
   if not (String.trim args = "") then
@@ -197,9 +169,6 @@ let get_active_option () =
   | None -> ()
   | Some (id, file, line, ch) -> active_options := Lsp_handler.FindDeclaration_feature(id, file, line, ch) :: !active_options
   );
-  if is_active_ComputeCIL () then active_options := Lsp_handler.ComputeCIL_feature :: !active_options;
-  if is_active_ComputeCallGraph () then active_options := Lsp_handler.ComputeCallGraph_feature :: !active_options;
-  if is_active_ComputeMetrics () then active_options := Lsp_handler.ComputeMetrics_feature :: !active_options;
   (match get_ComputeProofObligation_args () with
   | None -> ()
   | Some (root_path, id, file, line, ch) -> active_options := Lsp_handler.ComputeProofObligation_feature(root_path, id, file, line, ch) :: !active_options
@@ -251,70 +220,15 @@ let run () =
       let feature = get_active_option () in
       let data = 
       match feature with
-      | Some Lsp_handler.DidSave_feature -> 
-        let data = List.map Json.save_string (DidSave.handle ()) in
-        data
-        (*
-      | Some Lsp_handler.DidClose_feature(file) ->
-        let data = Json.save_string (DidClose.handle (file)) in
-        data :: []
-        *)
-      | Some Lsp_handler.FindDefinition_feature(id, file, line, ch) ->
-        let data = Json.save_string (Definition.find id file line ch) in
-        data :: []
-      | Some Lsp_handler.FindDeclaration_feature(id, file, line, ch) ->
-        let data = Json.save_string (Declaration.find id file line ch) in
-        data :: []
-      | Some Lsp_handler.ComputeCIL_feature -> 
-        let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Calculated CIL successfully, file generated : %s_fc.c" (Display_CIL.get ())) () in
-        let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
-        let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
-        data :: []
-      | Some Lsp_handler.ComputeCallGraph_feature ->
-        ignore (Sys.command ("dot -Tpdf "^(Compute_CG.get ())^".dot -o "^(Compute_CG.get ())^".pdf"));
-        Lsp.Self.debug ~level:2 ("Generated %s.dot and %s.pdf files") (Compute_CG.get ()) (Compute_CG.get ());
-        let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: ("Computed callgraph successfully, files generated : "^(Compute_CG.get ())^".dot and "^(Compute_CG.get ())^".pdf") () in
-        let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
-        let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
-        data :: []
-      | Some Lsp_handler.ComputeMetrics_feature ->
-        let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Calculated metrics successfully, file generated : %s.txt" (Show_metrics.get ())) () in
-        let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
-        let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
-        data :: []
-      | Some Lsp_handler.ComputeProofObligation_feature(root_path, id, file, line, ch) ->
-          let result = ShowPOVC.get_property root_path file line ch in
-          let result_msg =
-            match result with 
-          | `String "" -> (`String "No proof obligations")
-          | _ -> result
-          in
-          let lsp_message = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:result_msg () in
-          let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_message) in
-          data :: []
-        | None -> []
-        (* if not (String.equal (Acsl_wp.get ()) "") then 
-          (
-            (* let id = Id.get () in  *)
-            let file = Acsl_wp.get () in 
-            let data = Json.save_string (AcslWp.handle file) in
-  
-            match Cmdline_opt.get () with
-            | false -> Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
-              ignore (send_response plugin_sock data)
-            | true -> ignore (Lsp.Self.result "JSON result : %s\n%!" data) ;
-          );  *)        
-
-      (* if not (String.equal (Find_comp.get ()) "") then
-        (
-          let req_info = String.split_on_char ':' (Find_comp.get ()) in 
-          let int_id = (Id.get ()) in 
-          let data = Json.save_string (Completion.completion_items int_id (List.nth req_info 0) (Stdlib.int_of_string (List.nth req_info 1)) (Stdlib.int_of_string (List.nth req_info 2))) in
-          match Cmdline_opt.get () with
-          | false -> Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
-            ignore (send_response plugin_sock data)
-          | true -> ignore (Lsp.Self.result "JSON result : %s\n%!" data) ;
-        ); *)
+      | Some Lsp_handler.DidSave_feature -> List.map Json.save_string (DidSave.handle ())
+      (*| Some Lsp_handler.DidClose_feature(file) -> [Json.save_string (DidClose.handle (file))] *)
+      | Some Lsp_handler.FindDefinition_feature(id, file, line, ch) -> [(Definition.find id file line ch)]
+      | Some Lsp_handler.FindDeclaration_feature(id, file, line, ch) -> [(Declaration.find id file line ch)]
+      | Some Lsp_handler.ComputeCIL_feature -> []
+      | Some Lsp_handler.ComputeCallGraph_feature -> []
+      | Some Lsp_handler.ComputeMetrics_feature -> []
+      | Some Lsp_handler.ComputeProofObligation_feature(root_path, id, file, line, ch) -> [(ShowPOVC.get_property root_path id file line ch)]
+      | None -> []
       in
       match data, (Cmdline_opt.get ()) with
       | [], _ -> Self.debug ~level:2 "LSP activated !!!";
@@ -323,18 +237,6 @@ let run () =
         Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
         ignore (send_response_list plugin_sock data)
       | data, true -> List.iter (Lsp.Self.result "JSON result : %s\n%!" ) data
-  
-  (* with exn -> *)
-      (* Self.debug ~level:2 "Error while processing request : %s, Backtrace : %s\n%!" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ()); *)
-      (* let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:(Printexc.get_backtrace ()) () in *)
-      (* let lsp_message = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Str "frama_c_error") ~error: lsp_error_message () in *) 
-      (* let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_message) in *)
-      (* let data = data :: [] in *)
-      (* match Cmdline_opt.get () with *)
-      (* | false -> Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac)); *)
-      (* ignore (send_response_list plugin_sock data) *)
-      (* | true -> *)
-      (* List.iter (Lsp.Self.result "JSON result : %s\n%!" ) data *)
   )
 
 (* let () = Db.Main.extend run *)

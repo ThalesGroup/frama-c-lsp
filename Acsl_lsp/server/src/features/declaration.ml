@@ -177,31 +177,33 @@ let retrieve_location3 (pos : Filepath.position) new_globals =
 
   !declarations
 
-let create_lsp_locations (declarations) = 
-  let res = List.map (fun (loc : Cil_types.location) ->
-    (Lsp_types.Location.json_of_t
-      (Lsp_types.Location.create 
-        (Filepath.normalize (Filepath.Normalized.to_pretty_string (Stdlib.fst loc).pos_path))
-        (Lsp_types.Range.create 
-          (Lsp_types.Position.create ((Stdlib.fst loc).pos_lnum - 1) ((Stdlib.fst loc).pos_cnum - (Stdlib.fst loc).pos_bol))
-          (Lsp_types.Position.create ((Stdlib.snd loc).pos_lnum - 1) ((Stdlib.snd loc).pos_cnum - (Stdlib.snd loc).pos_bol))
-        )
-      )
-    )
-  ) declarations in
+let create_json_location (loc : Cil_types.location) = 
+  let lsp_position_1 = Lsp_types.Position.create ((Stdlib.fst loc).pos_lnum - 1) ((Stdlib.fst loc).pos_cnum - (Stdlib.fst loc).pos_bol) in
+  let lsp_position_2 = Lsp_types.Position.create ((Stdlib.snd loc).pos_lnum - 1) ((Stdlib.snd loc).pos_cnum - (Stdlib.snd loc).pos_bol) in
+  let lsp_range = Lsp_types.Range.create lsp_position_1 lsp_position_2 in
+  let lsp_location = Lsp_types.Location.create (Filepath.normalize (Filepath.Normalized.to_pretty_string (Stdlib.fst loc).pos_path)) lsp_range in
+  let json_location = Lsp_types.Location.json_of_t lsp_location in
+  json_location
+
+let create_json_locations locations =
+  let res = List.map create_json_location locations in
   Json.of_list res
   
 
-let find id declarationFile line ch : Json.json = 
+let find id declarationFile line ch : string = 
   let pos = Utils.to_filepath_position declarationFile line ch in
-
-  try 
-  let locations = retrieve_location pos in
-
-  if (List.length locations) = 0 then 
-    Lsp_types.ResponseMessage.json_of_t (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:`Null ())
-  else
-    Lsp_types.ResponseMessage.json_of_t (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:(create_lsp_locations locations) ())
-  with exn -> Utils.make_error (Printexc.to_string (exn)) (id)
+  try
+    let locations = retrieve_location pos in
+    if (List.length locations) = 0 then
+      let lsp_response = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:`Null () in
+      let json_response = Lsp_types.ResponseMessage.json_of_t lsp_response in
+      Json.save_string json_response
+    else
+      let lsp_response = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:(create_json_locations locations) () in
+      let json_response = Lsp_types.ResponseMessage.json_of_t lsp_response in
+      Json.save_string json_response
+  with exn ->
+    let json_response = Utils.make_error (Printexc.to_string (exn)) (id) in
+    Json.save_string json_response
 
     
