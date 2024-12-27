@@ -42,6 +42,10 @@
                     "when": "resourceLangId == acsl"
                 },
                 {
+                    "command": "provePO",
+                    "when": "resourceLangId == acsl"
+                },
+                {
                     "command": "showGlobalMetrics",
                     "when": "resourceLangId == acsl"
                 },
@@ -265,19 +269,23 @@
         "commands": [
             {
                 "command": "displayCIL",
-                "title": "Display CIL"
+                "title": "File CIL"
             },
             {
                 "command": "displayCIL_noannot",
-                "title": "Display CIL with No annotations"
+                "title": "File CIL (-no-annot)"
             },
             {
                 "command": "computeCG",
-                "title": "Compute Callgraph"
+                "title": "File CallGraph"
             },
             {
                 "command": "showPOVC",
-                "title": "Proof Obligation(s) of annotation"
+                "title": "Get WP Proof Obligation"
+            },
+            {
+                "command": "provePO",
+                "title": "Prove with WP"
             },
             {
                 "command": "showGlobalMetrics",
