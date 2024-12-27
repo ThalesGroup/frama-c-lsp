@@ -29,15 +29,16 @@ let is_position_between (line_check, char_check) (line1, char1) (line2, char2) =
 
 
 let get_property_status _rootPath id _file _fct _prop : string =
+  let verdict_msg = ref "" in
   Wp.Wpo.iter_on_goals (fun po -> 
     Lsp.Self.debug ~level:2 "gid:%s label:%s done!\n%!" (Wp.Wpo.get_gid po) (Wp.Wpo.get_label po);
     let proof_status, property = (Wp.Wpo.get_proof po) in
     match proof_status with
-    | `Passed -> Lsp.Self.debug ~level:2 "passed:%s\n%!" (Property.Names.get_prop_basename property)
-    | `Failed -> Lsp.Self.debug ~level:2 "failed:%s\n%!" (Property.Names.get_prop_basename property)
-    | `Unknown -> Lsp.Self.debug ~level:2 "unknown:%s\n%!" (Property.Names.get_prop_basename property)
+    | `Passed -> verdict_msg := Printf.sprintf "%spassed:%s\n%!" !verdict_msg (Property.Names.get_prop_basename property)
+    | `Failed -> verdict_msg := Printf.sprintf "%sfailed:%s\n%!" !verdict_msg (Property.Names.get_prop_basename property)
+    | `Unknown -> verdict_msg := Printf.sprintf "%sunknown:%s\n%!" !verdict_msg (Property.Names.get_prop_basename property)
     );
-  let result_msg = (`String "Proof not implemented yet !") in
+  let result_msg = (`String !verdict_msg) in
   let lsp_message = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:result_msg () in
   let json_message = Lsp_types.ResponseMessage.json_of_t lsp_message in
   Json.save_string json_message
