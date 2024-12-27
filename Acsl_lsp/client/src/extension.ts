@@ -151,21 +151,9 @@ export function activate(context: ExtensionContext) {
 		}
 	});
     const provePO = commands.registerCommand('provePO', async () => {
-            try {
-			const editor_1 = window.activeTextEditor;
-            if (!editor_1) {
-            window.showErrorMessage('No active editor found');
-            return;
-            }
-            // Get the cursor position
-            const cursorPosition = editor_1.selection.active;
-            // Get the word at the cursor position
-             const wordRange = editor_1.document.getWordRangeAtPosition(cursorPosition);
-            if (wordRange) {
-            // Extract the word as text
-            const word = editor_1.document.getText(wordRange);
-            const userInput = await window.showInputBox({
-                placeHolder: '@assigns', // Placeholder text in the input box
+		try {
+            const function_name = await window.showInputBox({
+                placeHolder: 'function', // Placeholder text in the input box
                 prompt: 'Please specify properties to prove', // The prompt message
                 validateInput: (input) => {
                     if (input.length === 0) {
@@ -173,10 +161,19 @@ export function activate(context: ExtensionContext) {
                     }
                     return null; // Return null to indicate valid input
             }});
-            const res = await client.sendRequest('provePO', [window.activeTextEditor.document.fileName, word, userInput]);
+			const property_name = await window.showInputBox({
+                placeHolder: 'property', // Placeholder text in the input box
+                prompt: 'Please specify properties to prove', // The prompt message
+                validateInput: (input) => {
+                    if (input.length === 0) {
+                        return 'Input cannot be empty!';
+                    }
+                    return null; // Return null to indicate valid input
+            }});
+            const res = await client.sendRequest('provePO', [window.activeTextEditor.document.fileName, function_name, property_name]);
             const wpResult = JSON.parse(JSON.stringify(res, null, 1));
             // create a new untitled document in a new tab
-            const newUri = Uri.parse('untitled:Proof Obligation');
+            const newUri = Uri.parse('untitled:Proof');
             const document = await workspace.openTextDocument(newUri);
             await languages.setTextDocumentLanguage(document, 'plaintext');
             const editor_2 = await window.showTextDocument(document, ViewColumn.Beside, true);
@@ -188,9 +185,6 @@ export function activate(context: ExtensionContext) {
                 editBuilder.delete(fullRange);
                 editBuilder.insert(editor_2.selection.start, wpResult);
             });
-			} else {
-            window.showInformationMessage('No word at cursor');
-            }
         }
         catch (err) {
             window.showErrorMessage('Failed to fetch and display WP proof: ' + err.message);
