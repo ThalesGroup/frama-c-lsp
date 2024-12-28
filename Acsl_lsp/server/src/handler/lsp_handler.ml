@@ -695,6 +695,23 @@ let notif_handler json_string server_sock =
     let data, pid = fork_execute_command command_str feature in
     Lsp_types.CONTENT (data), pid;
 
+  | "smokeTests" -> 
+      Lsp.Self.debug ~level:4 "displayCIL\n%!";
+      let file_name = match notif.params with 
+        | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
+        | _ -> Lsp.Self.debug ~level:3 "No params for displayCIL \n%!"; assert false
+      in
+      let kernel_opt = KernelOpt.create () in
+      let uncast_opt = UncastOpt.create () in
+      let wp_opt = WpOpt.create ~wp_prop:["smoke"] ~wp_prover:["alt-ergo"] ~wp_smoke_tests:true ~wp_gen:false () in
+      let feature = DidSave_feature in
+      let lsp_opt = LspOpt.create (feature) in
+      let command = Command.create ~kernel:kernel_opt ~files:[file_name] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt () in
+      let command_str = (Command.string_of_t command) in
+      Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
+      let data = execute_command command_str feature in
+      Lsp_types.CONTENT (data), 1;
+
   | "displayCIL" -> 
       Lsp.Self.debug ~level:4 "displayCIL\n%!";
       let file = match notif.params with 
