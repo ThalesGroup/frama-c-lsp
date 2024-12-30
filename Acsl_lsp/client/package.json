@@ -350,13 +350,12 @@
         "@typescript-eslint/parser": "^7.18.0",
         "eslint": "^8.57.0",
         "minimatch": "^3.1.2",
-        "mocha": "^9.2.2",
+        "mocha": "^11.0.1",
         "typescript": "^5.5.4"
     },
     "dependencies": {
         "@types/vscode-webview": "^1.57.5",
         "types": "^0.1.1",
-        "vsce": "^2.15.0",
         "vscode-languageclient": "^9.0.1"
     }
 }

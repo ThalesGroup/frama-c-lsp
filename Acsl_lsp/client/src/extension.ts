@@ -291,31 +291,39 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 			arguments: [vscode.Uri.parse("/home/user/git/L1/T0244734/acsl_lsp/Acsl_lsp/server/test_files/test1.c#L2")]
 		} as vscode.Command;
 
-	  this.data = [new TreeItem('cars', [
-		new TreeItem(
-			'Ford', [i1, new TreeItem('Focus'), new TreeItem('Mustang')]),
-		new TreeItem(
-			'BMW', [new TreeItem('320'), new TreeItem('X3'), new TreeItem('X5')])
-	  ])];
+		this.data = [new TreeItem("No goals !")];
+	  // this.data = [new TreeItem('cars', [
+		// new TreeItem(
+		// 	'Ford', [i1, new TreeItem('Focus'), new TreeItem('Mustang')]),
+		// new TreeItem(
+		//	'BMW', [new TreeItem('320'), new TreeItem('X3'), new TreeItem('X5')])
+	  // ])];
 	}
 
 	update(jsonData) {
 		// Check if the data is an array (list)
         if (Array.isArray(jsonData)) {
 			// Iterate over each item in the list
+			this.data = [];
 			jsonData.forEach((item, index) => {
-			  vscode.window.showInformationMessage(`Item ${index + 1}: ${JSON.stringify(item)}`);
+				let item_list = item.trim().split(":");
+				let verdict = item_list[0];
+				let property = item_list[1];
+				let file = item_list[2];
+				let line = item_list[3];
+				let t_item = new TreeItem(verdict + " : " + property);
+				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+				t_item.command = {
+					command: 'vscode.open',
+					arguments: [vscode.Uri.parse(workspacePath + "/" + file + "#L" + line)]
+				} as vscode.Command;
+				this.data.push(t_item);
+			  	// vscode.window.showInformationMessage(`Item ${index + 1}: ${JSON.stringify(item)}`);
+				vscode.window.showInformationMessage(file + "#L" + line);
 			});
 		  } else {
 			vscode.window.showErrorMessage('Parsed JSON is not an array.');
 		  }
-
-		this.data = [new TreeItem('cars', [
-			new TreeItem(
-				'Ford', [new TreeItem('JJJkkk'), new TreeItem('Mustang')]),
-			new TreeItem(
-				'BMW', [new TreeItem('320'), new TreeItem('X3'), new TreeItem('X5')])
-		  ])];
 	}
   
 	getTreeItem(element: TreeItem): vscode.TreeItem|Thenable<vscode.TreeItem> {
