@@ -1,5 +1,5 @@
 let server_port = 8005
-let wrapper_port = 8006
+(* let wrapper_port = 8006 *)
 (* let maxContLenBufSize = 50 *)
 (* let maxPendingRequests = 20 *)
 let defaultProtocolType = 0

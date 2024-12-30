@@ -202,11 +202,85 @@ let get_active_option () =
   | _ -> raise (Failure "Only one option can be specified at once")
 
 
+let file = ref ""
+
+let diagnostic loc severity msg source = 
+  Lsp_types.Diagnostic.create ~range:(Utils.get_lsp_range loc) ~severity:severity ~message:msg ~source:source ()
+  
+let escape_unicode str = (* todo : write proper function *)
+  let regex = Str.regexp {|\\[0-9]+|} in
+  Str.global_replace regex "unknown-char" str
+
+let diagnostics_handler (event : Log.event) = 
+    (* Lsp.Self.debug ~level:4 "diags handler : nb diags = %d\n%!" (List.length !diag_list); *)
+    let publish_to = ref "" in
+    let msg = event.evt_message in
+    let _category = match event.evt_category with
+      | Some c -> c 
+      | None -> "no-category"
+    in
+    let loc = match event.evt_source with 
+      | Some pos -> 
+        publish_to := Filepath.normalize (Filepath.Normalized.to_pretty_string pos.pos_path); 
+        Utils.real_loc (pos,pos); 
+      | None -> (
+        publish_to := Filepath.normalize !file;
+        Utils.dummyLoc (Filepath.normalize !file))
+    in
+    let diag_list = Start_server.StringMap.find_opt !publish_to !Start_server.diag_map in
+    let diag_list = match diag_list with
+      | None -> []
+      | Some l -> l
+    in
+    if (Utils.contains msg ~suffix:"syntax error" 
+      || Utils.contains msg ~suffix:"There were parsing errors in"
+      || Utils.contains msg ~suffix:"User Error"
+      || Utils.contains msg ~suffix:"invalid user input"
+      || Utils.contains msg ~suffix:"Invalid symbol"
+      || Utils.contains msg ~suffix:"before or at token"
+    ) then
+      (
+      Lsp.Self.debug ~level:4 "Error caught \n%!";
+      let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
+      Start_server.diag_map := Start_server.StringMap.add !publish_to (diag :: diag_list) !Start_server.diag_map
+      )
+    else
+    match event.evt_kind with 
+    | Log.Error ->  
+      Lsp.Self.debug ~level:4 "Error\n%!";
+      let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
+      Start_server.diag_map := Start_server.StringMap.add !publish_to (diag :: diag_list) !Start_server.diag_map
+    | Log.Failure ->
+      Lsp.Self.debug ~level:4 "Failure\n%!";
+      let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
+      Start_server.diag_map := Start_server.StringMap.add !publish_to (diag :: diag_list) !Start_server.diag_map
+    | Log.Warning ->
+      if (Utils.contains msg ~suffix:"Memory model hypotheses") then ()
+      else if (Utils.contains msg ~suffix:"Missing RTE guards") then ()
+      else (
+      Lsp.Self.debug ~level:4 "Warning\n%!";
+      let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Warning (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
+      Start_server.diag_map := Start_server.StringMap.add !publish_to (diag :: diag_list) !Start_server.diag_map
+      )
+      (* Lsp.Self.debug ~level:4 "diags handler warning : nb diags = %d\n%!" (List.length !diag_list); *)
+    | Log.Result -> 
+      Lsp.Self.debug ~level:4 "Result\n%!";
+    | Log.Debug -> 
+      Lsp.Self.debug ~level:4 "Debug\n%!";
+      let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Information (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
+      Start_server.diag_map := Start_server.StringMap.add !publish_to (diag :: diag_list) !Start_server.diag_map
+    | Log.Feedback ->
+      Lsp.Self.debug ~level:4 "Feedback\n%!"
+      (*
+      let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Information (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
+      Start_server.diag_map := Start_server.StringMap.add !publish_to (diag :: diag_list) !Start_server.diag_map
+      *)
+  
 
 let set_listerners () =
-    Log.add_listener ~plugin:"kernel" (DidSave.diagnostics_handler);
+    Log.add_listener ~plugin:"kernel" (diagnostics_handler);
     Lsp.Self.debug ~level:4 "kernel listener added\n%!";
-    Log.add_listener ~plugin:"wp" (DidSave.diagnostics_handler);
+    Log.add_listener ~plugin:"wp" (diagnostics_handler);
     Lsp.Self.debug ~level:4 "wp listener added\n%!"
 
 let send_dignostics exn =

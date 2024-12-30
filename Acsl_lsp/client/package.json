@@ -42,6 +42,10 @@
         "menus": {
             "editor/context": [
                 {
+                    "command": "smokeTests",
+                    "when": "resourceLangId == acsl"
+                },
+                {
                     "command": "displayCIL",
                     "when": "resourceLangId == acsl"
                 },
@@ -98,7 +102,7 @@
                 "icon": {
                     "light": "./images/logo-frama-c.png",
                     "dark": "./images/logo-frama-c.png"
-                  }
+                }
             }
         ],
         "grammars": [
@@ -121,7 +125,13 @@
                     "acslLsp": {
                         "scope": "window",
                         "type": "integer",
-                        "enum": [0, 1, 2, 3, 4],
+                        "enum": [
+                            0,
+                            1,
+                            2,
+                            3,
+                            4
+                        ],
                         "default": 4,
                         "description": "Specify ACSL LSP debug messages level. (4 = lowest severity, 1 = highest, 0 = off)."
                     }
@@ -284,6 +294,10 @@
         ],
         "commands": [
             {
+                "command": "smokeTests",
+                "title": "Smoke Tests"
+            },
+            {
                 "command": "displayCIL",
                 "title": "File CIL"
             },
@@ -342,6 +356,7 @@
     "dependencies": {
         "@types/vscode-webview": "^1.57.5",
         "types": "^0.1.1",
+        "vsce": "^2.15.0",
         "vscode-languageclient": "^9.0.1"
     }
 }

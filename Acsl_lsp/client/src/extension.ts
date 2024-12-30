@@ -90,6 +90,16 @@ export function activate(context: ExtensionContext) {
 	});
 	*/
 
+	const smokeTests = commands.registerCommand('smokeTests', async () => {
+		try {
+			await client.sendNotification('smokeTests', window.activeTextEditor.document.fileName);
+
+		} catch (err) {
+			window.showErrorMessage('Failed to run smoke tests: ' + err.message);
+			console.error('Error computing smoke tests:', err);
+		}
+	});
+
 	const displayCIL = commands.registerCommand('displayCIL', async () => {
 		try {
 			await client.sendNotification('displayCIL', window.activeTextEditor.document.fileName);
@@ -243,8 +253,7 @@ export function activate(context: ExtensionContext) {
     });
 
 	window.registerTreeDataProvider('WPPan', wpResults);
-
-	context.subscriptions.push(displayCIL, displayCIL_noannot, computeCG, showPOVC, provePO, showGlobalMetrics, showLocalMetrics, showCG);
+	context.subscriptions.push(smokeTests, displayCIL, displayCIL_noannot, computeCG, showPOVC, provePO, showGlobalMetrics, showLocalMetrics, showCG);
 
 	// Start the client. This will also launch the server
 	client.start();
