@@ -12,7 +12,11 @@
     "acslLsp": 3,
     "callgraph.output": "",
     "callgraph.roots": [],
-    "wp.prover": "none"
+    "wp.prover": "none",
+    "kernel.includePaths": [
+        "include_folder",
+        "include_folder2"
+    ]
 
 }
     

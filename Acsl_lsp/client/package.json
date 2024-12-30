@@ -19,12 +19,34 @@
         "vscode": "^1.85.0"
     },
     "activationEvents": [
-        "onLanguage:acsl"
+        "onLanguage:acsl",
+        "onView:myPanel"
     ],
     "main": "./out/extension",
     "contributes": {
+        "viewsContainers": {
+            "panel": [
+                {
+                    "id": "myPanel",
+                    "title": "FC Panel",
+                    "icon": "images/logo-frama-c.png"
+                }
+            ]
+        },
+        "views": {
+            "myPanel": [
+                {
+                    "id": "WPPan",
+                    "name": "WP pan"
+                }
+            ]
+        },
         "menus": {
             "editor/context": [
+                {
+                    "command": "smokeTests",
+                    "when": "resourceLangId == acsl"
+                },
                 {
                     "command": "displayCIL",
                     "when": "resourceLangId == acsl"
@@ -82,7 +104,7 @@
                 "icon": {
                     "light": "./images/logo-frama-c.png",
                     "dark": "./images/logo-frama-c.png"
-                  }
+                }
             }
         ],
         "grammars": [
@@ -105,7 +127,13 @@
                     "acslLsp": {
                         "scope": "window",
                         "type": "integer",
-                        "enum": [0, 1, 2, 3, 4],
+                        "enum": [
+                            0,
+                            1,
+                            2,
+                            3,
+                            4
+                        ],
                         "default": 4,
                         "description": "Specify ACSL LSP debug messages level. (4 = lowest severity, 1 = highest, 0 = off)."
                     }
@@ -268,6 +296,10 @@
         ],
         "commands": [
             {
+                "command": "smokeTests",
+                "title": "Smoke Tests"
+            },
+            {
                 "command": "displayCIL",
                 "title": "File CIL"
             },
@@ -316,7 +348,7 @@
         "@typescript-eslint/parser": "^7.18.0",
         "eslint": "^8.57.0",
         "minimatch": "^3.1.2",
-        "mocha": "^9.2.2",
+        "mocha": "^11.0.1",
         "typescript": "^5.5.4"
     },
     "dependencies": {
