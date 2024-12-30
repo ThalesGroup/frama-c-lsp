@@ -1,5 +1,6 @@
 import * as path from 'path';
 import { workspace, ExtensionContext, commands, extensions, window, ViewColumn, TabInputWebview, TextEditor, Uri, languages, Position, Range, env } from 'vscode';
+import * as vscode from 'vscode';
 import * as fs from 'fs';
 
 import {
@@ -150,6 +151,9 @@ export function activate(context: ExtensionContext) {
 			console.error('Error fetching WP proof obligation:', err);
 		}
 	});
+
+	const wpResults = new MyTreeDataProvider();
+
     const provePO = commands.registerCommand('provePO', async () => {
 		try {
             const function_name = await window.showInputBox({
@@ -171,20 +175,25 @@ export function activate(context: ExtensionContext) {
                     return null; // Return null to indicate valid input
             }});
             const res = await client.sendRequest('provePO', [window.activeTextEditor.document.fileName, function_name, property_name]);
-            const wpResult = JSON.parse(JSON.stringify(res, null, 1));
-            // create a new untitled document in a new tab
-            const newUri = Uri.parse('untitled:Proof');
-            const document = await workspace.openTextDocument(newUri);
-            await languages.setTextDocumentLanguage(document, 'plaintext');
-            const editor_2 = await window.showTextDocument(document, ViewColumn.Beside, true);
-            // delete previous content if any and set the content of the new document
-            editor_2.edit(editBuilder => {
-                const start = new Position(0, 0);
-                const end = new Position(document.lineCount, 0);
-                const fullRange = new Range(start, end);
-                editBuilder.delete(fullRange);
-                editBuilder.insert(editor_2.selection.start, wpResult);
-            });
+            
+			wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
+			wpResults.refresh();
+			window.showInformationMessage('Proof results updated in WP panel');
+
+			// const wpResult = JSON.parse(JSON.stringify(res, null, 1));
+            // // create a new untitled document in a new tab
+            // const newUri = Uri.parse('untitled:Proof');
+            // const document = await workspace.openTextDocument(newUri);
+            // await languages.setTextDocumentLanguage(document, 'plaintext');
+            // const editor_2 = await window.showTextDocument(document, ViewColumn.Beside, true);
+            // // delete previous content if any and set the content of the new document
+            // editor_2.edit(editBuilder => {
+            //    const start = new Position(0, 0);
+            //    const end = new Position(document.lineCount, 0);
+            //    const fullRange = new Range(start, end);
+            //    editBuilder.delete(fullRange);
+            //    editBuilder.insert(editor_2.selection.start, wpResult);
+            // });
         }
         catch (err) {
             window.showErrorMessage('Failed to fetch and display WP proof: ' + err.message);
@@ -233,6 +242,8 @@ export function activate(context: ExtensionContext) {
         panel.webview.html = getWebviewContent(pdfFileUri);
     });
 
+	window.registerTreeDataProvider('WPPan', wpResults);
+
 	context.subscriptions.push(displayCIL, displayCIL_noannot, computeCG, showPOVC, provePO, showGlobalMetrics, showLocalMetrics, showCG);
 
 	// Start the client. This will also launch the server
@@ -256,6 +267,87 @@ function getWebviewContent(pdfFileUri: Uri): string {
     `;
 }
 
+class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
+	private _onDidChangeTreeData: vscode.EventEmitter<TreeItem | undefined | null | void> = new vscode.EventEmitter<TreeItem | undefined | null | void>();
+    readonly onDidChangeTreeData: vscode.Event<TreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
+	// onDidChangeTreeData?: vscode.Event<TreeItem|null|undefined>|undefined;
+  
+	private data: TreeItem[];
+	// private items: TreeItem[] = [];
+
+	constructor() {
+		const i1 = new TreeItem('Fiesta');
+		i1.command = {
+			command: 'vscode.open',
+			arguments: [vscode.Uri.parse("/home/user/git/L1/T0244734/acsl_lsp/Acsl_lsp/server/test_files/test1.c#L2")]
+		} as vscode.Command;
+
+	  this.data = [new TreeItem('cars', [
+		new TreeItem(
+			'Ford', [i1, new TreeItem('Focus'), new TreeItem('Mustang')]),
+		new TreeItem(
+			'BMW', [new TreeItem('320'), new TreeItem('X3'), new TreeItem('X5')])
+	  ])];
+	}
+
+	update(jsonData) {
+		// Check if the data is an array (list)
+        if (Array.isArray(jsonData)) {
+			// Iterate over each item in the list
+			jsonData.forEach((item, index) => {
+			  vscode.window.showInformationMessage(`Item ${index + 1}: ${JSON.stringify(item)}`);
+			});
+		  } else {
+			vscode.window.showErrorMessage('Parsed JSON is not an array.');
+		  }
+
+		this.data = [new TreeItem('cars', [
+			new TreeItem(
+				'Ford', [new TreeItem('JJJkkk'), new TreeItem('Mustang')]),
+			new TreeItem(
+				'BMW', [new TreeItem('320'), new TreeItem('X3'), new TreeItem('X5')])
+		  ])];
+	}
+  
+	getTreeItem(element: TreeItem): vscode.TreeItem|Thenable<vscode.TreeItem> {
+	  return element;
+	}
+  
+	getChildren(element?: TreeItem|undefined): vscode.ProviderResult<TreeItem[]> {
+	  if (element === undefined) {
+		return this.data;
+	  }
+	  return element.children;
+	}
+
+	refresh(): void {
+		// Trigger the update by emitting the change event
+		this._onDidChangeTreeData.fire();
+	}
+	
+	addItem(newItem: TreeItem): void {
+		this.data.push(newItem);
+		this.refresh(); // Update the tree when an item is added
+	}
+	
+	removeItem(itemToRemove: TreeItem): void {
+		this.data = this.data.filter(item => item !== itemToRemove);
+		this.refresh(); // Update the tree when an item is removed
+	}
+
+  }
+  
+  class TreeItem extends vscode.TreeItem {
+	children: TreeItem[]|undefined;
+  
+	constructor(label: string, children?: TreeItem[]) {
+	  super(
+		  label,
+		  children === undefined ? vscode.TreeItemCollapsibleState.None :
+								   vscode.TreeItemCollapsibleState.Expanded);
+	  this.children = children;
+	}
+  }
 
 export function deactivate(): Thenable<void> | undefined {
 	if (!client) {
