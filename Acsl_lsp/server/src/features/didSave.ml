@@ -1,6 +1,7 @@
 
+module StringMap = Map.Make(String)
 
-
+let diag_map : Lsp_types.Diagnostic.t list StringMap.t ref = ref StringMap.empty
 
 let warn_categories = 
   List.map (fun x -> 
@@ -70,7 +71,7 @@ let remove_newline str =
   Str.matched_string str
 
 let handle () : Json.json list =
-  if Start_server.StringMap.is_empty !Start_server.diag_map then
+  if StringMap.is_empty !diag_map then
     (
     Lsp.Self.debug ~level:2 "Updated Diagnostics !\n%!";
     let lsp_notification_params = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Updated diagnostics !") () in
@@ -80,7 +81,7 @@ let handle () : Json.json list =
     [json_notification]
     )
   else
-    Start_server.StringMap.fold publishDiagnostics_notification !Start_server.diag_map []
+    StringMap.fold publishDiagnostics_notification !diag_map []
 
   (*
   Log.add_listener ~plugin:"kernel" (diagnostics_handler);
@@ -103,12 +104,12 @@ let handle () : Json.json list =
     (* let factory_setup = Wp.Generator.user_setup () in *)
     (* let generator = Wp.Generator.create ~setup:factory_setup () in *)
     (* let _proof_obligations = generator#compute_main() in *)
-    (* Start_server.StringMap.fold publishDiagnostics_notification !Start_server.diag_map [] *)
+    (* StringMap.fold publishDiagnostics_notification !diag_map [] *)
 
   (* with *)
   (* | _exn -> *)
     (* Lsp.Self.debug ~level:4 "DidSave error :  %s, Backtrace : %s\n%!" (Printexc.exn_slot_name _exn) (Printexc.get_backtrace ()); *)
-    (* Start_server.StringMap.fold publishDiagnostics_notification !Start_server.diag_map [] *)
+    (* StringMap.fold publishDiagnostics_notification !diag_map [] *)
 
   
 

@@ -15,7 +15,6 @@ type lsp_feature =
   | ComputeProofObligation_feature of (string * int * string * int * int)
   | Prove_feature of (string * int * string * string * string)
 
-
 module KernelOpt = struct
 type t = {
   include_paths : string list;
@@ -340,12 +339,51 @@ let readcontlen sock : string =
   ignore (Unix.read sock contlenbuf 0 1); (* consume remaining "\r\n" from request header *) (* note : why 1 ? *)
   !res
 
-let rec had_errors_in_channel ic =
+let get_notification_list filename dlist accumulated_list =
+  let lsp_notification_params = Lsp_types.PublishDiagnosticsParams.create ~uri:filename ~diagnostics:dlist () in
+  let json_notification_params = Lsp_types.PublishDiagnosticsParams.json_of_t lsp_notification_params in
+  let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"textDocument/publishDiagnostics" ~params:json_notification_params () in
+  let json_notification = Lsp_types.NotificationMessage.json_of_t lsp_notification in
+  let data = Json.save_string (json_notification) in
+  data :: accumulated_list
+
+let update_diag_data msg severity =
   try
-    let msg = Stdlib.input_line ic in
+    let msg_list = Str.split (Str.regexp ":") msg in
+    let filename, pos =
+      match msg_list with
+        | filename :: pos :: _ -> filename, (Stdlib.int_of_string pos)
+        | _ -> "", 0
+    in
+    Lsp.Self.debug "\t%s ---- %d\n%!" (filename) pos;
+    let pos = Utils.to_filepath_position filename pos 0 in
+    let loc = Utils.real_loc (pos, pos) in
+    let source = "kernel" in
+    let diag = Lsp_types.Diagnostic.create ~range:(Utils.get_lsp_range loc) ~severity:severity ~message:msg ~source:source () in
+    let diag_list = DidSave.StringMap.find_opt filename !DidSave.diag_map in
+    let diag_list = match diag_list with
+      | None -> []
+      | Some l -> l
+    in
+    let dlist = (diag :: diag_list) in
+    DidSave.diag_map := DidSave.StringMap.add filename dlist !DidSave.diag_map;
+  with _ -> ()
+
+let rec had_errors_in_channel oc =
+  try
+    let msg = Stdlib.input_line oc in
     Lsp.Self.debug "\t%s\n%!" (msg);
     if (Utils.contains msg ~suffix: "FRAMA-C EXIT CODE: 0") then false
-    else had_errors_in_channel ic
+    else if (Utils.contains msg ~suffix: ": fatal error:") then (
+      update_diag_data msg Lsp_types.DiagnosticSeverity.Error;
+      had_errors_in_channel oc)
+    else if (Utils.contains msg ~suffix: ": warning:") then (
+      update_diag_data msg Lsp_types.DiagnosticSeverity.Warning;
+      had_errors_in_channel oc)
+    else if (Utils.contains msg ~suffix: ": note:") then (
+      update_diag_data msg Lsp_types.DiagnosticSeverity.Warning;
+      had_errors_in_channel oc)
+    else had_errors_in_channel oc
   with End_of_file -> Lsp.Self.debug "\n%!"; true
 
 
@@ -355,10 +393,13 @@ let execute_command command feature =
   let wrapper_sock = Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in
   Unix.bind wrapper_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, 8006));
   Unix.listen wrapper_sock 100;
-  let ic = Unix.open_process_in command in
-  let frama_c_exit_with_errors = had_errors_in_channel ic in
+  let env = Unix.environment () in
+  let ic, oc, ec = Unix.open_process_full command env in
+  let frama_c_exit_with_error = had_errors_in_channel ic in
+  let _ = had_errors_in_channel ec in
+  let special_errors = DidSave.StringMap.fold get_notification_list !DidSave.diag_map [] in
   Lsp.Self.debug ~level:2 "Read ic completed !!!\n%!";
-  match frama_c_exit_with_errors with
+  match frama_c_exit_with_error with
   | true ->
     (
     match feature with
@@ -369,10 +410,18 @@ let execute_command command feature =
       let buffer = Bytes.make data_size '0' in
       let _req_data_len = Unix.read plugin_sock buffer 0 data_size in
       let request_str = (Bytes.to_string buffer) in
-      ignore (Unix.close_process_in ic);
+      ignore (Unix.close_process_full (ic, oc, ec));
       Unix.close plugin_sock;
       Unix.close wrapper_sock;
-      request_str
+      let data =
+        match special_errors, (String.trim request_str = "") with
+        | [], true -> ""
+        | [], false -> request_str
+        | l, true -> String.concat ":::" l
+        | l, false -> (String.concat ":::" l) ^ ":::" ^ request_str
+      in
+      data
+
 
     | FindDefinition_feature (id, _file, _, _)
     | FindDeclaration_feature (id, _file, _, _)
@@ -409,10 +458,17 @@ let execute_command command feature =
         let buffer = Bytes.make data_size '0' in
         let _req_data_len = Unix.read plugin_sock buffer 0 data_size in
         let request_str = (Bytes.to_string buffer) in
-        ignore (Unix.close_process_in ic);
+        ignore (Unix.close_process_full (ic, oc, ec));
         Unix.close plugin_sock;
         Unix.close wrapper_sock;
-        request_str
+        let data =
+          match special_errors, (String.trim request_str = "") with
+          | [], true -> ""
+          | [], false -> request_str
+          | l, true -> String.concat ":::" l
+          | l, false -> (String.concat ":::" l) ^ ":::" ^ request_str
+        in
+        data  
       | ComputeCIL_feature
       | ComputeCallGraph_feature
       | ComputeMetrics_feature ->
@@ -671,7 +727,8 @@ let notif_handler json_string server_sock =
         let data = execute_command command_str feature in
         Lsp_types.CONTENT (data), 1;
       end
-    else 
+    else Lsp_types.EMPTY (), 1
+    (*
       begin
         let kernel_opt = KernelOpt.create () in
         let uncast_opt = UncastOpt.create () in
@@ -683,6 +740,8 @@ let notif_handler json_string server_sock =
         let data = execute_command command_str feature in
         Lsp_types.CONTENT (data), 1
       end
+      *)
+
 
   | "showGlobalMetrics" -> 
     Lsp.Self.debug ~level:4 "global metrics\n%!";

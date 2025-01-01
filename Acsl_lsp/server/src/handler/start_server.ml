@@ -5,8 +5,6 @@ let server_port = 8005
 let defaultProtocolType = 0
 let addr = Unix.inet_addr_of_string "127.0.0.1"
 
-module StringMap = Map.Make(String)
-
 (*
 module StringLoc = struct
   type t = string * Log.event
@@ -38,9 +36,6 @@ module StringLocMap = Map.Make(StringLoc)
 *)
 
 
-let diag_map : Lsp_types.Diagnostic.t list StringMap.t ref = ref StringMap.empty
-
-
 
 let getnumber str = 
   let regex = Str.regexp {|[0-9]+|} in 
@@ -68,7 +63,7 @@ let update_empty_diagnostics string_json =
                 | Some params ->
                   let params = Lsp_types.PublishDiagnosticsParams.t_of_json params in
                   let file_uri = params.uri in
-                  diag_map := StringMap.add file_uri [] !diag_map;
+                  DidSave.diag_map := DidSave.StringMap.add file_uri [] !DidSave.diag_map;
                   Lsp.Self.debug ~level:4 "Updated map for  %s" file_uri
                 | None -> Lsp.Self.debug ~level:4 "Updated map for  1"; ()
             else Lsp.Self.debug ~level:4 "Updated map for  2"; ()
@@ -115,7 +110,7 @@ let handle_request server_sock =
         Lsp.Self.debug ~level:3 "Sending to client : %s\n\n%!" string_json;
         let string_json_list = Str.split (Str.regexp ":::") string_json in
         List.iter update_empty_diagnostics string_json_list;
-        StringMap.iter (send_empty_diagnostics server_sock) !diag_map;
+        DidSave.StringMap.iter (send_empty_diagnostics server_sock) !DidSave.diag_map;
         List.iter (send_request server_sock) (string_json_list);
         pid
       | EMPTY _ -> pid

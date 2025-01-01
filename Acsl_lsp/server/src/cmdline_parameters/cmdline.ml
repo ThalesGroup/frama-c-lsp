@@ -227,7 +227,7 @@ let diagnostics_handler (event : Log.event) =
         publish_to := Filepath.normalize !file;
         Utils.dummyLoc (Filepath.normalize !file))
     in
-    let diag_list = Start_server.StringMap.find_opt !publish_to !Start_server.diag_map in
+    let diag_list = DidSave.StringMap.find_opt !publish_to !DidSave.diag_map in
     let diag_list = match diag_list with
       | None -> []
       | Some l -> l
@@ -242,25 +242,25 @@ let diagnostics_handler (event : Log.event) =
       (
       Lsp.Self.debug ~level:4 "Error caught \n%!";
       let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
-      Start_server.diag_map := Start_server.StringMap.add !publish_to (diag :: diag_list) !Start_server.diag_map
+      DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
       )
     else
     match event.evt_kind with 
     | Log.Error ->  
       Lsp.Self.debug ~level:4 "Error\n%!";
       let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
-      Start_server.diag_map := Start_server.StringMap.add !publish_to (diag :: diag_list) !Start_server.diag_map
+      DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
     | Log.Failure ->
       Lsp.Self.debug ~level:4 "Failure\n%!";
       let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
-      Start_server.diag_map := Start_server.StringMap.add !publish_to (diag :: diag_list) !Start_server.diag_map
+      DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
     | Log.Warning ->
       if (Utils.contains msg ~suffix:"Memory model hypotheses") then ()
       else if (Utils.contains msg ~suffix:"Missing RTE guards") then ()
       else (
       Lsp.Self.debug ~level:4 "Warning\n%!";
       let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Warning (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
-      Start_server.diag_map := Start_server.StringMap.add !publish_to (diag :: diag_list) !Start_server.diag_map
+      DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
       )
       (* Lsp.Self.debug ~level:4 "diags handler warning : nb diags = %d\n%!" (List.length !diag_list); *)
     | Log.Result -> 
@@ -268,12 +268,12 @@ let diagnostics_handler (event : Log.event) =
     | Log.Debug -> 
       Lsp.Self.debug ~level:4 "Debug\n%!";
       let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Information (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
-      Start_server.diag_map := Start_server.StringMap.add !publish_to (diag :: diag_list) !Start_server.diag_map
+      DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
     | Log.Feedback ->
       Lsp.Self.debug ~level:4 "Feedback\n%!"
       (*
       let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Information (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
-      Start_server.diag_map := Start_server.StringMap.add !publish_to (diag :: diag_list) !Start_server.diag_map
+      DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
       *)
   
 
@@ -287,7 +287,7 @@ let send_dignostics exn =
   if Enabled.get () then
     (
     Self.debug ~level:2 "Error while processing request : %s, Backtrace : %s\n%!" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
-    let data = Start_server.StringMap.fold DidSave.publishDiagnostics_notification !Start_server.diag_map [] in
+    let data = DidSave.StringMap.fold DidSave.publishDiagnostics_notification !DidSave.diag_map [] in
     let data = List.map Json.save_string (data) in
     match Cmdline_opt.get () with
       | false ->
