@@ -98,7 +98,7 @@ let readcontlen sock : string =
 
 let handle_request server_sock = 
     try 
-      Lsp.Self.Debug.set (!Configuration.global_params.acslLsp);
+      (* Lsp.Self.Debug.set (!Configuration.global_params.acslLsp); *)
       let data_size = getnumber (readcontlen server_sock) in 
       let data_buf = Bytes.make data_size '0' in
       let _req_data_len = Unix.read server_sock data_buf 0 data_size in

@@ -93,7 +93,7 @@ let sections = {| {"items": [ {"section": "acslLsp"},
 
 let global_params = ref
   (create 
-  ~acslLsp:2
+  ~acslLsp:4
   ~includePaths:[]
   ~sourceFiles:[]
   ~macros:[]

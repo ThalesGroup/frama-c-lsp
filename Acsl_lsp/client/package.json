@@ -209,8 +209,7 @@
                         "items": {
                             "type": "string"
                         },
-                        "description": "If not empty, display only the functions of the callgraph reachable from the given functions",
-                        "default": ""
+                        "description": "If not empty, display only the functions of the callgraph reachable from the given functions"
                     },
                     "callgraph.services": {
                         "scope": "workspace",
