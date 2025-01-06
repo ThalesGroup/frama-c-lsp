@@ -96,14 +96,16 @@ let readcontlen sock : string =
   ignore (Unix.read sock contlenbuf 0 1);
   !res
 
-let handle_request server_sock = 
+let handle_request server_sock =
     try 
       (* Lsp.Self.Debug.set (!Configuration.global_params.acslLsp); *)
       let data_size = getnumber (readcontlen server_sock) in 
+      Lsp.Self.debug ~level:3 "Received from client : %d data size \n\n%!" data_size;
       let data_buf = Bytes.make data_size '0' in
       let _req_data_len = Unix.read server_sock data_buf 0 data_size in
       let request_str = (Bytes.to_string data_buf) in
       Lsp.Self.debug ~level:3 "Received from client : %s\n\n%!" request_str;
+      DidSave.StringMap.iter (send_empty_diagnostics server_sock) !DidSave.diag_map;
       let (response, pid) : (Lsp_types.lsp_result * int) = Lsp_handler.handle request_str server_sock in
       match response with
       | CONTENT string_json ->
@@ -114,13 +116,21 @@ let handle_request server_sock =
         List.iter (send_request server_sock) (string_json_list);
         pid
       | EMPTY _ -> pid
-    with exn ->
+    with 
+    | Lsp_handler.UnknownRequest id as exn ->
+      Lsp.Self.debug ~level:3 "Main Server is busy : %s, %s\n" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
+      let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Error ~message: "Server is busy !!" () in
+      let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
+      let json_notification = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
+      send_request server_sock json_notification;
+      id
+    | exn ->
       Lsp.Self.debug ~level:3 "Server is busy : %s, %s\n" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
       let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Error ~message: "Server is busy !" () in
       let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
       let json_notification = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
       send_request server_sock json_notification;
-      Unix._exit 0
+      0
       
 
 let connect () =

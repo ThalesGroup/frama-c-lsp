@@ -422,7 +422,6 @@ let execute_command command feature =
       in
       data
 
-
     | FindDefinition_feature (id, _file, _, _)
     | FindDeclaration_feature (id, _file, _, _)
     | ComputeProofObligation_feature (_, id, _file, _, _)
@@ -490,7 +489,23 @@ let fork_execute_command command feature =
     let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
     data, pid
   )
-  else (execute_command command feature), pid
+  else
+    try
+      (execute_command command feature), pid
+    with _exn -> (match feature with
+      | FindDefinition_feature (id, _file, _, _)
+      | FindDeclaration_feature (id, _file, _, _)
+      | ComputeProofObligation_feature (_, id, _file, _, _)
+      | Prove_feature (_, id, _file, _, _) ->
+        let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:"Server is busy !" () in
+        let lsp_message = (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~error:lsp_error_message ()) in
+        let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_message) in
+        data, pid
+      | _ ->
+        let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Error ~message: "Server is busy !" () in
+        let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
+        let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
+        data, pid)
 
 
     (* "completionProvider": {
@@ -873,6 +888,8 @@ let error_handler json_string =
   let data = Json.save_string (Lsp_types.ResponseError.json_of_t (error)) in
   Lsp_types.CONTENT (data), 1
 
+exception UnknownRequest of int
+
 let handle (json_string : string) server_sock : (Lsp_types.lsp_result * int) =
   try
     let json = Json.load_string json_string in
@@ -899,8 +916,8 @@ let handle (json_string : string) server_sock : (Lsp_types.lsp_result * int) =
           rq_handler json_string
         end
       else
-        raise (Failure "Unknown request")
-    | _ -> Lsp.Self.debug ~level:3 "no result\n%!"; raise (Failure "Unknown request")
+        raise (UnknownRequest 1)
+    | _ -> Lsp.Self.debug ~level:3 "no result\n%!"; raise (UnknownRequest 1)
   with
-  | Json.Error _ -> raise (Failure "Unknown request")
+  | Json.Error _ -> raise (UnknownRequest 1)
     
