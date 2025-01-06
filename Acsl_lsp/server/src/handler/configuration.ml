@@ -18,7 +18,7 @@ let sections = {| {"items": [
           {"section": "wp.prover"},
           {"section": "wp.timeout"},
           {"section": "wp.session"},
-          {"section": "diagnostics.wp"}
+          {"section": "diagnostics.wp"},
           {"section": "uncast"},
           {"section": "uncast.lshiftAsMul"},
           {"section": "uncast.rshiftAsDiv"},
