@@ -1,4 +1,5 @@
-let sections = {| {"items": [ {"section": "acslLsp"}, 
+let sections = {| {"items": [
+          {"section": "acslLsp"}, 
           {"section": "kernel.includePaths"},
           {"section": "kernel.sourceFiles"},
           {"section": "kernel.macros"},
@@ -18,6 +19,10 @@ let sections = {| {"items": [ {"section": "acslLsp"},
           {"section": "wp.timeout"},
           {"section": "wp.session"},
           {"section": "diagnostics.wp"}
+          {"section": "uncast"},
+          {"section": "uncast.lshiftAsMul"},
+          {"section": "uncast.rshiftAsDiv"},
+          {"section": "uncast.endianness"}
         ]
       }
     |}
@@ -43,6 +48,10 @@ let sections = {| {"items": [ {"section": "acslLsp"},
     wpTimeout : int;
     wpSession : string;
     diagnosticsWp : bool;
+    uncast : bool;
+    uncastLshiftAsMul : bool;
+    uncastRshoftAsDiv : bool;
+    uncastEndianness : string
   }
 
   let create
@@ -66,6 +75,10 @@ let sections = {| {"items": [ {"section": "acslLsp"},
     ~wpTimeout 
     ~wpSession 
     ~diagnosticsWp
+    ~uncast
+    ~uncastLshiftAsMul
+    ~uncastRshoftAsDiv
+    ~uncastEndianness
     ()
     =
     {
@@ -89,6 +102,10 @@ let sections = {| {"items": [ {"section": "acslLsp"},
       wpTimeout; 
       wpSession; 
       diagnosticsWp;
+      uncast;
+      uncastLshiftAsMul;
+      uncastRshoftAsDiv;
+      uncastEndianness;
     }
 
 let global_params = ref
@@ -113,6 +130,10 @@ let global_params = ref
   ~wpTimeout: 2
   ~wpSession: ""
   ~diagnosticsWp: false
+  ~uncast: false
+  ~uncastLshiftAsMul: true
+  ~uncastRshoftAsDiv: true
+  ~uncastEndianness: "little"
   ())
 
 let request_configurations : Json.json = 
@@ -125,17 +146,17 @@ let save_configs (result:  Json.json) =
   (* note : result arguments must be in the same order as in the configuration request *)
   match result with
   | `List [
-        `Int json_acslLsp; 
-        `List json_includePaths; 
-        `List json_sourceFiles; 
-        `List json_macros; 
+        `Int json_acslLsp;
+        `List json_includePaths;
+        `List json_sourceFiles;
+        `List json_macros;
         `String json_machdep;
         `Bool json_removeUnusedSpecifiedFunctions;
         `Bool json_aggressiveMerging;
-        `List json_generatedSpecCustom; 
+        `List json_generatedSpecCustom;
         `String json_metricsOutput;
         `String json_cgOutput;
-        `List json_cgRoots; 
+        `List json_cgRoots;
         `Bool json_cgServices;
         `Bool json_wpPruning;
         `Bool json_wpRte;
@@ -145,6 +166,10 @@ let save_configs (result:  Json.json) =
         `Int json_wpTimeout;
         `String json_wpSession;
         `Bool json_diagnosticsWp;
+        `Bool json_uncast;
+        `Bool json_uncastLshiftAsMul;
+        `Bool json_uncastRshoftAsDiv;
+        `String json_uncastEndianness
       ] 
     -> 
       global_params := create 
@@ -168,6 +193,10 @@ let save_configs (result:  Json.json) =
       ~wpTimeout: json_wpTimeout
       ~wpSession: json_wpSession
       ~diagnosticsWp: json_diagnosticsWp
+      ~uncast: json_uncast
+      ~uncastLshiftAsMul: json_uncastLshiftAsMul
+      ~uncastRshoftAsDiv: json_uncastRshoftAsDiv
+      ~uncastEndianness: json_uncastEndianness
       ();
 
 
