@@ -27,7 +27,8 @@
         "keybindings": [
             {
                 "command": "-editor.action.goToDefinition",
-                "key": "ctrl+click"
+                "key": "ctrl+click",
+                "when": "editorTextFocus"
             }],
         "viewsContainers": {
             "panel": [
