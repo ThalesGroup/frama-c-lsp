@@ -151,7 +151,7 @@ module UncastOpt = struct
     uncast_rshift_as_div: bool
   }
   let create () = {
-    uncast = !Configuration.global_params.uncast;
+    uncast = !Configuration.global_params.uncastActive;
     uncast_endianness = !Configuration.global_params.uncastEndianness;
     uncast_lshift_as_mul = !Configuration.global_params.uncastLshiftAsMul;
     uncast_rshift_as_div = !Configuration.global_params.uncastRshiftAsDiv

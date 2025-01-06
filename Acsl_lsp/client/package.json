@@ -68,7 +68,7 @@
             {
             "title": "Frama-C/Uncast",
             "properties": {
-                "uncast": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -uncast", "default": false},
+                "uncast.active": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -uncast", "default": false},
                 "uncast.lshiftAsMul": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -uncast-lshift-as-mul", "default": true},
                 "uncast.rshiftAsDiv": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -uncast-rshift-as-div", "default": true},
                 "uncast.endianness": {"scope": "workspace", "type": "string", "description": "Frama-C option: -uncast-endianness", "default": "little"}

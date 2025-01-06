@@ -19,7 +19,7 @@ let sections = {| {"items": [
           {"section": "wp.timeout"},
           {"section": "wp.session"},
           {"section": "diagnostics.wp"},
-          {"section": "uncast"},
+          {"section": "uncast.active""},
           {"section": "uncast.lshiftAsMul"},
           {"section": "uncast.rshiftAsDiv"},
           {"section": "uncast.endianness"}
@@ -48,7 +48,7 @@ let sections = {| {"items": [
     wpTimeout : int;
     wpSession : string;
     diagnosticsWp : bool;
-    uncast : bool;
+    uncastActive : bool;
     uncastLshiftAsMul : bool;
     uncastRshiftAsDiv : bool;
     uncastEndianness : string
@@ -75,7 +75,7 @@ let sections = {| {"items": [
     ~wpTimeout 
     ~wpSession 
     ~diagnosticsWp
-    ~uncast
+    ~uncastActive
     ~uncastLshiftAsMul
     ~uncastRshiftAsDiv
     ~uncastEndianness
@@ -102,7 +102,7 @@ let sections = {| {"items": [
       wpTimeout; 
       wpSession; 
       diagnosticsWp;
-      uncast;
+      uncastActive;
       uncastLshiftAsMul;
       uncastRshiftAsDiv;
       uncastEndianness;
@@ -130,7 +130,7 @@ let global_params = ref
   ~wpTimeout: 2
   ~wpSession: ""
   ~diagnosticsWp: false
-  ~uncast: false
+  ~uncastActive: false
   ~uncastLshiftAsMul: true
   ~uncastRshiftAsDiv: true
   ~uncastEndianness: "little"
@@ -166,7 +166,7 @@ let save_configs (result:  Json.json) =
         `Int json_wpTimeout;
         `String json_wpSession;
         `Bool json_diagnosticsWp;
-        `Bool json_uncast;
+        `Bool json_uncastActive;
         `Bool json_uncastLshiftAsMul;
         `Bool json_uncastRshiftAsDiv;
         `String json_uncastEndianness
@@ -193,7 +193,7 @@ let save_configs (result:  Json.json) =
       ~wpTimeout: json_wpTimeout
       ~wpSession: json_wpSession
       ~diagnosticsWp: json_diagnosticsWp
-      ~uncast: json_uncast
+      ~uncastActive: json_uncastActive
       ~uncastLshiftAsMul: json_uncastLshiftAsMul
       ~uncastRshiftAsDiv: json_uncastRshiftAsDiv
       ~uncastEndianness: json_uncastEndianness
