@@ -140,7 +140,9 @@ module MetacslOpt = struct
     let meta_no_check_ext_opt = option_if_true options.meta_no_check_ext "-meta-no-check-ext" in
     let meta_number_assertions_opt = option_if_true options.meta_number_assertions "-meta-number-assertions" in
     let meta_check_callee_assigns_opt = option_if_not_empty_string (String.concat "," options.meta_check_callee_assigns) "-meta-check-callee-assigns " in
+    if options.meta then 
     Printf.sprintf "%s %s %s %s %s %s %s %s" meta_opt meta_warn_key_opt meta_warn_key_opt meta_checks_opt meta_no_simpl_opt meta_no_check_ext_opt meta_number_assertions_opt meta_check_callee_assigns_opt
+    else ""
 end
 
 module UncastOpt = struct
