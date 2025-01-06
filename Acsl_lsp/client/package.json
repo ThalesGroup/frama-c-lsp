@@ -32,7 +32,7 @@
             },
             {
                 "command": "provePO",
-                "key": "ctrl+!",
+                "key": "ctrl+oem_8",
                 "when": "editorTextFocus"
             }
         ],
