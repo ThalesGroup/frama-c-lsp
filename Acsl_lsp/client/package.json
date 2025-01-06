@@ -28,7 +28,7 @@
             "panel": [
                 {
                     "id": "myPanel",
-                    "title": "FC Panel",
+                    "title": "Properties",
                     "icon": "images/logo-frama-c.png"
                 }
             ]
