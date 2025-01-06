@@ -29,7 +29,13 @@
                 "command": "-editor.action.goToDefinition",
                 "key": "ctrl+click",
                 "when": "editorTextFocus"
-            }],
+            },
+            {
+                "command": "provePO",
+                "key": "ctrl+!",
+                "when": "editorTextFocus"
+            }
+        ],
         "viewsContainers": {
             "panel": [
                 {
@@ -79,12 +85,6 @@
                 },
                 {
                     "command": "showLocalMetrics",
-                    "when": "resourceLangId == acsl"
-                }
-            ],
-            "editor/title": [
-                {
-                    "command": "showCG",
                     "when": "resourceLangId == acsl"
                 }
             ]
@@ -331,10 +331,6 @@
             {
                 "command": "showLocalMetrics",
                 "title": "File Metrics"
-            },
-            {
-                "command": "showCG",
-                "title": "Show Callgraph"
             },
             {
                 "command": "WPPan",
