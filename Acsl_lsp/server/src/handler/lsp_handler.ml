@@ -151,10 +151,10 @@ module UncastOpt = struct
     uncast_rshift_as_div: bool
   }
   let create () = {
-    uncast = true;
-    uncast_endianness = "little";
-    uncast_lshift_as_mul = true;
-    uncast_rshift_as_div = true
+    uncast = !Configuration.global_params.uncast;
+    uncast_endianness = !Configuration.global_params.uncastEndianness;
+    uncast_lshift_as_mul = !Configuration.global_params.uncastLshiftAsMul;
+    uncast_rshift_as_div = !Configuration.global_params.uncastRshiftAsDiv
   }
   let string_of_t (options : t) : string =
     let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in
@@ -163,7 +163,8 @@ module UncastOpt = struct
     let uncast_endianness_opt = option_if_not_empty_string options.uncast_endianness "-uncast-endianness " in
     let uncast_lshift_as_mul_opt = option_if_true options.uncast_lshift_as_mul "-uncast-lshift-as-mul " in
     let uncast_rshift_as_div_opt = option_if_true options.uncast_rshift_as_div "-uncast-rshift-as-div " in
-    Printf.sprintf "%s %s %s %s" uncast_opt uncast_endianness_opt uncast_lshift_as_mul_opt uncast_rshift_as_div_opt
+    if options.uncast then Printf.sprintf "%s %s %s %s" uncast_opt uncast_endianness_opt uncast_lshift_as_mul_opt uncast_rshift_as_div_opt
+    else ""
 end
 
 module MetricsOpt = struct

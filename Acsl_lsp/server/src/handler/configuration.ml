@@ -50,7 +50,7 @@ let sections = {| {"items": [
     diagnosticsWp : bool;
     uncast : bool;
     uncastLshiftAsMul : bool;
-    uncastRshoftAsDiv : bool;
+    uncastRshiftAsDiv : bool;
     uncastEndianness : string
   }
 
@@ -77,7 +77,7 @@ let sections = {| {"items": [
     ~diagnosticsWp
     ~uncast
     ~uncastLshiftAsMul
-    ~uncastRshoftAsDiv
+    ~uncastRshiftAsDiv
     ~uncastEndianness
     ()
     =
@@ -104,7 +104,7 @@ let sections = {| {"items": [
       diagnosticsWp;
       uncast;
       uncastLshiftAsMul;
-      uncastRshoftAsDiv;
+      uncastRshiftAsDiv;
       uncastEndianness;
     }
 
@@ -132,7 +132,7 @@ let global_params = ref
   ~diagnosticsWp: false
   ~uncast: false
   ~uncastLshiftAsMul: true
-  ~uncastRshoftAsDiv: true
+  ~uncastRshiftAsDiv: true
   ~uncastEndianness: "little"
   ())
 
@@ -168,7 +168,7 @@ let save_configs (result:  Json.json) =
         `Bool json_diagnosticsWp;
         `Bool json_uncast;
         `Bool json_uncastLshiftAsMul;
-        `Bool json_uncastRshoftAsDiv;
+        `Bool json_uncastRshiftAsDiv;
         `String json_uncastEndianness
       ] 
     -> 
@@ -195,7 +195,7 @@ let save_configs (result:  Json.json) =
       ~diagnosticsWp: json_diagnosticsWp
       ~uncast: json_uncast
       ~uncastLshiftAsMul: json_uncastLshiftAsMul
-      ~uncastRshoftAsDiv: json_uncastRshoftAsDiv
+      ~uncastRshiftAsDiv: json_uncastRshiftAsDiv
       ~uncastEndianness: json_uncastEndianness
       ();
 
