@@ -100,6 +100,17 @@
                 "wp.checkMemoryModel": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -wp-check-memory-model", "default": false},
                 "wp.noVolatile": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -wp-no-volatile", "default": true}
                 }
+            },
+            {
+            "title": "Frama-C/MetAcsl",
+            "properties": {
+                "metacsl.active": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -meta", "default": false},
+                "metacsl.checks": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -meta-checks", "default": true},
+                "metacsl.noSimpl": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -meta-no-simpl", "default": true},
+                "metacsl.noCheckExt": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -meta-no-check-ext", "default": true},
+                "metacsl.numberAssertions": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -meta-number-assertions", "default": true},
+                "metacsl.checkCalleeAssigns": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Frama-C option: -meta-check-callee-assigns"}
+                }
             }
         ]
     },
