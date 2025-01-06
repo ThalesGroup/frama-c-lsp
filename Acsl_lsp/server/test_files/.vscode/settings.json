@@ -1,12 +1,12 @@
 {
     "kernel.aggressiveMerging": false,
-    "kernel.keepUnusedSpecifiedFunctions": true,
+    "kernel.removeUnusedSpecifiedFunctions": true,
     "kernel.machdep": "",
     "kernel.sourceFiles": [
         "test1.c"
     ],
     "wp.checkMemoryModel": true,
-    "wp.volatile": false,
+    "wp.noVolatile": false,
     "metrics.output": "",
     "vscodeacsl.maxNumberOfProblems": 100,
     "acslLsp": 3,

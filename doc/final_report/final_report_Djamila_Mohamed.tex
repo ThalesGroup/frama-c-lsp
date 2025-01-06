@@ -273,7 +273,7 @@ Table \ref{tab:lsp-features} is a listing of all LSP features and the use cases 
     kernel.includePaths  					&     & X & X & X & X & X & X & X & X & X 	\\ \hline
     kernel.macros							&     & X & X & X & X & X & X & X & X & X 	\\ \hline
     kernel.machdep 							&     &   &   & X & X & X & X & X & X & X 	\\ \hline
-    kernel.keepUnusedSpecifiedFunctions 	&     & X & X & X & X & X & X & X & X & 	\\ \hline
+    kernel.removeUnusedSpecifiedFunctions 	&     & X & X & X & X & X & X & X & X & 	\\ \hline
     kernel.aggressiveMerging			 	&     & X & X & X & X & X & X & X & X &  	\\ \hline
     kernel.generatedSpecCustom 				& Yes &   &   & X & X & X & X & X &   &   	\\ \hline
     metrics.output 							&     &   &   &   & X & X & X &   &   & 	\\ \hline
@@ -282,8 +282,8 @@ Table \ref{tab:lsp-features} is a listing of all LSP features and the use cases 
     callgraph.services 						&     &   &   &   & X &   &   &   &   & 	\\ \hline
     wp.rte 									&     &   &   &   &   &   &   &   & X &   	\\ \hline
     wp.checkMemoryModel 					& Yes &   &   &   &   &   &   &   & X &   	\\ \hline
-    wp.volatile 							& Yes &   &   &   &   &   &   &   & X &   	\\ \hline
-    wp.pruning 								& Yes &   &   &   &   &   &   &   & X &   	\\ \hline
+    wp.noVolatile 							& Yes &   &   &   &   &   &   &   & X &   	\\ \hline
+    wp.noPruning 								& Yes &   &   &   &   &   &   &   & X &   	\\ \hline
     wp.prover 								&     &   &   &   &   &   &   &   & X &   	\\ \hline
     wp.timeout 								&     &   &   &   &   &   &   &   & X &   	\\ \hline
     wp.session 								&     &   &   &   &   &   &   &   & X &   	\\ \hline
@@ -715,7 +715,7 @@ Table \ref{tab:features-options} lists all client configurations that are suppor
 	kernel.macros 							& Kernel    & -cpp-extra-args \\ \hline
 	kernel.sourceFiles 					& Kernel    &  \\ \hline
 	kernel.machdep 						& Kernel    & -machdep \\ \hline
-	kernel.keepUnusedSpecifiedFunctions 	& Kernel    & -remove-unused-specified-functions \\ \hline
+	kernel.removeUnusedSpecifiedFunctions 	& Kernel    & -remove-unused-specified-functions \\ \hline
 	kernel.aggressiveMerging 				& Kernel    & -aggressive-merging \\ \hline
 	kernel.generatedSpecCustom 			& Kernel    & -generated-spec-custom \\ \hline
 	metrics.output 					& Metrics   & -metrics, -metrics-output \\ \hline
@@ -724,7 +724,7 @@ Table \ref{tab:features-options} lists all client configurations that are suppor
 	callgraph.services 					& Callgraph & -cg, -cg-no-services \\ \hline
 	wp.rte 							& WP & -wp, -wp-rte \\ \hline
 	wp.checkMemoryModel 			& WP & -wp, -wp-check-memory-model \\ \hline
-	wp.volatile 					& WP & -wp, -wp-volatile \\ \hline
+	wp.noVolatile 					& WP & -wp, -wp-volatile \\ \hline
 	wp.noPruning 					& WP & -wp, -wp-no-pruning \\ \hline
 	wp.prover 						& WP & -wp, -wp-prover \\ \hline
 	wp.timeout 						& WP & -wp, -wp-timeout \\ \hline

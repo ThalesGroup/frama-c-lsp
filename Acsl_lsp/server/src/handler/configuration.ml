@@ -3,17 +3,17 @@ let sections = {| {"items": [ {"section": "acslLsp"},
           {"section": "kernel.sourceFiles"},
           {"section": "kernel.macros"},
           {"section": "kernel.machdep"},
-          {"section": "kernel.keepUnusedSpecifiedFunctions"},
+          {"section": "kernel.removeUnusedSpecifiedFunctions"},
           {"section": "kernel.aggressiveMerging"},
           {"section": "kernel.generatedSpecCustom"},
           {"section": "metrics.output"},
           {"section": "callgraph.output"},
           {"section": "callgraph.roots"},
           {"section": "callgraph.services"},
-          {"section": "wp.pruning"},
+          {"section": "wp.noPruning"},
           {"section": "wp.rte"},
           {"section": "wp.checkMemoryModel"},
-          {"section": "wp.volatile"},
+          {"section": "wp.noVolatile"},
           {"section": "wp.prover"},
           {"section": "wp.timeout"},
           {"section": "wp.session"},
@@ -28,7 +28,7 @@ let sections = {| {"items": [ {"section": "acslLsp"},
     sourceFiles : string list;
     macros : string list;
     machdep : string;
-    keepUnusedSpecifiedFunctions : bool;
+    removeUnusedSpecifiedFunctions : bool;
     aggressiveMerging : bool;
     generatedSpecCustom : string list;
     metricsOutput : string;
@@ -51,7 +51,7 @@ let sections = {| {"items": [ {"section": "acslLsp"},
     ~sourceFiles
     ~macros
     ~machdep 
-    ~keepUnusedSpecifiedFunctions 
+    ~removeUnusedSpecifiedFunctions 
     ~aggressiveMerging 
     ~generatedSpecCustom
     ~metricsOutput 
@@ -74,7 +74,7 @@ let sections = {| {"items": [ {"section": "acslLsp"},
       sourceFiles;
       macros;
       machdep;
-      keepUnusedSpecifiedFunctions;
+      removeUnusedSpecifiedFunctions;
       aggressiveMerging;
       generatedSpecCustom;
       metricsOutput;
@@ -98,7 +98,7 @@ let global_params = ref
   ~sourceFiles:[]
   ~macros:[]
   ~machdep:""
-  ~keepUnusedSpecifiedFunctions:false
+  ~removeUnusedSpecifiedFunctions:false
   ~aggressiveMerging:false
   ~generatedSpecCustom:[]
   ~metricsOutput:""
@@ -130,7 +130,7 @@ let save_configs (result:  Json.json) =
         `List json_sourceFiles; 
         `List json_macros; 
         `String json_machdep;
-        `Bool json_keepUnusedSpecifiedFunctions;
+        `Bool json_removeUnusedSpecifiedFunctions;
         `Bool json_aggressiveMerging;
         `List json_generatedSpecCustom; 
         `String json_metricsOutput;
@@ -153,7 +153,7 @@ let save_configs (result:  Json.json) =
       ~sourceFiles: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_sourceFiles)
       ~macros: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_macros)
       ~machdep: (Utils.remove_newline (Utils.remove_quotes (json_machdep)))
-      ~keepUnusedSpecifiedFunctions: json_keepUnusedSpecifiedFunctions
+      ~removeUnusedSpecifiedFunctions: json_removeUnusedSpecifiedFunctions
       ~aggressiveMerging: json_aggressiveMerging
       ~generatedSpecCustom: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_generatedSpecCustom)
       ~metricsOutput: (Utils.remove_newline (Utils.remove_quotes (json_metricsOutput)))

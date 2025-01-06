@@ -36,7 +36,7 @@ let create () =
     cpp_extra_args = "-CC";
     machdep = !Configuration.global_params.machdep;
     generated_spec_custom = !Configuration.global_params.generatedSpecCustom;
-    keep_unused_specified_functions = !Configuration.global_params.keepUnusedSpecifiedFunctions;
+    keep_unused_specified_functions = !Configuration.global_params.removeUnusedSpecifiedFunctions;
     aggressive_merging = !Configuration.global_params.aggressiveMerging;
     kernel_warn_key = "annot-error=active,too-large-array=active";
     no_unicode = true;

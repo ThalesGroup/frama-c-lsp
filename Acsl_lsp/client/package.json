@@ -3,338 +3,94 @@
     "displayName": "ACSL/C",
     "description": "Visual Studio Code Client for ACSL Language Server",
     "version": "0.1.0",
-    "repository": {
-        "type": "git",
-        "url": "https://bitbucket.gemalto.com/users/t0244734/repos/acsl_lsp/browse/Acsl_lsp"
-    },
-    "categories": [
-        "Programming Languages"
-    ],
-    "keywords": [
-        "acsl",
-        "c",
-        "frama-c"
-    ],
-    "engines": {
-        "vscode": "^1.85.0"
-    },
-    "activationEvents": [
-        "onLanguage:acsl",
-        "onView:myPanel"
-    ],
+    "repository": {"type": "git", "url": "https://bitbucket.gemalto.com/users/t0244734/repos/acsl_lsp/browse/Acsl_lsp"},
+    "categories": ["Programming Languages"],
+    "keywords": ["acsl", "c", "frama-c"],
+    "engines": {"vscode": "^1.85.0"},
+    "activationEvents": ["onLanguage:acsl", "onView:myPanel"],
     "main": "./out/extension",
     "contributes": {
         "keybindings": [
-            {
-                "command": "-editor.action.goToDefinition",
-                "key": "ctrl+click",
-                "when": "editorTextFocus"
-            },
-            {
-                "command": "provePO",
-                "key": "ctrl+oem_8",
-                "when": "editorTextFocus"
-            }
+            {"command": "-editor.action.goToDefinition", "key": "ctrl+click", "when": "editorTextFocus"},
+            {"command": "provePO", "key": "ctrl+oem_8", "when": "editorTextFocus"}
         ],
         "viewsContainers": {
-            "panel": [
-                {
-                    "id": "myPanel",
-                    "title": "Properties",
-                    "icon": "images/logo-frama-c.png"
-                }
-            ]
+            "panel": [{"id": "myPanel", "title": "Properties", "icon": "images/logo-frama-c.png"}]
         },
         "views": {
-            "myPanel": [
-                {
-                    "id": "WPPan",
-                    "name": "WP pan"
-                }
-            ]
+            "myPanel": [{"id": "WPPan", "name": "WP pan"}]
         },
         "menus": {
             "editor/context": [
-                {
-                    "command": "smokeTests",
-                    "when": "resourceLangId == acsl"
-                },
-                {
-                    "command": "displayCIL",
-                    "when": "resourceLangId == acsl"
-                },
-                {
-                    "command": "displayCIL_noannot",
-                    "when": "resourceLangId == acsl"
-                },
-                {
-                    "command": "computeCG",
-                    "when": "resourceLangId == acsl"
-                },
-                {
-                    "command": "showPOVC",
-                    "when": "resourceLangId == acsl"
-                },
-                {
-                    "command": "provePO",
-                    "when": "resourceLangId == acsl"
-                },
-                {
-                    "command": "showGlobalMetrics",
-                    "when": "resourceLangId == acsl"
-                },
-                {
-                    "command": "showLocalMetrics",
-                    "when": "resourceLangId == acsl"
-                }
+                {"command": "smokeTests", "when": "resourceLangId == acsl"},
+                {"command": "displayCIL", "when": "resourceLangId == acsl"},
+                {"command": "displayCIL_noannot", "when": "resourceLangId == acsl"},
+                {"command": "computeCG", "when": "resourceLangId == acsl"},
+                {"command": "showPOVC", "when": "resourceLangId == acsl"},
+                {"command": "provePO", "when": "resourceLangId == acsl"},
+                {"command": "showGlobalMetrics", "when": "resourceLangId == acsl"},
+                {"command": "showLocalMetrics", "when": "resourceLangId == acsl"}
             ]
         },
-        "submenus": [
-            {
-                "id": "vscodeacsl.requires",
-                "label": "Show 'requires' POs"
-            }
-        ],
-        "languages": [
-            {
-                "id": "acsl",
-                "aliases": [
-                    "ACSL",
-                    "acsl"
-                ],
-                "extensions": [
-                    ".c",
-                    ".h"
-                ],
-                "configuration": "./syntax/language-configuration.json",
-                "icon": {
-                    "light": "./images/logo-frama-c.png",
-                    "dark": "./images/logo-frama-c.png"
-                }
-            }
-        ],
-        "grammars": [
-            {
-                "language": "acsl",
-                "scopeName": "source.acsl",
-                "path": "./syntax/acsl.tmLanguage.json"
-            }
-        ],
-        "configuration": [
-            {
-                "title": "Debugging",
-                "properties": {
-                    "vscodeacsl.maxNumberOfProblems": {
-                        "scope": "resource",
-                        "type": "number",
-                        "default": 1000,
-                        "description": "Controls the maximum number of problems produced by the server."
-                    },
-                    "acslLsp": {
-                        "scope": "window",
-                        "type": "integer",
-                        "enum": [
-                            0,
-                            1,
-                            2,
-                            3,
-                            4
-                        ],
-                        "default": 4,
-                        "description": "Specify ACSL LSP debug messages level. (4 = lowest severity, 1 = highest, 0 = off)."
-                    }
-                }
-            },
-            {
-                "title": "Common",
-                "properties": {
-                    "kernel.includePaths": {
-                        "scope": "workspace",
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "description": "Adds C/C++ include paths for the project."
-                    },
-                    "kernel.sourceFiles": {
-                        "scope": "workspace",
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "description": "Specifies which source files must be parsed."
-                    },
-                    "kernel.macros": {
-                        "scope": "workspace",
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "description": "Adds macros."
-                    },
-                    "kernel.machdep": {
-                        "scope": "workspace",
-                        "type": "string",
-                        "description": "Specify machdep"
-                    },
-                    "kernel.keepUnusedSpecifiedFunctions": {
-                        "scope": "workspace",
-                        "type": "boolean",
-                        "description": "Keep unused specified functions",
-                        "default": true
-                    },
-                    "kernel.aggressiveMerging": {
-                        "scope": "workspace",
-                        "type": "boolean",
-                        "description": "Merge function definitions modulo renaming",
-                        "default": false
-                    }
-                }
-            },
-            {
-                "title": "Metrics",
-                "properties": {
-                    "metrics.output": {
-                        "scope": "workspace",
-                        "type": "string",
-                        "description": "Metrics output file (only works for global metrics, file metrics will generate metrics in a plaintext file with same name as the source file)",
-                        "default": ""
-                    }
-                }
-            },
-            {
-                "title": "Callgraph",
-                "properties": {
-                    "callgraph.output": {
-                        "scope": "workspace",
-                        "type": "string",
-                        "description": "Callgraph output file (give file name without .dot extension)",
-                        "default": ""
-                    },
-                    "callgraph.roots": {
-                        "scope": "workspace",
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "description": "If not empty, display only the functions of the callgraph reachable from the given functions"
-                    },
-                    "callgraph.services": {
-                        "scope": "workspace",
-                        "type": "boolean",
-                        "description": "Compute and display services (groups of related functions which seem to provide common functionalities) from the callgraph",
-                        "default": true
-                    }
-                }
-            },
-            {
-                "title": "Prove annotations",
-                "properties": {
-                    "wp.rte": {
-                        "scope": "workspace",
-                        "type": "boolean",
-                        "description": "Generate RTE guards before WP",
-                        "default": false
-                    },
-                    "wp.prover": {
-                        "scope": "workspace",
-                        "type": "string",
-                        "default": "none",
-                        "description": "Submit proof obligations to prover(s): 'none' (no prover run), 'script' (replay all session scripts), 'tip' (replay or init scripts for failed goals), '<why3-prover>' (any Why-3 prover, (run 'frama-c -wp-detect' in a terminal to list available provers))"
-                    },
-                    "wp.timeout": {
-                        "scope": "workspace",
-                        "type": "integer",
-                        "default": 2,
-                        "description": "Set the timeout (in seconds) for provers (default: 2)"
-                    },
-                    "wp.session": {
-                        "scope": "workspace",
-                        "type": "string",
-                        "default": "",
-                        "description": "Set the plug-in session directory"
-                    }
-                }
-            },
-            {
-                "title": "Diagnostics",
-                "properties": {
-                    "diagnostics.wp": {
-                        "scope": "workspace",
-                        "type": "boolean",
-                        "description": "Enable WP diagnostics. (Not implemented yet)",
-                        "default": false
-                    }
-                }
-            },
-            {
-                "title": "Advanced options",
-                "properties": {
-                    "wp.pruning": {
-                        "scope": "workspace",
-                        "type": "boolean",
-                        "description": "Prune trivial branches. (set by default)",
-                        "default": true
-                    },
-                    "wp.checkMemoryModel": {
-                        "scope": "workspace",
-                        "type": "boolean",
-                        "description": "Insert memory model hypotheses in function contracts and check them on call.",
-                        "default": false
-                    },
-                    "wp.volatile": {
-                        "scope": "workspace",
-                        "type": "boolean",
-                        "description": "Sound modeling of volatile access. Disable to ignore volatile attributes.",
-                        "default": true
-                    },
-                    "kernel.generatedSpecCustom": {
-                        "scope": "workspace",
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "description": "Fine-tune missing specification generation by manually selecting modes for each clause (write it as [clause]:[mode]). Can be one of: frama-c, acsl, safe skip or the name of a custom registered mode. Do not use skip mode for assigns unless you know what you are doing! See Frama-C user manual for more information."
-                    }
-                }
-            }
-        ],
+        "submenus": [{"id": "vscodeacsl.requires","label": "Show 'requires' POs"}],
         "commands": [
-            {
-                "command": "smokeTests",
-                "title": "Smoke Tests"
+            {"command": "smokeTests", "title": "Smoke Tests"},
+            {"command": "displayCIL", "title": "File CIL"},
+            {"command": "displayCIL_noannot", "title": "File CIL (-no-annot)"},
+            {"command": "computeCG", "title": "File CallGraph"},
+            {"command": "showPOVC", "title": "Get WP Proof Obligation"},
+            {"command": "provePO", "title": "Prove with WP"},
+            {"command": "showGlobalMetrics", "title": "Project Metrics"},
+            {"command": "showLocalMetrics", "title": "File Metrics"},
+            {"command": "WPPan", "title": "Show Pan Panel"}
+        ],
+        "languages": [{"id": "acsl", "aliases": ["ACSL", "acsl"], "extensions": [".c", ".h"], "configuration": "./syntax/language-configuration.json", "icon": {"light": "./images/logo-frama-c.png", "dark": "./images/logo-frama-c.png"}}],
+        "grammars": [{"language": "acsl", "scopeName": "source.acsl", "path": "./syntax/acsl.tmLanguage.json"}],
+        "configuration": [
+            {"title": "Debugging",
+             "properties": {
+                "vscodeacsl.maxNumberOfProblems": {"scope": "resource", "type": "number", "default": 10000000, "description": "Maximum number of problems produced by the server."},
+                "acslLsp": {"scope": "window", "type": "integer", "enum": [0, 1, 2, 3, 4], "default": 4, "description": "Frama-C option: -lsp-debug (4 = Verbose, 0 = off)."}
+            }
             },
             {
-                "command": "displayCIL",
-                "title": "File CIL"
+            "title": "Frama-C/kernel",
+            "properties": {
+                "kernel.includePaths": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Include paths for the project. Frama-C option: -cpp-extra-args \"-I ...\""},
+                "kernel.sourceFiles": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Source files."},
+                "kernel.macros": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Frama-C option: -cpp-extra-args \"-D ...\""},
+                "kernel.machdep": {"scope": "workspace", "type": "string", "description": "Frama-C option: -machdep"},
+                "kernel.removeUnusedSpecifiedFunctions": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -remove-unused-specified-functions", "default": true},
+                "kernel.aggressiveMerging": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -aggressive-merging", "default": false},
+                "kernel.generatedSpecCustom": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Frama-C option: -generated-spec-custom"}
+                }
             },
             {
-                "command": "displayCIL_noannot",
-                "title": "File CIL (-no-annot)"
+            "title": "Frama-C/Metrics",
+            "properties": {
+                "metrics.output": {"scope": "workspace", "type": "string", "description": "Frama-C option: -metrics-output", "default": ""}
+                }
             },
             {
-                "command": "computeCG",
-                "title": "File CallGraph"
+            "title": "Frama-C/Cg",
+            "properties": {
+                "callgraph.output": {"scope": "workspace", "type": "string", "description": "Frama-C option: -cg", "default": ""},
+                "callgraph.roots": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Frama-C option: -cg-roots"},
+                "callgraph.services": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -cg-no-services", "default": true}
+                }
             },
             {
-                "command": "showPOVC",
-                "title": "Get WP Proof Obligation"
-            },
-            {
-                "command": "provePO",
-                "title": "Prove with WP"
-            },
-            {
-                "command": "showGlobalMetrics",
-                "title": "Project Metrics"
-            },
-            {
-                "command": "showLocalMetrics",
-                "title": "File Metrics"
-            },
-            {
-                "command": "WPPan",
-                "title": "Show Pan Panel"
+            "title": "Frama-C/WP",
+            "properties": {
+                "diagnostics.wp": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -wp", "default": false},
+                "wp.rte": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -wp-rte", "default": false},
+                "wp.prover": {"scope": "workspace", "type": "string", "default": "none", "description": "Frama-C option: -wp-prover"},
+                "wp.timeout": {"scope": "workspace", "type": "integer", "default": 2, "description": "Frama-C option: -wp-timeout"},
+                "wp.session": {"scope": "workspace", "type": "string", "default": "", "description": "Frama-C option: -wp-session"},
+                "wp.noPruning": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -wp-no-pruning", "default": true},
+                "wp.checkMemoryModel": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -wp-check-memory-model", "default": false},
+                "wp.noVolatile": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -wp-no-volatile", "default": true}
+                }
             }
         ]
     },

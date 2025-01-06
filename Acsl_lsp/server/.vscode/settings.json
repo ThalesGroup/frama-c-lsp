@@ -9,7 +9,7 @@
         "include_folder",
         "include_folder2"
     ],
-    "kernel.keepUnusedSpecifiedFunctions": true,
+    "kernel.removeUnusedSpecifiedFunctions": true,
     "kernel.sourceFiles": [
         "test1.c"
     ],
@@ -18,6 +18,6 @@
     "wp.timeout": 2,
     "diagnostics.wp": false,
     "wp.checkMemoryModel": false,
-    "wp.pruning": true,
-    "wp.volatile": true
+    "wp.noPruning": true,
+    "wp.noVolatile": true
 }
