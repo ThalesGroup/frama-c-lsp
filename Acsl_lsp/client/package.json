@@ -27,7 +27,7 @@
         "keybindings": [
             {
                 "command": "-editor.action.goToDefinition",
-                "key": "ctrl+f12"
+                "key": "ctrl+click"
             }],
         "viewsContainers": {
             "panel": [
