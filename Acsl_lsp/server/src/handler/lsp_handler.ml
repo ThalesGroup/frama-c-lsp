@@ -122,13 +122,13 @@ module MetacslOpt = struct
     meta_check_callee_assigns: string list
   }
   let create () = {
-    meta = true;
+    meta = !Configuration.global_params.metacslActive;
     meta_warn_key = "unknown-func=active";
-    meta_checks = true;
-    meta_no_simpl = true;
-    meta_no_check_ext = true;
-    meta_number_assertions = true;
-    meta_check_callee_assigns = []
+    meta_checks = !Configuration.global_params.metacslChecks;
+    meta_no_simpl = !Configuration.global_params.metacslNoSimpl;
+    meta_no_check_ext = !Configuration.global_params.metacslNoCheckExt;
+    meta_number_assertions = !Configuration.global_params.metacslNumberAssertions;
+    meta_check_callee_assigns = !Configuration.global_params.metacslCheckCalleeAssigns
   }
   let string_of_t (options : t) : string =
     let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in

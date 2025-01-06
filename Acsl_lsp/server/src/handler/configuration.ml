@@ -22,7 +22,13 @@ let sections = {| {"items": [
           {"section": "uncast.active"},
           {"section": "uncast.lshiftAsMul"},
           {"section": "uncast.rshiftAsDiv"},
-          {"section": "uncast.endianness"}
+          {"section": "uncast.endianness"},
+          {"section": "metacsl.active"},
+          {"section": "metacsl.checks"},
+          {"section": "metacsl.noSimpl"},
+          {"section": "metacsl.noCheckExt"},
+          {"section": "metacsl.numberAssertions"},
+          {"section": "metacsl.checkCalleeAssigns"}
         ]
       }
     |}
@@ -51,7 +57,13 @@ let sections = {| {"items": [
     uncastActive : bool;
     uncastLshiftAsMul : bool;
     uncastRshiftAsDiv : bool;
-    uncastEndianness : string
+    uncastEndianness : string;
+    metacslActive: bool;
+    metacslChecks: bool;
+    metacslNoSimpl: bool;
+    metacslNoCheckExt: bool;
+    metacslNumberAssertions: bool;
+    metacslCheckCalleeAssigns: string list
   }
 
   let create
@@ -79,6 +91,12 @@ let sections = {| {"items": [
     ~uncastLshiftAsMul
     ~uncastRshiftAsDiv
     ~uncastEndianness
+    ~metacslActive
+    ~metacslChecks
+    ~metacslNoSimpl
+    ~metacslNoCheckExt
+    ~metacslNumberAssertions
+    ~metacslCheckCalleeAssigns
     ()
     =
     {
@@ -106,6 +124,12 @@ let sections = {| {"items": [
       uncastLshiftAsMul;
       uncastRshiftAsDiv;
       uncastEndianness;
+      metacslActive;
+      metacslChecks;
+      metacslNoSimpl;
+      metacslNoCheckExt;
+      metacslNumberAssertions;
+      metacslCheckCalleeAssigns
     }
 
 let global_params = ref
@@ -134,6 +158,12 @@ let global_params = ref
   ~uncastLshiftAsMul: true
   ~uncastRshiftAsDiv: true
   ~uncastEndianness: "little"
+  ~metacslActive: false
+  ~metacslChecks: true
+  ~metacslNoSimpl: true
+  ~metacslNoCheckExt: true
+  ~metacslNumberAssertions: true
+  ~metacslCheckCalleeAssigns: []
   ())
 
 let request_configurations : Json.json = 
@@ -169,7 +199,13 @@ let save_configs (result:  Json.json) =
         `Bool json_uncastActive;
         `Bool json_uncastLshiftAsMul;
         `Bool json_uncastRshiftAsDiv;
-        `String json_uncastEndianness
+        `String json_uncastEndianness;
+        `Bool json_metacslActive;
+        `Bool json_metacslChecks;
+        `Bool json_metacslNoSimpl;
+        `Bool json_metacslNoCheckExt;
+        `Bool json_metacslNumberAssertions;
+        `List json_metacslCheckCalleeAssigns
       ] 
     -> 
       global_params := create 
@@ -197,6 +233,12 @@ let save_configs (result:  Json.json) =
       ~uncastLshiftAsMul: json_uncastLshiftAsMul
       ~uncastRshiftAsDiv: json_uncastRshiftAsDiv
       ~uncastEndianness: json_uncastEndianness
+      ~metacslActive: json_metacslActive
+      ~metacslChecks: json_metacslChecks
+      ~metacslNoSimpl: json_metacslNoSimpl
+      ~metacslNoCheckExt: json_metacslNoCheckExt
+      ~metacslNumberAssertions: json_metacslNumberAssertions
+      ~metacslCheckCalleeAssigns: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_metacslCheckCalleeAssigns)
       ();
 
 
