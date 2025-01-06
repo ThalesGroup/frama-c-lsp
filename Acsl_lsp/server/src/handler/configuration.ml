@@ -19,7 +19,7 @@ let sections = {| {"items": [
           {"section": "wp.timeout"},
           {"section": "wp.session"},
           {"section": "diagnostics.wp"},
-          {"section": "uncast.active""},
+          {"section": "uncast.active"},
           {"section": "uncast.lshiftAsMul"},
           {"section": "uncast.rshiftAsDiv"},
           {"section": "uncast.endianness"}
