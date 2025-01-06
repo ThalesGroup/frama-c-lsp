@@ -319,7 +319,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 				} as vscode.Command;
 				this.data.push(t_item);
 			  	// vscode.window.showInformationMessage(`Item ${index + 1}: ${JSON.stringify(item)}`);
-				vscode.window.showInformationMessage(file + "#L" + line);
+				// vscode.window.showInformationMessage(file + "#L" + line);
 			});
 		  } else {
 			vscode.window.showErrorMessage('Parsed JSON is not an array.');

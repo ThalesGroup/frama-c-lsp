@@ -211,8 +211,7 @@
                         "items": {
                             "type": "string"
                         },
-                        "description": "If not empty, display only the functions of the callgraph reachable from the given functions",
-                        "default": ""
+                        "description": "If not empty, display only the functions of the callgraph reachable from the given functions"
                     },
                     "callgraph.services": {
                         "scope": "workspace",
@@ -330,6 +329,10 @@
             {
                 "command": "showCG",
                 "title": "Show Callgraph"
+            },
+            {
+                "command": "WPPan",
+                "title": "Show Pan Panel"
             }
         ]
     },
