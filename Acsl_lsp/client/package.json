@@ -24,6 +24,12 @@
     ],
     "main": "./out/extension",
     "contributes": {
+        "keybindings": [
+            {
+                "command": "-editor.action.goToDefinition",
+                "key": "ctrl",
+                "when": "editorTextFocus"
+            }],
         "viewsContainers": {
             "panel": [
                 {
