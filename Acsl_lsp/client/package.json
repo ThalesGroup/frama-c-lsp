@@ -12,7 +12,8 @@
     "contributes": {
         "keybindings": [
             {"command": "-editor.action.goToDefinition", "key": "ctrl+click", "when": "editorTextFocus"},
-            {"command": "provePO", "key": "ctrl+oem_8", "when": "editorTextFocus"}
+            {"command": "provePO", "key": "ctrl+oem_8", "when": "editorTextFocus"},
+            {"command": "provePOStrategies", "key": "alt+oem_8", "when": "editorTextFocus"}
         ],
         "viewsContainers": {
             "panel": [{"id": "myPanel", "title": "Properties", "icon": "images/logo-frama-c.png"}]
@@ -28,6 +29,7 @@
                 {"command": "computeCG", "when": "resourceLangId == acsl"},
                 {"command": "showPOVC", "when": "resourceLangId == acsl"},
                 {"command": "provePO", "when": "resourceLangId == acsl"},
+                {"command": "provePOStrategies", "when": "resourceLangId == acsl"},
                 {"command": "showGlobalMetrics", "when": "resourceLangId == acsl"},
                 {"command": "showLocalMetrics", "when": "resourceLangId == acsl"}
             ]
@@ -40,6 +42,7 @@
             {"command": "computeCG", "title": "File CallGraph"},
             {"command": "showPOVC", "title": "Get WP Proof Obligation"},
             {"command": "provePO", "title": "Prove with WP"},
+            {"command": "provePOStrategies", "title": "Prove with WP Strategies"},
             {"command": "showGlobalMetrics", "title": "Project Metrics"},
             {"command": "showLocalMetrics", "title": "File Metrics"},
             {"command": "WPPan", "title": "Show Pan Panel"}

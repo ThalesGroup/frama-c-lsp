@@ -125,6 +125,33 @@ export function activate(context: ExtensionContext) {
         }
     });
 
+    const provePOStrategies = commands.registerCommand('provePOStrategies', async () => {
+		try {
+            const function_name = await window.showInputBox({
+                placeHolder: 'function', // Placeholder text in the input box
+                prompt: 'Please specify functions to prove (c.f. -wp-fct )', // The prompt message
+                validateInput: (input) => {
+                    if (input.length === 0) {return 'Input cannot be empty!';}
+                    return null; // Return null to indicate valid input
+            }});
+			const property_name = await window.showInputBox({
+                placeHolder: 'property', // Placeholder text in the input box
+                prompt: 'Please specify properties to prove (c.f. -wp-prop )', // The prompt message
+                validateInput: (input) => {
+                    if (input.length === 0) {return 'Input cannot be empty!';}
+                    return null; // Return null to indicate valid input
+            }});
+            const res = await client.sendRequest('provePOStrategies', [window.activeTextEditor.document.fileName, function_name, property_name]);
+			wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
+			wpResults.refresh();
+			window.showInformationMessage('Proof results updated');
+        }
+        catch (err) {
+            window.showErrorMessage('Failed to fetch and display WP proof: ' + err.message);
+            console.error('Error fetching WP proof:', err);
+        }
+    });
+
 	const showLocalMetrics = commands.registerCommand('showLocalMetrics', async () => {
 		try {
 			client.sendNotification('showLocalMetrics', window.activeTextEditor.document.fileName);
