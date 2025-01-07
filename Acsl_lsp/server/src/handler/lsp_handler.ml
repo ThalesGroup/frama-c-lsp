@@ -20,6 +20,8 @@ module KernelOpt = struct
 type t = {
   include_paths : string list;
   macros : string list;
+  macroStrategiesFunctionPrefix : string;
+  fct : string list;
   cpp_extra_args : string;
   machdep : string;
   generated_spec_custom : string list;
@@ -30,10 +32,12 @@ type t = {
   inline_calls : string;
   remove_inlines : string
   }
-let create () =
+let create ?fct () =
   {
     include_paths = !Configuration.global_params.includePaths;
     macros = !Configuration.global_params.macros;
+    macroStrategiesFunctionPrefix = !Configuration.global_params.macroStrategiesFunctionPrefix;
+    fct = (match fct with None -> [] | Some f -> f);
     cpp_extra_args = "-CC";
     machdep = !Configuration.global_params.machdep;
     generated_spec_custom = !Configuration.global_params.generatedSpecCustom;
@@ -49,7 +53,8 @@ let string_of_t (options : t) : string =
   let option_if_true b opt = if b then (opt) else "" in
   let include_paths_opt = List.map (fun x -> " -I"^(!rootPath^"/"^(x))) options.include_paths in
   let macros_opt = List.map (fun x -> " -D"^x) options.macros in
-  let cpp_extra_args_opt = "-cpp-extra-args=\" "^(options.cpp_extra_args)^" "^(String.concat " " include_paths_opt)^(String.concat " " macros_opt)^"\"" in
+  let macroStrategiesFunctionPrefix_opt = List.map (fun x -> " -D"^options.macroStrategiesFunctionPrefix^x) options.fct in
+  let cpp_extra_args_opt = "-cpp-extra-args=\" "^(options.cpp_extra_args)^" "^(String.concat " " include_paths_opt)^" "^(String.concat " " macros_opt)^" "^(String.concat " " macroStrategiesFunctionPrefix_opt)^"\"" in
   let machdep_opt = (option_if_not_empty_string options.machdep "-machdep ") in
   let generated_spec_custom_opt = option_if_not_empty_string (String.concat "," options.generated_spec_custom) "-generated-spec-custom=" in
   let remove_unused_specified_functions_opt = option_if_true options.keep_unused_specified_functions "-remove-unused-specified-functions " in
@@ -270,6 +275,7 @@ end
 
 module Command = struct
   type t = {
+  frama_c_exe: string;
   verbose: int;
   files : string list option;
   kernel : KernelOpt.t option;
@@ -281,7 +287,8 @@ module Command = struct
   cg : CgOpt.t option;
   lsp : LspOpt.t option;
   }
-  let create ?kernel ?files ?wp ?metacsl ?uncast ?metrics ?pprint ?cg ?lsp () : t = {
+  let create ?gui ?kernel ?files ?wp ?metacsl ?uncast ?metrics ?pprint ?cg ?lsp () : t = {
+    frama_c_exe = (match gui with None -> "frama-c" | Some g -> if g then "frama-c-gui" else "frama-c");
     verbose = !Configuration.global_params.acslLsp;
     files = (match kernel, files with
       | None, _ -> None
@@ -305,7 +312,7 @@ module Command = struct
     let option_if_not_empty_string s opt = if not (String.trim s = "") then (s ^ " " ^ opt) else "" in
     let file_names = match options.files with None -> "" | Some f -> String.concat " " f in
     let debug_level = Stdlib.string_of_int options.verbose in
-    let common_opt = Printf.sprintf "frama-c -lsp -lsp-no-cmdline -lsp-debug=%s %s" debug_level file_names in
+    let common_opt = Printf.sprintf "%s -lsp -lsp-no-cmdline -lsp-debug=%s %s" options.frama_c_exe debug_level file_names in
     let kernel_opt = match options.kernel with None -> "" | Some k -> KernelOpt.string_of_t k in
     let uncast_opt = match options.uncast with None -> "" | Some u -> option_if_not_empty_string (UncastOpt.string_of_t u) "-then-last" in
     let wp_opt = match options.wp with None -> "" | Some w -> option_if_not_empty_string (WpOpt.string_of_t w) "" in
@@ -635,19 +642,20 @@ let rq_handler json_string =
     | "provePO" -> (* prove with WP *)
       let id = (Utils.id_to_int request.id) in
       Lsp.Self.debug ~level:4 "provePO, %d\n%!" id;
-      let (file, fct, prop) = match request.params with
+      let (file, fct, prop, timeout) = match request.params with
           | Some `List
             [`List 
               [`String f;
               `String function_name;
-              `String property_name
+              `String property_name;
+              `Int timeout
               ]] -> 
-            (Utils.remove_newline (Utils.remove_quotes (f)), function_name, property_name)
+            (Utils.remove_newline (Utils.remove_quotes (f)), function_name, property_name, timeout)
           | _ -> Lsp.Self.debug ~level:3 "No params for showPOVC \n%!"; assert false
         in
       let kernel_opt = KernelOpt.create () in
       let uncast_opt = UncastOpt.create () in
-      let wp_opt = WpOpt.create ~wp_fct:[fct] ~wp_prop:[prop] ~wp_prover:["alt-ergo"] ~wp_gen:false ~wp_timeout:10 () in
+      let wp_opt = WpOpt.create ~wp_fct:[fct] ~wp_prop:[prop] ~wp_prover:["alt-ergo"] ~wp_gen:false ~wp_timeout:timeout () in
       let feature = Prove_feature (!rootPath, id, file, fct, prop) in
       let lsp_opt = LspOpt.create (feature) in
       let command = 
@@ -663,25 +671,26 @@ let rq_handler json_string =
       | "provePOStrategies" -> (* prove with WP strategies *)
       let id = (Utils.id_to_int request.id) in
       Lsp.Self.debug ~level:4 "provePOStrategies, %d\n%!" id;
-      let (file, fct, prop) = match request.params with
+      let (file, fct, prop, timeout) = match request.params with
           | Some `List
             [`List 
               [`String f;
               `String function_name;
-              `String property_name
+              `String property_name;
+              `Int timeout
               ]] -> 
-            (Utils.remove_newline (Utils.remove_quotes (f)), function_name, property_name)
+            (Utils.remove_newline (Utils.remove_quotes (f)), function_name, property_name, timeout)
           | _ -> Lsp.Self.debug ~level:3 "No params for showPOStrategies \n%!"; assert false
         in
-      let kernel_opt = KernelOpt.create () in
+      let kernel_opt = KernelOpt.create ~fct:[fct] () in
       let uncast_opt = UncastOpt.create () in
-      let wp_opt = WpOpt.create ~wp_fct:[fct] ~wp_prop:[prop] ~wp_prover:["tip"] ~wp_gen:false ~wp_timeout:10 ~wp_script:"dry" () in
+      let wp_opt = WpOpt.create ~wp_fct:[fct] ~wp_prop:[prop] ~wp_prover:["tip"] ~wp_gen:false ~wp_timeout:timeout ~wp_script:"dry" () in
       let feature = ProveStrategies_feature (!rootPath, id, file, fct, prop) in
       let lsp_opt = LspOpt.create (feature) in
       let command = 
         match (String.ends_with ~suffix:".c" file) with
-        | true -> Command.create ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
-        | false -> Command.create ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
+        | true -> Command.create ~gui:true ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
+        | false -> Command.create ~gui:true ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
       in
       let command_str = (Command.string_of_t command) in
       Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
