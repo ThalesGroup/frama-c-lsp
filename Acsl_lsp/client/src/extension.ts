@@ -114,7 +114,14 @@ export function activate(context: ExtensionContext) {
                     if (input.length === 0) {return 'Input cannot be empty!';}
                     return null; // Return null to indicate valid input
             }});
-            const res = await client.sendRequest('provePO', [window.activeTextEditor.document.fileName, function_name, property_name]);
+			const proof_timeout = await window.showInputBox({
+                placeHolder: 'timeout', // Placeholder text in the input box
+                prompt: 'Please specify timeout for provers (c.f. -wp-timeout )', // The prompt message
+                validateInput: (input) => {
+                    if (input.length === 0) {return 'Input cannot be empty!';}
+                    return null; // Return null to indicate valid input
+            }});
+            const res = await client.sendRequest('provePO', [window.activeTextEditor.document.fileName, function_name, property_name, proof_timeout]);
 			wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
 			wpResults.refresh();
 			window.showInformationMessage('Proof results updated');
@@ -141,7 +148,14 @@ export function activate(context: ExtensionContext) {
                     if (input.length === 0) {return 'Input cannot be empty!';}
                     return null; // Return null to indicate valid input
             }});
-            const res = await client.sendRequest('provePOStrategies', [window.activeTextEditor.document.fileName, function_name, property_name]);
+			const proof_timeout = await window.showInputBox({
+                placeHolder: 'timeout', // Placeholder text in the input box
+                prompt: 'Please specify timeout for provers (c.f. -wp-timeout )', // The prompt message
+                validateInput: (input) => {
+                    if (input.length === 0) {return 'Input cannot be empty!';}
+                    return null; // Return null to indicate valid input
+            }});
+            const res = await client.sendRequest('provePOStrategies', [window.activeTextEditor.document.fileName, function_name, property_name, proof_timeout]);
 			wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
 			wpResults.refresh();
 			window.showInformationMessage('Proof results updated');
