@@ -82,7 +82,8 @@ module WpOpt = struct
     wp_session: string;
     wp_smoke_tests: bool;
     wp_smoke_timeout: int;
-    wp_script: string
+    wp_script: string;
+    wp_cache: string
   }
   let create ?wp_fct ?wp_prop ?wp_timeout ?wp_prover ?wp_smoke_tests ?wp_gen ?wp_script () = {
     wp = true;
@@ -99,6 +100,7 @@ module WpOpt = struct
     wp_smoke_tests = (match wp_smoke_tests with None -> false | Some s -> s);
     wp_smoke_timeout = 3;
     wp_script = (match wp_script with | None -> !Configuration.global_params.wpScript | Some s -> s);
+    wp_cache = !Configuration.global_params.wpCache;
   }
   let string_of_t (options : t) : string =
     let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in
@@ -117,7 +119,8 @@ module WpOpt = struct
     let wp_smoke_tests_opt = option_if_true options.wp_smoke_tests "-wp-smoke-tests " in
     let wp_smoke_timeout_opt = option_if_not_empty_string (Stdlib.string_of_int options.wp_smoke_timeout) "-wp-smoke-timeout " in
     let wp_script = option_if_not_empty_string (options.wp_script) "-wp-script " in
-    Printf.sprintf "%s %s %s %s %s %s %s %s %s %s %s %s %s %s" wp_opt wp_prop_opt wp_fct_opt wp_gen_opt wp_rte_opt wp_pruning_opt wp_check_memory_model_opt wp_no_volatile_opt wp_prover_opt wp_timeout_opt wp_session_opt wp_smoke_tests_opt wp_smoke_timeout_opt wp_script
+    let wp_cache = option_if_not_empty_string (options.wp_cache) "-wp-cache " in
+    Printf.sprintf "%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s" wp_opt wp_prop_opt wp_fct_opt wp_gen_opt wp_rte_opt wp_pruning_opt wp_check_memory_model_opt wp_no_volatile_opt wp_prover_opt wp_timeout_opt wp_session_opt wp_smoke_tests_opt wp_smoke_timeout_opt wp_script wp_cache
 end
 
 module MetacslOpt = struct
@@ -626,7 +629,7 @@ let rq_handler json_string =
         in
       let kernel_opt = KernelOpt.create () in
       let uncast_opt = UncastOpt.create () in
-      let wp_opt = WpOpt.create () in
+      let wp_opt = WpOpt.create ~wp_prover:["none"] () in
       let feature = ComputeProofObligation_feature (!rootPath, id, file, line, ch) in
       let lsp_opt = LspOpt.create (feature) in
       let command = 
@@ -655,7 +658,7 @@ let rq_handler json_string =
         in
       let kernel_opt = KernelOpt.create () in
       let uncast_opt = UncastOpt.create () in
-      let wp_opt = WpOpt.create ~wp_fct:[fct] ~wp_prop:[prop] ~wp_prover:["alt-ergo"] ~wp_gen:false ~wp_timeout:timeout () in
+      let wp_opt = WpOpt.create ~wp_fct:[fct] ~wp_prop:[prop] ~wp_gen:false ~wp_timeout:timeout () in
       let feature = Prove_feature (!rootPath, id, file, fct, prop) in
       let lsp_opt = LspOpt.create (feature) in
       let command = 
@@ -824,7 +827,7 @@ let notif_handler json_string server_sock =
       in
       let kernel_opt = KernelOpt.create () in
       let uncast_opt = UncastOpt.create () in
-      let wp_opt = WpOpt.create ~wp_prop:["smoke"] ~wp_prover:["alt-ergo"] ~wp_smoke_tests:true ~wp_gen:false () in
+      let wp_opt = WpOpt.create ~wp_prop:["smoke"] ~wp_smoke_tests:true ~wp_gen:false () in
       let feature = DidSave_feature in
       let lsp_opt = LspOpt.create (feature) in
       let command = Command.create ~kernel:kernel_opt ~files:[file_name] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt () in
