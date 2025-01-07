@@ -20,6 +20,7 @@ let sections = {| {"items": [
           {"section": "wp.timeout"},
           {"section": "wp.session"},
           {"section": "wp.script"},
+          {"section": "wp.cache"},
           {"section": "diagnostics.wp"},
           {"section": "uncast.active"},
           {"section": "uncast.lshiftAsMul"},
@@ -57,6 +58,7 @@ let sections = {| {"items": [
     wpTimeout : int;
     wpSession : string;
     wpScript : string;
+    wpCache : string;
     diagnosticsWp : bool;
     uncastActive : bool;
     uncastLshiftAsMul : bool;
@@ -92,6 +94,7 @@ let sections = {| {"items": [
     ~wpTimeout
     ~wpSession
     ~wpScript
+    ~wpCache
     ~diagnosticsWp
     ~uncastActive
     ~uncastLshiftAsMul
@@ -127,6 +130,7 @@ let sections = {| {"items": [
       wpTimeout;
       wpSession;
       wpScript;
+      wpCache;
       diagnosticsWp;
       uncastActive;
       uncastLshiftAsMul;
@@ -163,6 +167,7 @@ let global_params = ref
   ~wpTimeout: 2
   ~wpSession: ""
   ~wpScript: ""
+  ~wpCache: ""
   ~diagnosticsWp: false
   ~uncastActive: false
   ~uncastLshiftAsMul: true
@@ -207,6 +212,7 @@ let save_configs (result:  Json.json) =
         `Int json_wpTimeout;
         `String json_wpSession;
         `String json_wpScript;
+        `String json_wpCache;
         `Bool json_diagnosticsWp;
         `Bool json_uncastActive;
         `Bool json_uncastLshiftAsMul;
@@ -242,6 +248,7 @@ let save_configs (result:  Json.json) =
       ~wpTimeout: json_wpTimeout
       ~wpSession: json_wpSession
       ~wpScript: json_wpScript
+      ~wpCache: json_wpCache
       ~diagnosticsWp: json_diagnosticsWp
       ~uncastActive: json_uncastActive
       ~uncastLshiftAsMul: json_uncastLshiftAsMul
