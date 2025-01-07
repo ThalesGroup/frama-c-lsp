@@ -660,7 +660,7 @@ let rq_handler json_string =
       let data, pid = fork_execute_command command_str feature in
       Lsp_types.CONTENT (data), pid;
 
-      | "proveStrategies" -> (* prove with WP strategies *)
+      | "provePOStrategies" -> (* prove with WP strategies *)
       let id = (Utils.id_to_int request.id) in
       Lsp.Self.debug ~level:4 "provePOStrategies, %d\n%!" id;
       let (file, fct, prop) = match request.params with
