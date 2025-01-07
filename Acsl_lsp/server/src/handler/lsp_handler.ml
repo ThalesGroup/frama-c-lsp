@@ -14,6 +14,7 @@ type lsp_feature =
   | ComputeMetrics_feature
   | ComputeProofObligation_feature of (string * int * string * int * int)
   | Prove_feature of (string * int * string * string * string)
+  | ProveStrategies_feature of (string * int * string * string * string)
 
 module KernelOpt = struct
 type t = {
@@ -75,9 +76,10 @@ module WpOpt = struct
     wp_timeout: int;
     wp_session: string;
     wp_smoke_tests: bool;
-    wp_smoke_timeout: int
+    wp_smoke_timeout: int;
+    wp_script: string
   }
-  let create ?wp_fct ?wp_prop ?wp_timeout ?wp_prover ?wp_smoke_tests ?wp_gen () = {
+  let create ?wp_fct ?wp_prop ?wp_timeout ?wp_prover ?wp_smoke_tests ?wp_gen ?wp_script () = {
     wp = true;
     wp_rte = !Configuration.global_params.wpRte;
     wp_prop = (match wp_prop with | None -> [] | Some p -> p);
@@ -90,7 +92,8 @@ module WpOpt = struct
     wp_timeout = (match wp_timeout with None -> !Configuration.global_params.wpTimeout | Some t -> t);
     wp_session = !Configuration.global_params.wpSession;
     wp_smoke_tests = (match wp_smoke_tests with None -> false | Some s -> s);
-    wp_smoke_timeout = 3
+    wp_smoke_timeout = 3;
+    wp_script = (match wp_script with | None -> !Configuration.global_params.wpScript | Some s -> s);
   }
   let string_of_t (options : t) : string =
     let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in
@@ -108,7 +111,8 @@ module WpOpt = struct
     let wp_session_opt = option_if_not_empty_string options.wp_session "-wp-session " in
     let wp_smoke_tests_opt = option_if_true options.wp_smoke_tests "-wp-smoke-tests " in
     let wp_smoke_timeout_opt = option_if_not_empty_string (Stdlib.string_of_int options.wp_smoke_timeout) "-wp-smoke-timeout " in
-    Printf.sprintf "%s %s %s %s %s %s %s %s %s %s %s %s %s" wp_opt wp_prop_opt wp_fct_opt wp_gen_opt wp_rte_opt wp_pruning_opt wp_check_memory_model_opt wp_no_volatile_opt wp_prover_opt wp_timeout_opt wp_session_opt wp_smoke_tests_opt wp_smoke_timeout_opt
+    let wp_script = option_if_not_empty_string (options.wp_script) "-wp-script " in
+    Printf.sprintf "%s %s %s %s %s %s %s %s %s %s %s %s %s %s" wp_opt wp_prop_opt wp_fct_opt wp_gen_opt wp_rte_opt wp_pruning_opt wp_check_memory_model_opt wp_no_volatile_opt wp_prover_opt wp_timeout_opt wp_session_opt wp_smoke_tests_opt wp_smoke_timeout_opt wp_script
 end
 
 module MetacslOpt = struct
@@ -260,6 +264,7 @@ module LspOpt = struct
     | ComputeMetrics_feature -> ""
     | ComputeProofObligation_feature (root_path, id, file, line, column) -> Printf.sprintf "-lsp-root-path=\"%s\" -lsp-id=\"%d\" -lsp-show-povc=%s:%d:%d" root_path id file line column
     | Prove_feature (root_path, id, file, fct, prop) -> Printf.sprintf "-lsp-root-path=\"%s\" -lsp-id=\"%d\" -lsp-prove=%s:%s:%s" root_path id file fct prop
+    | ProveStrategies_feature (root_path, id, file, fct, prop) -> Printf.sprintf "-lsp-root-path=\"%s\" -lsp-id=\"%d\" -lsp-prove=%s:%s:%s" root_path id file fct prop
 end
 
 
@@ -428,7 +433,8 @@ let execute_command command feature =
     | FindDefinition_feature (id, _file, _, _)
     | FindDeclaration_feature (id, _file, _, _)
     | ComputeProofObligation_feature (_, id, _file, _, _)
-    | Prove_feature (_, id, _file, _, _) ->
+    | Prove_feature (_, id, _file, _, _)
+    | ProveStrategies_feature (_, id, _file, _, _) ->
       Lsp.Self.debug ~level:2 "Error while executing frama-c command\n%!";
       let msg = Printf.sprintf "Frama-C Error ! Check OUTPUT !" in
       let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:msg () in
@@ -453,7 +459,8 @@ let execute_command command feature =
       | FindDefinition_feature (_, _, _, _)
       | FindDeclaration_feature (_, _, _, _)
       | ComputeProofObligation_feature (_, _, _, _, _)
-      | Prove_feature (_, _, _, _, _) ->
+      | Prove_feature (_, _, _, _, _)
+      | ProveStrategies_feature (_, _, _, _, _) ->
         Lsp.Self.debug ~level:2 "Executed frama-c command\n%!";
         let (plugin_sock, _) = Unix.accept wrapper_sock in
         let data_size = getnumber (readcontlen plugin_sock) in
@@ -499,7 +506,8 @@ let fork_execute_command command feature =
       | FindDefinition_feature (id, _file, _, _)
       | FindDeclaration_feature (id, _file, _, _)
       | ComputeProofObligation_feature (_, id, _file, _, _)
-      | Prove_feature (_, id, _file, _, _) ->
+      | Prove_feature (_, id, _file, _, _)
+      | ProveStrategies_feature (_, id, _file, _, _) ->
         let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:"Server is busy !" () in
         let lsp_message = (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~error:lsp_error_message ()) in
         let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_message) in
@@ -652,6 +660,33 @@ let rq_handler json_string =
       let data, pid = fork_execute_command command_str feature in
       Lsp_types.CONTENT (data), pid;
 
+      | "proveStrategies" -> (* prove with WP strategies *)
+      let id = (Utils.id_to_int request.id) in
+      Lsp.Self.debug ~level:4 "provePOStrategies, %d\n%!" id;
+      let (file, fct, prop) = match request.params with
+          | Some `List
+            [`List 
+              [`String f;
+              `String function_name;
+              `String property_name
+              ]] -> 
+            (Utils.remove_newline (Utils.remove_quotes (f)), function_name, property_name)
+          | _ -> Lsp.Self.debug ~level:3 "No params for showPOStrategies \n%!"; assert false
+        in
+      let kernel_opt = KernelOpt.create () in
+      let uncast_opt = UncastOpt.create () in
+      let wp_opt = WpOpt.create ~wp_fct:[fct] ~wp_prop:[prop] ~wp_prover:["tip"] ~wp_gen:false ~wp_timeout:10 ~wp_script:"dry" () in
+      let feature = ProveStrategies_feature (!rootPath, id, file, fct, prop) in
+      let lsp_opt = LspOpt.create (feature) in
+      let command = 
+        match (String.ends_with ~suffix:".c" file) with
+        | true -> Command.create ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
+        | false -> Command.create ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
+      in
+      let command_str = (Command.string_of_t command) in
+      Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
+      let data, pid = fork_execute_command command_str feature in
+      Lsp_types.CONTENT (data), pid;
 (*
     | "textDocument/completion" -> 
       Lsp.Self.debug ~level:4 "completion\n%!";

@@ -326,6 +326,7 @@ let run () =
       | Some Lsp_handler.ComputeMetrics_feature -> []
       | Some Lsp_handler.ComputeProofObligation_feature(root_path, id, file, line, ch) -> [(ShowPOVC.get_property root_path id file line ch)]
       | Some Lsp_handler.Prove_feature(root_path, id, file, fct, prop) -> [(ProvePO.get_property_status root_path id file fct prop)]
+      | Some Lsp_handler.ProveStrategies_feature(root_path, id, file, fct, prop) -> [(ProvePO.get_property_status root_path id file fct prop)]
       | None -> []
       in
       match data, (Cmdline_opt.get ()) with
