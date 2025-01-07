@@ -119,9 +119,11 @@ export function activate(context: ExtensionContext) {
                 prompt: 'Please specify timeout for provers (c.f. -wp-timeout )', // The prompt message
                 validateInput: (input) => {
                     if (input.length === 0) {return 'Input cannot be empty!';}
+					if (!/^\d+$/.test(input)) {return 'Please enter a valid integer';}
                     return null; // Return null to indicate valid input
             }});
-            const res = await client.sendRequest('provePO', [window.activeTextEditor.document.fileName, function_name, property_name, proof_timeout]);
+			const int_proof_timeout = parseInt(proof_timeout, 10);
+            const res = await client.sendRequest('provePO', [window.activeTextEditor.document.fileName, function_name, property_name, int_proof_timeout]);
 			wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
 			wpResults.refresh();
 			window.showInformationMessage('Proof results updated');
@@ -153,9 +155,11 @@ export function activate(context: ExtensionContext) {
                 prompt: 'Please specify timeout for provers (c.f. -wp-timeout )', // The prompt message
                 validateInput: (input) => {
                     if (input.length === 0) {return 'Input cannot be empty!';}
+					if (!/^\d+$/.test(input)) {return 'Please enter a valid integer';}
                     return null; // Return null to indicate valid input
             }});
-            const res = await client.sendRequest('provePOStrategies', [window.activeTextEditor.document.fileName, function_name, property_name, proof_timeout]);
+			const int_proof_timeout = parseInt(proof_timeout, 10);
+            const res = await client.sendRequest('provePOStrategies', [window.activeTextEditor.document.fileName, function_name, property_name, int_proof_timeout]);
 			wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
 			wpResults.refresh();
 			window.showInformationMessage('Proof results updated');
