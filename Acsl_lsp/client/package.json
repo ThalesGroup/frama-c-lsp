@@ -24,9 +24,6 @@
         "menus": {
             "editor/context": [
                 {"command": "smokeTests", "when": "resourceLangId == acsl"},
-                {"command": "displayCIL", "when": "resourceLangId == acsl"},
-                {"command": "displayCIL_noannot", "when": "resourceLangId == acsl"},
-                {"command": "computeCG", "when": "resourceLangId == acsl"},
                 {"command": "showPOVC", "when": "resourceLangId == acsl"},
                 {"command": "provePO", "when": "resourceLangId == acsl"},
                 {"command": "provePOStrategies", "when": "resourceLangId == acsl"},
@@ -39,13 +36,13 @@
                 {"command": "displayCIL_noannot", "when": "resourceLangId == acsl"},
                 {"command": "computeCG", "when": "resourceLangId == acsl"}
             ],
-            "view/container/context": [
-                {"command": "showPOVC", "when": "view == WPPan", "group": "navigation"},
-                {"command": "computeCG", "when": "view == WPPan", "group": "navigation"}
+            "view/item/context": [
+                {"command": "showPOVC", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
+                {"command": "computeCG", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"}
             ]
         },
         "submenus": [
-            {"id": "output", "label": "out"},
+            {"id": "output", "label": "Output", "icon": "images/logo-frama-c.png"},
             {"id": "vscodeacsl.requires","label": "Show 'requires' POs"}
         ],
         "commands": [
