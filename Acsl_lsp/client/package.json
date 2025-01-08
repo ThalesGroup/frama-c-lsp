@@ -34,8 +34,8 @@
                 {"command": "showLocalMetrics", "when": "resourceLangId == acsl"}
             ],
             "view/item/context": [
-                {"command": "showPOVC", "when": "view == WPPan && context == myTreeItem", "group": "navigation"},
-                {"command": "computeCG", "when": "view == WPPan && context == myTreeItem", "group": "navigation"}
+                {"command": "showPOVC", "when": "view == WPPan && context == myTreeItem"},
+                {"command": "computeCG", "when": "view == WPPan && context == myTreeItem"}
             ]
         },
         "submenus": [{"id": "vscodeacsl.requires","label": "Show 'requires' POs"}],
@@ -48,8 +48,7 @@
             {"command": "provePO", "title": "Prove with WP"},
             {"command": "provePOStrategies", "title": "Prove with WP Strategies"},
             {"command": "showGlobalMetrics", "title": "Project Metrics"},
-            {"command": "showLocalMetrics", "title": "File Metrics"},
-            {"command": "WPPan", "title": "Show Pan Panel"}
+            {"command": "showLocalMetrics", "title": "File Metrics"}
         ],
         "languages": [{"id": "acsl", "aliases": ["ACSL", "acsl"], "extensions": [".c", ".h"], "configuration": "./syntax/language-configuration.json", "icon": {"light": "./images/logo-frama-c.png", "dark": "./images/logo-frama-c.png"}}],
         "grammars": [{"language": "acsl", "scopeName": "source.acsl", "path": "./syntax/acsl.tmLanguage.json"}],
