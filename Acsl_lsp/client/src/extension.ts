@@ -112,6 +112,7 @@ export function activate(context: ExtensionContext) {
         	if (selectedItems.length > 0) {
 				const selectedItem = selectedItems[0];
 				// const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+				vscode.window.showInformationMessage(selectedItem.script);
 				const fileUri = vscode.Uri.parse("file://"+selectedItem.script);
 				const document = await workspace.openTextDocument(fileUri);
 				await languages.setTextDocumentLanguage(document, 'plaintext');
