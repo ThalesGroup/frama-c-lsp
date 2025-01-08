@@ -37,7 +37,7 @@
                 {"command": "computeCG", "when": "resourceLangId == acsl"}
             ],
             "view/item/context": [
-                {"command": "showPOVC", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
+                {"command": "showScript", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
                 {"command": "computeCG", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"}
             ]
         },
@@ -54,7 +54,8 @@
             {"command": "provePO", "title": "Prove with WP"},
             {"command": "provePOStrategies", "title": "Prove with WP Strategies"},
             {"command": "showGlobalMetrics", "title": "Project Metrics"},
-            {"command": "showLocalMetrics", "title": "File Metrics"}
+            {"command": "showLocalMetrics", "title": "File Metrics"},
+            {"command": "showScript", "title": "Goto script"}
         ],
         "languages": [{"id": "acsl", "aliases": ["ACSL", "acsl"], "extensions": [".c", ".h"], "configuration": "./syntax/language-configuration.json", "icon": {"light": "./images/logo-frama-c.png", "dark": "./images/logo-frama-c.png"}}],
         "grammars": [{"language": "acsl", "scopeName": "source.acsl", "path": "./syntax/acsl.tmLanguage.json"}],

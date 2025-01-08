@@ -96,7 +96,32 @@ export function activate(context: ExtensionContext) {
 		}
 	});
 
+
 	const wpResults = new MyTreeDataProvider();
+	// window.registerTreeDataProvider('WPPan', wpResults);
+	const wpResultsView = window.createTreeView('WPPan', {treeDataProvider: wpResults,
+        //id: 'WPPan',           // Unique identifier for the tree view
+        showCollapseAll: true,      // Show "Collapse All" button
+        canSelectMany: true,        // Allow multiple selection in the tree
+        //contextValue: 'myTree',     // A context value for filtering actions/commands
+		});
+
+	const showScript = commands.registerCommand('showScript', async (item: TreeItem) => {
+		try {
+			const selectedItems = wpResultsView.selection;
+        	if (selectedItems.length > 0) {
+				const selectedItem = selectedItems[0];
+				const fileUri = Uri.parse(selectedItem.script);
+				const document = await workspace.openTextDocument(fileUri);
+				await languages.setTextDocumentLanguage(document, 'plaintext');
+				const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
+			}
+			else {vscode.window.showInformationMessage('No item selected');}
+		} catch (err) {
+			window.showErrorMessage('Failed to fetch and display script: ' + err.message);
+			console.error('Error fetching script:', err);
+		}
+	});
 
     const provePO = commands.registerCommand('provePO', async () => {
 		try {
@@ -194,12 +219,12 @@ export function activate(context: ExtensionContext) {
 		}
 	});
 
-	window.registerTreeDataProvider('WPPan', wpResults);
 	context.subscriptions.push(smokeTests, displayCIL, displayCIL_noannot, computeCG, showPOVC, provePO, showGlobalMetrics, showLocalMetrics);
 
 	// Start the client. This will also launch the server
 	client.start();
 }
+
 
 class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 	private _onDidChangeTreeData: vscode.EventEmitter<TreeItem | undefined | null | void> = new vscode.EventEmitter<TreeItem | undefined | null | void>();
@@ -223,7 +248,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 				let line = item_list[3];
 				let stats = item_list[4];
 				let script = item_list[5];
-				let t_item = new TreeItem(verdict, property + " " + stats, 'itemContext');
+				let t_item = new TreeItem(verdict, property + " " + stats, script, 'itemContext');
 				//let t_item = new TreeItem(item.trim(), 'itemContext');
 				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 				t_item.command = {
@@ -268,11 +293,12 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
   class TreeItem extends vscode.TreeItem {
 	children: TreeItem[]|undefined;
   
-	constructor(label: string, description?:string, context?:string, children?: TreeItem[]) {
+	constructor(label: string, description?:string, public script?:string, context?:string, children?: TreeItem[]) {
 	  	super(label, children === undefined ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Expanded);
 		this.description = description;
 	  	this.children = children;
 	  	this.tooltip = `${this.label}`;
+		
 		if (this.label == "passed") {this.iconPath = new vscode.ThemeIcon('check');}
 		else {this.iconPath = new vscode.ThemeIcon('error');}
 	  	this.contextValue = context;
