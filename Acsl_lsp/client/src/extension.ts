@@ -112,7 +112,7 @@ export function activate(context: ExtensionContext) {
         	if (selectedItems.length > 0) {
 				const selectedItem = selectedItems[0];
 				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
-				const uriScheme = vscode.env.uriScheme;
+				const uriScheme = vscode.env.remoteName;
 				let fileUri: vscode.Uri;
 				vscode.window.showInformationMessage(uriScheme);
 				if (uriScheme === 'wsl') {
