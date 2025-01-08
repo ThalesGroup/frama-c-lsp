@@ -114,7 +114,7 @@ export function activate(context: ExtensionContext) {
 				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 				const uriScheme = vscode.env.uriScheme;
 				let fileUri: vscode.Uri;
-			
+				vscode.window.showInformationMessage(uriScheme);
 				if (uriScheme === 'wsl') {
 					// For WSL, use `wsl:/` prefix to the path
 					fileUri = vscode.Uri.parse(`wsl:/${workspacePath}/${selectedItem.script}`);
