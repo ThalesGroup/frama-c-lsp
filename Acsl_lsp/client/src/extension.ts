@@ -114,8 +114,8 @@ export function activate(context: ExtensionContext) {
 				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 				const uriScheme = vscode.env.remoteName;
 				let fileUri: vscode.Uri;
-				if (uriScheme === 'wsl') {fileUri = vscode.Uri.parse(`wsl:/${selectedItem.script}`);}
-				else {fileUri = vscode.Uri.file(selectedItem.script);}
+				if (uriScheme === 'wsl') {fileUri = vscode.Uri.parse(`wsl:${workspacePath}/${selectedItem.script}`);}
+				else {fileUri = vscode.Uri.file(workspacePath + "/" + selectedItem.script);}
 				//const fileUri = vscode.Uri.parse("file://"+selectedItem.script);
 				const document = await workspace.openTextDocument(fileUri);
 				await languages.setTextDocumentLanguage(document, 'plaintext');
