@@ -231,6 +231,21 @@ export function activate(context: ExtensionContext) {
 }
 
 
+function extractFilePaths(inputString: string): string[] {
+    // Regular expression for extracting file paths (Windows, Unix/Linux, and URI file paths)
+    const regex = /(?:[a-zA-Z]:\\(?:[^<>:"/\\|?*\x00-\x1F]+\\)*[^<>:"/\\|?*\x00-\x1F]+(?:\.[^\\]*)?|\/(?:[^/\\\x00-\x1F]+(?:\/[^/\\\x00-\x1F]+)*\/?))|file:\/\/(?:[a-zA-Z]:\\(?:[^<>:"/\\|?*\x00-\x1F]+\\)*[^<>:"/\\|?*\x00-\x1F]+(?:\.[^\\]*)?|\/(?:[^/\\\x00-\x1F]+(?:\/[^/\\\x00-\x1F]+)*\/?))/g;
+    
+    // Match all file paths in the string
+    const matches = inputString.match(regex);
+
+    // If no matches are found, return an empty array
+    if (matches === null) {
+        return [];
+    }
+
+    return matches;
+}
+
 class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 	private _onDidChangeTreeData: vscode.EventEmitter<TreeItem | undefined | null | void> = new vscode.EventEmitter<TreeItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<TreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
@@ -252,7 +267,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 				let file = item_list[2].trim();
 				let line = item_list[3].trim();
 				let stats = item_list[4].trim();
-				let script = item_list[5].split(" ")[1].trim();
+				let script = extractFilePaths(item_list[5])[0];
 				let t_item = new TreeItem(verdict, property + " " + stats, script, 'itemContext');
 				//let t_item = new TreeItem(item.trim(), 'itemContext');
 				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
