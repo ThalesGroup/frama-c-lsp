@@ -34,8 +34,8 @@
                 {"command": "showLocalMetrics", "when": "resourceLangId == acsl"}
             ],
             "view/item/context": [
-                {"command": "showPOVC", "when": "view == WPPan && context == myTreeItem"},
-                {"command": "computeCG", "when": "view == WPPan && context == myTreeItem"}
+                {"command": "showPOVC", "when": "view == WPPan"},
+                {"command": "computeCG", "when": "view == WPPan"}
             ]
         },
         "submenus": [{"id": "vscodeacsl.requires","label": "Show 'requires' POs"}],
