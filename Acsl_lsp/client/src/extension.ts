@@ -223,6 +223,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 				let line = item_list[3];
 				// let t_item = new TreeItem(verdict + " : " + property);
 				let t_item = new TreeItem(item.trim());
+				t_item.commandId = "displayCIL";
 				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 				t_item.command = {
 					command: 'vscode.open',
@@ -266,13 +267,19 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
   class TreeItem extends vscode.TreeItem {
 	children: TreeItem[]|undefined;
   
-	constructor(label: string, children?: TreeItem[]) {
-	  super(
-		  label,
-		  children === undefined ? vscode.TreeItemCollapsibleState.None :
-								   vscode.TreeItemCollapsibleState.Expanded);
+	constructor(label: string, public commandId?: string, children?: TreeItem[]) {
+	  super(label, children === undefined ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Expanded);
 	  this.children = children;
+	  this.contextValue = 'myTreeItem';
 	}
+
+	// Add command to each item
+    contextMenuCommand() {
+        return {
+            command: this.commandId,
+            title: `Command for ${this.label}`,
+        };
+    }
   }
 
 export function deactivate(): Thenable<void> | undefined {

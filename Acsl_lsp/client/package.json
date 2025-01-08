@@ -32,6 +32,10 @@
                 {"command": "provePOStrategies", "when": "resourceLangId == acsl"},
                 {"command": "showGlobalMetrics", "when": "resourceLangId == acsl"},
                 {"command": "showLocalMetrics", "when": "resourceLangId == acsl"}
+            ],
+            "view/item/context": [
+                {"command": "showPOVC", "when": "view == WPPan && context == myTreeItem", "group": "navigation"},
+                {"command": "computeCG", "when": "view == WPPan && context == myTreeItem", "group": "navigation"}
             ]
         },
         "submenus": [{"id": "vscodeacsl.requires","label": "Show 'requires' POs"}],
