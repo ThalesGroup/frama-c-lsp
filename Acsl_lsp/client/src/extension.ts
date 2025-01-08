@@ -114,15 +114,8 @@ export function activate(context: ExtensionContext) {
 				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 				const uriScheme = vscode.env.remoteName;
 				let fileUri: vscode.Uri;
-				vscode.window.showInformationMessage(uriScheme);
-				if (uriScheme === 'wsl') {
-					// For WSL, use `wsl:/` prefix to the path
-					fileUri = vscode.Uri.parse(`wsl:/${workspacePath}/${selectedItem.script}`);
-					vscode.window.showInformationMessage(`wsl:/${workspacePath}/${selectedItem.script}`);
-				} else {
-					// If not in WSL, convert to local path (Windows or Linux path)
-					fileUri = vscode.Uri.file(selectedItem.script);
-				}
+				if (uriScheme === 'wsl') {fileUri = vscode.Uri.parse(`wsl:/${selectedItem.script}`);}
+				else {fileUri = vscode.Uri.file(selectedItem.script);}
 				//const fileUri = vscode.Uri.parse("file://"+selectedItem.script);
 				const document = await workspace.openTextDocument(fileUri);
 				await languages.setTextDocumentLanguage(document, 'plaintext');
@@ -254,12 +247,12 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 			this.data = [];
 			jsonData.forEach((item, index) => {
 				let item_list = item.trim().split(":");
-				let verdict = item_list[0];
-				let property = item_list[1];
-				let file = item_list[2];
-				let line = item_list[3];
-				let stats = item_list[4];
-				let script = item_list[5];
+				let verdict = item_list[0].trim();
+				let property = item_list[1].trim();
+				let file = item_list[2].trim();
+				let line = item_list[3].trim();
+				let stats = item_list[4].trim();
+				let script = item_list[5].trim();
 				let t_item = new TreeItem(verdict, property + " " + stats, script, 'itemContext');
 				//let t_item = new TreeItem(item.trim(), 'itemContext');
 				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
