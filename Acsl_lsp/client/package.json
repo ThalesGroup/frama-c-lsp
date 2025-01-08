@@ -44,7 +44,10 @@
                 {"command": "computeCG", "when": "view == WPPan", "group": "navigation"}
             ]
         },
-        "submenus": [{"id": "vscodeacsl.requires","label": "Show 'requires' POs"}],
+        "submenus": [
+            {"id": "output", "label": "out"},
+            {"id": "vscodeacsl.requires","label": "Show 'requires' POs"}
+        ],
         "commands": [
             {"command": "smokeTests", "title": "Smoke Tests"},
             {"command": "displayCIL", "title": "File CIL"},
