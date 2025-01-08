@@ -223,7 +223,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 				let line = item_list[3];
 				// let t_item = new TreeItem(verdict + " : " + property);
 				let t_item = new TreeItem(item.trim());
-				t_item.commandId = "displayCIL";
+				t_item.commandId = "showPOVC";
 				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 				t_item.command = {
 					command: 'vscode.open',
