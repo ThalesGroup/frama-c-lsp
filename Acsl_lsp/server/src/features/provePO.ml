@@ -38,7 +38,8 @@ let get_property_status _rootPath id _file _fct _prop : string =
     let stats = Wp.ProofEngine.consolidated po in
     let prover_results = (Pretty_utils.to_string Wp.Stats.pretty stats) in
     let proof_status, property = (Wp.Wpo.get_proof po) in
-    let script_file = Pretty_utils.to_string Wp.ProofSession.pp_script_for po in
+    (* let script_file = Pretty_utils.to_string Wp.ProofSession.pp_script_for po in *)
+    let script_file = Pretty_utils.to_string Wp.ProofSession.pp_file (Wp.ProofSession.filename ~force:false po) in
     let position = match Property.source property with
     | None -> ""
     | Some position -> (Pretty_utils.to_string Filepath.pp_pos position) 
