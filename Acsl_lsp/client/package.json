@@ -7,7 +7,7 @@
     "categories": ["Programming Languages"],
     "keywords": ["acsl", "c", "frama-c"],
     "engines": {"vscode": "^1.85.0"},
-    "activationEvents": ["onLanguage:acsl", "onView:myPanel"],
+    "activationEvents": ["onLanguage:acsl"],
     "main": "./out/extension",
     "contributes": {
         "keybindings": [
