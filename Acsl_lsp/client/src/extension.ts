@@ -111,13 +111,14 @@ export function activate(context: ExtensionContext) {
 			const selectedItems = wpResultsView.selection;
         	if (selectedItems.length > 0) {
 				const selectedItem = selectedItems[0];
-				// const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 				const uriScheme = vscode.env.uriScheme;
 				let fileUri: vscode.Uri;
 			
 				if (uriScheme === 'wsl') {
 					// For WSL, use `wsl:/` prefix to the path
-					fileUri = vscode.Uri.parse(`wsl:${selectedItem.script}`);
+					fileUri = vscode.Uri.parse(`wsl:/${workspacePath}/${selectedItem.script}`);
+					vscode.window.showInformationMessage(`wsl:/${workspacePath}/${selectedItem.script}`);
 				} else {
 					// If not in WSL, convert to local path (Windows or Linux path)
 					fileUri = vscode.Uri.file(selectedItem.script);
