@@ -221,8 +221,10 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 				let property = item_list[1];
 				let file = item_list[2];
 				let line = item_list[3];
-				// let t_item = new TreeItem(verdict + " : " + property);
-				let t_item = new TreeItem(item.trim(), 'itemContext');
+				let stats = item_list[4];
+				let script = item_list[5];
+				let t_item = new TreeItem(verdict, property + " " + stats, 'itemContext');
+				//let t_item = new TreeItem(item.trim(), 'itemContext');
 				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 				t_item.command = {
 					command: 'vscode.open',
@@ -266,13 +268,12 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
   class TreeItem extends vscode.TreeItem {
 	children: TreeItem[]|undefined;
   
-	constructor(label: string, context?:string, children?: TreeItem[]) {
-		let column1 = "a";
-		let column2 = "b";
-		let column3 = "c";
+	constructor(label: string, description?:string, context?:string, children?: TreeItem[]) {
 	  	super(label, children === undefined ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Expanded);
+		this.description = description;
 	  	this.children = children;
-	  	this.tooltip = `${column1} | ${column2} | ${column3}`;
+	  	this.tooltip = `${this.label}`;
+		this.iconPath = new vscode.ThemeIcon('files');
 	  	this.contextValue = context;
 	}
   }
