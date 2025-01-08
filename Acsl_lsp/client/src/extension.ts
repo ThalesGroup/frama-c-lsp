@@ -269,6 +269,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 	constructor(label: string, children?: TreeItem[]) {
 	  super(label, children === undefined ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Expanded);
 	  this.children = children;
+	  this.contextValue = 'itemContext';
 	}
   }
 
