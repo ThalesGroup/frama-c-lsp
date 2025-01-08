@@ -111,8 +111,8 @@ export function activate(context: ExtensionContext) {
 			const selectedItems = wpResultsView.selection;
         	if (selectedItems.length > 0) {
 				const selectedItem = selectedItems[0];
-				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
-				const fileUri = vscode.Uri.file(workspacePath + "/" + selectedItem.script);
+				// const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+				const fileUri = vscode.Uri.file(selectedItem.script);
 				const document = await workspace.openTextDocument(fileUri);
 				await languages.setTextDocumentLanguage(document, 'plaintext');
 				const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
