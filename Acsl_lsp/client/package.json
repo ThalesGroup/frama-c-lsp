@@ -31,7 +31,13 @@
                 {"command": "provePO", "when": "resourceLangId == acsl"},
                 {"command": "provePOStrategies", "when": "resourceLangId == acsl"},
                 {"command": "showGlobalMetrics", "when": "resourceLangId == acsl"},
-                {"command": "showLocalMetrics", "when": "resourceLangId == acsl"}
+                {"command": "showLocalMetrics", "when": "resourceLangId == acsl"},
+                {"submenu": "output"}
+            ],
+            "output": [
+                {"command": "displayCIL", "when": "resourceLangId == acsl"},
+                {"command": "displayCIL_noannot", "when": "resourceLangId == acsl"},
+                {"command": "computeCG", "when": "resourceLangId == acsl"}
             ],
             "view/container/context": [
                 {"command": "showPOVC", "when": "view == WPPan", "group": "navigation"},
