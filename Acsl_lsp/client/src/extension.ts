@@ -273,7 +273,8 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 		this.description = description;
 	  	this.children = children;
 	  	this.tooltip = `${this.label}`;
-		this.iconPath = new vscode.ThemeIcon('files');
+		if (this.label == "passed") {this.iconPath = new vscode.ThemeIcon('check');}
+		else {this.iconPath = new vscode.ThemeIcon('error');}
 	  	this.contextValue = context;
 	}
   }
