@@ -13,6 +13,7 @@ type lsp_feature =
   | ComputeCallGraph_feature
   | ComputeMetrics_feature
   | ComputeProofObligation_feature of (string * int * string * int * int)
+  | ComputeProofObligationID_feature of (int * string)
   | Prove_feature of (string * int * string * string * string)
   | ProveStrategies_feature of (string * int * string * string * string)
 
@@ -271,6 +272,7 @@ module LspOpt = struct
     | ComputeCallGraph_feature -> ""
     | ComputeMetrics_feature -> ""
     | ComputeProofObligation_feature (root_path, id, file, line, column) -> Printf.sprintf "-lsp-root-path=\"%s\" -lsp-id=\"%d\" -lsp-show-povc=%s:%d:%d" root_path id file line column
+    | ComputeProofObligationID_feature (id, goal_id) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-show-po=%s" id goal_id
     | Prove_feature (root_path, id, file, fct, prop) -> Printf.sprintf "-lsp-root-path=\"%s\" -lsp-id=\"%d\" -lsp-prove=%s:%s:%s" root_path id file fct prop
     | ProveStrategies_feature (root_path, id, file, fct, prop) -> Printf.sprintf "-lsp-root-path=\"%s\" -lsp-id=\"%d\" -lsp-prove=%s:%s:%s" root_path id file fct prop
 end
@@ -440,11 +442,12 @@ let execute_command command feature =
       in
       data
 
-    | FindDefinition_feature (id, _file, _, _)
-    | FindDeclaration_feature (id, _file, _, _)
-    | ComputeProofObligation_feature (_, id, _file, _, _)
-    | Prove_feature (_, id, _file, _, _)
-    | ProveStrategies_feature (_, id, _file, _, _) ->
+    | FindDefinition_feature (id, _, _, _)
+    | FindDeclaration_feature (id, _, _, _)
+    | ComputeProofObligation_feature (_, id, _, _, _)
+    | ComputeProofObligationID_feature (id, _)
+    | Prove_feature (_, id, _, _, _)
+    | ProveStrategies_feature (_, id, _, _, _) ->
       Lsp.Self.debug ~level:2 "Error while executing frama-c command\n%!";
       let msg = Printf.sprintf "Frama-C Error ! Check OUTPUT !" in
       let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:msg () in
@@ -469,6 +472,7 @@ let execute_command command feature =
       | FindDefinition_feature (_, _, _, _)
       | FindDeclaration_feature (_, _, _, _)
       | ComputeProofObligation_feature (_, _, _, _, _)
+      | ComputeProofObligationID_feature (_, _)
       | Prove_feature (_, _, _, _, _)
       | ProveStrategies_feature (_, _, _, _, _) ->
         Lsp.Self.debug ~level:2 "Executed frama-c command\n%!";
@@ -513,11 +517,12 @@ let fork_execute_command command feature =
     try
       (execute_command command feature), pid
     with _exn -> (match feature with
-      | FindDefinition_feature (id, _file, _, _)
-      | FindDeclaration_feature (id, _file, _, _)
-      | ComputeProofObligation_feature (_, id, _file, _, _)
-      | Prove_feature (_, id, _file, _, _)
-      | ProveStrategies_feature (_, id, _file, _, _) ->
+      | FindDefinition_feature (id, _, _, _)
+      | FindDeclaration_feature (id, _, _, _)
+      | ComputeProofObligation_feature (_, id, _, _, _)
+      | ComputeProofObligationID_feature (id, _)
+      | Prove_feature (_, id, _, _, _)
+      | ProveStrategies_feature (_, id, _, _, _) ->
         let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:"Server is busy !" () in
         let lsp_message = (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~error:lsp_error_message ()) in
         let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_message) in
@@ -642,7 +647,29 @@ let rq_handler json_string =
       let data, pid = fork_execute_command command_str feature in
       Lsp_types.CONTENT (data), pid;
 
-    | "provePO" -> (* prove with WP *)
+      | "showPO" -> (* show proof obligation of specific function *)
+      let id = (Utils.id_to_int request.id) in
+      Lsp.Self.debug ~level:4 "showPO, %d\n%!" id;
+      let (file, goal_id) = match request.params with 
+          | Some `List [`List [`String f; `String goal_id;]] -> (Utils.remove_newline (Utils.remove_quotes (f)), Utils.remove_newline (Utils.remove_quotes (goal_id)))
+          | _ -> Lsp.Self.debug ~level:3 "No params for showPO \n%!"; assert false
+      in
+      let kernel_opt = KernelOpt.create () in
+      let uncast_opt = UncastOpt.create () in
+      let wp_opt = WpOpt.create ~wp_prover:["none"] () in
+      let feature = ComputeProofObligationID_feature (id, goal_id) in
+      let lsp_opt = LspOpt.create (feature) in
+      let command = 
+        match (String.ends_with ~suffix:".c" file) with
+        | true -> Command.create ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
+        | false -> Command.create ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
+      in
+      let command_str = (Command.string_of_t command) in
+      Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
+      let data, pid = fork_execute_command command_str feature in
+      Lsp_types.CONTENT (data), pid;
+
+      | "provePO" -> (* prove with WP *)
       let id = (Utils.id_to_int request.id) in
       Lsp.Self.debug ~level:4 "provePO, %d\n%!" id;
       let (file, fct, prop, timeout) = match request.params with

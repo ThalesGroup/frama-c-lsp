@@ -60,3 +60,23 @@ let get_property rootPath id file line ch : string =
   let json_message = Lsp_types.ResponseMessage.json_of_t lsp_message in
   Json.save_string json_message
 
+
+
+
+
+let get_property_from_id id goal_id : string =
+    let proof_oblgs = ref [] in
+    Wp.Wpo.iter_on_goals (fun po ->
+      if (String.equal goal_id (Wp.Wpo.get_gid po)) then
+        proof_oblgs := (Pretty_utils.to_string (Wp.Wpo.pp_goal) po) :: !proof_oblgs
+    );
+    let result = Json.of_string (String.concat "\n----------------------------\n" !proof_oblgs) in
+    let result_msg =
+      match result with 
+    | `String "" -> (`String "No proof obligations")
+    | _ -> result
+    in
+    let lsp_message = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:result_msg () in
+    let json_message = Lsp_types.ResponseMessage.json_of_t lsp_message in
+    Json.save_string json_message
+  

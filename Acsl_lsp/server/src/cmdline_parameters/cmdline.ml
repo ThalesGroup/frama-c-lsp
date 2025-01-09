@@ -97,6 +97,14 @@ module Show_POVC = Self.String
   let default = ""
 end)
 
+module Show_PO = Self.String
+(struct
+  let option_name = "-lsp-show-po"
+  let help = "send back the po of the located property"
+  let arg_name = "goal_id"
+  let default = ""
+end)
+
 module Prove = Self.String
 (struct
   let option_name = "-lsp-prove"
@@ -159,6 +167,15 @@ let get_ComputeProofObligation_args () =
     )
   else None
 
+let get_ComputeProofObligationID_args () =
+    let args = Show_PO.get () in
+    if not (String.trim args = "") then
+      (
+      let goal_id = (Show_PO.get ()) in
+      Some (Id.get (), goal_id)
+      )
+    else None
+
 let get_Prove_args () =
     let args = Prove.get () in
     if not (String.trim args = "") then
@@ -191,6 +208,10 @@ let get_active_option () =
   (match get_ComputeProofObligation_args () with
   | None -> ()
   | Some (root_path, id, file, line, ch) -> active_options := Lsp_handler.ComputeProofObligation_feature(root_path, id, file, line, ch) :: !active_options
+  );
+  (match get_ComputeProofObligationID_args () with
+  | None -> ()
+  | Some (goal_id) -> active_options := Lsp_handler.ComputeProofObligationID_feature(goal_id) :: !active_options
   );
   (match get_Prove_args () with
   | None -> ()
@@ -325,6 +346,7 @@ let run () =
       | Some Lsp_handler.ComputeCallGraph_feature -> []
       | Some Lsp_handler.ComputeMetrics_feature -> []
       | Some Lsp_handler.ComputeProofObligation_feature(root_path, id, file, line, ch) -> [(ShowPOVC.get_property root_path id file line ch)]
+      | Some Lsp_handler.ComputeProofObligationID_feature(id, goal_id) -> [(ShowPOVC.get_property_from_id id goal_id)]
       | Some Lsp_handler.Prove_feature(root_path, id, file, fct, prop) -> [(ProvePO.get_property_status root_path id file fct prop)]
       | Some Lsp_handler.ProveStrategies_feature(root_path, id, file, fct, prop) -> [(ProvePO.get_property_status root_path id file fct prop)]
       | None -> []
