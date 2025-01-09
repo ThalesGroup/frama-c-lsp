@@ -38,7 +38,7 @@
             ],
             "view/item/context": [
                 {"command": "showScript", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
-                {"command": "computeCG", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"}
+                {"command": "showPO", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"}
             ]
         },
         "submenus": [
@@ -55,7 +55,8 @@
             {"command": "provePOStrategies", "title": "Prove with WP Strategies"},
             {"command": "showGlobalMetrics", "title": "Project Metrics"},
             {"command": "showLocalMetrics", "title": "File Metrics"},
-            {"command": "showScript", "title": "Goto script"}
+            {"command": "showScript", "title": "Goto script"},
+            {"command": "showPO", "title": "Get WP Proof Obligation"}
         ],
         "languages": [{"id": "acsl", "aliases": ["ACSL", "acsl"], "extensions": [".c", ".h"], "configuration": "./syntax/language-configuration.json", "icon": {"light": "./images/logo-frama-c.png", "dark": "./images/logo-frama-c.png"}}],
         "grammars": [{"language": "acsl", "scopeName": "source.acsl", "path": "./syntax/acsl.tmLanguage.json"}],

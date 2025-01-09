@@ -97,6 +97,39 @@ export function activate(context: ExtensionContext) {
 	});
 
 
+	const showPO = commands.registerCommand('showPO', async () => {
+		try {
+			const selectedItems = wpResultsView.selection;
+			if (selectedItems.length > 0) {
+				const selectedItem = selectedItems[0];
+				const goal_id = selectedItem.goal_id;
+				const res = await client.sendRequest('showPO', [window.activeTextEditor.document.fileName, goal_id]);
+				const wpResult = JSON.parse(JSON.stringify(res, null, 1));
+
+				// create a new untitled document in a new tab
+				const newUri = Uri.parse('untitled:Proof Obligation');
+				const document = await workspace.openTextDocument(newUri);
+				await languages.setTextDocumentLanguage(document, 'plaintext');
+				const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
+
+				// delete previous content if any and set the content of the new document
+				editor.edit(editBuilder => {
+					const start = new Position(0, 0);
+					const end = new Position(document.lineCount, 0);
+					const fullRange = new Range(start, end);
+					editBuilder.delete(fullRange);
+					editBuilder.insert(editor.selection.start, wpResult);
+				});
+				window.showInformationMessage('Proof obligation computed');
+			}
+			else {vscode.window.showInformationMessage('No item selected');}
+		} catch (err) {
+			window.showErrorMessage('Failed to fetch and display WP proof obligation: ' + err.message);
+			console.error('Error fetching WP proof obligation:', err);
+		}
+	});
+
+
 	const wpResults = new MyTreeDataProvider();
 	// window.registerTreeDataProvider('WPPan', wpResults);
 	const wpResultsView = window.createTreeView('WPPan', {treeDataProvider: wpResults,
@@ -247,13 +280,12 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 			jsonData.forEach((item, index) => {
 				let item_list = item.trim().split(":");
 				let verdict = item_list[0].trim();
-				let property = item_list[1].trim();
+				let goal_id = item_list[1].trim();
 				let file = item_list[2].trim();
 				let line = item_list[3].trim();
 				let stats = item_list[4].trim();
 				let script = item_list[5].trim();
-				let t_item = new TreeItem(verdict, property + " " + stats, script, 'itemContext');
-				//let t_item = new TreeItem(item.trim(), 'itemContext');
+				let t_item = new TreeItem(verdict, goal_id + " " + stats, goal_id, script, 'itemContext');
 				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 				t_item.command = {
 					command: 'vscode.open',
@@ -297,7 +329,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
   class TreeItem extends vscode.TreeItem {
 	children: TreeItem[]|undefined;
   
-	constructor(label: string, description?:string, public script?:string, context?:string, children?: TreeItem[]) {
+	constructor(label: string, description?:string, public goal_id?:string, public script?:string, context?:string, children?: TreeItem[]) {
 	  	super(label, children === undefined ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Expanded);
 		this.description = description;
 	  	this.children = children;
