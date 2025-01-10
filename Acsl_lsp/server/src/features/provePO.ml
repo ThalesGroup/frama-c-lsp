@@ -28,7 +28,7 @@ let is_position_between (line_check, char_check) (line1, char1) (line2, char2) =
 
 
 
-let get_property_status _rootPath id _file _fct _prop : string =
+let get_property_status id : string =
   let verdict_msg = ref [] in
   Wp.Wpo.iter_on_goals (fun po -> 
     Lsp.Self.debug ~level:2 "gid:%s label:%s done!\n%!" (Wp.Wpo.get_gid po) (Wp.Wpo.get_label po);

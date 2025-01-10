@@ -14,8 +14,8 @@ type lsp_feature =
   | ComputeMetrics_feature
   | ComputeProofObligation_feature of (string * int * string * int * int)
   | ComputeProofObligationID_feature of (int * string)
-  | Prove_feature of (string * int * string * string * string)
-  | ProveStrategies_feature of (string * int * string * string * string)
+  | Prove_feature of (int)
+  | ProveStrategies_feature of (int)
 
 module KernelOpt = struct
 type t = {
@@ -31,9 +31,10 @@ type t = {
   kernel_warn_key : string;
   no_unicode : bool;
   inline_calls : string;
-  remove_inlines : string
+  remove_inlines : string;
+  strategies : bool
   }
-let create ?fct () =
+let create ?fct ~strategies () =
   {
     include_paths = !Configuration.global_params.includePaths;
     macros = !Configuration.global_params.macros;
@@ -47,14 +48,15 @@ let create ?fct () =
     kernel_warn_key = "annot-error=active,too-large-array=active";
     no_unicode = true;
     inline_calls = "@inline";
-    remove_inlines = "@inline"
+    remove_inlines = "@inline";
+    strategies = strategies;
   }
 let string_of_t (options : t) : string =
   let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in
   let option_if_true b opt = if b then (opt) else "" in
   let include_paths_opt = List.map (fun x -> " -I"^(!rootPath^"/"^(x))) options.include_paths in
   let macros_opt = List.map (fun x -> " -D"^x) options.macros in
-  let macros_opt = (" -D" ^ options.macroStrategiesFunctionPrefix) :: macros_opt in
+  let macros_opt = if options.strategies then (" -D" ^ options.macroStrategiesFunctionPrefix) :: macros_opt else macros_opt in
   let macroStrategiesFunctionPrefix_opt = List.map (fun x -> " -D"^options.macroStrategiesFunctionPrefix^x) options.fct in
   let cpp_extra_args_opt = "-cpp-extra-args=\" "^(options.cpp_extra_args)^" "^(String.concat " " include_paths_opt)^" "^(String.concat " " macros_opt)^" "^(String.concat " " macroStrategiesFunctionPrefix_opt)^"\"" in
   let machdep_opt = (option_if_not_empty_string options.machdep "-machdep ") in
@@ -272,8 +274,8 @@ module LspOpt = struct
     | ComputeMetrics_feature -> ""
     | ComputeProofObligation_feature (root_path, id, file, line, column) -> Printf.sprintf "-lsp-root-path=\"%s\" -lsp-id=\"%d\" -lsp-show-povc=%s:%d:%d" root_path id file line column
     | ComputeProofObligationID_feature (id, goal_id) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-show-po=%s" id goal_id
-    | Prove_feature (root_path, id, file, fct, prop) -> Printf.sprintf "-lsp-root-path=\"%s\" -lsp-id=\"%d\" -lsp-prove=%s:%s:%s" root_path id file fct prop
-    | ProveStrategies_feature (root_path, id, file, fct, prop) -> Printf.sprintf "-lsp-root-path=\"%s\" -lsp-id=\"%d\" -lsp-prove=%s:%s:%s" root_path id file fct prop
+    | Prove_feature (id) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-prove" id
+    | ProveStrategies_feature (id) -> Printf.sprintf "-lsp-id=\"%d\"" id
 end
 
 
@@ -445,8 +447,8 @@ let execute_command command feature =
     | FindDeclaration_feature (id, _, _, _)
     | ComputeProofObligation_feature (_, id, _, _, _)
     | ComputeProofObligationID_feature (id, _)
-    | Prove_feature (_, id, _, _, _)
-    | ProveStrategies_feature (_, id, _, _, _) ->
+    | Prove_feature (id)
+    | ProveStrategies_feature (id) ->
       Lsp.Self.debug ~level:2 "Error while executing frama-c command\n%!";
       let msg = Printf.sprintf "Frama-C Error ! Check OUTPUT !" in
       let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:msg () in
@@ -472,8 +474,8 @@ let execute_command command feature =
       | FindDeclaration_feature (_, _, _, _)
       | ComputeProofObligation_feature (_, _, _, _, _)
       | ComputeProofObligationID_feature (_, _)
-      | Prove_feature (_, _, _, _, _)
-      | ProveStrategies_feature (_, _, _, _, _) ->
+      | Prove_feature (_)
+      | ProveStrategies_feature (_) ->
         Lsp.Self.debug ~level:2 "Executed frama-c command\n%!";
         let (plugin_sock, _) = Unix.accept wrapper_sock in
         let data_size = getnumber (readcontlen plugin_sock) in
@@ -520,8 +522,8 @@ let fork_execute_command command feature =
       | FindDeclaration_feature (id, _, _, _)
       | ComputeProofObligation_feature (_, id, _, _, _)
       | ComputeProofObligationID_feature (id, _)
-      | Prove_feature (_, id, _, _, _)
-      | ProveStrategies_feature (_, id, _, _, _) ->
+      | Prove_feature (id)
+      | ProveStrategies_feature (id) ->
         let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:"Server is busy !" () in
         let lsp_message = (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~error:lsp_error_message ()) in
         let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_message) in
@@ -567,6 +569,11 @@ let capabilities_str = {|{
   }
 }|}
 
+
+let check_fct fct =
+  let fct = String.trim fct in
+  Str.split (Str.regexp ":") fct
+
 let rq_handler json_string =
   let json = Json.load_string json_string in 
   let request = Lsp_types.RequestMessage.t_of_json json in 
@@ -590,7 +597,7 @@ let rq_handler json_string =
       let src_file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
       let line = params.position.line in 
       let ch = params.position.character in
-      let kernel_opt = KernelOpt.create () in
+      let kernel_opt = KernelOpt.create ~strategies:false () in
       let feature = FindDefinition_feature ((Utils.id_to_int request.id), src_file, line, ch) in
       let lsp_opt = LspOpt.create (feature) in
       let command = Command.create ~kernel:kernel_opt ~lsp:lsp_opt () in
@@ -609,7 +616,7 @@ let rq_handler json_string =
       let src_file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
       let line = params.position.line in 
       let ch = params.position.character in
-      let kernel_opt = KernelOpt.create () in
+      let kernel_opt = KernelOpt.create ~strategies:false () in
       let feature = FindDeclaration_feature ((Utils.id_to_int request.id), src_file, line, ch) in
       let lsp_opt = LspOpt.create (feature) in
       let command = Command.create ~kernel:kernel_opt ~lsp:lsp_opt () in
@@ -631,7 +638,7 @@ let rq_handler json_string =
             (Utils.remove_newline (Utils.remove_quotes (f)), l, c)
           | _ -> Lsp.Self.debug ~level:3 "No params for showPOVC \n%!"; assert false
         in
-      let kernel_opt = KernelOpt.create () in
+      let kernel_opt = KernelOpt.create ~strategies:false () in
       let uncast_opt = UncastOpt.create () in
       let wp_opt = WpOpt.create ~wp_prover:["none"] () in
       let feature = ComputeProofObligation_feature (!rootPath, id, file, line, ch) in
@@ -656,16 +663,17 @@ let rq_handler json_string =
              Utils.remove_newline (Utils.remove_quotes (goal_id)))
           | _ -> Lsp.Self.debug ~level:3 "No params for showPO \n%!"; assert false
       in
-      let kernel_opt = KernelOpt.create () in
+      let function_id = check_fct function_id in
+      let kernel_opt = KernelOpt.create ~strategies:false () in
       let uncast_opt = UncastOpt.create () in
-      let wp_opt = WpOpt.create ~wp_fct:[function_id] ~wp_prover:["none"] () in
+      let wp_opt = WpOpt.create ~wp_fct:function_id ~wp_prover:["none"] () in
       let feature = ComputeProofObligationID_feature (id, goal_id) in
       let lsp_opt = LspOpt.create (feature) in
-      let command = Command.create ~kernel:kernel_opt ~files:[file_id] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt () in
-        (* match (String.ends_with ~suffix:".c" file) with
-        | true -> Command.create ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
+      (* let command = Command.create ~kernel:kernel_opt ~files:[file_id] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt () in *)
+      let command = match (String.ends_with ~suffix:".c" file_id) with
+        | true -> Command.create ~kernel:kernel_opt ~files:[file_id] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
         | false -> Command.create ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
-      in *)
+      in
       let command_str = (Command.string_of_t command) in
       Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
       let data, pid = fork_execute_command command_str feature in
@@ -686,10 +694,12 @@ let rq_handler json_string =
             (Utils.remove_newline (Utils.remove_quotes (f)), function_name, property_name, timeout, gui)
           | _ -> Lsp.Self.debug ~level:3 "No params for showPOVC \n%!"; assert false
         in
-      let kernel_opt = KernelOpt.create () in
+      let fct = check_fct fct in
+      let prop = check_fct prop in
+      let kernel_opt = KernelOpt.create ~strategies:false () in
       let uncast_opt = UncastOpt.create () in
-      let wp_opt = WpOpt.create ~wp_fct:[fct] ~wp_prop:[prop] ~wp_gen:false ~wp_timeout:timeout () in
-      let feature = Prove_feature (!rootPath, id, file, fct, prop) in
+      let wp_opt = WpOpt.create ~wp_fct:fct ~wp_prop:prop ~wp_gen:false ~wp_timeout:timeout () in
+      let feature = Prove_feature (id) in
       let lsp_opt = LspOpt.create (feature) in
       let command = 
         match (String.ends_with ~suffix:".c" file) with
@@ -716,10 +726,12 @@ let rq_handler json_string =
             (Utils.remove_newline (Utils.remove_quotes (f)), function_name, property_name, timeout, gui)
           | _ -> Lsp.Self.debug ~level:3 "No params for showPOStrategies \n%!"; assert false
         in
-      let kernel_opt = KernelOpt.create ~fct:[fct] () in
+      let fct = check_fct fct in
+      let prop = check_fct prop in
+      let kernel_opt = KernelOpt.create ~fct:fct ~strategies:true () in
       let uncast_opt = UncastOpt.create () in
-      let wp_opt = WpOpt.create ~wp_fct:[fct] ~wp_prop:[prop] ~wp_prover:["tip"] ~wp_gen:false ~wp_timeout:timeout ~wp_script:"dry" () in
-      let feature = ProveStrategies_feature (!rootPath, id, file, fct, prop) in
+      let wp_opt = WpOpt.create ~wp_fct:fct ~wp_prop:prop ~wp_prover:["tip"] ~wp_gen:false ~wp_timeout:timeout ~wp_script:"dry" () in
+      let feature = ProveStrategies_feature (id) in
       let lsp_opt = LspOpt.create (feature) in
       let command = 
         match (String.ends_with ~suffix:".c" file) with
@@ -811,7 +823,7 @@ let notif_handler json_string server_sock =
     let file_name = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
     if String.ends_with ~suffix:".c" file_name then
       begin
-        let kernel_opt = KernelOpt.create () in
+        let kernel_opt = KernelOpt.create ~strategies:false () in
         let uncast_opt = UncastOpt.create () in
         let wp_opt = WpOpt.create ~wp_prop:["@assigns"] ~wp_prover:["none"] ~wp_smoke_tests:false ~wp_gen:true () in
         let metacsl_opt = MetacslOpt.create () in
@@ -841,7 +853,7 @@ let notif_handler json_string server_sock =
 
   | "showGlobalMetrics" -> 
     Lsp.Self.debug ~level:4 "global metrics\n%!";
-    let kernel_opt = KernelOpt.create () in
+    let kernel_opt = KernelOpt.create ~strategies:false () in
     let metrics_opt = MetricsOpt.create () in
     let feature = ComputeMetrics_feature in
     let command = Command.create ~kernel:kernel_opt ~metrics:metrics_opt () in
@@ -856,7 +868,7 @@ let notif_handler json_string server_sock =
         | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
         | _ -> Lsp.Self.debug ~level:3 "No params for displayCIL \n%!"; assert false
       in
-      let kernel_opt = KernelOpt.create () in
+      let kernel_opt = KernelOpt.create ~strategies:false () in
       let uncast_opt = UncastOpt.create () in
       let wp_opt = WpOpt.create ~wp_prop:["smoke"] ~wp_smoke_tests:true ~wp_gen:false () in
       let feature = DidSave_feature in
@@ -874,7 +886,7 @@ let notif_handler json_string server_sock =
         | _ -> Lsp.Self.debug ~level:3 "No params for displayCIL \n%!"; assert false
       in
       let feature = ComputeCIL_feature in
-      let kernel_opt = KernelOpt.create () in
+      let kernel_opt = KernelOpt.create ~strategies:false () in
       let file_basename = (Filename.remove_extension (Filename.basename (String.trim file))) in
       let pprint_opt = PprintOpt.create ~file:file_basename () in
       let command = Command.create ~kernel:kernel_opt ~files:[file] ~pprint:pprint_opt () in
@@ -890,7 +902,7 @@ let notif_handler json_string server_sock =
           | _ -> Lsp.Self.debug ~level:3 "No params for displayCIL \n%!"; assert false
         in
         let feature = ComputeCIL_feature in
-        let kernel_opt = KernelOpt.create () in
+        let kernel_opt = KernelOpt.create ~strategies:false () in
         let file_basename = (Filename.remove_extension (Filename.basename (String.trim file))) in
         let pprint_opt = PprintOpt.create ~file:file_basename ~no_annot:true () in
         let command = Command.create ~kernel:kernel_opt ~files:[file] ~pprint:pprint_opt () in
@@ -906,7 +918,7 @@ let notif_handler json_string server_sock =
         | _ -> Lsp.Self.debug ~level:3 "No params for metrics \n%!"; assert false
     in
     let feature = ComputeMetrics_feature in
-    let kernel_opt = KernelOpt.create () in
+    let kernel_opt = KernelOpt.create ~strategies:false () in
     let metrics_opt = MetricsOpt.create () in
     let command = Command.create ~kernel:kernel_opt ~files:[file] ~metrics:metrics_opt () in
     let command_str = (Command.string_of_t command) in
@@ -922,7 +934,7 @@ let notif_handler json_string server_sock =
     in
     let feature = ComputeCallGraph_feature in
     let file_basename = (Filename.remove_extension (Filename.basename (String.trim file))) in
-    let kernel_opt = KernelOpt.create () in
+    let kernel_opt = KernelOpt.create ~strategies:false () in
     let cg_opt = CgOpt.create ~file:file_basename () in
     let command = Command.create ~kernel:kernel_opt ~files:[file] ~cg:cg_opt () in
     let command_str = (Command.string_of_t command) in
