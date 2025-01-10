@@ -89,14 +89,13 @@ export function activate(context: ExtensionContext) {
 			const extension = path.extname(filePath);  // Get the file extension
 			const fileNameBase = fileName.slice(0, -extension.length); // Remove the extension
 			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
-			const filePathOut = workspacePath + "/.frama-c/fc_" + fileNameBase + ".dot";
-			window.showErrorMessage("Failed to compute callgraph:" + filePathOut);
+			const filePathOut = workspacePath + "/.frama-c/fc_" + fileNameBase + ".dot.pdf";
 			if (!fs.existsSync(filePathOut)) {
 				try {fs.writeFileSync(filePathOut, 'Task in progress ...')}
 				catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
 			}
 			const fileUri = vscode.Uri.parse(filePathOut);
-			vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(filePathOut));
+			vscode.window.showTextDocument(fileUri, { preview: false });;
 
 			await client.sendNotification('computeCG', filePath);
 		} catch (err) {
