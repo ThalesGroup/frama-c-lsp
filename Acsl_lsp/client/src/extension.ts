@@ -42,16 +42,18 @@ export function activate(context: ExtensionContext) {
 	const displayCIL = commands.registerCommand('displayCIL', async () => {
 		try {
 			const filePath = window.activeTextEditor.document.fileName;
-			await client.sendNotification('displayCIL', filePath);
-			window.showInformationMessage('CIL file generated');
-			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
-			const dirPath = path.dirname(filePath);     // Extract the directory path
     		const fileName = path.basename(filePath);   // Extract the file name
-			let fileUri: vscode.Uri;
-			fileUri = vscode.Uri.parse(`${workspacePath}/.frama-c/fc_${fileName}`);
+			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+			const fileNameOut = workspacePath + "/.frama-c/fc_" + fileName;
+			if (!fs.existsSync(fileNameOut)) {
+				try {fs.writeFileSync(fileNameOut, 'Task in progress ...')}
+				catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
+			}
+			const fileUri = vscode.Uri.parse(fileNameOut);
 			const document = await workspace.openTextDocument(fileUri);
 			await languages.setTextDocumentLanguage(document, 'plaintext');
 			const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
+			await client.sendNotification('displayCIL', filePath);
 		} catch (err) {
 			window.showErrorMessage('Failed to compute displayCIL: ' + err.message);
 			console.error('Error computing displayCIL:', err);
@@ -61,16 +63,18 @@ export function activate(context: ExtensionContext) {
 	const displayCIL_noannot = commands.registerCommand('displayCIL_noannot', async () => {
 		try {
 			const filePath = window.activeTextEditor.document.fileName;
-			await client.sendNotification('displayCIL_noannot', filePath);
-			window.showInformationMessage('CIL file generated');
-			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
-			const dirPath = path.dirname(filePath);     // Extract the directory path
     		const fileName = path.basename(filePath);   // Extract the file name
-			let fileUri: vscode.Uri;
-			fileUri = vscode.Uri.parse(`${workspacePath}/.frama-c/fc_${fileName}`);
+			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+			const fileNameOut = workspacePath + "/.frama-c/fc_" + fileName;
+			if (!fs.existsSync(fileNameOut)) {
+				try {fs.writeFileSync(fileNameOut, 'Task in progress ...')}
+				catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
+			}
+			const fileUri = vscode.Uri.parse(fileNameOut);
 			const document = await workspace.openTextDocument(fileUri);
 			await languages.setTextDocumentLanguage(document, 'plaintext');
 			const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
+			await client.sendNotification('displayCIL_noannot', filePath);
 		} catch (err) {
 			window.showErrorMessage('Failed to compute displayCIL_noannot: ' + err.message);
 			console.error('Error computing displayCIL_noannot:', err);
@@ -80,16 +84,20 @@ export function activate(context: ExtensionContext) {
 	const computeCG = commands.registerCommand('computeCG', async () => {
 		try {
 			const filePath = window.activeTextEditor.document.fileName;
-			await client.sendNotification('computeCG', filePath);
-			window.showInformationMessage('CallGraph generated');
-			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 			const dirPath = path.dirname(filePath);     // Extract the directory path
     		const fileName = path.basename(filePath);   // Extract the file name
 			const extension = path.extname(filePath);  // Get the file extension
 			const fileNameBase = fileName.slice(0, -extension.length); // Remove the extension
-			let fileUri: vscode.Uri;
-			fileUri = vscode.Uri.parse(`${workspacePath}/.frama-c/fc_${fileNameBase}.dot`);
+			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+			const filePathOut = workspacePath + "/.frama-c/fc_" + fileNameBase + ".dot";
+			if (!fs.existsSync(filePathOut)) {
+				try {fs.writeFileSync(filePath, 'Task in progress ...')}
+				catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
+			}
+			const fileUri = vscode.Uri.parse(filePathOut);
 			vscode.commands.executeCommand('revealFileInOS', fileUri);
+
+			await client.sendNotification('computeCG', filePath);
 		} catch (err) {
 			window.showErrorMessage('Failed to compute callgraph: ' + err.message);
 			console.error('Error computing callgraph:', err);
@@ -347,16 +355,19 @@ export function activate(context: ExtensionContext) {
 	const showLocalMetrics = commands.registerCommand('showLocalMetrics', async () => {
 		try {
 			const filePath = window.activeTextEditor.document.fileName;
-			client.sendNotification('showLocalMetrics', filePath);
-			window.showInformationMessage('Metrics file generated');
-			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
-			const dirPath = path.dirname(filePath);     // Extract the directory path
 			const file_name = "fc_metrics.txt";
-			let fileUri: vscode.Uri;
-			fileUri = vscode.Uri.parse(`${workspacePath}/.frama-c/${file_name}`);
+			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+			const filePath_metrics = workspacePath + "/.frama-c/" + file_name;
+			if (!fs.existsSync(filePath_metrics)) {
+				try {fs.writeFileSync(filePath_metrics, 'Task in progress ...')}
+				catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
+			}
+			const dirPath = path.dirname(filePath);     // Extract the directory path
+			const fileUri = vscode.Uri.parse(filePath_metrics);
 			const document = await workspace.openTextDocument(fileUri);
 			await languages.setTextDocumentLanguage(document, 'plaintext');
 			const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
+			client.sendNotification('showLocalMetrics', filePath);
 		} catch (err) {
 			window.showErrorMessage('Failed to get local metrics: ' + err.message);
 			console.error('Error getting local metrics:', err);
@@ -365,15 +376,18 @@ export function activate(context: ExtensionContext) {
 
 	const showGlobalMetrics = commands.registerCommand('showGlobalMetrics', async () => {
 		try {
-			client.sendNotification('showGlobalMetrics');
-			window.showInformationMessage('Metrics file generated');
-			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 			const file_name = "fc_metrics.txt";
-			let fileUri: vscode.Uri;
-			fileUri = vscode.Uri.parse(`${workspacePath}/.frama-c/${file_name}`);
+			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+			const filePath = workspacePath + "/.frama-c/" + file_name;
+			if (!fs.existsSync(filePath)) {
+				try {fs.writeFileSync(filePath, 'Task in progress ...')}
+				catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
+			}
+			const fileUri = vscode.Uri.parse(filePath);
 			const document = await workspace.openTextDocument(fileUri);
 			await languages.setTextDocumentLanguage(document, 'plaintext');
 			const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
+			client.sendNotification('showGlobalMetrics');
 		} catch (err) {
 			window.showErrorMessage('Failed to get global metrics: ' + err.message);
 			console.error('Error getting global metrics:', err);
