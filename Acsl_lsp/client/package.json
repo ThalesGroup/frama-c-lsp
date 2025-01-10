@@ -47,7 +47,8 @@
             ]
         },
         "submenus": [
-            {"id": "output", "label": "Output", "icon": "images/logo-frama-c.png"},
+            {"id": "Frama-C", "label": "Frama-C", "icon": "images/logo-frama-c.png"},
+            {"id": "Frama-C/WP", "label": "Frama-C/WP", "icon": "images/logo-frama-c.png"},
             {"id": "vscodeacsl.requires","label": "Show 'requires' POs"}
         ],
         "commands": [
