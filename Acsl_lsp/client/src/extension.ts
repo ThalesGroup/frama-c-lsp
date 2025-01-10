@@ -91,7 +91,7 @@ export function activate(context: ExtensionContext) {
 			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 			const filePathOut = workspacePath + "/.frama-c/fc_" + fileNameBase + ".dot";
 			if (!fs.existsSync(filePathOut)) {
-				try {fs.writeFileSync(filePath, 'Task in progress ...')}
+				try {fs.writeFileSync(filePathOut, 'Task in progress ...')}
 				catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
 			}
 			const fileUri = vscode.Uri.parse(filePathOut);
