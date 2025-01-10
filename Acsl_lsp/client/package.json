@@ -110,7 +110,7 @@
             {
             "title": "Frama-C/Metrics",
             "properties": {
-                "metrics.byFunction": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -metrics-by-function", "default": ""}
+                "metrics.byFunction": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -metrics-by-function", "default": false}
                 }
             },
             {
