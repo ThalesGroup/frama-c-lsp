@@ -41,12 +41,14 @@ export function activate(context: ExtensionContext) {
 
 	const displayCIL = commands.registerCommand('displayCIL', async () => {
 		try {
-			await client.sendNotification('displayCIL', window.activeTextEditor.document.fileName);
+			const filePath = window.activeTextEditor.document.fileName;
+			await client.sendNotification('displayCIL', filePath);
 			window.showInformationMessage('CIL file generated');
 			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
-			const file_name = "fc_" + window.activeTextEditor.document.fileName;
+			const dirPath = path.dirname(filePath);     // Extract the directory path
+    		const fileName = path.basename(filePath);   // Extract the file name
 			let fileUri: vscode.Uri;
-			fileUri = vscode.Uri.parse(`${workspacePath}/.frama-c/${file_name}`);
+			fileUri = vscode.Uri.parse(`${workspacePath}/.frama-c/fc_${fileName}`);
 			const document = await workspace.openTextDocument(fileUri);
 			await languages.setTextDocumentLanguage(document, 'plaintext');
 			const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
@@ -58,12 +60,14 @@ export function activate(context: ExtensionContext) {
 
 	const displayCIL_noannot = commands.registerCommand('displayCIL_noannot', async () => {
 		try {
-			await client.sendNotification('displayCIL_noannot', window.activeTextEditor.document.fileName);
+			const filePath = window.activeTextEditor.document.fileName;
+			await client.sendNotification('displayCIL_noannot', filePath);
 			window.showInformationMessage('CIL file generated');
 			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
-			const file_name = "fc_" + window.activeTextEditor.document.fileName;
+			const dirPath = path.dirname(filePath);     // Extract the directory path
+    		const fileName = path.basename(filePath);   // Extract the file name
 			let fileUri: vscode.Uri;
-			fileUri = vscode.Uri.parse(`${workspacePath}/.frama-c/${file_name}`);
+			fileUri = vscode.Uri.parse(`${workspacePath}/.frama-c/fc_${fileName}`);
 			const document = await workspace.openTextDocument(fileUri);
 			await languages.setTextDocumentLanguage(document, 'plaintext');
 			const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
@@ -75,12 +79,14 @@ export function activate(context: ExtensionContext) {
 
 	const computeCG = commands.registerCommand('computeCG', async () => {
 		try {
-			await client.sendNotification('computeCG', window.activeTextEditor.document.fileName);
+			const filePath = window.activeTextEditor.document.fileName;
+			await client.sendNotification('computeCG', filePath);
 			window.showInformationMessage('CallGraph generated');
 			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
-			const file_name = "fc_" + window.activeTextEditor.document.fileName;
+			const dirPath = path.dirname(filePath);     // Extract the directory path
+    		const fileName = path.basename(filePath);   // Extract the file name
 			let fileUri: vscode.Uri;
-			fileUri = vscode.Uri.parse(`${workspacePath}/.frama-c/${file_name}`);
+			fileUri = vscode.Uri.parse(`${workspacePath}/.frama-c/fc_${fileName}`);
 			vscode.commands.executeCommand('revealFileInOS', fileUri);
 		} catch (err) {
 			window.showErrorMessage('Failed to compute callgraph: ' + err.message);
@@ -338,12 +344,14 @@ export function activate(context: ExtensionContext) {
 
 	const showLocalMetrics = commands.registerCommand('showLocalMetrics', async () => {
 		try {
-			client.sendNotification('showLocalMetrics', window.activeTextEditor.document.fileName);
+			const filePath = window.activeTextEditor.document.fileName;
+			client.sendNotification('showLocalMetrics', filePath);
 			window.showInformationMessage('Metrics file generated');
 			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
-			const file_name = "fc_metrics.txt";
+			const dirPath = path.dirname(filePath);     // Extract the directory path
+    		const fileName = path.basename(filePath);   // Extract the file name
 			let fileUri: vscode.Uri;
-			fileUri = vscode.Uri.parse(`${workspacePath}/.frama-c/${file_name}`);
+			fileUri = vscode.Uri.parse(`${workspacePath}/.frama-c/fc_${fileName}`);
 			const document = await workspace.openTextDocument(fileUri);
 			await languages.setTextDocumentLanguage(document, 'plaintext');
 			const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
