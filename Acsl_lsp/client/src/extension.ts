@@ -102,8 +102,10 @@ export function activate(context: ExtensionContext) {
 			const selectedItems = wpResultsView.selection;
 			if (selectedItems.length > 0) {
 				const selectedItem = selectedItems[0];
+				const file_id = selectedItem.file_id;
+				const function_id = selectedItem.function_id;
 				const goal_id = selectedItem.goal_id;
-				const res = await client.sendRequest('showPO', [window.activeTextEditor.document.fileName, goal_id]);
+				const res = await client.sendRequest('showPO', [file_id, function_id, goal_id]);
 				const wpResult = JSON.parse(JSON.stringify(res, null, 1));
 
 				// create a new untitled document in a new tab
@@ -281,15 +283,17 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 				let item_list = item.trim().split(":");
 				let verdict = item_list[0].trim();
 				let goal_id = item_list[1].trim();
-				let file = item_list[2].trim();
+				let file_id = item_list[2].trim();
 				let line = item_list[3].trim();
 				let stats = item_list[4].trim();
 				let script = item_list[5].trim();
-				let t_item = new TreeItem(verdict, goal_id + " " + stats, goal_id, script, 'itemContext');
+				let function_id = item_list[6].trim();
+				let property_id = item_list[7].trim();
+				let t_item = new TreeItem(verdict, goal_id + " " + stats, file_id, function_id, goal_id, script, 'itemContext');
 				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 				t_item.command = {
 					command: 'vscode.open',
-					arguments: [vscode.Uri.parse(workspacePath + "/" + file + "#L" + line)]
+					arguments: [vscode.Uri.parse(workspacePath + "/" + file_id + "#L" + line)]
 				} as vscode.Command;
 				this.data.push(t_item);
 			});
@@ -329,7 +333,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
   class TreeItem extends vscode.TreeItem {
 	children: TreeItem[]|undefined;
   
-	constructor(label: string, description?:string, public goal_id?:string, public script?:string, context?:string, children?: TreeItem[]) {
+	constructor(label: string, description?:string, public file_id?:string, public function_id?:string, public goal_id?:string, public script?:string, context?:string, children?: TreeItem[]) {
 	  	super(label, children === undefined ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Expanded);
 		this.description = description;
 	  	this.children = children;
