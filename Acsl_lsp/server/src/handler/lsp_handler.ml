@@ -238,8 +238,8 @@ module CgOpt = struct
     cg_no_services : bool;
     cmd : string;
   }
-  let create ?file () : t = 
-    let ofile = (match file with None -> ".frama-c/fc_callgraph.dot" | Some f -> Printf.sprintf ".frama-c/fc_%s.dot" f) in
+  let create ~file () : t = 
+    let ofile = Printf.sprintf ".frama-c/fc_%s.dot" file in
     {
     cg = ofile;
     cg_roots = !Configuration.global_params.cgRoots;
