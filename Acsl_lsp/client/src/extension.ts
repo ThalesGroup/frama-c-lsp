@@ -43,6 +43,13 @@ export function activate(context: ExtensionContext) {
 		try {
 			await client.sendNotification('displayCIL', window.activeTextEditor.document.fileName);
 			window.showInformationMessage('CIL file generated');
+			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+			const file_name = "fc_" + window.activeTextEditor.document.fileName;
+			let fileUri: vscode.Uri;
+			fileUri = vscode.Uri.parse(`${workspacePath}/.frama-c/${file_name}`);
+			const document = await workspace.openTextDocument(fileUri);
+			await languages.setTextDocumentLanguage(document, 'plaintext');
+			const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
 		} catch (err) {
 			window.showErrorMessage('Failed to compute displayCIL: ' + err.message);
 			console.error('Error computing displayCIL:', err);
@@ -53,6 +60,13 @@ export function activate(context: ExtensionContext) {
 		try {
 			await client.sendNotification('displayCIL_noannot', window.activeTextEditor.document.fileName);
 			window.showInformationMessage('CIL file generated');
+			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+			const file_name = "fc_" + window.activeTextEditor.document.fileName;
+			let fileUri: vscode.Uri;
+			fileUri = vscode.Uri.parse(`${workspacePath}/.frama-c/${file_name}`);
+			const document = await workspace.openTextDocument(fileUri);
+			await languages.setTextDocumentLanguage(document, 'plaintext');
+			const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
 		} catch (err) {
 			window.showErrorMessage('Failed to compute displayCIL_noannot: ' + err.message);
 			console.error('Error computing displayCIL_noannot:', err);
@@ -63,6 +77,11 @@ export function activate(context: ExtensionContext) {
 		try {
 			await client.sendNotification('computeCG', window.activeTextEditor.document.fileName);
 			window.showInformationMessage('CallGraph generated');
+			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+			const file_name = "fc_" + window.activeTextEditor.document.fileName;
+			let fileUri: vscode.Uri;
+			fileUri = vscode.Uri.parse(`${workspacePath}/.frama-c/${file_name}`);
+			vscode.commands.executeCommand('revealFileInOS', fileUri);
 		} catch (err) {
 			window.showErrorMessage('Failed to compute callgraph: ' + err.message);
 			console.error('Error computing callgraph:', err);
@@ -147,11 +166,9 @@ export function activate(context: ExtensionContext) {
         	if (selectedItems.length > 0) {
 				const selectedItem = selectedItems[0];
 				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
-				const uriScheme = vscode.env.remoteName;
+				// const uriScheme = vscode.env.remoteName;
 				let fileUri: vscode.Uri;
-				if (uriScheme === 'wsl') {fileUri = vscode.Uri.parse(`${workspacePath}/${selectedItem.script}`);}
-				else {fileUri = vscode.Uri.file(workspacePath + "/" + selectedItem.script);}
-				//const fileUri = vscode.Uri.parse("file://"+selectedItem.script);
+				fileUri = vscode.Uri.parse(`${workspacePath}/${selectedItem.script}`);
 				const document = await workspace.openTextDocument(fileUri);
 				await languages.setTextDocumentLanguage(document, 'plaintext');
 				const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
@@ -323,6 +340,13 @@ export function activate(context: ExtensionContext) {
 		try {
 			client.sendNotification('showLocalMetrics', window.activeTextEditor.document.fileName);
 			window.showInformationMessage('Metrics file generated');
+			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+			const file_name = "fc_metrics.txt";
+			let fileUri: vscode.Uri;
+			fileUri = vscode.Uri.parse(`${workspacePath}/.frama-c/${file_name}`);
+			const document = await workspace.openTextDocument(fileUri);
+			await languages.setTextDocumentLanguage(document, 'plaintext');
+			const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
 		} catch (err) {
 			window.showErrorMessage('Failed to get local metrics: ' + err.message);
 			console.error('Error getting local metrics:', err);
@@ -333,6 +357,13 @@ export function activate(context: ExtensionContext) {
 		try {
 			client.sendNotification('showGlobalMetrics');
 			window.showInformationMessage('Metrics file generated');
+			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+			const file_name = "fc_metrics.txt";
+			let fileUri: vscode.Uri;
+			fileUri = vscode.Uri.parse(`${workspacePath}/.frama-c/${file_name}`);
+			const document = await workspace.openTextDocument(fileUri);
+			await languages.setTextDocumentLanguage(document, 'plaintext');
+			const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
 		} catch (err) {
 			window.showErrorMessage('Failed to get global metrics: ' + err.message);
 			console.error('Error getting global metrics:', err);

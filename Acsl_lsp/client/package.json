@@ -110,13 +110,12 @@
             {
             "title": "Frama-C/Metrics",
             "properties": {
-                "metrics.output": {"scope": "workspace", "type": "string", "description": "Frama-C option: -metrics-output", "default": ""}
+                "metrics.byFunction": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -metrics-by-function", "default": ""}
                 }
             },
             {
             "title": "Frama-C/Cg",
             "properties": {
-                "callgraph.output": {"scope": "workspace", "type": "string", "description": "Frama-C option: -cg", "default": ""},
                 "callgraph.roots": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Frama-C option: -cg-roots"},
                 "callgraph.services": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -cg-no-services", "default": true}
                 }
