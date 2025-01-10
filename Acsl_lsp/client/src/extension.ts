@@ -3,6 +3,7 @@ import { workspace, ExtensionContext, commands, extensions, window, ViewColumn, 
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import {LanguageClient,	LanguageClientOptions, ServerOptions, TransportKind} from 'vscode-languageclient/node';
+import { exec } from 'child_process';
 
 let client: LanguageClient;
 
@@ -89,13 +90,15 @@ export function activate(context: ExtensionContext) {
 			const extension = path.extname(filePath);  // Get the file extension
 			const fileNameBase = fileName.slice(0, -extension.length); // Remove the extension
 			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
-			const filePathOut = workspacePath + "/.frama-c/fc_" + fileNameBase + ".dot.pdf";
-			if (!fs.existsSync(filePathOut)) {
-				try {fs.writeFileSync(filePathOut, 'Task in progress ...')}
-				catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
-			}
+			// const filePathOut = workspacePath + "/.frama-c/fc_" + fileNameBase + ".dot.pdf";
+			const filePathOut = workspacePath + "/.frama-c";
+			// if (!fs.existsSync(filePathOut)) {
+			//	try {fs.writeFileSync(filePathOut, 'Task in progress ...')}
+			//	catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
+			//}
 			const fileUri = vscode.Uri.parse(filePathOut);
-			vscode.window.showTextDocument(fileUri, { preview: false });;
+			// vscode.window.showTextDocument(fileUri, { preview: false });
+			openDirectoryExternally(filePathOut)
 
 			await client.sendNotification('computeCG', filePath);
 		} catch (err) {
@@ -479,6 +482,22 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 	  	this.contextValue = context;
 	}
   }
+
+
+// Function to open the directory in the system's file explorer
+function openDirectoryExternally(folderPath: string) {
+    const platform = process.platform;
+
+    if (platform === 'win32') {
+        exec(`explorer "${folderPath}"`);
+    } else if (platform === 'darwin') {
+        exec(`open "${folderPath}"`);
+    } else if (platform === 'linux') {
+        exec(`xdg-open "${folderPath}"`);
+    } else {
+        console.error('Unsupported platform');
+    }
+}
 
 export function deactivate(): Thenable<void> | undefined {
 	if (!client) {
