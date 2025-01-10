@@ -8,8 +8,7 @@ let sections = {| {"items": [
           {"section": "kernel.removeUnusedSpecifiedFunctions"},
           {"section": "kernel.aggressiveMerging"},
           {"section": "kernel.generatedSpecCustom"},
-          {"section": "metrics.output"},
-          {"section": "callgraph.output"},
+          {"section": "metrics.byFunction"},
           {"section": "callgraph.roots"},
           {"section": "callgraph.services"},
           {"section": "wp.noPruning"},
@@ -46,8 +45,7 @@ let sections = {| {"items": [
     removeUnusedSpecifiedFunctions : bool;
     aggressiveMerging : bool;
     generatedSpecCustom : string list;
-    metricsOutput : string;
-    cgOutput : string;
+    metricsByFunction : bool;
     cgRoots : string list;
     cgServices : bool;
     wpPruning : bool;
@@ -82,8 +80,7 @@ let sections = {| {"items": [
     ~removeUnusedSpecifiedFunctions 
     ~aggressiveMerging 
     ~generatedSpecCustom
-    ~metricsOutput 
-    ~cgOutput 
+    ~metricsByFunction
     ~cgRoots
     ~cgServices 
     ~wpPruning 
@@ -118,8 +115,7 @@ let sections = {| {"items": [
       removeUnusedSpecifiedFunctions;
       aggressiveMerging;
       generatedSpecCustom;
-      metricsOutput;
-      cgOutput;
+      metricsByFunction;
       cgRoots;
       cgServices;
       wpPruning;
@@ -155,8 +151,7 @@ let global_params = ref
   ~removeUnusedSpecifiedFunctions:false
   ~aggressiveMerging:false
   ~generatedSpecCustom:[]
-  ~metricsOutput:""
-  ~cgOutput:""
+  ~metricsByFunction:false
   ~cgRoots:[]
   ~cgServices:false
   ~wpPruning:false
@@ -200,8 +195,7 @@ let save_configs (result:  Json.json) =
         `Bool json_removeUnusedSpecifiedFunctions;
         `Bool json_aggressiveMerging;
         `List json_generatedSpecCustom;
-        `String json_metricsOutput;
-        `String json_cgOutput;
+        `Bool json_metricsByFunction;
         `List json_cgRoots;
         `Bool json_cgServices;
         `Bool json_wpPruning;
@@ -236,8 +230,7 @@ let save_configs (result:  Json.json) =
       ~removeUnusedSpecifiedFunctions: json_removeUnusedSpecifiedFunctions
       ~aggressiveMerging: json_aggressiveMerging
       ~generatedSpecCustom: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_generatedSpecCustom)
-      ~metricsOutput: (Utils.remove_newline (Utils.remove_quotes (json_metricsOutput)))
-      ~cgOutput: (Utils.remove_newline (Utils.remove_quotes (json_cgOutput)))
+      ~metricsByFunction: json_metricsByFunction
       ~cgRoots: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_cgRoots)
       ~cgServices: json_cgServices
       ~wpPruning: json_wpPruning
