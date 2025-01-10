@@ -54,6 +54,7 @@ let string_of_t (options : t) : string =
   let option_if_true b opt = if b then (opt) else "" in
   let include_paths_opt = List.map (fun x -> " -I"^(!rootPath^"/"^(x))) options.include_paths in
   let macros_opt = List.map (fun x -> " -D"^x) options.macros in
+  let macros_opt = (" -D" ^ options.macroStrategiesFunctionPrefix) :: macros_opt in
   let macroStrategiesFunctionPrefix_opt = List.map (fun x -> " -D"^options.macroStrategiesFunctionPrefix^x) options.fct in
   let cpp_extra_args_opt = "-cpp-extra-args=\" "^(options.cpp_extra_args)^" "^(String.concat " " include_paths_opt)^" "^(String.concat " " macros_opt)^" "^(String.concat " " macroStrategiesFunctionPrefix_opt)^"\"" in
   let machdep_opt = (option_if_not_empty_string options.machdep "-machdep ") in
@@ -650,20 +651,23 @@ let rq_handler json_string =
       | "showPO" -> (* show proof obligation of specific function *)
       let id = (Utils.id_to_int request.id) in
       Lsp.Self.debug ~level:4 "showPO, %d\n%!" id;
-      let (file, goal_id) = match request.params with 
-          | Some `List [`List [`String f; `String goal_id;]] -> (Utils.remove_newline (Utils.remove_quotes (f)), Utils.remove_newline (Utils.remove_quotes (goal_id)))
+      let (file_id, function_id, goal_id) = match request.params with 
+          | Some `List [`List [`String file_id; `String function_id; `String goal_id;]] ->
+            (Utils.remove_newline (Utils.remove_quotes (file_id)),
+             Utils.remove_newline (Utils.remove_quotes (function_id)),
+             Utils.remove_newline (Utils.remove_quotes (goal_id)))
           | _ -> Lsp.Self.debug ~level:3 "No params for showPO \n%!"; assert false
       in
       let kernel_opt = KernelOpt.create () in
       let uncast_opt = UncastOpt.create () in
-      let wp_opt = WpOpt.create ~wp_prover:["none"] () in
+      let wp_opt = WpOpt.create ~wp_fct:[function_id] ~wp_prover:["none"] () in
       let feature = ComputeProofObligationID_feature (id, goal_id) in
       let lsp_opt = LspOpt.create (feature) in
-      let command = 
-        match (String.ends_with ~suffix:".c" file) with
+      let command = Command.create ~kernel:kernel_opt ~files:[file_id] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt () in
+        (* match (String.ends_with ~suffix:".c" file) with
         | true -> Command.create ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
         | false -> Command.create ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
-      in
+      in *)
       let command_str = (Command.string_of_t command) in
       Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
       let data, pid = fork_execute_command command_str feature in
