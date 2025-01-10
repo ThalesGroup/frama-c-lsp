@@ -493,7 +493,7 @@ function openDirectoryExternally(folderPath: string) {
     } else if (platform === 'darwin') {
         exec(`open "${folderPath}"`);
     } else if (platform === 'linux') {
-        exec(`xdg-open "${folderPath}"`);
+        exec(`explorer.exe "${folderPath}"`);
     } else {
         console.error('Unsupported platform');
     }
