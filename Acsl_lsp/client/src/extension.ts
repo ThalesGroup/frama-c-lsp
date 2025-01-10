@@ -339,7 +339,7 @@ export function activate(context: ExtensionContext) {
 		}
 	});
 
-	context.subscriptions.push(smokeTests, displayCIL, displayCIL_noannot, computeCG, showPOVC, provePO, showGlobalMetrics, showLocalMetrics);
+	context.subscriptions.push(smokeTests, displayCIL, displayCIL_noannot, computeCG, showPOVC, provePO, provePOGUI, provePOStrategies, provePOStrategiesGUI, showGlobalMetrics, showLocalMetrics);
 
 	// Start the client. This will also launch the server
 	client.start();
