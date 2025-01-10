@@ -190,7 +190,47 @@ export function activate(context: ExtensionContext) {
 			const int_proof_timeout = parseInt(proof_timeout, 10);
 			wpResults.update([]);
 			wpResults.refresh();
-            const res = await client.sendRequest('provePO', [window.activeTextEditor.document.fileName, function_name, property_name, int_proof_timeout]);
+			const gui = false;
+            const res = await client.sendRequest('provePO', [window.activeTextEditor.document.fileName, function_name, property_name, int_proof_timeout, gui]);
+			wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
+			wpResults.refresh();
+			window.showInformationMessage('Proof results updated');
+        }
+        catch (err) {
+            window.showErrorMessage('Failed to fetch and display WP proof: ' + err.message);
+            console.error('Error fetching WP proof:', err);
+        }
+    });
+
+	const provePOGUI = commands.registerCommand('provePO', async () => {
+		try {
+            const function_name = await window.showInputBox({
+                placeHolder: 'function', // Placeholder text in the input box
+                prompt: 'Please specify functions to prove (c.f. -wp-fct )', // The prompt message
+                validateInput: (input) => {
+                    if (input.length === 0) {return 'Input cannot be empty!';}
+                    return null; // Return null to indicate valid input
+            }});
+			const property_name = await window.showInputBox({
+                placeHolder: 'property', // Placeholder text in the input box
+                prompt: 'Please specify properties to prove (c.f. -wp-prop )', // The prompt message
+                validateInput: (input) => {
+                    if (input.length === 0) {return 'Input cannot be empty!';}
+                    return null; // Return null to indicate valid input
+            }});
+			const proof_timeout = await window.showInputBox({
+                placeHolder: 'timeout', // Placeholder text in the input box
+                prompt: 'Please specify timeout for provers (c.f. -wp-timeout )', // The prompt message
+                validateInput: (input) => {
+                    if (input.length === 0) {return 'Input cannot be empty!';}
+					if (!/^\d+$/.test(input)) {return 'Please enter a valid integer';}
+                    return null; // Return null to indicate valid input
+            }});
+			const int_proof_timeout = parseInt(proof_timeout, 10);
+			wpResults.update([]);
+			wpResults.refresh();
+			const gui = true;
+            const res = await client.sendRequest('provePO', [window.activeTextEditor.document.fileName, function_name, property_name, int_proof_timeout, gui]);
 			wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
 			wpResults.refresh();
 			window.showInformationMessage('Proof results updated');
@@ -228,7 +268,47 @@ export function activate(context: ExtensionContext) {
 			const int_proof_timeout = parseInt(proof_timeout, 10);
 			wpResults.update([]);
 			wpResults.refresh();
-            const res = await client.sendRequest('provePOStrategies', [window.activeTextEditor.document.fileName, function_name, property_name, int_proof_timeout]);
+			const gui = false;
+            const res = await client.sendRequest('provePOStrategies', [window.activeTextEditor.document.fileName, function_name, property_name, int_proof_timeout, gui]);
+			wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
+			wpResults.refresh();
+			window.showInformationMessage('Proof results updated');
+        }
+        catch (err) {
+            window.showErrorMessage('Failed to fetch and display WP proof: ' + err.message);
+            console.error('Error fetching WP proof:', err);
+        }
+    });
+
+    const provePOStrategiesGUI = commands.registerCommand('provePOStrategiesGUI', async () => {
+		try {
+            const function_name = await window.showInputBox({
+                placeHolder: 'function', // Placeholder text in the input box
+                prompt: 'Please specify functions to prove (c.f. -wp-fct )', // The prompt message
+                validateInput: (input) => {
+                    if (input.length === 0) {return 'Input cannot be empty!';}
+                    return null; // Return null to indicate valid input
+            }});
+			const property_name = await window.showInputBox({
+                placeHolder: 'property', // Placeholder text in the input box
+                prompt: 'Please specify properties to prove (c.f. -wp-prop )', // The prompt message
+                validateInput: (input) => {
+                    if (input.length === 0) {return 'Input cannot be empty!';}
+                    return null; // Return null to indicate valid input
+            }});
+			const proof_timeout = await window.showInputBox({
+                placeHolder: 'timeout', // Placeholder text in the input box
+                prompt: 'Please specify timeout for provers (c.f. -wp-timeout )', // The prompt message
+                validateInput: (input) => {
+                    if (input.length === 0) {return 'Input cannot be empty!';}
+					if (!/^\d+$/.test(input)) {return 'Please enter a valid integer';}
+                    return null; // Return null to indicate valid input
+            }});
+			const int_proof_timeout = parseInt(proof_timeout, 10);
+			wpResults.update([]);
+			wpResults.refresh();
+			const gui = true;
+            const res = await client.sendRequest('provePOStrategies', [window.activeTextEditor.document.fileName, function_name, property_name, int_proof_timeout, gui]);
 			wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
 			wpResults.refresh();
 			window.showInformationMessage('Proof results updated');
