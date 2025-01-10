@@ -676,15 +676,16 @@ let rq_handler json_string =
       | "provePO" -> (* prove with WP *)
       let id = (Utils.id_to_int request.id) in
       Lsp.Self.debug ~level:4 "provePO, %d\n%!" id;
-      let (file, fct, prop, timeout) = match request.params with
+      let (file, fct, prop, timeout, gui) = match request.params with
           | Some `List
             [`List 
               [`String f;
               `String function_name;
               `String property_name;
-              `Int timeout
+              `Int timeout;
+              `Bool gui
               ]] -> 
-            (Utils.remove_newline (Utils.remove_quotes (f)), function_name, property_name, timeout)
+            (Utils.remove_newline (Utils.remove_quotes (f)), function_name, property_name, timeout, gui)
           | _ -> Lsp.Self.debug ~level:3 "No params for showPOVC \n%!"; assert false
         in
       let kernel_opt = KernelOpt.create () in
@@ -694,8 +695,8 @@ let rq_handler json_string =
       let lsp_opt = LspOpt.create (feature) in
       let command = 
         match (String.ends_with ~suffix:".c" file) with
-        | true -> Command.create ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
-        | false -> Command.create ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
+        | true -> Command.create ~gui:gui ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
+        | false -> Command.create ~gui:gui ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
       in
       let command_str = (Command.string_of_t command) in
       Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
@@ -705,15 +706,16 @@ let rq_handler json_string =
       | "provePOStrategies" -> (* prove with WP strategies *)
       let id = (Utils.id_to_int request.id) in
       Lsp.Self.debug ~level:4 "provePOStrategies, %d\n%!" id;
-      let (file, fct, prop, timeout) = match request.params with
+      let (file, fct, prop, timeout, gui) = match request.params with
           | Some `List
             [`List 
               [`String f;
               `String function_name;
               `String property_name;
-              `Int timeout
+              `Int timeout;
+              `Bool gui
               ]] -> 
-            (Utils.remove_newline (Utils.remove_quotes (f)), function_name, property_name, timeout)
+            (Utils.remove_newline (Utils.remove_quotes (f)), function_name, property_name, timeout, gui)
           | _ -> Lsp.Self.debug ~level:3 "No params for showPOStrategies \n%!"; assert false
         in
       let kernel_opt = KernelOpt.create ~fct:[fct] () in
@@ -723,8 +725,8 @@ let rq_handler json_string =
       let lsp_opt = LspOpt.create (feature) in
       let command = 
         match (String.ends_with ~suffix:".c" file) with
-        | true -> Command.create ~gui:true ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
-        | false -> Command.create ~gui:true ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
+        | true -> Command.create ~gui:gui ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
+        | false -> Command.create ~gui:gui ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
       in
       let command_str = (Command.string_of_t command) in
       Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
