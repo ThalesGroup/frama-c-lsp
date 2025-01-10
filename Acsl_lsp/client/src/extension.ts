@@ -96,7 +96,7 @@ export function activate(context: ExtensionContext) {
 				catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
 			}
 			const fileUri = vscode.Uri.parse(filePathOut);
-			vscode.commands.executeCommand('revealFileInOS', fileUri);
+			vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(filePathOut));
 
 			await client.sendNotification('computeCG', filePath);
 		} catch (err) {
