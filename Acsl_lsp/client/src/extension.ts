@@ -90,6 +90,7 @@ export function activate(context: ExtensionContext) {
 			const fileNameBase = fileName.slice(0, -extension.length); // Remove the extension
 			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 			const filePathOut = workspacePath + "/.frama-c/fc_" + fileNameBase + ".dot";
+			window.showErrorMessage("Failed to compute callgraph:" + filePathOut);
 			if (!fs.existsSync(filePathOut)) {
 				try {fs.writeFileSync(filePathOut, 'Task in progress ...')}
 				catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
