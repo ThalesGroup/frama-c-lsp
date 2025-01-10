@@ -52,7 +52,7 @@ export function activate(context: ExtensionContext) {
 			}
 			const fileUri = vscode.Uri.parse(fileNameOut);
 			const document = await workspace.openTextDocument(fileUri);
-			await languages.setTextDocumentLanguage(document, 'plaintext');
+			await languages.setTextDocumentLanguage(document, 'acsl');
 			const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
 			await client.sendNotification('displayCIL', filePath);
 		} catch (err) {
@@ -73,7 +73,7 @@ export function activate(context: ExtensionContext) {
 			}
 			const fileUri = vscode.Uri.parse(fileNameOut);
 			const document = await workspace.openTextDocument(fileUri);
-			await languages.setTextDocumentLanguage(document, 'plaintext');
+			await languages.setTextDocumentLanguage(document, 'acsl');
 			const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
 			await client.sendNotification('displayCIL_noannot', filePath);
 		} catch (err) {
