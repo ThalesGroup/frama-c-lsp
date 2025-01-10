@@ -351,9 +351,9 @@ export function activate(context: ExtensionContext) {
 			window.showInformationMessage('Metrics file generated');
 			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 			const dirPath = path.dirname(filePath);     // Extract the directory path
-    		const fileName = path.basename(filePath);   // Extract the file name
+			const file_name = "fc_metrics.txt";
 			let fileUri: vscode.Uri;
-			fileUri = vscode.Uri.parse(`${workspacePath}/.frama-c/fc_${fileName}`);
+			fileUri = vscode.Uri.parse(`${workspacePath}/.frama-c/${file_name}`);
 			const document = await workspace.openTextDocument(fileUri);
 			await languages.setTextDocumentLanguage(document, 'plaintext');
 			const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
