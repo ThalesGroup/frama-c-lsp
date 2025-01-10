@@ -15,14 +15,13 @@
             {"command": "provePOStrategies", "key": "alt+oem_2", "when": "editorTextFocus"},
             {"command": "provePOGUI", "key": "shift+alt+oem_8", "when": "editorTextFocus"},
             {"command": "provePOStrategiesGUI", "key": "shift+alt+oem_2", "when": "editorTextFocus"},
-            {"command": "smokeTests", "key": "alt+s", "when": "editorTextFocus"},
-            {"command": "showPOVC", "key": "shift+alt+s", "when": "editorTextFocus"},
+            {"command": "smokeTests", "key": "alt+oem_period", "when": "editorTextFocus"},
 
             {"command": "displayCIL", "key": "alt+right", "when": "editorTextFocus"},
             {"command": "displayCIL_noannot", "key": "shift+alt+right", "when": "editorTextFocus"},
-            {"command": "showLocalMetrics", "key": "alt+m", "when": "editorTextFocus"},
-            {"command": "showGlobalMetrics", "key": "shift+alt+m", "when": "editorTextFocus"},
-            {"command": "computeCG", "key": "alt+g", "when": "editorTextFocus"},
+            {"command": "showLocalMetrics", "key": "alt+up", "when": "editorTextFocus"},
+            {"command": "showGlobalMetrics", "key": "shift+alt+up", "when": "editorTextFocus"},
+            {"command": "computeCG", "key": "alt+down", "when": "editorTextFocus"},
 
             {"command": "-editor.action.goToDefinition", "key": "ctrl+click", "when": "editorTextFocus"}
         ],
@@ -69,13 +68,13 @@
             {"command": "showGlobalMetrics", "title": "Display Project Metrics"},
             {"command": "showLocalMetrics", "title": "Display File Metrics"},
             {"command": "smokeTests", "title": "Smoke Tests"},
-            {"command": "showPOVC", "title": "Get WP Proof Obligation"},
+            {"command": "showPOVC", "title": "Display Proof Obligation"},
             {"command": "showScript", "title": "Goto script"},
-            {"command": "showPO", "title": "Get WP Proof Obligation"},
-            {"command": "provePO", "title": "Prove with WP"},
-            {"command": "provePOStrategies", "title": "Prove with WP Strategies"},
-            {"command": "provePOGUI", "title": "Prove with WP (GUI)"},
-            {"command": "provePOStrategiesGUI", "title": "Prove with WP Strategies (GUI)"}
+            {"command": "showPO", "title": "Display Proof Obligation"},
+            {"command": "provePO", "title": "Prove"},
+            {"command": "provePOStrategies", "title": "Prove with Strategies"},
+            {"command": "provePOGUI", "title": "Prove (GUI)"},
+            {"command": "provePOStrategiesGUI", "title": "Prove with Strategies (GUI)"}
         ],
         "languages": [{"id": "acsl", "aliases": ["ACSL", "acsl"], "extensions": [".c", ".h"], "configuration": "./syntax/language-configuration.json", "icon": {"light": "./images/logo-frama-c.png", "dark": "./images/logo-frama-c.png"}}],
         "grammars": [{"language": "acsl", "scopeName": "source.acsl", "path": "./syntax/acsl.tmLanguage.json"}],
