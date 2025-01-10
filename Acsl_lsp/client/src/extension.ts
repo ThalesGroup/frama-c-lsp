@@ -86,7 +86,7 @@ export function activate(context: ExtensionContext) {
 			const dirPath = path.dirname(filePath);     // Extract the directory path
     		const fileName = path.basename(filePath);   // Extract the file name
 			let fileUri: vscode.Uri;
-			fileUri = vscode.Uri.parse(`${workspacePath}/.frama-c/fc_${fileName}`);
+			fileUri = vscode.Uri.parse(`${workspacePath}/.frama-c/*`);
 			vscode.commands.executeCommand('revealFileInOS', fileUri);
 		} catch (err) {
 			window.showErrorMessage('Failed to compute callgraph: ' + err.message);
