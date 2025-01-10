@@ -11,9 +11,20 @@
     "main": "./out/extension",
     "contributes": {
         "keybindings": [
-            {"command": "-editor.action.goToDefinition", "key": "ctrl+click", "when": "editorTextFocus"},
-            {"command": "provePO", "key": "ctrl+oem_8", "when": "editorTextFocus"},
-            {"command": "provePOStrategies", "key": "alt+oem_8", "when": "editorTextFocus"}
+            {"command": "provePO", "key": "alt+oem_8", "when": "editorTextFocus"},
+            {"command": "provePOStrategies", "key": "alt+oem_2", "when": "editorTextFocus"},
+            {"command": "provePOGUI", "key": "shift+alt+oem_8", "when": "editorTextFocus"},
+            {"command": "provePOStrategiesGUI", "key": "shift+alt+oem_2", "when": "editorTextFocus"},
+            {"command": "smokeTests", "key": "alt+s", "when": "editorTextFocus"},
+            {"command": "showPOVC", "key": "shift+alt+s", "when": "editorTextFocus"},
+
+            {"command": "displayCIL", "key": "alt+right", "when": "editorTextFocus"},
+            {"command": "displayCIL_noannot", "key": "shift+alt+right", "when": "editorTextFocus"},
+            {"command": "showLocalMetrics", "key": "alt+m", "when": "editorTextFocus"},
+            {"command": "showGlobalMetrics", "key": "shift+alt+m", "when": "editorTextFocus"},
+            {"command": "computeCG", "key": "alt+g", "when": "editorTextFocus"},
+
+            {"command": "-editor.action.goToDefinition", "key": "ctrl+click", "when": "editorTextFocus"}
         ],
         "viewsContainers": {
             "panel": [{"id": "myPanel", "title": "Properties", "icon": "images/logo-frama-c.png"}]
@@ -34,12 +45,12 @@
                 {"command": "showLocalMetrics", "when": "resourceLangId == acsl"}
             ],
             "Frama-C/WP": [
-                {"command": "smokeTests", "when": "resourceLangId == acsl"},
-                {"command": "showPOVC", "when": "resourceLangId == acsl"},
                 {"command": "provePO", "when": "resourceLangId == acsl"},
                 {"command": "provePOStrategies", "when": "resourceLangId == acsl"},
                 {"command": "provePOGUI", "when": "resourceLangId == acsl"},
-                {"command": "provePOStrategiesGUI", "when": "resourceLangId == acsl"}
+                {"command": "provePOStrategiesGUI", "when": "resourceLangId == acsl"},
+                {"command": "smokeTests", "when": "resourceLangId == acsl"},
+                {"command": "showPOVC", "when": "resourceLangId == acsl"}
             ],
             "view/item/context": [
                 {"command": "showScript", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
@@ -52,11 +63,11 @@
             {"id": "vscodeacsl.requires","label": "Show 'requires' POs"}
         ],
         "commands": [
-            {"command": "displayCIL", "title": "File CIL"},
-            {"command": "displayCIL_noannot", "title": "File CIL (-no-annot)"},
-            {"command": "computeCG", "title": "File CallGraph"},
-            {"command": "showGlobalMetrics", "title": "Project Metrics"},
-            {"command": "showLocalMetrics", "title": "File Metrics"},
+            {"command": "displayCIL", "title": "Display File CIL"},
+            {"command": "displayCIL_noannot", "title": "Display File CIL (-no-annot)"},
+            {"command": "computeCG", "title": "Generate File CallGraph"},
+            {"command": "showGlobalMetrics", "title": "Display Project Metrics"},
+            {"command": "showLocalMetrics", "title": "Display File Metrics"},
             {"command": "smokeTests", "title": "Smoke Tests"},
             {"command": "showPOVC", "title": "Get WP Proof Obligation"},
             {"command": "showScript", "title": "Goto script"},
