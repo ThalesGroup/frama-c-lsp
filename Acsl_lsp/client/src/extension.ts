@@ -202,7 +202,7 @@ export function activate(context: ExtensionContext) {
         }
     });
 
-	const provePOGUI = commands.registerCommand('provePO', async () => {
+	const provePOGUI = commands.registerCommand('provePOGUI', async () => {
 		try {
             const function_name = await window.showInputBox({
                 placeHolder: 'function', // Placeholder text in the input box
