@@ -189,12 +189,10 @@ module MetricsOpt = struct
     metrics_by_function: bool;
     metrics_output: string;
   }
-  let create ?file () = {
+  let create () = {
     metrics = true;
-    metrics_by_function = true;
-    metrics_output = (match file with
-    | None -> (if not (String.trim !Configuration.global_params.metricsOutput = "") then !Configuration.global_params.metricsOutput else ".frama-c/fc_metrics.txt")
-    | Some f -> Printf.sprintf ".frama-c/fc_%s.txt" f)
+    metrics_by_function = !Configuration.global_params.metricsByFunction;
+    metrics_output = ".frama-c/fc_metrics.txt"
   }
   let string_of_t (options : t) : string =
     let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in
@@ -241,7 +239,7 @@ module CgOpt = struct
     cmd : string;
   }
   let create ?file () : t = 
-    let ofile = (match file with None -> !Configuration.global_params.cgOutput | Some f -> Printf.sprintf ".frama-c/fc_%s.dot" f) in
+    let ofile = (match file with None -> ".frama-c/fc_callgraph.dot" | Some f -> Printf.sprintf ".frama-c/fc_%s.dot" f) in
     {
     cg = ofile;
     cg_roots = !Configuration.global_params.cgRoots;
@@ -907,10 +905,9 @@ let notif_handler json_string server_sock =
         | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
         | _ -> Lsp.Self.debug ~level:3 "No params for metrics \n%!"; assert false
     in
-    let file_basename = (Filename.remove_extension (Filename.basename (String.trim file))) in
     let feature = ComputeMetrics_feature in
     let kernel_opt = KernelOpt.create () in
-    let metrics_opt = MetricsOpt.create ~file:file_basename () in
+    let metrics_opt = MetricsOpt.create () in
     let command = Command.create ~kernel:kernel_opt ~files:[file] ~metrics:metrics_opt () in
     let command_str = (Command.string_of_t command) in
     Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
