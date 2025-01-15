@@ -356,6 +356,18 @@ export function activate(context: ExtensionContext) {
         }
     });
 
+    const stop = commands.registerCommand('stop', async () => {
+		try {
+            const res = await client.sendRequest('stop');
+			window.showInformationMessage('Stopped processes');
+        }
+        catch (err) {
+            window.showErrorMessage('Failed to stop Frama-C: ' + err.message);
+            console.error('Error stropping Frama-C:', err);
+        }
+    });
+
+
 	const showLocalMetrics = commands.registerCommand('showLocalMetrics', async () => {
 		try {
 			const filePath = window.activeTextEditor.document.fileName;

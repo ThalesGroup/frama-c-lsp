@@ -119,18 +119,18 @@ let handle_request server_sock =
     with 
     | Lsp_handler.UnknownRequest id as exn ->
       Lsp.Self.debug ~level:3 "Main Server is busy : %s, %s\n" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
-      let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Error ~message: "Server is busy !!" () in
+      let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Error ~message: "Server is busy !!!" () in
       let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
       let json_notification = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
       send_request server_sock json_notification;
       id
     | exn ->
-      Lsp.Self.debug ~level:3 "Server is busy : %s, %s\n" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
-      let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Error ~message: "Server is busy !" () in
+      Lsp.Self.debug ~level:3 "Server is busy ! : %s, %s\n" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
+      let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Error ~message: "Server is busy !!" () in
       let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
       let json_notification = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
       send_request server_sock json_notification;
-      0
+      1
       
 
 let connect () =
@@ -142,7 +142,13 @@ let connect () =
   while true do
     let pid = handle_request server_sock in
     flush oc;
-    if (pid = 0) then Unix._exit 0
-    else if (pid = 1) then ()
-    else ignore (Unix.waitpid [Unix.WNOHANG] (-1))
+    if (pid = 0) then (Lsp.Self.debug ~level:4 "Exit of SUB PROCESS !!!!" ; Unix._exit 0)
+    (* else if (pid = 1) then () *)
+    else (
+      try
+        let pid, _status = Unix.waitpid [Unix.WNOHANG] (-1) in
+        if (pid = !Lsp_handler.fork_pid) then Lsp_handler.fork_pid := 0;
+      with _ -> ()
+      )
+    (*  pid_set := IntSet.remove pid !pid_set; *)
   done;

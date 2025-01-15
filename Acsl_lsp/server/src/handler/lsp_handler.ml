@@ -2,7 +2,7 @@
 let rootPath = ref ""
 let receivedShutdown = ref false
 
-let pid_list = ref []
+let fork_pid = ref 0
 
 type lsp_feature =
   | DidSave_feature
@@ -54,19 +54,19 @@ let create ?fct ~strategies () =
 let string_of_t (options : t) : string =
   let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in
   let option_if_true b opt = if b then (opt) else "" in
-  let include_paths_opt = List.map (fun x -> " -I"^(!rootPath^"/"^(x))) options.include_paths in
-  let macros_opt = List.map (fun x -> " -D"^x) options.macros in
-  let macros_opt = if options.strategies then (" -D" ^ options.macroStrategiesFunctionPrefix) :: macros_opt else macros_opt in
-  let macroStrategiesFunctionPrefix_opt = List.map (fun x -> " -D"^options.macroStrategiesFunctionPrefix^x) options.fct in
-  let cpp_extra_args_opt = "-cpp-extra-args=\" "^(options.cpp_extra_args)^" "^(String.concat " " include_paths_opt)^" "^(String.concat " " macros_opt)^" "^(String.concat " " macroStrategiesFunctionPrefix_opt)^"\"" in
-  let machdep_opt = (option_if_not_empty_string options.machdep "-machdep ") in
+  let include_paths_opt = List.map (fun x -> "-I"^(!rootPath^"/"^(x))) options.include_paths in
+  let macros_opt = List.map (fun x -> "-D"^x) options.macros in
+  let macros_opt = if options.strategies then ("-D" ^ options.macroStrategiesFunctionPrefix) :: macros_opt else macros_opt in
+  let macroStrategiesFunctionPrefix_opt = List.map (fun x -> "-D"^options.macroStrategiesFunctionPrefix^x) options.fct in
+  let cpp_extra_args_opt = "-cpp-extra-args=\""^(options.cpp_extra_args)^""^(String.concat "" include_paths_opt)^""^(String.concat "" macros_opt)^""^(String.concat "" macroStrategiesFunctionPrefix_opt)^"\"" in
+  let machdep_opt = (option_if_not_empty_string options.machdep "-machdep=") in
   let generated_spec_custom_opt = option_if_not_empty_string (String.concat "," options.generated_spec_custom) "-generated-spec-custom=" in
-  let remove_unused_specified_functions_opt = option_if_true options.keep_unused_specified_functions "-remove-unused-specified-functions " in
-  let aggressive_merging_opt = option_if_true options.aggressive_merging "-aggressive-merging " in
-  let kernel_warn_key_opt = option_if_not_empty_string options.kernel_warn_key "-kernel-warn-key " in
+  let remove_unused_specified_functions_opt = option_if_true options.keep_unused_specified_functions "-remove-unused-specified-functions" in
+  let aggressive_merging_opt = option_if_true options.aggressive_merging "-aggressive-merging" in
+  let kernel_warn_key_opt = option_if_not_empty_string options.kernel_warn_key "-kernel-warn-key=" in
   let no_unicode_opt = option_if_true options.no_unicode "-no-unicode" in
-  let inline_calls_opt = option_if_not_empty_string options.inline_calls "-inline-calls " in
-  let remove_inlines_opt = option_if_not_empty_string options.remove_inlines "-remove-inlined " in
+  let inline_calls_opt = option_if_not_empty_string options.inline_calls "-inline-calls=" in
+  let remove_inlines_opt = option_if_not_empty_string options.remove_inlines "-remove-inlined=" in
   Printf.sprintf "%s %s %s %s %s %s %s %s %s"
   cpp_extra_args_opt machdep_opt generated_spec_custom_opt remove_unused_specified_functions_opt aggressive_merging_opt kernel_warn_key_opt no_unicode_opt inline_calls_opt remove_inlines_opt
 end
@@ -110,20 +110,20 @@ module WpOpt = struct
     let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in
     let option_if_true b opt = if b then (opt) else "" in
     let wp_opt = option_if_true options.wp "-wp" in
-    let wp_prop_opt = option_if_not_empty_string (String.concat "," options.wp_prop) "-wp-prop " in
-    let wp_fct_opt = option_if_not_empty_string (String.concat "," options.wp_fct) "-wp-fct " in
+    let wp_prop_opt = option_if_not_empty_string (String.concat "," options.wp_prop) "-wp-prop=" in
+    let wp_fct_opt = option_if_not_empty_string (String.concat "," options.wp_fct) "-wp-fct=" in
     let wp_gen_opt = option_if_true options.wp_gen "-wp-gen" in
     let wp_rte_opt = option_if_true options.wp_rte "-wp-rte" in
     let wp_pruning_opt = option_if_true options.wp_pruning "-wp-no-pruning" in
     let wp_check_memory_model_opt = option_if_true options.wp_check_memory_model "-wp-model \"Typed+var+int+float\" -wp-check-memory-model" in
     let wp_no_volatile_opt = option_if_true options.wp_no_volatile "-wp-no-volatile" in
-    let wp_prover_opt = option_if_not_empty_string (String.concat "," options.wp_prover) "-wp-prover " in
-    let wp_timeout_opt = Printf.sprintf "-wp-timeout %d" options.wp_timeout in
-    let wp_session_opt = option_if_not_empty_string options.wp_session "-wp-session " in
-    let wp_smoke_tests_opt = option_if_true options.wp_smoke_tests "-wp-smoke-tests " in
-    let wp_smoke_timeout_opt = option_if_not_empty_string (Stdlib.string_of_int options.wp_smoke_timeout) "-wp-smoke-timeout " in
-    let wp_script = option_if_not_empty_string (options.wp_script) "-wp-script " in
-    let wp_cache = option_if_not_empty_string (options.wp_cache) "-wp-cache " in
+    let wp_prover_opt = option_if_not_empty_string (String.concat "," options.wp_prover) "-wp-prover=" in
+    let wp_timeout_opt = Printf.sprintf "-wp-timeout=%d" options.wp_timeout in
+    let wp_session_opt = option_if_not_empty_string options.wp_session "-wp-session=" in
+    let wp_smoke_tests_opt = option_if_true options.wp_smoke_tests "-wp-smoke-tests" in
+    let wp_smoke_timeout_opt = option_if_not_empty_string (Stdlib.string_of_int options.wp_smoke_timeout) "-wp-smoke-timeout=" in
+    let wp_script = option_if_not_empty_string (options.wp_script) "-wp-script=" in
+    let wp_cache = option_if_not_empty_string (options.wp_cache) "-wp-cache=" in
     Printf.sprintf "%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s" wp_opt wp_prop_opt wp_fct_opt wp_gen_opt wp_rte_opt wp_pruning_opt wp_check_memory_model_opt wp_no_volatile_opt wp_prover_opt wp_timeout_opt wp_session_opt wp_smoke_tests_opt wp_smoke_timeout_opt wp_script wp_cache
 end
 
@@ -150,12 +150,12 @@ module MetacslOpt = struct
     let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in
     let option_if_true b opt = if b then (opt) else "" in
     let meta_opt = option_if_true options.meta "-meta" in
-    let meta_warn_key_opt = option_if_not_empty_string options.meta_warn_key "-meta-warn-key " in
+    let meta_warn_key_opt = option_if_not_empty_string options.meta_warn_key "-meta-warn-key=" in
     let meta_checks_opt = option_if_true options.meta_checks "-meta-checks" in
     let meta_no_simpl_opt = option_if_true  options.meta_no_simpl "-meta-no-simpl" in
     let meta_no_check_ext_opt = option_if_true options.meta_no_check_ext "-meta-no-check-ext" in
     let meta_number_assertions_opt = option_if_true options.meta_number_assertions "-meta-number-assertions" in
-    let meta_check_callee_assigns_opt = option_if_not_empty_string (String.concat "," options.meta_check_callee_assigns) "-meta-check-callee-assigns " in
+    let meta_check_callee_assigns_opt = option_if_not_empty_string (String.concat "," options.meta_check_callee_assigns) "-meta-check-callee-assigns=" in
     if options.meta then 
     Printf.sprintf "%s %s %s %s %s %s %s %s" meta_opt meta_warn_key_opt meta_warn_key_opt meta_checks_opt meta_no_simpl_opt meta_no_check_ext_opt meta_number_assertions_opt meta_check_callee_assigns_opt
     else ""
@@ -177,10 +177,10 @@ module UncastOpt = struct
   let string_of_t (options : t) : string =
     let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in
     let option_if_true b opt = if b then (opt) else "" in
-    let uncast_opt = option_if_true options.uncast "-uncast " in
-    let uncast_endianness_opt = option_if_not_empty_string options.uncast_endianness "-uncast-endianness " in
-    let uncast_lshift_as_mul_opt = option_if_true options.uncast_lshift_as_mul "-uncast-lshift-as-mul " in
-    let uncast_rshift_as_div_opt = option_if_true options.uncast_rshift_as_div "-uncast-rshift-as-div " in
+    let uncast_opt = option_if_true options.uncast "-uncast" in
+    let uncast_endianness_opt = option_if_not_empty_string options.uncast_endianness "-uncast-endianness=" in
+    let uncast_lshift_as_mul_opt = option_if_true options.uncast_lshift_as_mul "-uncast-lshift-as-mul" in
+    let uncast_rshift_as_div_opt = option_if_true options.uncast_rshift_as_div "-uncast-rshift-as-div" in
     if options.uncast then Printf.sprintf "%s %s %s %s" uncast_opt uncast_endianness_opt uncast_lshift_as_mul_opt uncast_rshift_as_div_opt
     else ""
 end
@@ -199,9 +199,9 @@ module MetricsOpt = struct
   let string_of_t (options : t) : string =
     let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in
     let option_if_true b opt = if b then (opt) else "" in
-    let metrics_opt = option_if_true options.metrics "-metrics " in
+    let metrics_opt = option_if_true options.metrics "-metrics" in
     let metrics_by_function_opt = option_if_true options.metrics_by_function "-metrics-by-function" in
-    let metrics_output_opt = option_if_not_empty_string options.metrics_output "-metrics-output " in
+    let metrics_output_opt = option_if_not_empty_string options.metrics_output "-metrics-output=" in
     Printf.sprintf "%s %s %s" metrics_opt metrics_by_function_opt metrics_output_opt
 end
 
@@ -224,10 +224,10 @@ module PprintOpt = struct
   let string_of_t (options : t) : string =
     let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in
     let option_if_true b opt = if b then (opt) else "" in
-    let print_opt = option_if_true options.print "-print " in
-    let no_unicode_opt = option_if_true options.no_unicode "-no-unicode " in
-    let ocode_opt = option_if_not_empty_string options.ocode "-ocode " in
-    let no_annot_opt = option_if_true options.no_annot "-no-annot " in
+    let print_opt = option_if_true options.print "-print" in
+    let no_unicode_opt = option_if_true options.no_unicode "-no-unicode" in
+    let ocode_opt = option_if_not_empty_string options.ocode "-ocode" in
+    let no_annot_opt = option_if_true options.no_annot "-no-annot" in
     let keep_comments_opt = option_if_true options.keep_comments "-keep-comments" in
     Printf.sprintf "%s %s %s %s %s" print_opt no_unicode_opt ocode_opt no_annot_opt keep_comments_opt
 end
@@ -328,10 +328,32 @@ module Command = struct
     let cg_opt = match options.cg with None -> "" | Some c -> option_if_not_empty_string (CgOpt.string_of_t c) "" in
     let lsp_opt = match options.lsp with None -> "" | Some l -> option_if_not_empty_string (LspOpt.string_of_t l) "" in
     let frama_c_cmd = Printf.sprintf "%s %s %s %s %s %s %s %s %s" common_opt kernel_opt uncast_opt metacsl_opt wp_opt metrics_opt pprint_opt cg_opt lsp_opt in
-    let exit_value_cmd = "echo \"FRAMA-C EXIT CODE: $?\"" in
+    frama_c_cmd
+    (* let exit_value_cmd = "echo \"FRAMA-C EXIT CODE: $?\"" in
     let session_dir_cmd = "mkdir -p .frama-c" in
     let cg_cmd = match options.cg with None -> "" | Some c -> Printf.sprintf "%s" c.cmd in
-    Printf.sprintf "%s; %s; %s; %s" session_dir_cmd frama_c_cmd exit_value_cmd cg_cmd
+    Printf.sprintf "%s; %s; %s; %s" session_dir_cmd frama_c_cmd exit_value_cmd cg_cmd *)
+  
+  let args_of_t (options : t) : string * string array =
+    let replace_all_occurrences pattern replacement input_string =
+      let regex = Str.regexp pattern in
+      Str.global_replace regex replacement input_string
+    in
+    let split_and_remove_blank str =
+      let words = String.split_on_char ' ' str in
+      let lst = List.filter (fun s -> s <> "") words in
+      let lst = List.map (replace_all_occurrences "-I" " -I ") lst in
+      let lst = List.map (replace_all_occurrences "-D" " -D ") lst in
+      let lst = List.map (replace_all_occurrences "\"" "") lst in
+      let lst = lst in
+      Array.of_list lst
+    in
+    let cmd = string_of_t options in
+    let prog = options.frama_c_exe in
+    let args = split_and_remove_blank cmd in
+    (* let prog_opt = 
+    let args_opt = match options.cg with None -> "" | Some c -> Printf.sprintf "%s" c.cmd in *)
+    prog, args
   end
 
 
@@ -410,28 +432,40 @@ let rec had_errors_in_channel oc =
 
 
 
-let execute_command command feature =
+let execute_command prog args feature =
+  let signal_handler signal = if signal = Sys.sigint then () in
+  Sys.set_signal Sys.sigint (Sys.Signal_handle signal_handler);
   let wrapper_sock = Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in
   Unix.bind wrapper_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, 8006));
   Unix.listen wrapper_sock 100;
   let env = Unix.environment () in
-  let ic, oc, ec = Unix.open_process_full command env in
-  let frama_c_exit_with_error = had_errors_in_channel ic in
+  let ic, oc, ec = Unix.open_process_args_full prog args env in
+  let cpid = Unix.process_full_pid (ic, oc, ec) in
+  let signal_handler signal = if signal = Sys.sigint then Unix.kill cpid Sys.sigkill in
+  Sys.set_signal Sys.sigint (Sys.Signal_handle signal_handler);
+  let _ = had_errors_in_channel ic in
   let _ = had_errors_in_channel ec in
+  let status  = Unix.close_process_full (ic, oc, ec) in
   let special_errors = DidSave.StringMap.fold get_notification_list !DidSave.diag_map [] in
   Lsp.Self.debug ~level:2 "Read ic completed !!!\n%!";
-  match frama_c_exit_with_error with
-  | true ->
+  match status with
+  | Unix.WEXITED 0 -> 
     (
     match feature with
-    | DidSave_feature ->
+      | DidSave_feature
+      | FindDefinition_feature (_, _, _, _)
+      | FindDeclaration_feature (_, _, _, _)
+      | ComputeProofObligation_feature (_, _, _, _, _)
+      | ComputeProofObligationID_feature (_, _)
+      | Prove_feature (_)
+      | ProveStrategies_feature (_) ->
       Lsp.Self.debug ~level:2 "Executed frama-c command\n%!";
       let (plugin_sock, _) = Unix.accept wrapper_sock in
       let data_size = getnumber (readcontlen plugin_sock) in
       let buffer = Bytes.make data_size '0' in
       let _req_data_len = Unix.read plugin_sock buffer 0 data_size in
       let request_str = (Bytes.to_string buffer) in
-      ignore (Unix.close_process_full (ic, oc, ec));
+      (* ignore (Unix.close_process_full (ic, oc, ec)); *)
       Unix.close plugin_sock;
       Unix.close wrapper_sock;
       let data =
@@ -442,57 +476,7 @@ let execute_command command feature =
         | l, false -> (String.concat ":::" l) ^ ":::" ^ request_str
       in
       data
-
-    | FindDefinition_feature (id, _, _, _)
-    | FindDeclaration_feature (id, _, _, _)
-    | ComputeProofObligation_feature (_, id, _, _, _)
-    | ComputeProofObligationID_feature (id, _)
-    | Prove_feature (id)
-    | ProveStrategies_feature (id) ->
-      Lsp.Self.debug ~level:2 "Error while executing frama-c command\n%!";
-      let msg = Printf.sprintf "Frama-C Error ! Check OUTPUT !" in
-      let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:msg () in
-      let lsp_message = (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~error:lsp_error_message ()) in
-      let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_message) in
-      Unix.close wrapper_sock;
-      data
-
-    | ComputeCIL_feature
-    | ComputeCallGraph_feature
-    | ComputeMetrics_feature ->
-      let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Error ~message: "Frama-c error ! Check OUTPUT !" () in
-      let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
-      let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
-      Unix.close wrapper_sock;
-      data
-    )
-  | false ->
-    (
-    match feature with
-      | DidSave_feature
-      | FindDefinition_feature (_, _, _, _)
-      | FindDeclaration_feature (_, _, _, _)
-      | ComputeProofObligation_feature (_, _, _, _, _)
-      | ComputeProofObligationID_feature (_, _)
-      | Prove_feature (_)
-      | ProveStrategies_feature (_) ->
-        Lsp.Self.debug ~level:2 "Executed frama-c command\n%!";
-        let (plugin_sock, _) = Unix.accept wrapper_sock in
-        let data_size = getnumber (readcontlen plugin_sock) in
-        let buffer = Bytes.make data_size '0' in
-        let _req_data_len = Unix.read plugin_sock buffer 0 data_size in
-        let request_str = (Bytes.to_string buffer) in
-        ignore (Unix.close_process_full (ic, oc, ec));
-        Unix.close plugin_sock;
-        Unix.close wrapper_sock;
-        let data =
-          match special_errors, (String.trim request_str = "") with
-          | [], true -> ""
-          | [], false -> request_str
-          | l, true -> String.concat ":::" l
-          | l, false -> (String.concat ":::" l) ^ ":::" ^ request_str
-        in
-        data  
+    
       | ComputeCIL_feature
       | ComputeCallGraph_feature
       | ComputeMetrics_feature ->
@@ -504,10 +488,58 @@ let execute_command command feature =
         data
     )
 
-let fork_execute_command command feature =
+  | Unix.WEXITED _
+  | Unix.WSIGNALED _ 
+  | Unix.WSTOPPED _ ->
+    (
+      match feature with
+      | DidSave_feature ->
+          Lsp.Self.debug ~level:2 "Executed frama-c command\n%!";
+          let (plugin_sock, _) = Unix.accept wrapper_sock in
+          let data_size = getnumber (readcontlen plugin_sock) in
+          let buffer = Bytes.make data_size '0' in
+          let _req_data_len = Unix.read plugin_sock buffer 0 data_size in
+          let request_str = (Bytes.to_string buffer) in
+          (* ignore (Unix.close_process_full (ic, oc, ec)); *)
+          Unix.close plugin_sock;
+          Unix.close wrapper_sock;
+          let data =
+            match special_errors, (String.trim request_str = "") with
+            | [], true -> ""
+            | [], false -> request_str
+            | l, true -> String.concat ":::" l
+            | l, false -> (String.concat ":::" l) ^ ":::" ^ request_str
+          in
+          data  
+  
+      | FindDefinition_feature (id, _, _, _)
+      | FindDeclaration_feature (id, _, _, _)
+      | ComputeProofObligation_feature (_, id, _, _, _)
+      | ComputeProofObligationID_feature (id, _)
+      | Prove_feature (id)
+      | ProveStrategies_feature (id) ->
+        Lsp.Self.debug ~level:2 "Error while executing frama-c command\n%!";
+        let msg = Printf.sprintf "Frama-C Error ! Check OUTPUT !" in
+        let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:msg () in
+        let lsp_message = (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~error:lsp_error_message ()) in
+        let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_message) in
+        Unix.close wrapper_sock;
+        data
+  
+      | ComputeCIL_feature
+      | ComputeCallGraph_feature
+      | ComputeMetrics_feature ->
+        let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Error ~message: "Frama-c error ! Check OUTPUT !" () in
+        let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
+        let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
+        Unix.close wrapper_sock;
+        data
+      )
+
+let fork_execute_command prog args feature =
   let pid = Unix.fork () in
   if not (pid = 0) then (
-    pid_list := pid :: !pid_list;
+    fork_pid := pid;
     Lsp.Self.debug ~level:2 "Request sent to Frama-C !\n%!";
     let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Request sent to Frama-C !") () in
     let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
@@ -516,20 +548,22 @@ let fork_execute_command command feature =
   )
   else
     try
-      (execute_command command feature), pid
-    with _exn -> (match feature with
+      (execute_command prog args feature), pid
+    with exn -> (match feature with
       | FindDefinition_feature (id, _, _, _)
       | FindDeclaration_feature (id, _, _, _)
       | ComputeProofObligation_feature (_, id, _, _, _)
       | ComputeProofObligationID_feature (id, _)
       | Prove_feature (id)
       | ProveStrategies_feature (id) ->
-        let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:"Server is busy !" () in
+        Lsp.Self.debug ~level:3 "Server is busy !:! : %s, %s\n" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
+        let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:"Server is busy !:!" () in
         let lsp_message = (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~error:lsp_error_message ()) in
         let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_message) in
         data, pid
       | _ ->
-        let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Error ~message: "Server is busy !" () in
+        Lsp.Self.debug ~level:3 "Server is busy !::! : %s, %s\n" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
+        let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Error ~message: "Server is busy !::!" () in
         let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
         let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
         data, pid)
@@ -601,9 +635,10 @@ let rq_handler json_string =
       let feature = FindDefinition_feature ((Utils.id_to_int request.id), src_file, line, ch) in
       let lsp_opt = LspOpt.create (feature) in
       let command = Command.create ~kernel:kernel_opt ~lsp:lsp_opt () in
-      let command_str = (Command.string_of_t command) in
-      Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
-      let data, pid = fork_execute_command command_str feature in
+      (* let command_str = (Command.string_of_t command) in *)
+      let prog, args = (Command.args_of_t command) in
+      (* Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str; *)
+      let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT data, pid;
       
     | "textDocument/declaration" -> 
@@ -620,9 +655,10 @@ let rq_handler json_string =
       let feature = FindDeclaration_feature ((Utils.id_to_int request.id), src_file, line, ch) in
       let lsp_opt = LspOpt.create (feature) in
       let command = Command.create ~kernel:kernel_opt ~lsp:lsp_opt () in
-      let command_str = (Command.string_of_t command) in
-      Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
-      let data, pid = fork_execute_command command_str feature in
+      (* let command_str = (Command.string_of_t command) in
+      Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str; *)
+      let prog, args = (Command.args_of_t command) in
+      let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT (data), pid;
 
     | "showPOVC" -> (* show proof obligation of specific function *)
@@ -648,9 +684,10 @@ let rq_handler json_string =
         | true -> Command.create ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
         | false -> Command.create ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
       in
-      let command_str = (Command.string_of_t command) in
-      Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
-      let data, pid = fork_execute_command command_str feature in
+      (* let command_str = (Command.string_of_t command) in
+      Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str; *)
+      let prog, args = (Command.args_of_t command) in
+      let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT (data), pid;
 
       | "showPO" -> (* show proof obligation of specific function *)
@@ -674,9 +711,10 @@ let rq_handler json_string =
         | true -> Command.create ~kernel:kernel_opt ~files:[file_id] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
         | false -> Command.create ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
       in
-      let command_str = (Command.string_of_t command) in
-      Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
-      let data, pid = fork_execute_command command_str feature in
+      (* let command_str = (Command.string_of_t command) in
+      Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str; *)
+      let prog, args = (Command.args_of_t command) in
+      let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT (data), pid;
 
       | "provePO" -> (* prove with WP *)
@@ -706,9 +744,10 @@ let rq_handler json_string =
         | true -> Command.create ~gui:gui ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
         | false -> Command.create ~gui:gui ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
       in
-      let command_str = (Command.string_of_t command) in
-      Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
-      let data, pid = fork_execute_command command_str feature in
+      (* let command_str = (Command.string_of_t command) in
+      Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str; *)
+      let prog, args = (Command.args_of_t command) in
+      let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT (data), pid;
 
       | "provePOStrategies" -> (* prove with WP strategies *)
@@ -738,9 +777,10 @@ let rq_handler json_string =
         | true -> Command.create ~gui:gui ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
         | false -> Command.create ~gui:gui ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
       in
-      let command_str = (Command.string_of_t command) in
-      Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
-      let data, pid = fork_execute_command command_str feature in
+      (* let command_str = (Command.string_of_t command) in
+      Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str; *)
+      let prog, args = (Command.args_of_t command) in
+      let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT (data), pid;
 (*
     | "textDocument/completion" -> 
@@ -757,6 +797,13 @@ let rq_handler json_string =
       Lsp.Self.debug ~level:3 "Command = %s\n%!" command;
       Lsp_types.CONTENT (fork_execute_command command false ~id:request.id ());
 *)
+    | "stop" -> (
+        Lsp.Self.debug ~level:2 "Kill pid %d!%!" !fork_pid;
+        if not (!fork_pid = 0) then Unix.kill !fork_pid Sys.sigint;
+        fork_pid := 0;
+        let lsp_response = Lsp_types.ResponseMessage.json_of_t (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:request.id ~result:`Null ()) in
+        Lsp_types.CONTENT (Json.save_string lsp_response), 1;
+    )
     | "shutdown" -> receivedShutdown := true;
       let lsp_response = Lsp_types.ResponseMessage.json_of_t (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:request.id ~result:`Null ()) in
       Lsp_types.CONTENT (Json.save_string lsp_response), 1;
@@ -830,9 +877,10 @@ let notif_handler json_string server_sock =
         let feature = DidSave_feature in
         let lsp_opt = LspOpt.create (feature) in
         let command = Command.create ~kernel:kernel_opt ~files:[file_name] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt () in
-        let command_str = (Command.string_of_t command) in
-        Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
-        let data = execute_command command_str feature in
+        (* let command_str = (Command.string_of_t command) in
+        Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str; *)
+        let prog, args = (Command.args_of_t command) in
+        let data = execute_command prog args feature in
         Lsp_types.CONTENT (data), 1;
       end
     else Lsp_types.EMPTY (), 1
@@ -857,9 +905,10 @@ let notif_handler json_string server_sock =
     let metrics_opt = MetricsOpt.create () in
     let feature = ComputeMetrics_feature in
     let command = Command.create ~kernel:kernel_opt ~metrics:metrics_opt () in
-    let command_str = (Command.string_of_t command) in
-    Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
-    let data, pid = fork_execute_command command_str feature in
+    (* let command_str = (Command.string_of_t command) in
+    Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str; *)
+    let prog, args = (Command.args_of_t command) in
+    let data, pid = fork_execute_command prog args feature in
     Lsp_types.CONTENT (data), pid;
 
   | "smokeTests" -> 
@@ -874,9 +923,10 @@ let notif_handler json_string server_sock =
       let feature = DidSave_feature in
       let lsp_opt = LspOpt.create (feature) in
       let command = Command.create ~kernel:kernel_opt ~files:[file_name] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt () in
-      let command_str = (Command.string_of_t command) in
-      Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
-      let data = execute_command command_str feature in
+      (* let command_str = (Command.string_of_t command) in
+      Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str; *)
+      let prog, args = (Command.args_of_t command) in
+      let data = execute_command prog args feature in
       Lsp_types.CONTENT (data), 1;
 
   | "displayCIL" -> 
@@ -890,9 +940,10 @@ let notif_handler json_string server_sock =
       let file_basename = (Filename.remove_extension (Filename.basename (String.trim file))) in
       let pprint_opt = PprintOpt.create ~file:file_basename () in
       let command = Command.create ~kernel:kernel_opt ~files:[file] ~pprint:pprint_opt () in
-      let command_str = (Command.string_of_t command) in
-      Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
-      let data, pid = fork_execute_command command_str feature in
+      (* let command_str = (Command.string_of_t command) in
+      Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str; *)
+      let prog, args = (Command.args_of_t command) in
+      let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT (data), pid;
 
   | "displayCIL_noannot" -> 
@@ -906,9 +957,10 @@ let notif_handler json_string server_sock =
         let file_basename = (Filename.remove_extension (Filename.basename (String.trim file))) in
         let pprint_opt = PprintOpt.create ~file:file_basename ~no_annot:true () in
         let command = Command.create ~kernel:kernel_opt ~files:[file] ~pprint:pprint_opt () in
-        let command_str = (Command.string_of_t command) in
-        Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
-        let data, pid = fork_execute_command command_str feature in
+        (* let command_str = (Command.string_of_t command) in
+        Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str; *)
+        let prog, args = (Command.args_of_t command) in
+        let data, pid = fork_execute_command prog args feature in
         Lsp_types.CONTENT (data), pid;
 
   | "showLocalMetrics" -> 
@@ -921,9 +973,10 @@ let notif_handler json_string server_sock =
     let kernel_opt = KernelOpt.create ~strategies:false () in
     let metrics_opt = MetricsOpt.create () in
     let command = Command.create ~kernel:kernel_opt ~files:[file] ~metrics:metrics_opt () in
-    let command_str = (Command.string_of_t command) in
-    Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
-    let data, pid = fork_execute_command command_str feature in
+    (* let command_str = (Command.string_of_t command) in
+    Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str; *)
+    let prog, args = (Command.args_of_t command) in
+    let data, pid = fork_execute_command prog args feature in
     Lsp_types.CONTENT (data), pid
   
   | "computeCG" -> 
@@ -937,9 +990,10 @@ let notif_handler json_string server_sock =
     let kernel_opt = KernelOpt.create ~strategies:false () in
     let cg_opt = CgOpt.create ~file:file_basename () in
     let command = Command.create ~kernel:kernel_opt ~files:[file] ~cg:cg_opt () in
-    let command_str = (Command.string_of_t command) in
-    Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str;
-    let data, pid = fork_execute_command command_str feature in
+    (* let command_str = (Command.string_of_t command) in
+    Lsp.Self.debug ~level:3 "Command = %s\n%!" command_str; *)
+    let prog, args = (Command.args_of_t command) in
+    let data, pid = fork_execute_command prog args feature in
     Lsp_types.CONTENT (data), pid
 
   | "workspace/didChangeConfiguration" ->
