@@ -33,10 +33,18 @@ export function activate(context: ExtensionContext) {
 	const smokeTests = commands.registerCommand('smokeTests', async () => {
 		try {
 			await client.sendNotification('smokeTests', window.activeTextEditor.document.fileName);
-			window.showInformationMessage('Smoke tests computed');
 		} catch (err) {
 			window.showErrorMessage('Failed to run smoke tests: ' + err.message);
 			console.error('Error computing smoke tests:', err);
+		}
+	});
+
+	const ccdoc = commands.registerCommand('ccdoc', async () => {
+		try {
+			await client.sendNotification('ccdoc');
+		} catch (err) {
+			window.showErrorMessage('Failed to run ccdoc: ' + err.message);
+			console.error('Error computing ccdoc:', err);
 		}
 	});
 
@@ -410,7 +418,7 @@ export function activate(context: ExtensionContext) {
 		}
 	});
 
-	context.subscriptions.push(smokeTests, displayCIL, displayCIL_noannot, computeCG, showPOVC, provePO, provePOGUI, provePOStrategies, provePOStrategiesGUI, showGlobalMetrics, showLocalMetrics);
+	context.subscriptions.push(smokeTests, ccdoc, displayCIL, displayCIL_noannot, computeCG, showPOVC, provePO, provePOGUI, provePOStrategies, provePOStrategiesGUI, showGlobalMetrics, showLocalMetrics);
 
 	// Start the client. This will also launch the server
 	client.start();

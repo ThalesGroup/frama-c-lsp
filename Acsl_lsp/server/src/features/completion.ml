@@ -111,7 +111,7 @@ let json_of_completions (completions : (string * Lsp_types.CompletionItemKind.t)
   let curr_line = ref "" in
   let acsl_block_started = ref false in
   let res = ref false in
-  Lsp.Self.debug ~level:4 "Requested line: %d\n%!" line;
+  Lsp.Self.debug ~level:1 "Requested line: %d\n%!" line;
 
   try 
     while true do
@@ -119,25 +119,25 @@ let json_of_completions (completions : (string * Lsp_types.CompletionItemKind.t)
       curr_line := Stdlib.input_line ic;
       match Utils.contains !curr_line ~suffix:"/*@" with
       | true ->  
-          Lsp.Self.debug ~level:4 "Found beginning of acsl block: %d\n%!" !cnt;
+          Lsp.Self.debug ~level:1 "Found beginning of acsl block: %d\n%!" !cnt;
           start_line := !cnt;
           acsl_block_started := true;
       | false -> 
         (match Utils.contains !curr_line ~suffix:"*/" with 
         | true ->
-            Lsp.Self.debug ~level:4 "Found end of acsl block: %d\n%!" !cnt;
+            Lsp.Self.debug ~level:1 "Found end of acsl block: %d\n%!" !cnt;
             end_line := !cnt;
             acsl_block_started := false; 
             res := !res || (line >= !start_line && line <= !end_line) ; (* todo : how to interrupt the loop when found *)
             (match !res with 
-            | true -> Lsp.Self.debug ~level:4 "Is in acsl block\n%!";
-            | false -> Lsp.Self.debug ~level:4 "Is not in acsl block\n%!";)
+            | true -> Lsp.Self.debug ~level:1 "Is in acsl block\n%!";
+            | false -> Lsp.Self.debug ~level:1 "Is not in acsl block\n%!";)
         | false -> ();)
         done;
         Stdlib.close_in ic;
         !res
     with _ -> 
-      Lsp.Self.debug ~level:4 "END OF FILE REACHED FOR ACSL BLOCK CHECK\n%!";
+      Lsp.Self.debug ~level:1 "END OF FILE REACHED FOR ACSL BLOCK CHECK\n%!";
       Stdlib.close_in ic;
       !res *)
 

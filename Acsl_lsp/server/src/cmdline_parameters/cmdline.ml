@@ -117,11 +117,33 @@ let maxPendingRequests = 20
 let defaultProtocolType = 0
 let addr = Unix.inet_addr_of_string "127.0.0.1"
 
+
+
+(* Send data in chunks over a socket *)
+let send_in_chunks socket data chunk_size =
+  let data_len = String.length data in
+  let rec send_data offset =
+    if offset < data_len then
+      let chunk = String.sub data offset (min chunk_size (data_len - offset)) in
+      let bytes_sent = Unix.send socket (Bytes.of_string chunk) 0 (String.length chunk) [] in
+      if bytes_sent = String.length chunk then
+        send_data (offset + bytes_sent)  (* Continue sending remaining data *)
+      else
+        Self.error "Error: only %d bytes sent\n" bytes_sent
+  in
+  send_data 0  (* Start from offset 0 *)
+
+
 let send_response plugin_sock response =
-      let response_str = Printf.sprintf "Content-Length: %d\r\n\r\n%s" (String.length response) response in
-      let response_bytes = Bytes.of_string response_str in
-      let sent = Unix.send plugin_sock (response_bytes) 0 (String.length response_str) [] in
-      Self.debug ~level:4 "size : %d content : %s\n%!" sent response_str
+  let response_str = Printf.sprintf "Content-Length: %d\r\n\r\n%s" (String.length response) response in
+  let chunk_size = 65530 in
+  send_in_chunks plugin_sock response_str chunk_size
+  (*
+  let response_bytes = Bytes.of_string response_str in
+  let response_size = (String.length response_str) in
+  let sent = Unix.send plugin_sock response_bytes 0 response_size [] in
+  Self.debug ~level:2 "size : %d content : %s\n%!" sent response_str
+  *)
 
 let send_response_list plugin_sock response_list =
   let response_list = List.rev response_list in
@@ -226,7 +248,6 @@ let escape_unicode str = (* todo : write proper function *)
   Str.global_replace regex "unknown-char" str
 
 let diagnostics_handler (event : Log.event) = 
-    (* Lsp.Self.debug ~level:4 "diags handler : nb diags = %d\n%!" (List.length !diag_list); *)
     let publish_to = ref "" in
     let msg = event.evt_message in
     let _category = match event.evt_category with
@@ -242,10 +263,8 @@ let diagnostics_handler (event : Log.event) =
         Utils.dummyLoc (Filepath.normalize !file))
     in
     let diag_list = DidSave.StringMap.find_opt !publish_to !DidSave.diag_map in
-    let diag_list = match diag_list with
-      | None -> []
-      | Some l -> l
-    in
+    let diag_list = match diag_list with | None -> [] | Some l -> l in
+    (*
     if (Utils.contains msg ~suffix:"syntax error" 
       || Utils.contains msg ~suffix:"There were parsing errors in"
       || Utils.contains msg ~suffix:"User Error"
@@ -254,58 +273,56 @@ let diagnostics_handler (event : Log.event) =
       || Utils.contains msg ~suffix:"before or at token"
     ) then
       (
-      Lsp.Self.debug ~level:4 "Error caught \n%!";
+      Lsp.Self.debug ~level:1 "Error caught \n%!";
       let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
       DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
       )
     else
+      *)
     match event.evt_kind with 
     | Log.Error ->  
-      Lsp.Self.debug ~level:4 "Error\n%!";
+      Lsp.Self.debug ~level:1 "Error\n%!";
       let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
       DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
     | Log.Failure ->
-      Lsp.Self.debug ~level:4 "Failure\n%!";
+      Lsp.Self.debug ~level:1 "Failure\n%!";
       let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
       DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
     | Log.Warning ->
-      if (Utils.contains msg ~suffix:"Memory model hypotheses") then ()
-      else if (Utils.contains msg ~suffix:"Missing RTE guards") then ()
-      else (
-      Lsp.Self.debug ~level:4 "Warning\n%!";
+      Lsp.Self.debug ~level:1 "Warning\n%!";
       let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Warning (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
       DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
-      )
-      (* Lsp.Self.debug ~level:4 "diags handler warning : nb diags = %d\n%!" (List.length !diag_list); *)
     | Log.Result -> 
-      Lsp.Self.debug ~level:4 "Result\n%!";
+      Lsp.Self.debug ~level:1 "Result\n%!";
     | Log.Debug -> 
-      Lsp.Self.debug ~level:4 "Debug\n%!";
+      Lsp.Self.debug ~level:1 "Debug\n%!";
       let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Information (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
       DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
     | Log.Feedback ->
-      Lsp.Self.debug ~level:4 "Feedback\n%!"
-      (*
+      Lsp.Self.debug ~level:1 "Feedback\n%!";
       let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Information (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
       DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
-      *)
   
 
 let set_listerners () =
     Log.add_listener ~plugin:"kernel" (diagnostics_handler);
-    Lsp.Self.debug ~level:4 "kernel listener added\n%!";
+    Lsp.Self.debug ~level:1 "kernel listener added\n%!";
     Log.add_listener ~plugin:"wp" (diagnostics_handler);
-    Lsp.Self.debug ~level:4 "wp listener added\n%!"
+    Lsp.Self.debug ~level:1 "wp listener added\n%!";
+    Log.add_listener ~plugin:"metacsl" (diagnostics_handler);
+    Lsp.Self.debug ~level:1 "matacsl listener added\n%!";
+    Log.add_listener ~plugin:"cc_doc" (diagnostics_handler);
+    Lsp.Self.debug ~level:1 "cc_doc listener added\n%!"
 
 let send_dignostics exn =
   if Enabled.get () then
     (
-    Self.debug ~level:2 "Error while processing request : %s, Backtrace : %s\n%!" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
+    Self.debug ~level:1 "Error while processing request : %s, Backtrace : %s\n%!" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
     let data = DidSave.StringMap.fold DidSave.publishDiagnostics_notification !DidSave.diag_map [] in
     let data = List.map Json.save_string (data) in
     match Cmdline_opt.get () with
       | false ->
-        Self.debug ~level:2 "Output results in case of failure !!!";
+        Self.debug ~level:1 "Output results in case of failure !!!";
         Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
         ignore (send_response_list plugin_sock data)
       | true -> List.iter (Lsp.Self.result "JSON result : %s\n%!" ) data
@@ -316,14 +333,10 @@ let run () =
   (
     if Handler_opt.get () then
       (
-        Lsp.Self.debug ~level:3 "Running LSP Handler\n%!";
-        try
-            Start_server.connect ()
-        with exn ->
-          Lsp.Self.debug ~level:1 "There was an error in the server %s:\n Backtrace : %s\n%!" (Printexc.to_string exn) (Printexc.get_backtrace ())
+        try Start_server.connect ();
+        with exn -> Lsp.Self.debug ~level:1 "There was an error in the server %s:\n Backtrace : %s\n%!" (Printexc.to_string exn) (Printexc.get_backtrace ())
       )
     else
-    (* try *)
       let framac_share = Utils.file_str Fc_config.datadir in
       Kernel.Share.set (Fc_config.datadir);
       let share = Kernel.Share.get () in
@@ -331,26 +344,26 @@ let run () =
       let feature = get_active_option () in
       let data = 
       match feature with
-      | Some Lsp_handler.DidSave_feature -> List.map Json.save_string (DidSave.handle ())
+      | Some Lsp_handler.DidSave_feature -> let data = List.map Json.save_string (DidSave.handle ()) in Lsp.Self.feedback ~level:1 "Updated Diagnostics !\n%!"; data
       (*| Some Lsp_handler.DidClose_feature(file) -> [Json.save_string (DidClose.handle (file))] *)
-      | Some Lsp_handler.FindDefinition_feature(id, file, line, ch) -> [(Definition.find id file line ch)]
-      | Some Lsp_handler.FindDeclaration_feature(id, file, line, ch) -> [(Declaration.find id file line ch)]
+      | Some Lsp_handler.FindDefinition_feature(id, file, line, ch) -> let data = [(Definition.find id file line ch)] in Lsp.Self.feedback ~level:1 "Find definition attempt done !\n%!"; data
+      | Some Lsp_handler.FindDeclaration_feature(id, file, line, ch) -> let data = [(Declaration.find id file line ch)] in Lsp.Self.feedback ~level:1 "Find declaration attempt done !\n%!"; data
       | Some Lsp_handler.ComputeCIL_feature -> []
       | Some Lsp_handler.ComputeCallGraph_feature -> []
       | Some Lsp_handler.ComputeMetrics_feature -> []
-      | Some Lsp_handler.ComputeProofObligation_feature(root_path, id, file, line, ch) -> [(ShowPOVC.get_property root_path id file line ch)]
-      | Some Lsp_handler.ComputeProofObligationID_feature(id, goal_id) -> [(ShowPOVC.get_property_from_id id goal_id)]
-      | Some Lsp_handler.Prove_feature(id) -> [(ProvePO.get_property_status id)]
-      | Some Lsp_handler.ProveStrategies_feature(id) -> [(ProvePO.get_property_status id)]
-      | None -> []
+      | Some Lsp_handler.ComputeProofObligation_feature(root_path, id, file, line, ch) -> let data = [(ShowPOVC.get_property root_path id file line ch)] in Lsp.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; data
+      | Some Lsp_handler.ComputeProofObligationID_feature(id, goal_id) -> let data = [(ShowPOVC.get_property_from_id id goal_id)] in Lsp.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; data
+      | Some Lsp_handler.Prove_feature(id) -> let data = [(ProvePO.get_property_status id)] in Lsp.Self.feedback ~level:1 "Proof attempt done !\n%!"; data
+      | Some Lsp_handler.ProveStrategies_feature(id) -> let data = [(ProvePO.get_property_status id)] in Lsp.Self.feedback ~level:1 "Proof attempt with strategies done !\n%!"; data
+      | None ->  Self.debug ~level:1 "LSP started !!!"; []
       in
       match data, (Cmdline_opt.get ()) with
-      | [], _ -> Self.debug ~level:2 "LSP activated !!!";
+      | [], _ -> ()
       | data, false ->
-        Self.debug ~level:2 "Output results !!!";
+        Self.debug ~level:1 "Sending data to LSP handler ...";
         Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
         ignore (send_response_list plugin_sock data)
-      | data, true -> List.iter (Lsp.Self.result "JSON result : %s\n%!" ) data
+      | data, true -> List.iter (Lsp.Self.result "%s\n%!" ) data
   )
 
 (* let () = Db.Main.extend run *)

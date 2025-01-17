@@ -31,7 +31,7 @@ let is_position_between (line_check, char_check) (line1, char1) (line2, char2) =
 let get_property_status id : string =
   let verdict_msg = ref [] in
   Wp.Wpo.iter_on_goals (fun po -> 
-    Lsp.Self.debug ~level:2 "gid:%s label:%s done!\n%!" (Wp.Wpo.get_gid po) (Wp.Wpo.get_label po);
+    Lsp.Self.debug ~level:1 "gid:%s label:%s done!\n%!" (Wp.Wpo.get_gid po) (Wp.Wpo.get_label po);
     (* let prover_result_list = (Wp.Wpo.get_results po) in
     let prover_result_list = (List.map (fun (p, r) -> (Printf.sprintf "%s==>%s" (Pretty_utils.to_string Wp.VCS.pp_prover p) (Pretty_utils.to_string Wp.VCS.pp_result r))) prover_result_list) in
     let prover_results = String.concat " " prover_result_list in *)
@@ -39,7 +39,7 @@ let get_property_status id : string =
     let prover_results = (Pretty_utils.to_string Wp.Stats.pretty stats) in
     let proof_status, property = (Wp.Wpo.get_proof po) in
     let function_name = match Wp.Wpo.get_index po with
-    | Axiomatic _a -> "Axiomatic"
+    | Axiomatic _a -> "@all"
     | Function (kf, _) -> Ast_info.Function.get_name kf.fundec
     (*| Function (kf, s) -> Pretty_utils.to_string (fun x y -> Wp.Wpo.pp_function x y s) kf *)
     in
@@ -49,7 +49,7 @@ let get_property_status id : string =
     [] -> "No labels given"
     | l :: _ -> l
     in
-    Lsp.Self.debug ~level:2 "function:%s label:%s done!\n%!" function_name property_name;
+    Lsp.Self.debug ~level:1 "function:%s label:%s done!\n%!" function_name property_name;
     (* let script_file = Pretty_utils.to_string Wp.ProofSession.pp_script_for po in *)
     let script_file = Pretty_utils.to_string Wp.ProofSession.pp_file (Wp.ProofSession.filename ~force:false po) in
     let position = match Property.source property with

@@ -35,7 +35,8 @@
             "editor/context": [
                 {"command": "stop", "when": "resourceLangId == acsl"},
                 {"submenu": "Frama-C"},
-                {"submenu": "Frama-C/WP"}
+                {"submenu": "Frama-C/WP"},
+                {"submenu": "Frama-C/CCDOC"}
             ],
             "Frama-C": [
                 {"command": "displayCIL", "when": "resourceLangId == acsl"},
@@ -52,6 +53,9 @@
                 {"command": "smokeTests", "when": "resourceLangId == acsl"},
                 {"command": "showPOVC", "when": "resourceLangId == acsl"}
             ],
+            "Frama-C/CCDOC": [
+                {"command": "ccdoc", "when": "resourceLangId == acsl"}
+            ],
             "view/item/context": [
                 {"command": "showScript", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
                 {"command": "showPO", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"}
@@ -60,7 +64,7 @@
         "submenus": [
             {"id": "Frama-C", "label": "Frama-C", "icon": "images/logo-frama-c.png"},
             {"id": "Frama-C/WP", "label": "Frama-C/WP", "icon": "images/logo-frama-c.png"},
-            {"id": "vscodeacsl.requires","label": "Show 'requires' POs"}
+            {"id": "Frama-C/CCDOC", "label": "Frama-C/CCDOC", "icon": "images/logo-frama-c.png"}
         ],
         "commands": [
             {"command": "displayCIL", "title": "Display File CIL"},
@@ -76,7 +80,8 @@
             {"command": "provePOStrategies", "title": "Prove with Strategies"},
             {"command": "provePOGUI", "title": "Prove (GUI)"},
             {"command": "provePOStrategiesGUI", "title": "Prove with Strategies (GUI)"},
-            {"command": "stop", "title": "Stop"}
+            {"command": "stop", "title": "Stop"},
+            {"command": "ccdoc", "title": "Run"}
         ],
         "languages": [{"id": "acsl", "aliases": ["ACSL", "acsl"], "extensions": [".c", ".h"], "configuration": "./syntax/language-configuration.json", "icon": {"light": "./images/logo-frama-c.png", "dark": "./images/logo-frama-c.png"}}],
         "grammars": [{"language": "acsl", "scopeName": "source.acsl", "path": "./syntax/acsl.tmLanguage.json"}],
@@ -89,7 +94,7 @@
             {
             "title": "Frama-C/kernel",
             "properties": {
-                "kernel.lspDebug": {"scope": "window", "type": "integer", "enum": [0, 1, 2, 3, 4], "default": 4, "description": "Frama-C option: -lsp-debug (4 = Verbose, 0 = off)."},
+                "kernel.lspDebug": {"scope": "window", "type": "integer", "enum": [0, 1, 2], "default": 0, "description": "Frama-C option: -lsp-debug (2 => (1 + json messages), 1 => lsp handler output, 0 => off)."},
                 "kernel.includePaths": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Include paths for the project. Frama-C option: -cpp-extra-args \"-I ...\""},
                 "kernel.sourceFiles": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Source files."},
                 "kernel.macros": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Frama-C option: -cpp-extra-args \"-D ...\""},
@@ -148,6 +153,14 @@
                 "metacsl.noCheckExt": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -meta-no-check-ext", "default": true},
                 "metacsl.numberAssertions": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -meta-number-assertions", "default": true},
                 "metacsl.checkCalleeAssigns": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Frama-C option: -meta-check-callee-assigns"}
+                }
+            },
+            {
+            "title": "Frama-C/Ccdoc",
+            "properties": {
+                "ccdoc.active": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -ccdoc", "default": false},
+                "ccdoc.coverageVerif": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -ccdoc-coverage-verif", "default": true},
+                "ccdoc.latex": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -ccdoc-latex", "default": true}
                 }
             }
         ]

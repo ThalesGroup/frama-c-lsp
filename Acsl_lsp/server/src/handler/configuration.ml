@@ -30,7 +30,10 @@ let sections = {| {"items": [
           {"section": "metacsl.noSimpl"},
           {"section": "metacsl.noCheckExt"},
           {"section": "metacsl.numberAssertions"},
-          {"section": "metacsl.checkCalleeAssigns"}
+          {"section": "metacsl.checkCalleeAssigns"},
+          {"section": "ccdoc.active"},
+          {"section": "ccdoc.coverageVerif"},
+          {"section": "ccdoc.latex"}
         ]
       }
     |}
@@ -67,7 +70,10 @@ let sections = {| {"items": [
     metacslNoSimpl: bool;
     metacslNoCheckExt: bool;
     metacslNumberAssertions: bool;
-    metacslCheckCalleeAssigns: string list
+    metacslCheckCalleeAssigns: string list;
+    ccdocActive : bool;
+    ccdocCoverageVerif : bool;
+    ccdocLatex : bool
   }
 
   let create
@@ -103,6 +109,9 @@ let sections = {| {"items": [
     ~metacslNoCheckExt
     ~metacslNumberAssertions
     ~metacslCheckCalleeAssigns
+    ~ccdocActive
+    ~ccdocCoverageVerif
+    ~ccdocLatex
     ()
     =
     {
@@ -137,12 +146,15 @@ let sections = {| {"items": [
       metacslNoSimpl;
       metacslNoCheckExt;
       metacslNumberAssertions;
-      metacslCheckCalleeAssigns
+      metacslCheckCalleeAssigns;
+      ccdocActive;
+      ccdocCoverageVerif;
+      ccdocLatex
     }
 
 let global_params = ref
   (create 
-  ~acslLsp:4
+  ~acslLsp:0
   ~includePaths:[]
   ~sourceFiles:[]
   ~macros:[]
@@ -174,6 +186,9 @@ let global_params = ref
   ~metacslNoCheckExt: true
   ~metacslNumberAssertions: true
   ~metacslCheckCalleeAssigns: []
+  ~ccdocActive: false
+  ~ccdocCoverageVerif: false
+  ~ccdocLatex: false
   ())
 
 let request_configurations : Json.json = 
@@ -217,7 +232,10 @@ let save_configs (result:  Json.json) =
         `Bool json_metacslNoSimpl;
         `Bool json_metacslNoCheckExt;
         `Bool json_metacslNumberAssertions;
-        `List json_metacslCheckCalleeAssigns
+        `List json_metacslCheckCalleeAssigns;
+        `Bool json_ccdocActive;
+        `Bool json_ccdocCoverageVerif;
+        `Bool json_ccdocLatex;
       ] 
     -> 
       global_params := create 
@@ -253,9 +271,11 @@ let save_configs (result:  Json.json) =
       ~metacslNoCheckExt: json_metacslNoCheckExt
       ~metacslNumberAssertions: json_metacslNumberAssertions
       ~metacslCheckCalleeAssigns: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_metacslCheckCalleeAssigns)
+      ~ccdocActive: json_ccdocActive
+      ~ccdocCoverageVerif: json_ccdocCoverageVerif
+      ~ccdocLatex: json_ccdocLatex
       ();
-
-
-      Lsp.Self.debug ~level:4 "save_configs : global_params length : %d\n%!" (List.length (Json.list result))
+      Lsp.Self.Debug.set json_acslLsp; (* !Configuration.global_params.acslLsp *)
+      Lsp.Self.debug ~level:1 "save_configs : global_params length : %d\n%!" (List.length (Json.list result))
   | x -> 
-    Lsp.Self.debug ~level:3 "Requested unknown configuration(s), error : %s\n\t%s\n%!" (Json.save_string ~pretty:true x) (Printexc.get_backtrace ())
+    Lsp.Self.error "Requested unknown configuration(s), error : %s\n\t%s\n%!" (Json.save_string ~pretty:true x) (Printexc.get_backtrace ())

@@ -36,7 +36,7 @@ let rec extract_hd_elems dlist nb res =
 
 let publishDiagnostics_notification filename dlist accumulated_list : Json.json list =
   let dlist = remove_duplicate_diagnostics dlist in
-  let dlist = extract_hd_elems dlist 20 [] in
+  (* let dlist = extract_hd_elems dlist 20 [] in *)
   let lsp_notification_params = Lsp_types.PublishDiagnosticsParams.create ~uri:filename ~diagnostics:dlist () in
   let json_notification_params = Lsp_types.PublishDiagnosticsParams.json_of_t lsp_notification_params in
   let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"textDocument/publishDiagnostics" ~params:json_notification_params () in
@@ -73,21 +73,23 @@ let remove_newline str =
 let handle () : Json.json list =
   if StringMap.is_empty !diag_map then
     (
-    Lsp.Self.debug ~level:2 "Updated Diagnostics !\n%!";
+    Lsp.Self.debug ~level:1 "Updated Empty Diagnostics !\n%!";
     let lsp_notification_params = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Updated diagnostics !") () in
     let json_notification_params = Lsp_types.ShowMessageParams.json_of_t lsp_notification_params in
     let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params:json_notification_params () in
     let json_notification = Lsp_types.NotificationMessage.json_of_t lsp_notification in
     [json_notification]
     )
-  else
-    StringMap.fold publishDiagnostics_notification !diag_map []
+  else (
+    let data = StringMap.fold publishDiagnostics_notification !diag_map [] in
+    data
+  )
 
   (*
   Log.add_listener ~plugin:"kernel" (diagnostics_handler);
-  Lsp.Self.debug ~level:4 "kernel listener added\n%!";
+  Lsp.Self.debug ~level:1 "kernel listener added\n%!";
   Log.add_listener ~plugin:"wp" (diagnostics_handler);
-  Lsp.Self.debug ~level:4 "wp listener added\n%!";
+  Lsp.Self.debug ~level:1 "wp listener added\n%!";
   *)
 
   (* file := filename; *)
@@ -108,7 +110,7 @@ let handle () : Json.json list =
 
   (* with *)
   (* | _exn -> *)
-    (* Lsp.Self.debug ~level:4 "DidSave error :  %s, Backtrace : %s\n%!" (Printexc.exn_slot_name _exn) (Printexc.get_backtrace ()); *)
+    (* Lsp.Self.debug ~level:1 "DidSave error :  %s, Backtrace : %s\n%!" (Printexc.exn_slot_name _exn) (Printexc.get_backtrace ()); *)
     (* StringMap.fold publishDiagnostics_notification !diag_map [] *)
 
   
