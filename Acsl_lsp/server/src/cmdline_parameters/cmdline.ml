@@ -331,7 +331,6 @@ let send_dignostics exn =
 
 let send_result data =
   match data, (Cmdline_opt.get ()) with
-  | [], _ -> ()
   | data, false ->
     Self.debug ~level:1 "Sending data to LSP handler ...";
     Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
@@ -364,7 +363,6 @@ let run () =
       | Some Lsp_handler.ComputeProofObligation_feature(root_path, id, file, line, ch) -> let data = [(ShowPOVC.get_property root_path id file line ch)] in Lsp.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; send_result data
       | Some Lsp_handler.ComputeProofObligationID_feature(id, goal_id) -> let data = [(ShowPOVC.get_property_from_id id goal_id)] in Lsp.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; send_result data
       | Some Lsp_handler.Prove_feature(id) -> let data = [(ProvePO.get_property_status id)] in Lsp.Self.feedback ~level:1 "Proof attempt done !\n%!"; send_result data
-      | Some Lsp_handler.ProveStrategies_feature(id) -> let data = [(ProvePO.get_property_status id)] in Lsp.Self.feedback ~level:1 "Proof attempt with strategies done !\n%!"; send_result data
       | None ->  Self.debug ~level:1 "LSP started !!!"
   )
 

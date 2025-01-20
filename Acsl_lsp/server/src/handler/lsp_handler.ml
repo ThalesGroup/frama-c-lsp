@@ -15,7 +15,6 @@ type lsp_feature =
   | ComputeProofObligation_feature of (string * int * string * int * int)
   | ComputeProofObligationID_feature of (int * string)
   | Prove_feature of (int)
-  | ProveStrategies_feature of (int)
 
 module KernelOpt = struct
 type t = {
@@ -298,7 +297,6 @@ module LspOpt = struct
     | ComputeProofObligation_feature (root_path, id, file, line, column) -> Printf.sprintf "-lsp-root-path=\"%s\" -lsp-id=\"%d\" -lsp-show-povc=%s:%d:%d" root_path id file line column
     | ComputeProofObligationID_feature (id, goal_id) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-show-po=%s" id goal_id
     | Prove_feature (id) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-prove" id
-    | ProveStrategies_feature (id) -> Printf.sprintf "-lsp-id=\"%d\"" id
 end
 
 
@@ -325,7 +323,7 @@ module Command = struct
       | None, _ -> None
       | _, Some fls -> if strategies then Some (fls @ !Configuration.global_params.sourceFileStrategies) else files
       | _, None -> 
-        let sourceFiles = List.map (fun x -> (!rootPath)^"/"^x) (!Configuration.global_params.sourceFiles) in
+        let sourceFiles = List.map (fun x -> (!rootPath)^"/"^x) (!Configuration.global_params.sourceFiles @ !Configuration.global_params.sourceFileStrategies) in
         match sourceFiles with
         | [] -> Some (Utils.get_workspace_files !rootPath)
         | _ -> Some (sourceFiles)
@@ -496,8 +494,7 @@ let execute_command prog args feature =
       | FindDeclaration_feature (_, _, _, _)
       | ComputeProofObligation_feature (_, _, _, _, _)
       | ComputeProofObligationID_feature (_, _)
-      | Prove_feature (_)
-      | ProveStrategies_feature (_) ->
+      | Prove_feature (_) ->
       Lsp.Self.debug ~level:1 "Executed frama-c command (frama-c exited normally)\n%!";
       let (plugin_sock, _) = Unix.accept wrapper_sock in
       let _data_size = getnumber (readcontlen plugin_sock) in
@@ -555,8 +552,7 @@ let execute_command prog args feature =
       | FindDeclaration_feature (id, _, _, _)
       | ComputeProofObligation_feature (_, id, _, _, _)
       | ComputeProofObligationID_feature (id, _)
-      | Prove_feature (id)
-      | ProveStrategies_feature (id) ->
+      | Prove_feature (id) ->
         Lsp.Self.debug ~level:1 "Error while executing frama-c command\n%!";
         let msg = Printf.sprintf "Frama-C Error ! Check OUTPUT !" in
         let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:msg () in
@@ -593,8 +589,7 @@ let fork_execute_command prog args feature =
       | FindDeclaration_feature (id, _, _, _)
       | ComputeProofObligation_feature (_, id, _, _, _)
       | ComputeProofObligationID_feature (id, _)
-      | Prove_feature (id)
-      | ProveStrategies_feature (id) ->
+      | Prove_feature (id) ->
         Lsp.Self.debug ~level:1 "Server is busy !:! : %s, %s\n" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
         let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:"Server is busy !:!" () in
         let lsp_message = (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~error:lsp_error_message ()) in
@@ -817,7 +812,7 @@ let rq_handler json_string =
       let kernel_opt = KernelOpt.create ~fct:fct ~strategies:true () in
       let uncast_opt = UncastOpt.create () in
       let wp_opt = WpOpt.create ~wp_fct:fct ~wp_prop:prop ~wp_prover:["tip"] ~wp_gen:false ~wp_timeout:timeout ~wp_script:"dry" () in
-      let feature = ProveStrategies_feature (id) in
+      let feature = Prove_feature (id) in
       let lsp_opt = LspOpt.create (feature) in
       let command = 
         match (String.ends_with ~suffix:".c" file) with
