@@ -328,6 +328,17 @@ let send_dignostics exn =
       | true -> List.iter (Lsp.Self.result "JSON result : %s\n%!" ) data
     )
 
+
+let send_result data =
+  match data, (Cmdline_opt.get ()) with
+  | [], _ -> ()
+  | data, false ->
+    Self.debug ~level:1 "Sending data to LSP handler ...";
+    Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
+    ignore (send_response_list plugin_sock data)
+  | data, true -> List.iter (Lsp.Self.result "%s\n%!" ) data
+
+
 let run () = 
   if Enabled.get () then
   (
@@ -342,28 +353,19 @@ let run () =
       let share = Kernel.Share.get () in
       Filepath.add_symbolic_dir framac_share share;
       let feature = get_active_option () in
-      let data = 
       match feature with
-      | Some Lsp_handler.DidSave_feature -> let data = List.map Json.save_string (DidSave.handle ()) in Lsp.Self.feedback ~level:1 "Updated Diagnostics !\n%!"; data
+      | Some Lsp_handler.DidSave_feature -> let data = List.map Json.save_string (DidSave.handle ()) in Lsp.Self.feedback ~level:1 "Updated Diagnostics !\n%!"; send_result data
       (*| Some Lsp_handler.DidClose_feature(file) -> [Json.save_string (DidClose.handle (file))] *)
-      | Some Lsp_handler.FindDefinition_feature(id, file, line, ch) -> let data = [(Definition.find id file line ch)] in Lsp.Self.feedback ~level:1 "Find definition attempt done !\n%!"; data
-      | Some Lsp_handler.FindDeclaration_feature(id, file, line, ch) -> let data = [(Declaration.find id file line ch)] in Lsp.Self.feedback ~level:1 "Find declaration attempt done !\n%!"; data
-      | Some Lsp_handler.ComputeCIL_feature -> []
-      | Some Lsp_handler.ComputeCallGraph_feature -> []
-      | Some Lsp_handler.ComputeMetrics_feature -> []
-      | Some Lsp_handler.ComputeProofObligation_feature(root_path, id, file, line, ch) -> let data = [(ShowPOVC.get_property root_path id file line ch)] in Lsp.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; data
-      | Some Lsp_handler.ComputeProofObligationID_feature(id, goal_id) -> let data = [(ShowPOVC.get_property_from_id id goal_id)] in Lsp.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; data
-      | Some Lsp_handler.Prove_feature(id) -> let data = [(ProvePO.get_property_status id)] in Lsp.Self.feedback ~level:1 "Proof attempt done !\n%!"; data
-      | Some Lsp_handler.ProveStrategies_feature(id) -> let data = [(ProvePO.get_property_status id)] in Lsp.Self.feedback ~level:1 "Proof attempt with strategies done !\n%!"; data
-      | None ->  Self.debug ~level:1 "LSP started !!!"; []
-      in
-      match data, (Cmdline_opt.get ()) with
-      | [], _ -> ()
-      | data, false ->
-        Self.debug ~level:1 "Sending data to LSP handler ...";
-        Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
-        ignore (send_response_list plugin_sock data)
-      | data, true -> List.iter (Lsp.Self.result "%s\n%!" ) data
+      | Some Lsp_handler.FindDefinition_feature(id, file, line, ch) -> let data = [(Definition.find id file line ch)] in Lsp.Self.feedback ~level:1 "Find definition attempt done !\n%!"; send_result data
+      | Some Lsp_handler.FindDeclaration_feature(id, file, line, ch) -> let data = [(Declaration.find id file line ch)] in Lsp.Self.feedback ~level:1 "Find declaration attempt done !\n%!"; send_result data
+      | Some Lsp_handler.ComputeCIL_feature -> send_result []
+      | Some Lsp_handler.ComputeCallGraph_feature -> send_result []
+      | Some Lsp_handler.ComputeMetrics_feature -> send_result []
+      | Some Lsp_handler.ComputeProofObligation_feature(root_path, id, file, line, ch) -> let data = [(ShowPOVC.get_property root_path id file line ch)] in Lsp.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; send_result data
+      | Some Lsp_handler.ComputeProofObligationID_feature(id, goal_id) -> let data = [(ShowPOVC.get_property_from_id id goal_id)] in Lsp.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; send_result data
+      | Some Lsp_handler.Prove_feature(id) -> let data = [(ProvePO.get_property_status id)] in Lsp.Self.feedback ~level:1 "Proof attempt done !\n%!"; send_result data
+      | Some Lsp_handler.ProveStrategies_feature(id) -> let data = [(ProvePO.get_property_status id)] in Lsp.Self.feedback ~level:1 "Proof attempt with strategies done !\n%!"; send_result data
+      | None ->  Self.debug ~level:1 "LSP started !!!"
   )
 
 (* let () = Db.Main.extend run *)

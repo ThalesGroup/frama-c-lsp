@@ -99,6 +99,7 @@
                 "kernel.sourceFiles": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Source files."},
                 "kernel.macros": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Frama-C option: -cpp-extra-args \"-D ...\""},
                 "kernel.macroStrategiesFunctionPrefix": {"scope": "workspace", "type": "string", "description": "Frama-C option: -cpp-extra-args \"-D ...\". Define a macro for each function given with option -wp-fct"},
+                "kernel.sourceFileStrategies": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Source files providing strategies."},
                 "kernel.machdep": {"scope": "workspace", "type": "string", "description": "Frama-C option: -machdep"},
                 "kernel.removeUnusedSpecifiedFunctions": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -remove-unused-specified-functions", "default": true},
                 "kernel.aggressiveMerging": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -aggressive-merging", "default": false},

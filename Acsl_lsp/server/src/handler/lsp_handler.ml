@@ -317,12 +317,13 @@ module Command = struct
   ccdoc: CcdocOpt.t option;
   lsp : LspOpt.t option;
   }
-  let create ?gui ?kernel ?files ?wp ?metacsl ?uncast ?metrics ?pprint ?cg ?ccdoc ?lsp () : t = {
+  let create ?gui ?kernel ~strategies ?files ?wp ?metacsl ?uncast ?metrics ?pprint ?cg ?ccdoc ?lsp () : t = {
     frama_c_exe = (match gui with None -> "frama-c" | Some g -> if g then "frama-c-gui" else "frama-c");
     verbose = !Configuration.global_params.acslLsp;
-    files = (match kernel, files with
+    files =
+    (match kernel, files with
       | None, _ -> None
-      | _, Some _ -> files;
+      | _, Some fls -> if strategies then Some (fls @ !Configuration.global_params.sourceFileStrategies) else files
       | _, None -> 
         let sourceFiles = List.map (fun x -> (!rootPath)^"/"^x) (!Configuration.global_params.sourceFiles) in
         match sourceFiles with
@@ -646,7 +647,17 @@ let check_fct fct =
   let fct = String.trim fct in
   let fct_lst = Str.split (Str.regexp ",") fct in
   if (List.exists (fun element -> element = "@all") fct_lst) then []
+  else if (List.exists (fun element -> element = "@axiomatic") fct_lst) then []
   else fct_lst
+
+let check_prop fct prop =
+  let prop = String.trim prop in
+  let fct = String.trim fct in
+  let prop_lst = Str.split (Str.regexp ",") prop in
+  let fct_lst = Str.split (Str.regexp ",") fct in
+  if (List.exists (fun element -> element = "@all") prop_lst) then []
+  else if (List.exists (fun element -> element = "@axiomatic") fct_lst) then "@lemma" :: prop_lst
+  else prop_lst
 
 let rq_handler json_string =
   let json = Json.load_string json_string in 
@@ -674,7 +685,7 @@ let rq_handler json_string =
       let kernel_opt = KernelOpt.create ~strategies:false () in
       let feature = FindDefinition_feature ((Utils.id_to_int request.id), src_file, line, ch) in
       let lsp_opt = LspOpt.create (feature) in
-      let command = Command.create ~kernel:kernel_opt ~lsp:lsp_opt () in
+      let command = Command.create ~strategies:false ~kernel:kernel_opt ~lsp:lsp_opt () in
       (* let command_str = (Command.string_of_t command) in *)
       let prog, args = (Command.args_of_t command) in
       (* Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str; *)
@@ -694,7 +705,7 @@ let rq_handler json_string =
       let kernel_opt = KernelOpt.create ~strategies:false () in
       let feature = FindDeclaration_feature ((Utils.id_to_int request.id), src_file, line, ch) in
       let lsp_opt = LspOpt.create (feature) in
-      let command = Command.create ~kernel:kernel_opt ~lsp:lsp_opt () in
+      let command = Command.create ~strategies:false ~kernel:kernel_opt ~lsp:lsp_opt () in
       (* let command_str = (Command.string_of_t command) in
       Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str; *)
       let prog, args = (Command.args_of_t command) in
@@ -721,8 +732,8 @@ let rq_handler json_string =
       let lsp_opt = LspOpt.create (feature) in
       let command = 
         match (String.ends_with ~suffix:".c" file) with
-        | true -> Command.create ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
-        | false -> Command.create ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
+        | true -> Command.create ~strategies:false ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
+        | false -> Command.create ~strategies:false ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
       in
       (* let command_str = (Command.string_of_t command) in
       Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str; *)
@@ -733,7 +744,7 @@ let rq_handler json_string =
       | "showPO" -> (* show proof obligation of specific function *)
       let id = (Utils.id_to_int request.id) in
       Lsp.Self.debug ~level:1 "showPO, %d\n%!" id;
-      let (file_id, function_id, goal_id) = match request.params with 
+      let (_file_id, function_id, goal_id) = match request.params with 
           | Some `List [`List [`String file_id; `String function_id; `String goal_id;]] ->
             (Utils.remove_newline (Utils.remove_quotes (file_id)),
              Utils.remove_newline (Utils.remove_quotes (function_id)),
@@ -746,11 +757,7 @@ let rq_handler json_string =
       let wp_opt = WpOpt.create ~wp_fct:function_ids ~wp_prover:["none"] () in
       let feature = ComputeProofObligationID_feature (id, goal_id) in
       let lsp_opt = LspOpt.create (feature) in
-      (* let command = Command.create ~kernel:kernel_opt ~files:[file_id] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt () in *)
-      let command = match (String.ends_with ~suffix:".c" file_id) with
-        | true -> Command.create ~kernel:kernel_opt ~files:[file_id] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
-        | false -> Command.create ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
-      in
+      let command = Command.create ~strategies:false ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt () in
       (* let command_str = (Command.string_of_t command) in
       Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str; *)
       let prog, args = (Command.args_of_t command) in
@@ -772,8 +779,8 @@ let rq_handler json_string =
             (Utils.remove_newline (Utils.remove_quotes (f)), function_name, property_name, timeout, gui)
           | _ -> Lsp.Self.debug ~level:1 "No params for showPOVC \n%!"; assert false
       in
+      let prop = check_prop fct prop in
       let fct = check_fct fct in
-      let prop = check_fct prop in
       let kernel_opt = KernelOpt.create ~strategies:false () in
       let uncast_opt = UncastOpt.create () in
       let wp_opt = WpOpt.create ~wp_fct:fct ~wp_prop:prop ~wp_gen:false ~wp_timeout:timeout () in
@@ -781,8 +788,8 @@ let rq_handler json_string =
       let lsp_opt = LspOpt.create (feature) in
       let command = 
         match (String.ends_with ~suffix:".c" file) with
-        | true -> Command.create ~gui:gui ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
-        | false -> Command.create ~gui:gui ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
+        | true -> Command.create ~strategies:false ~gui:gui ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
+        | false -> Command.create ~strategies:false ~gui:gui ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
       in
       (* let command_str = (Command.string_of_t command) in
       Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str; *)
@@ -805,8 +812,8 @@ let rq_handler json_string =
             (Utils.remove_newline (Utils.remove_quotes (f)), function_name, property_name, timeout, gui)
           | _ -> Lsp.Self.debug ~level:1 "No params for showPOStrategies \n%!"; assert false
         in
+      let prop = check_prop fct prop in
       let fct = check_fct fct in
-      let prop = check_fct prop in
       let kernel_opt = KernelOpt.create ~fct:fct ~strategies:true () in
       let uncast_opt = UncastOpt.create () in
       let wp_opt = WpOpt.create ~wp_fct:fct ~wp_prop:prop ~wp_prover:["tip"] ~wp_gen:false ~wp_timeout:timeout ~wp_script:"dry" () in
@@ -814,8 +821,8 @@ let rq_handler json_string =
       let lsp_opt = LspOpt.create (feature) in
       let command = 
         match (String.ends_with ~suffix:".c" file) with
-        | true -> Command.create ~gui:gui ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
-        | false -> Command.create ~gui:gui ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
+        | true -> Command.create ~strategies:true ~gui:gui ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
+        | false -> Command.create ~strategies:true ~gui:gui ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
       in
       (* let command_str = (Command.string_of_t command) in
       Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str; *)
@@ -893,7 +900,7 @@ let notif_handler json_string server_sock =
     let uri = params.textDocument.uri in 
     let src_file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
     let lsp_opt = LspOpt.create (DidClose_feature(src_file)) in
-    let command = Command.create ~lsp:lsp_opt () in
+    let command = Command.create ~strategies:false ~lsp:lsp_opt () in
     let command_str = (Command.string_of_t command) in
     (* let command = "frama-c -lsp -lsp-no-cmdline -lsp-debug="^(debug ())^" -lsp-did-close=" ^ src_file ^ " ; echo \"FRAMA-C EXIT CODE: $?\"" in *)
     Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str;
@@ -916,7 +923,7 @@ let notif_handler json_string server_sock =
         let metacsl_opt = MetacslOpt.create () in
         let feature = DidSave_feature in
         let lsp_opt = LspOpt.create (feature) in
-        let command = Command.create ~kernel:kernel_opt ~files:[file_name] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt () in
+        let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file_name] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt () in
         (* let command_str = (Command.string_of_t command) in
         Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str; *)
         let prog, args = (Command.args_of_t command) in
@@ -930,7 +937,7 @@ let notif_handler json_string server_sock =
         let uncast_opt = UncastOpt.create () in
         let feature = DidSave_feature in
         let lsp_opt = LspOpt.create (feature) in
-        let command = Command.create ~kernel:kernel_opt ~uncast:uncast_opt ~lsp:lsp_opt () in
+        let command = Command.create ~strategies:false ~kernel:kernel_opt ~uncast:uncast_opt ~lsp:lsp_opt () in
         let command_str = (Command.string_of_t command) in
         Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str;
         let data = execute_command command_str feature in
@@ -944,7 +951,7 @@ let notif_handler json_string server_sock =
     let kernel_opt = KernelOpt.create ~strategies:false () in
     let metrics_opt = MetricsOpt.create () in
     let feature = ComputeMetrics_feature in
-    let command = Command.create ~kernel:kernel_opt ~metrics:metrics_opt () in
+    let command = Command.create ~strategies:false ~kernel:kernel_opt ~metrics:metrics_opt () in
     (* let command_str = (Command.string_of_t command) in
     Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str; *)
     let prog, args = (Command.args_of_t command) in
@@ -962,7 +969,7 @@ let notif_handler json_string server_sock =
       let wp_opt = WpOpt.create ~wp_prop:["smoke"] ~wp_smoke_tests:true ~wp_gen:false () in
       let feature = DidSave_feature in
       let lsp_opt = LspOpt.create (feature) in
-      let command = Command.create ~kernel:kernel_opt ~files:[file_name] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt () in
+      let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file_name] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt () in
       (* let command_str = (Command.string_of_t command) in
       Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str; *)
       let prog, args = (Command.args_of_t command) in
@@ -976,7 +983,7 @@ let notif_handler json_string server_sock =
       let ccdoc_opt = CcdocOpt.create () in
       let feature = DidSave_feature in
       let lsp_opt = LspOpt.create (feature) in
-      let command = Command.create ~kernel:kernel_opt ~uncast:uncast_opt ~ccdoc:ccdoc_opt ~lsp:lsp_opt () in
+      let command = Command.create ~strategies:false ~kernel:kernel_opt ~uncast:uncast_opt ~ccdoc:ccdoc_opt ~lsp:lsp_opt () in
       let prog, args = (Command.args_of_t command) in
       let data = execute_command prog args feature in
       Lsp_types.CONTENT (data), 1;
@@ -991,7 +998,7 @@ let notif_handler json_string server_sock =
       let kernel_opt = KernelOpt.create ~strategies:false () in
       let file_basename = (Filename.remove_extension (Filename.basename (String.trim file))) in
       let pprint_opt = PprintOpt.create ~file:file_basename () in
-      let command = Command.create ~kernel:kernel_opt ~files:[file] ~pprint:pprint_opt () in
+      let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file] ~pprint:pprint_opt () in
       (* let command_str = (Command.string_of_t command) in
       Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str; *)
       let prog, args = (Command.args_of_t command) in
@@ -1008,7 +1015,7 @@ let notif_handler json_string server_sock =
         let kernel_opt = KernelOpt.create ~strategies:false () in
         let file_basename = (Filename.remove_extension (Filename.basename (String.trim file))) in
         let pprint_opt = PprintOpt.create ~file:file_basename ~no_annot:true () in
-        let command = Command.create ~kernel:kernel_opt ~files:[file] ~pprint:pprint_opt () in
+        let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file] ~pprint:pprint_opt () in
         (* let command_str = (Command.string_of_t command) in
         Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str; *)
         let prog, args = (Command.args_of_t command) in
@@ -1024,7 +1031,7 @@ let notif_handler json_string server_sock =
     let feature = ComputeMetrics_feature in
     let kernel_opt = KernelOpt.create ~strategies:false () in
     let metrics_opt = MetricsOpt.create () in
-    let command = Command.create ~kernel:kernel_opt ~files:[file] ~metrics:metrics_opt () in
+    let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file] ~metrics:metrics_opt () in
     (* let command_str = (Command.string_of_t command) in
     Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str; *)
     let prog, args = (Command.args_of_t command) in
@@ -1041,7 +1048,7 @@ let notif_handler json_string server_sock =
     let file_basename = (Filename.remove_extension (Filename.basename (String.trim file))) in
     let kernel_opt = KernelOpt.create ~strategies:false () in
     let cg_opt = CgOpt.create ~file:file_basename () in
-    let command = Command.create ~kernel:kernel_opt ~files:[file] ~cg:cg_opt () in
+    let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file] ~cg:cg_opt () in
     (* let command_str = (Command.string_of_t command) in
     Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str; *)
     let prog, args = (Command.args_of_t command) in
