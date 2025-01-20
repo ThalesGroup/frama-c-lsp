@@ -147,6 +147,25 @@ export function activate(context: ExtensionContext) {
 	const showPO = commands.registerCommand('showPO', async () => {
 		try {
 			const selectedItems = wpResultsView.selection;
+        	if (selectedItems.length > 0) {
+				const selectedItem = selectedItems[0];
+				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+				// const uriScheme = vscode.env.remoteName;
+				let fileUri: vscode.Uri;
+				fileUri = vscode.Uri.parse(`${workspacePath}/.frama-c/${selectedItem.goal_id}.txt`);
+				const document = await workspace.openTextDocument(fileUri);
+				await languages.setTextDocumentLanguage(document, 'plaintext');
+				const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
+			}
+			else {vscode.window.showInformationMessage('No item selected');}
+		} catch (err) {
+			window.showErrorMessage('Failed to fetch and display WP proof obligation: ' + err.message);
+			console.error('Error fetching WP proof obligation:', err);
+		}
+	});
+		/*
+		try {
+			const selectedItems = wpResultsView.selection;
 			if (selectedItems.length > 0) {
 				const selectedItem = selectedItems[0];
 				const file_id = selectedItem.file_id;
@@ -177,6 +196,7 @@ export function activate(context: ExtensionContext) {
 			console.error('Error fetching WP proof obligation:', err);
 		}
 	});
+	*/
 
 
 	const wpResults = new MyTreeDataProvider();
@@ -418,7 +438,7 @@ export function activate(context: ExtensionContext) {
 		}
 	});
 
-	context.subscriptions.push(smokeTests, ccdoc, displayCIL, displayCIL_noannot, computeCG, showPOVC, provePO, provePOGUI, provePOStrategies, provePOStrategiesGUI, showGlobalMetrics, showLocalMetrics);
+	context.subscriptions.push(smokeTests, ccdoc, displayCIL, displayCIL_noannot, computeCG, showPOVC, showPO, provePO, provePOGUI, provePOStrategies, provePOStrategiesGUI, showGlobalMetrics, showLocalMetrics);
 
 	// Start the client. This will also launch the server
 	client.start();
