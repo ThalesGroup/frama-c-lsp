@@ -110,7 +110,7 @@ export function activate(context: ExtensionContext) {
 		}
 	});
 
-	const displayCILProject_noannot = commands.registerCommand('displayCILProjetct_noannot', async () => {
+	const displayCILProject_noannot = commands.registerCommand('displayCILProject_noannot', async () => {
 		try {
     		const fileName = "project.c";   // Extract the file name
 			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
