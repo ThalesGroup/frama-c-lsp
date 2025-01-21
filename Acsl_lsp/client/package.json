@@ -148,7 +148,10 @@
                 "wp.model": {"scope": "workspace", "type": "string", "default": "", "description": "Frama-C option: -wp-model"},
                 "wp.noPruning": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -wp-no-pruning", "default": true},
                 "wp.checkMemoryModel": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -wp-check-memory-model", "default": false},
-                "wp.noVolatile": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -wp-no-volatile", "default": true}
+                "wp.noVolatile": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -wp-no-volatile", "default": true},
+                "wp.autoDepth": {"scope": "workspace", "type": "integer", "default": 4, "description": "Frama-C option: -wp-auto-depth"},
+                "wp.autoWidth": {"scope": "workspace", "type": "integer", "default": 4, "description": "Frama-C option: -wp-auto-width"},
+                "wp.autoBacktrack": {"scope": "workspace", "type": "integer", "default": 4, "description": "Frama-C option: -wp-auto-backtrack"}
                 }
             },
             {
