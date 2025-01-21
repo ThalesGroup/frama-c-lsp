@@ -90,6 +90,46 @@ export function activate(context: ExtensionContext) {
 		}
 	});
 
+	const displayCILProject = commands.registerCommand('displayCILProject', async () => {
+		try {
+    		const fileName = "project.c";   // Extract the file name
+			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+			const fileNameOut = workspacePath + "/.frama-c/fc_" + fileName;
+			if (!fs.existsSync(fileNameOut)) {
+				try {fs.writeFileSync(fileNameOut, 'Task in progress ...')}
+				catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
+			}
+			const fileUri = vscode.Uri.parse(fileNameOut);
+			const document = await workspace.openTextDocument(fileUri);
+			await languages.setTextDocumentLanguage(document, 'acsl');
+			const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
+			await client.sendNotification('displayCILProject');
+		} catch (err) {
+			window.showErrorMessage('Failed to compute displayCILProject: ' + err.message);
+			console.error('Error computing displayCILProject:', err);
+		}
+	});
+
+	const displayCILProject_noannot = commands.registerCommand('displayCILProjetct_noannot', async () => {
+		try {
+    		const fileName = "project.c";   // Extract the file name
+			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+			const fileNameOut = workspacePath + "/.frama-c/fc_" + fileName;
+			if (!fs.existsSync(fileNameOut)) {
+				try {fs.writeFileSync(fileNameOut, 'Task in progress ...')}
+				catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
+			}
+			const fileUri = vscode.Uri.parse(fileNameOut);
+			const document = await workspace.openTextDocument(fileUri);
+			await languages.setTextDocumentLanguage(document, 'acsl');
+			const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
+			await client.sendNotification('displayCILProject_noannot');
+		} catch (err) {
+			window.showErrorMessage('Failed to compute displayCILProject_noannot: ' + err.message);
+			console.error('Error computing displayCILProject_noannot:', err);
+		}
+	});
+
 	const computeCG = commands.registerCommand('computeCG', async () => {
 		try {
 			const filePath = window.activeTextEditor.document.fileName;
@@ -438,7 +478,7 @@ export function activate(context: ExtensionContext) {
 		}
 	});
 
-	context.subscriptions.push(smokeTests, ccdoc, displayCIL, displayCIL_noannot, computeCG, showPOVC, showPO, provePO, provePOGUI, provePOStrategies, provePOStrategiesGUI, showGlobalMetrics, showLocalMetrics);
+	context.subscriptions.push(smokeTests, ccdoc, displayCIL, displayCIL_noannot, displayCILProject, displayCILProject_noannot, computeCG, showPOVC, showPO, provePO, provePOGUI, provePOStrategies, provePOStrategiesGUI, showGlobalMetrics, showLocalMetrics);
 
 	// Start the client. This will also launch the server
 	client.start();

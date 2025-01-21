@@ -41,6 +41,8 @@
             "Frama-C": [
                 {"command": "displayCIL", "when": "resourceLangId == acsl"},
                 {"command": "displayCIL_noannot", "when": "resourceLangId == acsl"},
+                {"command": "displayCILProject", "when": "resourceLangId == acsl"},
+                {"command": "displayCILProject_noannot", "when": "resourceLangId == acsl"},
                 {"command": "computeCG", "when": "resourceLangId == acsl"},
                 {"command": "showGlobalMetrics", "when": "resourceLangId == acsl"},
                 {"command": "showLocalMetrics", "when": "resourceLangId == acsl"}
@@ -69,6 +71,8 @@
         "commands": [
             {"command": "displayCIL", "title": "Display File CIL"},
             {"command": "displayCIL_noannot", "title": "Display File CIL (-no-annot)"},
+            {"command": "displayCILProject", "title": "Display Project CIL"},
+            {"command": "displayCILProject_noannot", "title": "Display Project CIL (-no-annot)"},
             {"command": "computeCG", "title": "Generate File CallGraph"},
             {"command": "showGlobalMetrics", "title": "Display Project Metrics"},
             {"command": "showLocalMetrics", "title": "Display File Metrics"},
