@@ -139,8 +139,8 @@ let connect () =
   Lsp.Self.debug ~level:1 "Connecting on port %d\n%!" server_port;
   let (ic, oc) = Unix.open_connection (Unix.ADDR_INET (addr, server_port)) in 
   Lsp.Self.feedback ~level:1 "Connected on port %d\n%!" server_port;
-  let plugin_lst = Config_data.Plugins.Plugins.list () in
-  List.iter (Lsp.Self.feedback ~level:1 "plugin: %s") plugin_lst;
+  (* let plugin_lst = Config_data.Plugins.Plugins.list () in
+  List.iter (Lsp.Self.feedback ~level:1 "plugin: %s") plugin_lst; *)
   let server_sock = Unix.descr_of_in_channel ic in
   while true do
     let pid = handle_request server_sock in
