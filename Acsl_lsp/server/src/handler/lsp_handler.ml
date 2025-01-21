@@ -330,7 +330,13 @@ module Command = struct
     files =
     (match kernel, files with
       | None, _ -> None
-      | _, Some fls -> if strategies then Some (fls @ !Configuration.global_params.sourceFileStrategies) else files
+      | _, Some fls -> (
+        let fls = if strategies then (fls @ !Configuration.global_params.sourceFileStrategies) else fls in
+        (match metacsl with
+        | None -> Some fls
+        | Some _ -> Some (fls @ !Configuration.global_params.sourceFileMetacsl)
+        )
+      )
       | _, None -> 
         let sourceFiles = List.map (fun x -> (!rootPath)^"/"^x) (!Configuration.global_params.sourceFiles @ !Configuration.global_params.sourceFileStrategies) in
         match sourceFiles with
@@ -690,9 +696,9 @@ let rq_handler json_string =
       let feature = FindDefinition_feature ((Utils.id_to_int request.id), src_file, line, ch) in
       let lsp_opt = LspOpt.create (feature) in
       let command = Command.create ~strategies:false ~kernel:kernel_opt ~lsp:lsp_opt () in
-      (* let command_str = (Command.string_of_t command) in *)
+      let command_str = (Command.string_of_t command) in
+      Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
-      (* Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str; *)
       let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT data, pid;
       
@@ -710,8 +716,8 @@ let rq_handler json_string =
       let feature = FindDeclaration_feature ((Utils.id_to_int request.id), src_file, line, ch) in
       let lsp_opt = LspOpt.create (feature) in
       let command = Command.create ~strategies:false ~kernel:kernel_opt ~lsp:lsp_opt () in
-      (* let command_str = (Command.string_of_t command) in
-      Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str; *)
+      let command_str = (Command.string_of_t command) in
+      Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT (data), pid;
@@ -739,8 +745,8 @@ let rq_handler json_string =
         | true -> Command.create ~strategies:false ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
         | false -> Command.create ~strategies:false ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
       in
-      (* let command_str = (Command.string_of_t command) in
-      Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str; *)
+      let command_str = (Command.string_of_t command) in
+      Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT (data), pid;
@@ -762,8 +768,8 @@ let rq_handler json_string =
       let feature = ComputeProofObligationID_feature (id, goal_id) in
       let lsp_opt = LspOpt.create (feature) in
       let command = Command.create ~strategies:false ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt () in
-      (* let command_str = (Command.string_of_t command) in
-      Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str; *)
+      let command_str = (Command.string_of_t command) in
+      Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT (data), pid;
@@ -788,15 +794,16 @@ let rq_handler json_string =
       let kernel_opt = KernelOpt.create ~strategies:false () in
       let uncast_opt = UncastOpt.create () in
       let wp_opt = WpOpt.create ~wp_fct:fct ~wp_prop:prop ~wp_gen:false ~wp_timeout:timeout () in
+      let metacsl_opt = MetacslOpt.create () in
       let feature = Prove_feature (id) in
       let lsp_opt = LspOpt.create (feature) in
       let command = 
         match (String.ends_with ~suffix:".c" file) with
-        | true -> Command.create ~strategies:false ~gui:gui ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
-        | false -> Command.create ~strategies:false ~gui:gui ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
+        | true -> Command.create ~strategies:false ~gui:gui ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
+        | false -> Command.create ~strategies:false ~gui:gui ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
       in
-      (* let command_str = (Command.string_of_t command) in
-      Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str; *)
+      let command_str = (Command.string_of_t command) in
+      Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT (data), pid;
@@ -821,15 +828,16 @@ let rq_handler json_string =
       let kernel_opt = KernelOpt.create ~fct:fct ~strategies:true () in
       let uncast_opt = UncastOpt.create () in
       let wp_opt = WpOpt.create ~wp_fct:fct ~wp_prop:prop ~wp_prover:["tip"] ~wp_gen:false ~wp_timeout:timeout () in
+      let metacsl_opt = MetacslOpt.create () in
       let feature = Prove_feature (id) in
       let lsp_opt = LspOpt.create (feature) in
       let command = 
         match (String.ends_with ~suffix:".c" file) with
-        | true -> Command.create ~strategies:true ~gui:gui ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
-        | false -> Command.create ~strategies:true ~gui:gui ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
+        | true -> Command.create ~strategies:true ~gui:gui ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
+        | false -> Command.create ~strategies:true ~gui:gui ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
       in
-      (* let command_str = (Command.string_of_t command) in
-      Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str; *)
+      let command_str = (Command.string_of_t command) in
+      Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT (data), pid;
@@ -928,8 +936,8 @@ let notif_handler json_string server_sock =
         let feature = DidSave_feature in
         let lsp_opt = LspOpt.create (feature) in
         let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file_name] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt () in
-        (* let command_str = (Command.string_of_t command) in
-        Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str; *)
+        let command_str = (Command.string_of_t command) in
+        Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
         let prog, args = (Command.args_of_t command) in
         let data = execute_command prog args feature in
         Lsp_types.CONTENT (data), 1;
@@ -956,8 +964,8 @@ let notif_handler json_string server_sock =
     let metrics_opt = MetricsOpt.create () in
     let feature = ComputeMetrics_feature in
     let command = Command.create ~strategies:false ~kernel:kernel_opt ~metrics:metrics_opt () in
-    (* let command_str = (Command.string_of_t command) in
-    Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str; *)
+    let command_str = (Command.string_of_t command) in
+    Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
     let prog, args = (Command.args_of_t command) in
     let data, pid = fork_execute_command prog args feature in
     Lsp_types.CONTENT (data), pid;
@@ -974,8 +982,8 @@ let notif_handler json_string server_sock =
       let feature = DidSave_feature in
       let lsp_opt = LspOpt.create (feature) in
       let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file_name] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt () in
-      (* let command_str = (Command.string_of_t command) in
-      Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str; *)
+      let command_str = (Command.string_of_t command) in
+      Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data = execute_command prog args feature in
       Lsp_types.CONTENT (data), 1;
@@ -988,6 +996,8 @@ let notif_handler json_string server_sock =
       let feature = DidSave_feature in
       let lsp_opt = LspOpt.create (feature) in
       let command = Command.create ~strategies:false ~kernel:kernel_opt ~uncast:uncast_opt ~ccdoc:ccdoc_opt ~lsp:lsp_opt () in
+      let command_str = (Command.string_of_t command) in
+      Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data = execute_command prog args feature in
       Lsp_types.CONTENT (data), 1;
@@ -1003,8 +1013,8 @@ let notif_handler json_string server_sock =
       let file_basename = (Filename.remove_extension (Filename.basename (String.trim file))) in
       let pprint_opt = PprintOpt.create ~file:file_basename () in
       let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file] ~pprint:pprint_opt () in
-      (* let command_str = (Command.string_of_t command) in
-      Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str; *)
+      let command_str = (Command.string_of_t command) in
+      Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT (data), pid;
@@ -1016,6 +1026,8 @@ let notif_handler json_string server_sock =
       let file_basename = "project" in
       let pprint_opt = PprintOpt.create ~file:file_basename () in
       let command = Command.create ~strategies:false ~kernel:kernel_opt ~pprint:pprint_opt () in
+      let command_str = (Command.string_of_t command) in
+      Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT (data), pid;
@@ -1031,6 +1043,8 @@ let notif_handler json_string server_sock =
       let file_basename = (Filename.remove_extension (Filename.basename (String.trim file))) in
       let pprint_opt = PprintOpt.create ~file:file_basename ~no_annot:true () in
       let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file] ~pprint:pprint_opt () in
+      let command_str = (Command.string_of_t command) in
+      Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT (data), pid;
@@ -1042,6 +1056,8 @@ let notif_handler json_string server_sock =
       let file_basename = "project" in
       let pprint_opt = PprintOpt.create ~file:file_basename ~no_annot:true () in
       let command = Command.create ~strategies:false ~kernel:kernel_opt ~pprint:pprint_opt () in
+      let command_str = (Command.string_of_t command) in
+      Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT (data), pid;
@@ -1056,8 +1072,8 @@ let notif_handler json_string server_sock =
     let kernel_opt = KernelOpt.create ~strategies:false () in
     let metrics_opt = MetricsOpt.create () in
     let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file] ~metrics:metrics_opt () in
-    (* let command_str = (Command.string_of_t command) in
-    Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str; *)
+    let command_str = (Command.string_of_t command) in
+    Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
     let prog, args = (Command.args_of_t command) in
     let data, pid = fork_execute_command prog args feature in
     Lsp_types.CONTENT (data), pid
@@ -1073,8 +1089,8 @@ let notif_handler json_string server_sock =
     let kernel_opt = KernelOpt.create ~strategies:false () in
     let cg_opt = CgOpt.create ~file:file_basename () in
     let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file] ~cg:cg_opt () in
-    (* let command_str = (Command.string_of_t command) in
-    Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str; *)
+    let command_str = (Command.string_of_t command) in
+    Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
     let prog, args = (Command.args_of_t command) in
     let data, pid = fork_execute_command prog args feature in
     Lsp_types.CONTENT (data), pid

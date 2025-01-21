@@ -5,6 +5,7 @@ let sections = {| {"items": [
           {"section": "kernel.macros"},
           {"section": "kernel.macroStrategiesFunctionPrefix"},
           {"section": "kernel.sourceFileStrategies"},
+          {"section": "kernel.sourceFileMetacsl"},
           {"section": "kernel.machdep"},
           {"section": "kernel.removeUnusedSpecifiedFunctions"},
           {"section": "kernel.aggressiveMerging"},
@@ -51,6 +52,7 @@ let sections = {| {"items": [
     macros : string list;
     macroStrategiesFunctionPrefix : string;
     sourceFileStrategies : string list;
+    sourceFileMetacsl : string list;
     machdep : string;
     removeUnusedSpecifiedFunctions : bool;
     aggressiveMerging : bool;
@@ -95,6 +97,7 @@ let sections = {| {"items": [
     ~macros
     ~macroStrategiesFunctionPrefix
     ~sourceFileStrategies
+    ~sourceFileMetacsl
     ~machdep 
     ~removeUnusedSpecifiedFunctions 
     ~aggressiveMerging 
@@ -139,6 +142,7 @@ let sections = {| {"items": [
       macros;
       macroStrategiesFunctionPrefix;
       sourceFileStrategies;
+      sourceFileMetacsl;
       machdep;
       removeUnusedSpecifiedFunctions;
       aggressiveMerging;
@@ -184,6 +188,7 @@ let global_params = ref
   ~macros:[]
   ~macroStrategiesFunctionPrefix:""
   ~sourceFileStrategies:[]
+  ~sourceFileMetacsl: []
   ~machdep:""
   ~removeUnusedSpecifiedFunctions:false
   ~aggressiveMerging:false
@@ -237,6 +242,7 @@ let save_configs (result:  Json.json) =
         `List json_macros;
         `String json_macroStrategiesFunctionPrefix;
         `List json_sourceFileStrategies;
+        `List json_sourceFileMetacsl;
         `String json_machdep;
         `Bool json_removeUnusedSpecifiedFunctions;
         `Bool json_aggressiveMerging;
@@ -281,6 +287,7 @@ let save_configs (result:  Json.json) =
       ~macros: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_macros)
       ~macroStrategiesFunctionPrefix: (Utils.remove_newline (Utils.remove_quotes (json_macroStrategiesFunctionPrefix)))
       ~sourceFileStrategies: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_sourceFileStrategies)
+      ~sourceFileMetacsl: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_sourceFileMetacsl)
       ~machdep: (Utils.remove_newline (Utils.remove_quotes (json_machdep)))
       ~removeUnusedSpecifiedFunctions: json_removeUnusedSpecifiedFunctions
       ~aggressiveMerging: json_aggressiveMerging
