@@ -29,8 +29,8 @@ type t = {
   aggressive_merging : bool;
   kernel_warn_key : string;
   no_unicode : bool;
-  inline_calls : string;
-  remove_inlines : string;
+  inline_calls : string list;
+  remove_inlined : string list;
   strategies : bool
   }
 let create ?fct ~strategies () =
@@ -46,8 +46,8 @@ let create ?fct ~strategies () =
     aggressive_merging = !Configuration.global_params.aggressiveMerging;
     kernel_warn_key = "annot-error=active,too-large-array=active";
     no_unicode = true;
-    inline_calls = "@inline";
-    remove_inlines = "@inline";
+    inline_calls = !Configuration.global_params.inlineCalls;
+    remove_inlined = !Configuration.global_params.removeInlined;
     strategies = strategies;
   }
 let string_of_t (options : t) : string =
@@ -64,8 +64,8 @@ let string_of_t (options : t) : string =
   let aggressive_merging_opt = option_if_true options.aggressive_merging "-aggressive-merging" in
   let kernel_warn_key_opt = option_if_not_empty_string options.kernel_warn_key "-kernel-warn-key=" in
   let no_unicode_opt = option_if_true options.no_unicode "-no-unicode" in
-  let inline_calls_opt = option_if_not_empty_string options.inline_calls "-inline-calls=" in
-  let remove_inlines_opt = option_if_not_empty_string options.remove_inlines "-remove-inlined=" in
+  let inline_calls_opt = option_if_not_empty_string (String.concat "," options.inline_calls) "-inline-calls=" in
+  let remove_inlines_opt = option_if_not_empty_string (String.concat "," options.remove_inlined) "-remove-inlined=" in
   Printf.sprintf "%s %s %s %s %s %s %s %s %s"
   cpp_extra_args_opt machdep_opt generated_spec_custom_opt remove_unused_specified_functions_opt aggressive_merging_opt kernel_warn_key_opt no_unicode_opt inline_calls_opt remove_inlines_opt
 end

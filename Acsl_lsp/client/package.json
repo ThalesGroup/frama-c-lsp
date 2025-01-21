@@ -107,7 +107,9 @@
                 "kernel.machdep": {"scope": "workspace", "type": "string", "description": "Frama-C option: -machdep"},
                 "kernel.removeUnusedSpecifiedFunctions": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -remove-unused-specified-functions", "default": true},
                 "kernel.aggressiveMerging": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -aggressive-merging", "default": false},
-                "kernel.generatedSpecCustom": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Frama-C option: -generated-spec-custom"}
+                "kernel.generatedSpecCustom": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Frama-C option: -generated-spec-custom"},
+                "kernel.inlineCalls": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Frama-C option: -inline-calls"},
+                "kernel.removeInlined": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Frama-C option: -remove-inlined"}
                 }
             },
             {

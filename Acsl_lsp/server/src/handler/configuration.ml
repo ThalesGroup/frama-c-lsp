@@ -9,6 +9,8 @@ let sections = {| {"items": [
           {"section": "kernel.removeUnusedSpecifiedFunctions"},
           {"section": "kernel.aggressiveMerging"},
           {"section": "kernel.generatedSpecCustom"},
+          {"section": "kernel.inlineCalls"},
+          {"section": "kernel.removeInlined"},
           {"section": "metrics.byFunction"},
           {"section": "callgraph.roots"},
           {"section": "callgraph.services"},
@@ -50,6 +52,8 @@ let sections = {| {"items": [
     removeUnusedSpecifiedFunctions : bool;
     aggressiveMerging : bool;
     generatedSpecCustom : string list;
+    inlineCalls: string list;
+    removeInlined: string list;
     metricsByFunction : bool;
     cgRoots : string list;
     cgServices : bool;
@@ -89,6 +93,8 @@ let sections = {| {"items": [
     ~removeUnusedSpecifiedFunctions 
     ~aggressiveMerging 
     ~generatedSpecCustom
+    ~inlineCalls
+    ~removeInlined
     ~metricsByFunction
     ~cgRoots
     ~cgServices 
@@ -128,6 +134,8 @@ let sections = {| {"items": [
       removeUnusedSpecifiedFunctions;
       aggressiveMerging;
       generatedSpecCustom;
+      inlineCalls;
+      removeInlined;
       metricsByFunction;
       cgRoots;
       cgServices;
@@ -168,6 +176,8 @@ let global_params = ref
   ~removeUnusedSpecifiedFunctions:false
   ~aggressiveMerging:false
   ~generatedSpecCustom:[]
+  ~inlineCalls:[]
+  ~removeInlined:[]
   ~metricsByFunction:false
   ~cgRoots:[]
   ~cgServices:false
@@ -216,6 +226,8 @@ let save_configs (result:  Json.json) =
         `Bool json_removeUnusedSpecifiedFunctions;
         `Bool json_aggressiveMerging;
         `List json_generatedSpecCustom;
+        `List json_inlineCalls;
+        `List json_removeInlined;
         `Bool json_metricsByFunction;
         `List json_cgRoots;
         `Bool json_cgServices;
@@ -255,6 +267,8 @@ let save_configs (result:  Json.json) =
       ~removeUnusedSpecifiedFunctions: json_removeUnusedSpecifiedFunctions
       ~aggressiveMerging: json_aggressiveMerging
       ~generatedSpecCustom: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_generatedSpecCustom)
+      ~inlineCalls: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_inlineCalls)
+      ~removeInlined: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_removeInlined)
       ~metricsByFunction: json_metricsByFunction
       ~cgRoots: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_cgRoots)
       ~cgServices: json_cgServices
