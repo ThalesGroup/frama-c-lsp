@@ -55,7 +55,7 @@ let string_of_t (options : t) : string =
   let option_if_true b opt = if b then (opt) else "" in
   let include_paths_opt = List.map (fun x -> "-I"^(!rootPath^"/"^(x))) options.include_paths in
   let macros_opt = List.map (fun x -> "-D"^x) options.macros in
-  let macros_opt = if options.strategies then ("-D" ^ options.macroStrategiesFunctionPrefix) :: macros_opt else macros_opt in
+  (* let macros_opt = if options.strategies then ("-D" ^ options.macroStrategiesFunctionPrefix) :: macros_opt else macros_opt in *)
   let macroStrategiesFunctionPrefix_opt = List.map (fun x -> "-D"^options.macroStrategiesFunctionPrefix^x) options.fct in
   let cpp_extra_args_opt = "-cpp-extra-args=\""^(options.cpp_extra_args)^""^(String.concat "" include_paths_opt)^""^(String.concat "" macros_opt)^""^(String.concat "" macroStrategiesFunctionPrefix_opt)^"\"" in
   let machdep_opt = (option_if_not_empty_string options.machdep "-machdep=") in
@@ -192,7 +192,7 @@ module CcdocOpt = struct
     ccdoc_latex: bool
   }
   let create () = {
-    ccdoc = !Configuration.global_params.uncastActive;
+    ccdoc = !Configuration.global_params.ccdocActive;
     ccdoc_out = ".frama-c/fc_ccdoc.tex";
     ccdoc_coverage_verif = !Configuration.global_params.ccdocCoverageVerif;
     ccdoc_latex = !Configuration.global_params.ccdocLatex;
@@ -811,7 +811,7 @@ let rq_handler json_string =
       let fct = check_fct fct in
       let kernel_opt = KernelOpt.create ~fct:fct ~strategies:true () in
       let uncast_opt = UncastOpt.create () in
-      let wp_opt = WpOpt.create ~wp_fct:fct ~wp_prop:prop ~wp_prover:["tip"] ~wp_gen:false ~wp_timeout:timeout ~wp_script:"dry" () in
+      let wp_opt = WpOpt.create ~wp_fct:fct ~wp_prop:prop ~wp_prover:["tip"] ~wp_gen:false ~wp_timeout:timeout () in
       let feature = Prove_feature (id) in
       let lsp_opt = LspOpt.create (feature) in
       let command = 
@@ -954,10 +954,10 @@ let notif_handler json_string server_sock =
     Lsp_types.CONTENT (data), pid;
 
   | "smokeTests" -> 
-      Lsp.Self.debug ~level:1 "displayCIL\n%!";
+      Lsp.Self.debug ~level:1 "smokeTests\n%!";
       let file_name = match notif.params with 
         | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
-        | _ -> Lsp.Self.debug ~level:1 "No params for displayCIL \n%!"; assert false
+        | _ -> Lsp.Self.debug ~level:1 "No params for smokeTests \n%!"; assert false
       in
       let kernel_opt = KernelOpt.create ~strategies:false () in
       let uncast_opt = UncastOpt.create () in
@@ -1000,23 +1000,43 @@ let notif_handler json_string server_sock =
       let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT (data), pid;
 
-  | "displayCIL_noannot" -> 
-        Lsp.Self.debug ~level:1 "displayCIL_noannot\n%!";
-        let file = match notif.params with 
-          | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
-          | _ -> Lsp.Self.debug ~level:1 "No params for displayCIL \n%!"; assert false
-        in
-        let feature = ComputeCIL_feature in
-        let kernel_opt = KernelOpt.create ~strategies:false () in
-        let file_basename = (Filename.remove_extension (Filename.basename (String.trim file))) in
-        let pprint_opt = PprintOpt.create ~file:file_basename ~no_annot:true () in
-        let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file] ~pprint:pprint_opt () in
-        (* let command_str = (Command.string_of_t command) in
-        Lsp.Self.debug ~level:1 "Command = %s\n%!" command_str; *)
-        let prog, args = (Command.args_of_t command) in
-        let data, pid = fork_execute_command prog args feature in
-        Lsp_types.CONTENT (data), pid;
+  | "displayCILProject" -> 
+      Lsp.Self.debug ~level:1 "displayCILProject\n%!";
+      let feature = ComputeCIL_feature in
+      let kernel_opt = KernelOpt.create ~strategies:false () in
+      let file_basename = "project" in
+      let pprint_opt = PprintOpt.create ~file:file_basename () in
+      let command = Command.create ~strategies:false ~kernel:kernel_opt ~pprint:pprint_opt () in
+      let prog, args = (Command.args_of_t command) in
+      let data, pid = fork_execute_command prog args feature in
+      Lsp_types.CONTENT (data), pid;
 
+  | "displayCIL_noannot" -> 
+      Lsp.Self.debug ~level:1 "displayCIL_noannot\n%!";
+      let file = match notif.params with 
+        | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
+        | _ -> Lsp.Self.debug ~level:1 "No params for displayCIL \n%!"; assert false
+      in
+      let feature = ComputeCIL_feature in
+      let kernel_opt = KernelOpt.create ~strategies:false () in
+      let file_basename = (Filename.remove_extension (Filename.basename (String.trim file))) in
+      let pprint_opt = PprintOpt.create ~file:file_basename ~no_annot:true () in
+      let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file] ~pprint:pprint_opt () in
+      let prog, args = (Command.args_of_t command) in
+      let data, pid = fork_execute_command prog args feature in
+      Lsp_types.CONTENT (data), pid;
+
+  | "displayCILProject_noannot" -> 
+      Lsp.Self.debug ~level:1 "displayCILProject_noannot\n%!";
+      let feature = ComputeCIL_feature in
+      let kernel_opt = KernelOpt.create ~strategies:false () in
+      let file_basename = "project" in
+      let pprint_opt = PprintOpt.create ~file:file_basename ~no_annot:true () in
+      let command = Command.create ~strategies:false ~kernel:kernel_opt ~pprint:pprint_opt () in
+      let prog, args = (Command.args_of_t command) in
+      let data, pid = fork_execute_command prog args feature in
+      Lsp_types.CONTENT (data), pid;
+  
   | "showLocalMetrics" -> 
     Lsp.Self.debug ~level:1 "local metrics\n%!";
     let file = match notif.params with 
