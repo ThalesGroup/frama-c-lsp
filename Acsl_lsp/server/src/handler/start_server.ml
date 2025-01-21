@@ -106,7 +106,7 @@ let handle_request server_sock =
       let _req_data_len = Unix.read server_sock data_buf 0 data_size in
       let request_str = (Bytes.to_string data_buf) in
       Lsp.Self.debug ~level:1 "Received from client : %s\n\n%!" request_str;
-      DidSave.StringMap.iter (send_empty_diagnostics server_sock) !DidSave.diag_map;
+      (* DidSave.StringMap.iter (send_empty_diagnostics server_sock) !DidSave.diag_map; *)
       let (response, pid) : (Lsp_types.lsp_result * int) = Lsp_handler.handle request_str server_sock in
       match response with
       | CONTENT string_json ->

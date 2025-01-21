@@ -70,8 +70,14 @@ let get_property_status id : string =
     in
     let po_node_list = get_leaves [] po_node in
     (* let po_node_list = Wp.ProofEngine.children po_node in *)
-    let po_subgoals = List.map (fun x -> Wp.ProofEngine.goal x) po_node_list in
-    let po_str = String.concat "\n" (List.map (Pretty_utils.to_string Wp.Wpo.pp_goal_flow) po_subgoals) in
+    let get_tactics po_node =
+      let po_path = Wp.ProofEngine.path po_node in
+      let po_tactics = List.map (fun x -> match Wp.ProofEngine.tactic_label x with None -> "." | Some s -> s) po_path in
+      String.concat "\n" po_tactics
+    in
+    let po_subgoals = List.map (fun x -> (Wp.ProofEngine.goal x, get_tactics x)) po_node_list in
+    let po_str = String.concat "\n" (List.map (fun (x,y) -> ((Pretty_utils.to_string Wp.Wpo.pp_goal_flow) x) ^ "\n" ^ y) po_subgoals) in
+
     let output_channel = open_out po_file in
     output_string output_channel po_str;
     close_out output_channel;

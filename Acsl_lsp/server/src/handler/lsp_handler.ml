@@ -86,7 +86,10 @@ module WpOpt = struct
     wp_smoke_tests: bool;
     wp_smoke_timeout: int;
     wp_script: string;
-    wp_cache: string
+    wp_cache: string;
+    wp_auto_depth: int;
+    wp_auto_width: int;
+    wp_auto_backtrack: int;
   }
   let create ?wp_fct ?wp_prop ?wp_timeout ?wp_prover ?wp_smoke_tests ?wp_gen ?wp_script () = {
     wp = true;
@@ -104,6 +107,9 @@ module WpOpt = struct
     wp_smoke_timeout = 3;
     wp_script = (match wp_script with | None -> !Configuration.global_params.wpScript | Some s -> s);
     wp_cache = !Configuration.global_params.wpCache;
+    wp_auto_depth = !Configuration.global_params.wpAutoDepth;
+    wp_auto_width = !Configuration.global_params.wpAutoWidth;
+    wp_auto_backtrack = !Configuration.global_params.wpAutoBacktrack;
   }
   let string_of_t (options : t) : string =
     let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in
@@ -123,7 +129,10 @@ module WpOpt = struct
     let wp_smoke_timeout_opt = option_if_not_empty_string (Stdlib.string_of_int options.wp_smoke_timeout) "-wp-smoke-timeout=" in
     let wp_script = option_if_not_empty_string (options.wp_script) "-wp-script=" in
     let wp_cache = option_if_not_empty_string (options.wp_cache) "-wp-cache=" in
-    Printf.sprintf "%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s" wp_opt wp_prop_opt wp_fct_opt wp_gen_opt wp_rte_opt wp_pruning_opt wp_check_memory_model_opt wp_no_volatile_opt wp_prover_opt wp_timeout_opt wp_session_opt wp_smoke_tests_opt wp_smoke_timeout_opt wp_script wp_cache
+    let wp_auto_depth = Printf.sprintf "-wp-auto-depth=%d" options.wp_timeout in
+    let wp_auto_width = Printf.sprintf "-wp-auto-width=%d" options.wp_timeout in
+    let wp_auto_backtrack = Printf.sprintf "-wp-auto-backtrack=%d" options.wp_timeout in
+    Printf.sprintf "%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s" wp_opt wp_prop_opt wp_fct_opt wp_gen_opt wp_rte_opt wp_pruning_opt wp_check_memory_model_opt wp_no_volatile_opt wp_prover_opt wp_timeout_opt wp_session_opt wp_smoke_tests_opt wp_smoke_timeout_opt wp_script wp_cache wp_auto_depth wp_auto_width wp_auto_backtrack
 end
 
 module MetacslOpt = struct

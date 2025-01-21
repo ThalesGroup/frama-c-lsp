@@ -23,6 +23,9 @@ let sections = {| {"items": [
           {"section": "wp.session"},
           {"section": "wp.script"},
           {"section": "wp.cache"},
+          {"section": "wp.autoDepth"},
+          {"section": "wp.autoWidth"},
+          {"section": "wp.autoBacktrack"},
           {"section": "diagnostics.wp"},
           {"section": "uncast.active"},
           {"section": "uncast.lshiftAsMul"},
@@ -66,6 +69,9 @@ let sections = {| {"items": [
     wpSession : string;
     wpScript : string;
     wpCache : string;
+    wpAutoDepth : int;
+    wpAutoWidth : int;
+    wpAutoBacktrack : int;
     diagnosticsWp : bool;
     uncastActive : bool;
     uncastLshiftAsMul : bool;
@@ -107,6 +113,9 @@ let sections = {| {"items": [
     ~wpSession
     ~wpScript
     ~wpCache
+    ~wpAutoDepth
+    ~wpAutoWidth
+    ~wpAutoBacktrack
     ~diagnosticsWp
     ~uncastActive
     ~uncastLshiftAsMul
@@ -148,6 +157,9 @@ let sections = {| {"items": [
       wpSession;
       wpScript;
       wpCache;
+      wpAutoDepth;
+      wpAutoWidth;
+      wpAutoBacktrack;
       diagnosticsWp;
       uncastActive;
       uncastLshiftAsMul;
@@ -190,6 +202,9 @@ let global_params = ref
   ~wpSession: ""
   ~wpScript: ""
   ~wpCache: ""
+  ~wpAutoDepth: 20
+  ~wpAutoWidth: 1
+  ~wpAutoBacktrack: 1
   ~diagnosticsWp: false
   ~uncastActive: false
   ~uncastLshiftAsMul: true
@@ -240,6 +255,9 @@ let save_configs (result:  Json.json) =
         `String json_wpSession;
         `String json_wpScript;
         `String json_wpCache;
+        `Int json_wpAutoDepth;
+        `Int json_wpAutoWidth;
+        `Int json_wpAutoBacktrack;
         `Bool json_diagnosticsWp;
         `Bool json_uncastActive;
         `Bool json_uncastLshiftAsMul;
@@ -281,6 +299,9 @@ let save_configs (result:  Json.json) =
       ~wpSession: json_wpSession
       ~wpScript: json_wpScript
       ~wpCache: json_wpCache
+      ~wpAutoDepth: json_wpAutoDepth
+      ~wpAutoWidth: json_wpAutoWidth
+      ~wpAutoBacktrack: json_wpAutoBacktrack
       ~diagnosticsWp: json_diagnosticsWp
       ~uncastActive: json_uncastActive
       ~uncastLshiftAsMul: json_uncastLshiftAsMul
