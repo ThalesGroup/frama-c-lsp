@@ -27,6 +27,7 @@ let sections = {| {"items": [
           {"section": "wp.autoDepth"},
           {"section": "wp.autoWidth"},
           {"section": "wp.autoBacktrack"},
+          {"section": "wp.filenameTruncation"},
           {"section": "diagnostics.wp"},
           {"section": "uncast.active"},
           {"section": "uncast.lshiftAsMul"},
@@ -74,6 +75,7 @@ let sections = {| {"items": [
     wpAutoDepth : int;
     wpAutoWidth : int;
     wpAutoBacktrack : int;
+    wpFilenameTruncation: int;
     diagnosticsWp : bool;
     uncastActive : bool;
     uncastLshiftAsMul : bool;
@@ -119,6 +121,7 @@ let sections = {| {"items": [
     ~wpAutoDepth
     ~wpAutoWidth
     ~wpAutoBacktrack
+    ~wpFilenameTruncation
     ~diagnosticsWp
     ~uncastActive
     ~uncastLshiftAsMul
@@ -164,6 +167,7 @@ let sections = {| {"items": [
       wpAutoDepth;
       wpAutoWidth;
       wpAutoBacktrack;
+      wpFilenameTruncation;
       diagnosticsWp;
       uncastActive;
       uncastLshiftAsMul;
@@ -210,6 +214,7 @@ let global_params = ref
   ~wpAutoDepth: 20
   ~wpAutoWidth: 1
   ~wpAutoBacktrack: 1
+  ~wpFilenameTruncation: 220
   ~diagnosticsWp: false
   ~uncastActive: false
   ~uncastLshiftAsMul: true
@@ -264,6 +269,7 @@ let save_configs (result:  Json.json) =
         `Int json_wpAutoDepth;
         `Int json_wpAutoWidth;
         `Int json_wpAutoBacktrack;
+        `Int json_wpFilenameTruncation;
         `Bool json_diagnosticsWp;
         `Bool json_uncastActive;
         `Bool json_uncastLshiftAsMul;
@@ -309,6 +315,7 @@ let save_configs (result:  Json.json) =
       ~wpAutoDepth: json_wpAutoDepth
       ~wpAutoWidth: json_wpAutoWidth
       ~wpAutoBacktrack: json_wpAutoBacktrack
+      ~wpFilenameTruncation: json_wpFilenameTruncation
       ~diagnosticsWp: json_diagnosticsWp
       ~uncastActive: json_uncastActive
       ~uncastLshiftAsMul: json_uncastLshiftAsMul

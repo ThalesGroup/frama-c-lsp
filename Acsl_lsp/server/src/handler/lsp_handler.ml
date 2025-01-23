@@ -90,6 +90,7 @@ module WpOpt = struct
     wp_auto_depth: int;
     wp_auto_width: int;
     wp_auto_backtrack: int;
+    wp_filename_truncation: int;
   }
   let create ?wp_fct ?wp_prop ?wp_timeout ?wp_prover ?wp_smoke_tests ?wp_gen ?wp_script () = {
     wp = true;
@@ -110,6 +111,7 @@ module WpOpt = struct
     wp_auto_depth = !Configuration.global_params.wpAutoDepth;
     wp_auto_width = !Configuration.global_params.wpAutoWidth;
     wp_auto_backtrack = !Configuration.global_params.wpAutoBacktrack;
+    wp_filename_truncation = !Configuration.global_params.wpFilenameTruncation;
   }
   let string_of_t (options : t) : string =
     let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in
@@ -132,7 +134,8 @@ module WpOpt = struct
     let wp_auto_depth = Printf.sprintf "-wp-auto-depth=%d" options.wp_timeout in
     let wp_auto_width = Printf.sprintf "-wp-auto-width=%d" options.wp_timeout in
     let wp_auto_backtrack = Printf.sprintf "-wp-auto-backtrack=%d" options.wp_timeout in
-    Printf.sprintf "%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s" wp_opt wp_prop_opt wp_fct_opt wp_gen_opt wp_rte_opt wp_pruning_opt wp_check_memory_model_opt wp_no_volatile_opt wp_prover_opt wp_timeout_opt wp_session_opt wp_smoke_tests_opt wp_smoke_timeout_opt wp_script wp_cache wp_auto_depth wp_auto_width wp_auto_backtrack
+    let wp_filename_truncation = Printf.sprintf "-wp-filename-truncation=%d" options.wp_filename_truncation in
+    Printf.sprintf "%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s" wp_opt wp_prop_opt wp_fct_opt wp_gen_opt wp_rte_opt wp_pruning_opt wp_check_memory_model_opt wp_no_volatile_opt wp_prover_opt wp_timeout_opt wp_session_opt wp_smoke_tests_opt wp_smoke_timeout_opt wp_script wp_cache wp_auto_depth wp_auto_width wp_auto_backtrack wp_filename_truncation
 end
 
 module MetacslOpt = struct
