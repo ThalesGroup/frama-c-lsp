@@ -152,7 +152,8 @@
                 "wp.noVolatile": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -wp-no-volatile", "default": true},
                 "wp.autoDepth": {"scope": "workspace", "type": "integer", "default": 4, "description": "Frama-C option: -wp-auto-depth"},
                 "wp.autoWidth": {"scope": "workspace", "type": "integer", "default": 4, "description": "Frama-C option: -wp-auto-width"},
-                "wp.autoBacktrack": {"scope": "workspace", "type": "integer", "default": 4, "description": "Frama-C option: -wp-auto-backtrack"}
+                "wp.autoBacktrack": {"scope": "workspace", "type": "integer", "default": 4, "description": "Frama-C option: -wp-auto-backtrack"},
+                "wp.filenameTruncation": {"scope": "workspace", "type": "integer", "default": 220, "description": "Frama-C option: -wp-filename-truncation"}
                 }
             },
             {
