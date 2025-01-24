@@ -465,6 +465,9 @@ let rec had_errors_in_channel oc =
     else if (Utils.contains msg ~suffix: ": fatal error:") then (
       update_diag_data msg Lsp_types.DiagnosticSeverity.Error;
       had_errors_in_channel oc)
+    else if (Utils.contains msg ~suffix: ": error:") then (
+      update_diag_data msg Lsp_types.DiagnosticSeverity.Error;
+      had_errors_in_channel oc)
     else if (Utils.contains msg ~suffix: ": warning:") then (
       update_diag_data msg Lsp_types.DiagnosticSeverity.Warning;
       had_errors_in_channel oc)
@@ -479,10 +482,12 @@ let rec had_errors_in_channel oc =
     let buffer = Bytes.create chunk_size in
     let rec read_data accumulated_data =
       let bytes_received = Unix.read socket buffer 0 chunk_size in
+      Lsp.Self.debug ~level:2 "Read chunk size %d: \n%!" bytes_received;
       if bytes_received = 0 then
         accumulated_data  (* Connection closed *)
       else
         let chunk = Bytes.sub_string buffer 0 bytes_received in
+        Lsp.Self.debug ~level:2 "Read chunk %s: \n%!" chunk;
         read_data (accumulated_data ^ chunk)  (* Accumulate the data *)
     in
     read_data ""
@@ -523,7 +528,7 @@ let execute_command prog args feature =
       let request_str = read_socket_in_chunks plugin_sock chunk_size in
       Unix.close plugin_sock;
       Unix.close wrapper_sock;
-      let data =
+     let data = 
         match special_errors, (String.trim request_str = "") with
         | [], true -> ""
         | [], false -> request_str
@@ -551,10 +556,12 @@ let execute_command prog args feature =
       | DidSave_feature ->
           Lsp.Self.debug ~level:1 "Executed frama-c command (frama-c did not exit normally)\n%!";
           let (plugin_sock, _) = Unix.accept wrapper_sock in
-          let data_size = getnumber (readcontlen plugin_sock) in
-          let buffer = Bytes.make data_size '0' in
+          let _data_size = getnumber (readcontlen plugin_sock) in
+          (* let buffer = Bytes.make data_size '0' in
           let _req_data_len = Unix.read plugin_sock buffer 0 data_size in
-          let request_str = (Bytes.to_string buffer) in
+          let request_str = (Bytes.to_string buffer) in *)
+          let chunk_size = 65530 in
+          let request_str = read_socket_in_chunks plugin_sock chunk_size in
           Unix.close plugin_sock;
           Unix.close wrapper_sock;
           let data =
@@ -564,7 +571,7 @@ let execute_command prog args feature =
             | l, true -> String.concat ":::" l
             | l, false -> (String.concat ":::" l) ^ ":::" ^ request_str
           in
-          data  
+          data
   
       | FindDefinition_feature (id, _, _, _)
       | FindDeclaration_feature (id, _, _, _)
@@ -830,7 +837,7 @@ let rq_handler json_string =
       let fct = check_fct fct in
       let kernel_opt = KernelOpt.create ~fct:fct ~strategies:true () in
       let uncast_opt = UncastOpt.create () in
-      let wp_opt = WpOpt.create ~wp_fct:fct ~wp_prop:prop ~wp_prover:["tip"] ~wp_gen:false ~wp_timeout:timeout () in
+      let wp_opt = WpOpt.create ~wp_fct:fct ~wp_prop:prop ~wp_prover:["tip"] ~wp_script:"dry" ~wp_gen:false ~wp_timeout:timeout () in
       let metacsl_opt = MetacslOpt.create () in
       let feature = Prove_feature (id) in
       let lsp_opt = LspOpt.create (feature) in

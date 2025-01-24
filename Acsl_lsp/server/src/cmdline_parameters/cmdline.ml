@@ -125,6 +125,7 @@ let send_in_chunks socket data chunk_size =
   let rec send_data offset =
     if offset < data_len then
       let chunk = String.sub data offset (min chunk_size (data_len - offset)) in
+      Lsp.Self.debug ~level:1 "Sending chunck: %s\n%!" chunk;
       let bytes_sent = Unix.send socket (Bytes.of_string chunk) 0 (String.length chunk) [] in
       if bytes_sent = String.length chunk then
         send_data (offset + bytes_sent)  (* Continue sending remaining data *)
