@@ -61,7 +61,7 @@
             "view/item/context": [
                 {"command": "showScript", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
                 {"command": "showPO", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
-                {"command": "runAgain", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"}
+                {"command": "runAgain", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
                 {"command": "runAgainGui", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"}
             ]
         },
