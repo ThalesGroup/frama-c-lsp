@@ -547,9 +547,11 @@ let execute_command prog args feature =
         data
       | ComputeCallGraph_feature ofile ->
           let prog = "dot" in
-          let args = [|"dot"; Printf.sprintf "-Tpdf %s" ofile; Printf.sprintf "-o %s.pdf" ofile|] in
+          let args = [|"dot"; "-Tpdf"; Printf.sprintf "%s" ofile; "-o"; Printf.sprintf "%s.pdf" ofile|] in
           let env = Unix.environment () in
           let ic, oc, ec = Unix.open_process_args_full prog args env in
+          let _ = had_errors_in_channel ic in
+          let _ = had_errors_in_channel ec in
           let _status  = Unix.close_process_full (ic, oc, ec) in
           Lsp.Self.debug ~level:1 "No Error after executing frama-c command\n%!";
           let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Successful operation !") () in
