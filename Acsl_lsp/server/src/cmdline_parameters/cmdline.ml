@@ -359,7 +359,7 @@ let run () =
       | Some Lsp_handler.FindDefinition_feature(id, file, line, ch) -> let data = [(Definition.find id file line ch)] in Lsp.Self.feedback ~level:1 "Find definition attempt done !\n%!"; send_result data
       | Some Lsp_handler.FindDeclaration_feature(id, file, line, ch) -> let data = [(Declaration.find id file line ch)] in Lsp.Self.feedback ~level:1 "Find declaration attempt done !\n%!"; send_result data
       | Some Lsp_handler.ComputeCIL_feature -> send_result []
-      | Some Lsp_handler.ComputeCallGraph_feature -> send_result []
+      | Some Lsp_handler.ComputeCallGraph_feature _ -> send_result []
       | Some Lsp_handler.ComputeMetrics_feature -> send_result []
       | Some Lsp_handler.ComputeProofObligation_feature(root_path, id, file, line, ch) -> let data = [(ShowPOVC.get_property root_path id file line ch)] in Lsp.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; send_result data
       | Some Lsp_handler.ComputeProofObligationID_feature(id, goal_id) -> let data = [(ShowPOVC.get_property_from_id id goal_id)] in Lsp.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; send_result data

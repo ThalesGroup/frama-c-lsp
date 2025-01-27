@@ -10,7 +10,7 @@ type lsp_feature =
   | FindDefinition_feature of (int * string * int * int)
   | FindDeclaration_feature of (int * string * int * int)
   | ComputeCIL_feature
-  | ComputeCallGraph_feature
+  | ComputeCallGraph_feature of string
   | ComputeMetrics_feature
   | ComputeProofObligation_feature of (string * int * string * int * int)
   | ComputeProofObligationID_feature of (int * string)
@@ -304,7 +304,7 @@ module LspOpt = struct
     | FindDefinition_feature (id, file, line, column) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-definition=%s:%d:%d" id file line column
     | FindDeclaration_feature (id, file, line, column) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-declaration=%s:%d:%d" id file line column
     | ComputeCIL_feature -> ""
-    | ComputeCallGraph_feature -> ""
+    | ComputeCallGraph_feature _ -> ""
     | ComputeMetrics_feature -> ""
     | ComputeProofObligation_feature (root_path, id, file, line, column) -> Printf.sprintf "-lsp-root-path=\"%s\" -lsp-id=\"%d\" -lsp-show-povc=%s:%d:%d" root_path id file line column
     | ComputeProofObligationID_feature (id, goal_id) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-show-po=%s" id goal_id
@@ -538,7 +538,6 @@ let execute_command prog args feature =
       data
     
       | ComputeCIL_feature
-      | ComputeCallGraph_feature
       | ComputeMetrics_feature ->
         Lsp.Self.debug ~level:1 "No Error after executing frama-c command\n%!";
         let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Successful operation !") () in
@@ -546,6 +545,18 @@ let execute_command prog args feature =
         let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
         Unix.close wrapper_sock;
         data
+      | ComputeCallGraph_feature ofile ->
+          let prog = "dot" in
+          let args = [|"dot"; Printf.sprintf "-Tpdf %s" ofile; Printf.sprintf "-o %s.pdf" ofile|] in
+          let env = Unix.environment () in
+          let ic, oc, ec = Unix.open_process_args_full prog args env in
+          let _status  = Unix.close_process_full (ic, oc, ec) in
+          Lsp.Self.debug ~level:1 "No Error after executing frama-c command\n%!";
+          let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Successful operation !") () in
+          let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
+          let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
+          Unix.close wrapper_sock;
+          data
     )
 
   | Unix.WEXITED _
@@ -587,7 +598,7 @@ let execute_command prog args feature =
         data
   
       | ComputeCIL_feature
-      | ComputeCallGraph_feature
+      | ComputeCallGraph_feature _
       | ComputeMetrics_feature ->
         let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Error ~message: "Frama-c error ! Check OUTPUT !" () in
         let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
@@ -1094,11 +1105,12 @@ let notif_handler json_string server_sock =
         | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
         | _ -> Lsp.Self.debug ~level:1 "No params for computeCG \n%!"; assert false
     in
-    let feature = ComputeCallGraph_feature in
+  
     let file_basename = (Filename.remove_extension (Filename.basename (String.trim file))) in
     let kernel_opt = KernelOpt.create ~strategies:false () in
     let cg_opt = CgOpt.create ~file:file_basename () in
     let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file] ~cg:cg_opt () in
+    let feature = ComputeCallGraph_feature cg_opt.cg in
     let command_str = (Command.string_of_t command) in
     Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
     let prog, args = (Command.args_of_t command) in
@@ -1146,6 +1158,8 @@ let error_handler json_string =
 exception UnknownRequest of int
 
 let handle (json_string : string) server_sock : (Lsp_types.lsp_result * int) =
+  let root_dir = ".frama-c" in
+  if not (Sys.file_exists root_dir) then Unix.mkdir root_dir 0o755;
   try
     let json = Json.load_string json_string in
     match json with

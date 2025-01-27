@@ -138,12 +138,8 @@ export function activate(context: ExtensionContext) {
 			const extension = path.extname(filePath);  // Get the file extension
 			const fileNameBase = fileName.slice(0, -extension.length); // Remove the extension
 			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
-			const filePathOut = workspacePath + "/.frama-c/fc_" + fileNameBase + ".dot.pdf";
+			const filePathOut = workspacePath + "/.frama-c";
 			// const filePathOut = workspacePath + "/.frama-c";
-			if (!fs.existsSync(filePathOut)) {
-				try {fs.writeFileSync(filePathOut, 'Task in progress ...')}
-				catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
-			}
 			const fileUri = vscode.Uri.parse(filePathOut);
 			await vscode.commands.executeCommand('revealInExplorer', fileUri);
 			// vscode.window.showTextDocument(fileUri, { preview: false });
