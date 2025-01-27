@@ -562,7 +562,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 	update(data) {
 		// Check if the data is an array (list)
         if (Array.isArray(data)) {
-			let [fct_id, prop_id, jsonData] = data;
+			let [filename_id, fct_id, prop_id, jsonData] = data;
 			if (jsonData.length == 0) {this.data = [new TreeItem("No goals !")];}
 			else {
 			// Iterate over each item in the list
@@ -577,7 +577,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 				let script = item_list[5].trim();
 				let function_id = item_list[6].trim();
 				let property_id = item_list[7].trim();
-				let t_item = new TreeItem(verdict, goal_id + " " + stats, file_id, function_id, goal_id, script, fct_id, prop_id, 'itemContext');
+				let t_item = new TreeItem(verdict, goal_id + " " + stats, file_id, function_id, goal_id, script, filename_id, fct_id, prop_id, 'itemContext');
 				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 				t_item.command = {
 					command: 'vscode.open',
@@ -621,7 +621,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
   class TreeItem extends vscode.TreeItem {
 	children: TreeItem[]|undefined;
   
-	constructor(label: string, description?:string, public file_id?:string, public function_id?:string, public goal_id?:string, public script?:string, public fct_id?:string, public prop_id?:string, context?:string, children?: TreeItem[]) {
+	constructor(label: string, description?:string, public file_id?:string, public function_id?:string, public goal_id?:string, public script?:string, public filename_id?:string, public fct_id?:string, public prop_id?:string, context?:string, children?: TreeItem[]) {
 	  	super(label, children === undefined ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Expanded);
 		this.description = description;
 	  	this.children = children;
