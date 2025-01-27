@@ -336,6 +336,74 @@ export function activate(context: ExtensionContext) {
 		}
 	});
 
+	const runAgainStrategies = commands.registerCommand('runAgainStrategies', async (item: TreeItem) => {
+		try {
+			const selectedItems = wpResultsView.selection;
+        	if (selectedItems.length > 0) {
+				const selectedItem = selectedItems[0];
+				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+				const file_name = selectedItem.file_id;
+				const function_name = selectedItem.fct_id;
+				const property_name = selectedItem.prop_id;
+				const proof_timeout = await window.showInputBox({
+					placeHolder: 'timeout', // Placeholder text in the input box
+					prompt: 'Please specify timeout for provers (c.f. -wp-timeout )', // The prompt message
+					validateInput: (input) => {
+						if (input.length === 0) {return 'Input cannot be empty!';}
+						if (!/^\d+$/.test(input)) {return 'Please enter a valid integer';}
+						return null; // Return null to indicate valid input
+				}});
+				const int_proof_timeout = parseInt(proof_timeout, 10);
+				wpResults.update(["","","",[]]);
+				wpResults.refresh();
+				const gui = false;
+				const res = await client.sendRequest('provePOStrategies', [file_name, function_name, property_name, int_proof_timeout, gui]);
+				wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
+				wpResults.refresh();
+				window.showInformationMessage('Proof results updated');
+
+			}
+			else {vscode.window.showInformationMessage('No item selected');}
+		} catch (err) {
+			window.showErrorMessage('Failed to fetch and display script: ' + err.message);
+			console.error('Error fetching script:', err);
+		}
+	});
+
+	const runAgainStrategiesGui = commands.registerCommand('runAgainStrategiesGui', async (item: TreeItem) => {
+		try {
+			const selectedItems = wpResultsView.selection;
+        	if (selectedItems.length > 0) {
+				const selectedItem = selectedItems[0];
+				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+				const file_name = selectedItem.file_id;
+				const function_name = selectedItem.fct_id;
+				const property_name = selectedItem.prop_id;
+				const proof_timeout = await window.showInputBox({
+					placeHolder: 'timeout', // Placeholder text in the input box
+					prompt: 'Please specify timeout for provers (c.f. -wp-timeout )', // The prompt message
+					validateInput: (input) => {
+						if (input.length === 0) {return 'Input cannot be empty!';}
+						if (!/^\d+$/.test(input)) {return 'Please enter a valid integer';}
+						return null; // Return null to indicate valid input
+				}});
+				const int_proof_timeout = parseInt(proof_timeout, 10);
+				wpResults.update(["","","",[]]);
+				wpResults.refresh();
+				const gui = true;
+				const res = await client.sendRequest('provePOStrategies', [file_name, function_name, property_name, int_proof_timeout, gui]);
+				wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
+				wpResults.refresh();
+				window.showInformationMessage('Proof results updated');
+
+			}
+			else {vscode.window.showInformationMessage('No item selected');}
+		} catch (err) {
+			window.showErrorMessage('Failed to fetch and display script: ' + err.message);
+			console.error('Error fetching script:', err);
+		}
+	});
+
     const provePO = commands.registerCommand('provePO', async () => {
 		try {
             const function_name = await window.showInputBox({
@@ -546,7 +614,7 @@ export function activate(context: ExtensionContext) {
 		}
 	});
 
-	context.subscriptions.push(smokeTests, ccdoc, displayCIL, displayCIL_noannot, displayCILProject, displayCILProject_noannot, computeCG, showPOVC, showPO, runAgain, runAgainGui, provePO, provePOGUI, provePOStrategies, provePOStrategiesGUI, showGlobalMetrics, showLocalMetrics);
+	context.subscriptions.push(smokeTests, ccdoc, displayCIL, displayCIL_noannot, displayCILProject, displayCILProject_noannot, computeCG, showPOVC, showPO, runAgain, runAgainGui, runAgainStrategies, runAgainStrategiesGui, provePO, provePOGUI, provePOStrategies, provePOStrategiesGUI, showGlobalMetrics, showLocalMetrics);
 
 	// Start the client. This will also launch the server
 	client.start();

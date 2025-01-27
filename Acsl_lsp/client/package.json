@@ -63,6 +63,8 @@
                 {"command": "showPO", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
                 {"command": "runAgain", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
                 {"command": "runAgainGui", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"}
+                {"command": "runAgainStrategies", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
+                {"command": "runAgainStrategiesGui", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"}
             ]
         },
         "submenus": [
@@ -84,6 +86,8 @@
             {"command": "showPO", "title": "Display Proof Obligation"},
             {"command": "runAgain", "title": "Run proof again"},
             {"command": "runAgainGui", "title": "Run proof again (GUI)"},
+            {"command": "runAgainStrategies", "title": "Run proof again with strategies"},
+            {"command": "runAgainStrategiesGui", "title": "Run proof again wih strategies (GUI)"},
             {"command": "provePO", "title": "Prove"},
             {"command": "provePOStrategies", "title": "Prove with Strategies"},
             {"command": "provePOGUI", "title": "Prove (GUI)"},
