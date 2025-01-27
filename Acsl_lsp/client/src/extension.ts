@@ -274,8 +274,8 @@ export function activate(context: ExtensionContext) {
         	if (selectedItems.length > 0) {
 				const selectedItem = selectedItems[0];
 				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
-				function_name = ${selectedItem.fct_id};
-				property_name = ${selectedItem.prop_id};
+				const function_name = selectedItem.fct_id;
+				const property_name = selectedItem.prop_id;
 				const proof_timeout = await window.showInputBox({
 					placeHolder: 'timeout', // Placeholder text in the input box
 					prompt: 'Please specify timeout for provers (c.f. -wp-timeout )', // The prompt message
@@ -587,7 +587,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
   class TreeItem extends vscode.TreeItem {
 	children: TreeItem[]|undefined;
   
-	constructor(label: string, description?:string, public file_id?:string, public function_id?:string, public goal_id?:string, public script?:string, fct_id?:string, prop_id?:string, context?:string, children?: TreeItem[]) {
+	constructor(label: string, description?:string, public file_id?:string, public function_id?:string, public goal_id?:string, public script?:string, public fct_id?:string, public prop_id?:string, context?:string, children?: TreeItem[]) {
 	  	super(label, children === undefined ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Expanded);
 		this.description = description;
 	  	this.children = children;
