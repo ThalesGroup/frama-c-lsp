@@ -524,9 +524,10 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 
 	constructor() {this.data = [new TreeItem("No goals !")];}
 
-	update(jsonData) {
+	update(data) {
 		// Check if the data is an array (list)
-        if (Array.isArray(jsonData)) {
+        if (Array.isArray(data)) {
+			let [fct_id, prop_id, jsonData] = data;
 			if (jsonData.length == 0) {this.data = [new TreeItem("No goals !")];}
 			else {
 			// Iterate over each item in the list
@@ -541,8 +542,6 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 				let script = item_list[5].trim();
 				let function_id = item_list[6].trim();
 				let property_id = item_list[7].trim();
-				let fct_id = item_list[8].trim();
-				let prop_id = item_list[9].trim();
 				let t_item = new TreeItem(verdict, goal_id + " " + stats, file_id, function_id, goal_id, script, fct_id, prop_id, 'itemContext');
 				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 				t_item.command = {

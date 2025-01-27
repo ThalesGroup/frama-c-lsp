@@ -308,7 +308,7 @@ module LspOpt = struct
     | ComputeMetrics_feature -> ""
     | ComputeProofObligation_feature (root_path, id, file, line, column) -> Printf.sprintf "-lsp-root-path=\"%s\" -lsp-id=\"%d\" -lsp-show-povc=%s:%d:%d" root_path id file line column
     | ComputeProofObligationID_feature (id, goal_id) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-show-po=%s" id goal_id
-    | Prove_feature (id, fct, prop) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-prove=%s,%s" id fct prop
+    | Prove_feature (id, fct, prop) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-prove=%s:%s" id fct prop
 end
 
 

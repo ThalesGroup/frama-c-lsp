@@ -83,11 +83,12 @@ let get_property_status id fct prop: string =
     close_out output_channel;
     let _property_id = (Property.Names.get_prop_name_id property) in
     match proof_status with
-    | `Passed -> verdict_msg := `String (Printf.sprintf "passed:%s:%s:%s:%s:%s:%s:%s:%s\n%!" goal_id position prover_results script_file function_name property_name fct prop) :: !verdict_msg
-    | `Failed -> verdict_msg := `String (Printf.sprintf "failed:%s:%s:%s:%s:%s:%s:%s:%s\n%!" goal_id position prover_results script_file function_name property_name fct prop) :: !verdict_msg
-    | `Unknown -> verdict_msg := `String (Printf.sprintf "unknown:%s:%s:%s:%s:%s:%s:%s:%s\n%!" goal_id position prover_results script_file function_name property_name fct prop) :: !verdict_msg
+    | `Passed -> verdict_msg := `String (Printf.sprintf "passed:%s:%s:%s:%s:%s:%s\n%!" goal_id position prover_results script_file function_name property_name) :: !verdict_msg
+    | `Failed -> verdict_msg := `String (Printf.sprintf "failed:%s:%s:%s:%s:%s:%s\n%!" goal_id position prover_results script_file function_name property_name) :: !verdict_msg
+    | `Unknown -> verdict_msg := `String (Printf.sprintf "unknown:%s:%s:%s:%s:%s:%s\n%!" goal_id position prover_results script_file function_name property_name) :: !verdict_msg
     );
   let result_msg = (`List !verdict_msg) in
+  let result_msg = (`List [`String fct; `String prop; result_msg]) in
   let lsp_message = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:result_msg () in
   let json_message = Lsp_types.ResponseMessage.json_of_t lsp_message in
   Json.save_string json_message

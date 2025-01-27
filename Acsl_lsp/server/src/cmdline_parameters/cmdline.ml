@@ -203,7 +203,7 @@ let get_Prove_args () =
     let args = Prove.get () in
     if not (String.trim args = "") then
       (
-      let req_info = String.split_on_char ':' (Show_POVC.get ()) in
+      let req_info = String.split_on_char ':' (Prove.get ()) in
       let fct = (List.nth req_info 0) in
       let prop = (List.nth req_info 1) in
       Some (Id.get (), fct, prop)
