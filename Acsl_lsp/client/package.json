@@ -62,7 +62,7 @@
                 {"command": "showScript", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
                 {"command": "showPO", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
                 {"command": "runAgain", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
-                {"command": "runAgainGui", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"}
+                {"command": "runAgainGui", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
                 {"command": "runAgainStrategies", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
                 {"command": "runAgainStrategiesGui", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"}
             ]
