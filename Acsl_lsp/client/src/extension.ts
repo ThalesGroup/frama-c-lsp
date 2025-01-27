@@ -268,6 +268,39 @@ export function activate(context: ExtensionContext) {
 		}
 	});
 
+	const runAgain = commands.registerCommand('runAgain', async (item: TreeItem) => {
+		try {
+			const selectedItems = wpResultsView.selection;
+        	if (selectedItems.length > 0) {
+				const selectedItem = selectedItems[0];
+				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+				function_name = ${selectedItem.fct_id};
+				property_name = ${selectedItem.prop_id};
+				const proof_timeout = await window.showInputBox({
+					placeHolder: 'timeout', // Placeholder text in the input box
+					prompt: 'Please specify timeout for provers (c.f. -wp-timeout )', // The prompt message
+					validateInput: (input) => {
+						if (input.length === 0) {return 'Input cannot be empty!';}
+						if (!/^\d+$/.test(input)) {return 'Please enter a valid integer';}
+						return null; // Return null to indicate valid input
+				}});
+				const int_proof_timeout = parseInt(proof_timeout, 10);
+				wpResults.update([]);
+				wpResults.refresh();
+				const gui = false;
+				const res = await client.sendRequest('provePO', [window.activeTextEditor.document.fileName, function_name, property_name, int_proof_timeout, gui]);
+				wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
+				wpResults.refresh();
+				window.showInformationMessage('Proof results updated');
+
+			}
+			else {vscode.window.showInformationMessage('No item selected');}
+		} catch (err) {
+			window.showErrorMessage('Failed to fetch and display script: ' + err.message);
+			console.error('Error fetching script:', err);
+		}
+	});
+
     const provePO = commands.registerCommand('provePO', async () => {
 		try {
             const function_name = await window.showInputBox({
@@ -508,7 +541,9 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 				let script = item_list[5].trim();
 				let function_id = item_list[6].trim();
 				let property_id = item_list[7].trim();
-				let t_item = new TreeItem(verdict, goal_id + " " + stats, file_id, function_id, goal_id, script, 'itemContext');
+				let fct_id = item_list[8].trim();
+				let prop_id = item_list[9].trim();
+				let t_item = new TreeItem(verdict, goal_id + " " + stats, file_id, function_id, goal_id, script, fct_id, prop_id, 'itemContext');
 				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 				t_item.command = {
 					command: 'vscode.open',
@@ -552,7 +587,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
   class TreeItem extends vscode.TreeItem {
 	children: TreeItem[]|undefined;
   
-	constructor(label: string, description?:string, public file_id?:string, public function_id?:string, public goal_id?:string, public script?:string, context?:string, children?: TreeItem[]) {
+	constructor(label: string, description?:string, public file_id?:string, public function_id?:string, public goal_id?:string, public script?:string, fct_id?:string, prop_id?:string, context?:string, children?: TreeItem[]) {
 	  	super(label, children === undefined ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Expanded);
 		this.description = description;
 	  	this.children = children;

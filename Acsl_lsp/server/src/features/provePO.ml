@@ -28,7 +28,7 @@ let is_position_between (line_check, char_check) (line1, char1) (line2, char2) =
 
 
 
-let get_property_status id : string =
+let get_property_status id fct prop: string =
   let root_dir = ".frama-c" in
   if not (Sys.file_exists root_dir) then Unix.mkdir root_dir 0o755;
   let verdict_msg = ref [] in
@@ -83,9 +83,9 @@ let get_property_status id : string =
     close_out output_channel;
     let _property_id = (Property.Names.get_prop_name_id property) in
     match proof_status with
-    | `Passed -> verdict_msg := `String (Printf.sprintf "passed:%s:%s:%s:%s:%s:%s\n%!" goal_id position prover_results script_file function_name property_name) :: !verdict_msg
-    | `Failed -> verdict_msg := `String (Printf.sprintf "failed:%s:%s:%s:%s:%s:%s\n%!" goal_id position prover_results script_file function_name property_name) :: !verdict_msg
-    | `Unknown -> verdict_msg := `String (Printf.sprintf "unknown:%s:%s:%s:%s:%s:%s\n%!" goal_id position prover_results script_file function_name property_name) :: !verdict_msg
+    | `Passed -> verdict_msg := `String (Printf.sprintf "passed:%s:%s:%s:%s:%s:%s:%s:%s\n%!" goal_id position prover_results script_file function_name property_name fct prop) :: !verdict_msg
+    | `Failed -> verdict_msg := `String (Printf.sprintf "failed:%s:%s:%s:%s:%s:%s:%s:%s\n%!" goal_id position prover_results script_file function_name property_name fct prop) :: !verdict_msg
+    | `Unknown -> verdict_msg := `String (Printf.sprintf "unknown:%s:%s:%s:%s:%s:%s:%s:%s\n%!" goal_id position prover_results script_file function_name property_name fct prop) :: !verdict_msg
     );
   let result_msg = (`List !verdict_msg) in
   let lsp_message = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:result_msg () in

@@ -60,7 +60,8 @@
             ],
             "view/item/context": [
                 {"command": "showScript", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
-                {"command": "showPO", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"}
+                {"command": "showPO", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
+                {"command": "runAgain", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"}
             ]
         },
         "submenus": [
@@ -80,6 +81,7 @@
             {"command": "showPOVC", "title": "Display Proof Obligation"},
             {"command": "showScript", "title": "Goto script"},
             {"command": "showPO", "title": "Display Proof Obligation"},
+            {"command": "runAgain", "title": "Run proof again"},
             {"command": "provePO", "title": "Prove"},
             {"command": "provePOStrategies", "title": "Prove with Strategies"},
             {"command": "provePOGUI", "title": "Prove (GUI)"},

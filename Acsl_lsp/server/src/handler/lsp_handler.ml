@@ -14,7 +14,7 @@ type lsp_feature =
   | ComputeMetrics_feature
   | ComputeProofObligation_feature of (string * int * string * int * int)
   | ComputeProofObligationID_feature of (int * string)
-  | Prove_feature of (int)
+  | Prove_feature of (int * string * string)
 
 module KernelOpt = struct
 type t = {
@@ -308,7 +308,7 @@ module LspOpt = struct
     | ComputeMetrics_feature -> ""
     | ComputeProofObligation_feature (root_path, id, file, line, column) -> Printf.sprintf "-lsp-root-path=\"%s\" -lsp-id=\"%d\" -lsp-show-povc=%s:%d:%d" root_path id file line column
     | ComputeProofObligationID_feature (id, goal_id) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-show-po=%s" id goal_id
-    | Prove_feature (id) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-prove" id
+    | Prove_feature (id, fct, prop) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-prove=%s,%s" id fct prop
 end
 
 
@@ -492,6 +492,14 @@ let rec had_errors_in_channel oc =
     in
     read_data ""
 
+let execute_extra_command prog args =
+  let env = Unix.environment () in
+  let ic, oc, ec = Unix.open_process_args_full prog args env in
+  let _ = had_errors_in_channel ic in
+  let _ = had_errors_in_channel ec in
+  let status  = Unix.close_process_full (ic, oc, ec) in
+  status
+
 let execute_command prog args feature =
   let signal_handler signal = if signal = Sys.sigint then () in
   Sys.set_signal Sys.sigint (Sys.Signal_handle signal_handler);
@@ -546,19 +554,18 @@ let execute_command prog args feature =
         Unix.close wrapper_sock;
         data
       | ComputeCallGraph_feature ofile ->
-          let prog = "dot" in
-          let args = [|"dot"; "-Tpdf"; Printf.sprintf "%s" ofile; "-o"; Printf.sprintf "%s.pdf" ofile|] in
-          let env = Unix.environment () in
-          let ic, oc, ec = Unix.open_process_args_full prog args env in
-          let _ = had_errors_in_channel ic in
-          let _ = had_errors_in_channel ec in
-          let _status  = Unix.close_process_full (ic, oc, ec) in
-          Lsp.Self.debug ~level:1 "No Error after executing frama-c command\n%!";
-          let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Successful operation !") () in
-          let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
-          let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
-          Unix.close wrapper_sock;
-          data
+        let prog = "dot" in
+        let args = [|"dot"; "-Tpdf"; Printf.sprintf "%s" ofile; "-o"; Printf.sprintf "%s.pdf" ofile|] in
+        let _status = execute_extra_command prog args in
+        let prog = "evince" in
+        let args = [|"evince"; Printf.sprintf "%s.pdf" ofile|] in
+        let _status = execute_extra_command prog args in
+        Lsp.Self.debug ~level:1 "No Error after executing frama-c command\n%!";
+        let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Successful operation !") () in
+        let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
+        let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
+        Unix.close wrapper_sock;
+        data
     )
 
   | Unix.WEXITED _
@@ -590,7 +597,7 @@ let execute_command prog args feature =
       | FindDeclaration_feature (id, _, _, _)
       | ComputeProofObligation_feature (_, id, _, _, _)
       | ComputeProofObligationID_feature (id, _)
-      | Prove_feature (id) ->
+      | Prove_feature (id, _, _) ->
         Lsp.Self.debug ~level:1 "Error while executing frama-c command\n%!";
         let msg = Printf.sprintf "Frama-C Error ! Check OUTPUT !" in
         let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:msg () in
@@ -627,7 +634,7 @@ let fork_execute_command prog args feature =
       | FindDeclaration_feature (id, _, _, _)
       | ComputeProofObligation_feature (_, id, _, _, _)
       | ComputeProofObligationID_feature (id, _)
-      | Prove_feature (id) ->
+      | Prove_feature (id, _, _) ->
         Lsp.Self.debug ~level:1 "Server is busy !:! : %s, %s\n" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
         let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:"Server is busy !:!" () in
         let lsp_message = (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~error:lsp_error_message ()) in
@@ -818,7 +825,7 @@ let rq_handler json_string =
       let uncast_opt = UncastOpt.create () in
       let wp_opt = WpOpt.create ~wp_fct:fct ~wp_prop:prop ~wp_gen:false ~wp_timeout:timeout () in
       let metacsl_opt = MetacslOpt.create () in
-      let feature = Prove_feature (id) in
+      let feature = Prove_feature (id, (String.concat "," fct), (String.concat ","prop)) in
       let lsp_opt = LspOpt.create (feature) in
       let command = 
         match (String.ends_with ~suffix:".c" file) with
@@ -852,7 +859,7 @@ let rq_handler json_string =
       let uncast_opt = UncastOpt.create () in
       let wp_opt = WpOpt.create ~wp_fct:fct ~wp_prop:prop ~wp_prover:["tip"] ~wp_script:"dry" ~wp_gen:false ~wp_timeout:timeout () in
       let metacsl_opt = MetacslOpt.create () in
-      let feature = Prove_feature (id) in
+      let feature = Prove_feature (id, (String.concat "," fct), (String.concat "," prop)) in
       let lsp_opt = LspOpt.create (feature) in
       let command = 
         match (String.ends_with ~suffix:".c" file) with

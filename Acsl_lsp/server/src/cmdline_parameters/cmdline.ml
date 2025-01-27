@@ -105,10 +105,12 @@ module Show_PO = Self.String
   let default = ""
 end)
 
-module Prove = Self.False
+module Prove = Self.String
 (struct
   let option_name = "-lsp-prove"
   let help = "send back the proof status"
+  let arg_name = "fct and prop"
+  let default = ""
 end)
 
 let wrapper_port_framac = 8006
@@ -198,9 +200,13 @@ let get_ComputeProofObligationID_args () =
     else None
 
 let get_Prove_args () =
-    if (Prove.get ()) then
+    let args = Prove.get () in
+    if not (String.trim args = "") then
       (
-      Some (Id.get ())
+      let req_info = String.split_on_char ':' (Show_POVC.get ()) in
+      let fct = (List.nth req_info 0) in
+      let prop = (List.nth req_info 1) in
+      Some (Id.get (), fct, prop)
       )
     else None
 
@@ -231,7 +237,7 @@ let get_active_option () =
   );
   (match get_Prove_args () with
   | None -> ()
-  | Some (id) -> active_options := Lsp_handler.Prove_feature(id) :: !active_options
+  | Some (id, fct, prop) -> active_options := Lsp_handler.Prove_feature(id, fct, prop) :: !active_options
   );
   match !active_options with
   [] -> None
@@ -363,7 +369,7 @@ let run () =
       | Some Lsp_handler.ComputeMetrics_feature -> send_result []
       | Some Lsp_handler.ComputeProofObligation_feature(root_path, id, file, line, ch) -> let data = [(ShowPOVC.get_property root_path id file line ch)] in Lsp.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; send_result data
       | Some Lsp_handler.ComputeProofObligationID_feature(id, goal_id) -> let data = [(ShowPOVC.get_property_from_id id goal_id)] in Lsp.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; send_result data
-      | Some Lsp_handler.Prove_feature(id) -> let data = [(ProvePO.get_property_status id)] in Lsp.Self.feedback ~level:1 "Proof attempt done !\n%!"; send_result data
+      | Some Lsp_handler.Prove_feature(id, fct, prop) -> let data = [(ProvePO.get_property_status id fct prop)] in Lsp.Self.feedback ~level:1 "Proof attempt done !\n%!"; send_result data
       | None ->  Self.debug ~level:1 "LSP started !!!"
   )
 
