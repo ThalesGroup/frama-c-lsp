@@ -341,7 +341,7 @@ module Command = struct
         )
       )
       | _, None -> 
-        let sourceFiles = List.map (fun x -> (!rootPath)^"/"^x) (!Configuration.global_params.sourceFiles @ !Configuration.global_params.sourceFileStrategies) in
+        let sourceFiles = List.map (fun x -> (!rootPath)^"/"^x) (!Configuration.global_params.sourceFiles @ !Configuration.global_params.sourceFileStrategies @ !Configuration.global_params.sourceFileMetacsl) in
         match sourceFiles with
         | [] -> Some (Utils.get_workspace_files !rootPath)
         | _ -> Some (sourceFiles)

@@ -301,6 +301,39 @@ export function activate(context: ExtensionContext) {
 		}
 	});
 
+	const runAgainGui = commands.registerCommand('runAgainGui', async (item: TreeItem) => {
+		try {
+			const selectedItems = wpResultsView.selection;
+        	if (selectedItems.length > 0) {
+				const selectedItem = selectedItems[0];
+				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+				const function_name = selectedItem.fct_id;
+				const property_name = selectedItem.prop_id;
+				const proof_timeout = await window.showInputBox({
+					placeHolder: 'timeout', // Placeholder text in the input box
+					prompt: 'Please specify timeout for provers (c.f. -wp-timeout )', // The prompt message
+					validateInput: (input) => {
+						if (input.length === 0) {return 'Input cannot be empty!';}
+						if (!/^\d+$/.test(input)) {return 'Please enter a valid integer';}
+						return null; // Return null to indicate valid input
+				}});
+				const int_proof_timeout = parseInt(proof_timeout, 10);
+				wpResults.update(["","",[]]);
+				wpResults.refresh();
+				const gui = true;
+				const res = await client.sendRequest('provePO', [window.activeTextEditor.document.fileName, function_name, property_name, int_proof_timeout, gui]);
+				wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
+				wpResults.refresh();
+				window.showInformationMessage('Proof results updated');
+
+			}
+			else {vscode.window.showInformationMessage('No item selected');}
+		} catch (err) {
+			window.showErrorMessage('Failed to fetch and display script: ' + err.message);
+			console.error('Error fetching script:', err);
+		}
+	});
+
     const provePO = commands.registerCommand('provePO', async () => {
 		try {
             const function_name = await window.showInputBox({
