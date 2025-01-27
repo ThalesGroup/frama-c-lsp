@@ -204,9 +204,10 @@ let get_Prove_args () =
     if not (String.trim args = "") then
       (
       let req_info = String.split_on_char ':' (Prove.get ()) in
-      let fct = (List.nth req_info 0) in
-      let prop = (List.nth req_info 1) in
-      Some (Id.get (), fct, prop)
+      let file = (List.nth req_info 0) in
+      let fct = (List.nth req_info 1) in
+      let prop = (List.nth req_info 2) in
+      Some (Id.get (), file, fct, prop)
       )
     else None
 
@@ -237,7 +238,7 @@ let get_active_option () =
   );
   (match get_Prove_args () with
   | None -> ()
-  | Some (id, fct, prop) -> active_options := Lsp_handler.Prove_feature(id, fct, prop) :: !active_options
+  | Some (id, file, fct, prop) -> active_options := Lsp_handler.Prove_feature(id, file, fct, prop) :: !active_options
   );
   match !active_options with
   [] -> None
@@ -369,7 +370,7 @@ let run () =
       | Some Lsp_handler.ComputeMetrics_feature -> send_result []
       | Some Lsp_handler.ComputeProofObligation_feature(root_path, id, file, line, ch) -> let data = [(ShowPOVC.get_property root_path id file line ch)] in Lsp.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; send_result data
       | Some Lsp_handler.ComputeProofObligationID_feature(id, goal_id) -> let data = [(ShowPOVC.get_property_from_id id goal_id)] in Lsp.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; send_result data
-      | Some Lsp_handler.Prove_feature(id, fct, prop) -> let data = [(ProvePO.get_property_status id fct prop)] in Lsp.Self.feedback ~level:1 "Proof attempt done !\n%!"; send_result data
+      | Some Lsp_handler.Prove_feature(id, file, fct, prop) -> let data = [(ProvePO.get_property_status id file fct prop)] in Lsp.Self.feedback ~level:1 "Proof attempt done !\n%!"; send_result data
       | None ->  Self.debug ~level:1 "LSP started !!!"
   )
 

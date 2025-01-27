@@ -274,6 +274,7 @@ export function activate(context: ExtensionContext) {
         	if (selectedItems.length > 0) {
 				const selectedItem = selectedItems[0];
 				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+				const file_name = selectedItem.file_id;
 				const function_name = selectedItem.fct_id;
 				const property_name = selectedItem.prop_id;
 				const proof_timeout = await window.showInputBox({
@@ -288,7 +289,7 @@ export function activate(context: ExtensionContext) {
 				wpResults.update(["","",[]]);
 				wpResults.refresh();
 				const gui = false;
-				const res = await client.sendRequest('provePO', [window.activeTextEditor.document.fileName, function_name, property_name, int_proof_timeout, gui]);
+				const res = await client.sendRequest('provePO', [file_name, function_name, property_name, int_proof_timeout, gui]);
 				wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
 				wpResults.refresh();
 				window.showInformationMessage('Proof results updated');
@@ -307,6 +308,7 @@ export function activate(context: ExtensionContext) {
         	if (selectedItems.length > 0) {
 				const selectedItem = selectedItems[0];
 				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+				const file_name = selectedItem.file_id;
 				const function_name = selectedItem.fct_id;
 				const property_name = selectedItem.prop_id;
 				const proof_timeout = await window.showInputBox({
@@ -321,7 +323,7 @@ export function activate(context: ExtensionContext) {
 				wpResults.update(["","",[]]);
 				wpResults.refresh();
 				const gui = true;
-				const res = await client.sendRequest('provePO', [window.activeTextEditor.document.fileName, function_name, property_name, int_proof_timeout, gui]);
+				const res = await client.sendRequest('provePO', [file_name, function_name, property_name, int_proof_timeout, gui]);
 				wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
 				wpResults.refresh();
 				window.showInformationMessage('Proof results updated');
@@ -544,7 +546,7 @@ export function activate(context: ExtensionContext) {
 		}
 	});
 
-	context.subscriptions.push(smokeTests, ccdoc, displayCIL, displayCIL_noannot, displayCILProject, displayCILProject_noannot, computeCG, showPOVC, showPO, provePO, provePOGUI, provePOStrategies, provePOStrategiesGUI, showGlobalMetrics, showLocalMetrics);
+	context.subscriptions.push(smokeTests, ccdoc, displayCIL, displayCIL_noannot, displayCILProject, displayCILProject_noannot, computeCG, showPOVC, showPO, runAgain, runAgainGui, provePO, provePOGUI, provePOStrategies, provePOStrategiesGUI, showGlobalMetrics, showLocalMetrics);
 
 	// Start the client. This will also launch the server
 	client.start();
