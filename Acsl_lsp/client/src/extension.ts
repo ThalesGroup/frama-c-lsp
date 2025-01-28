@@ -286,8 +286,8 @@ export function activate(context: ExtensionContext) {
 						return null; // Return null to indicate valid input
 				}});
 				const int_proof_timeout = parseInt(proof_timeout, 10);
-				wpResults.update(["","","",[]]);
-				wpResults.refresh();
+				// wpResults.update(["","","",[]]);
+				// wpResults.refresh();
 				const gui = false;
 				const res = await client.sendRequest('provePO', [file_name, function_name, property_name, int_proof_timeout, gui]);
 				wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
@@ -320,8 +320,8 @@ export function activate(context: ExtensionContext) {
 						return null; // Return null to indicate valid input
 				}});
 				const int_proof_timeout = parseInt(proof_timeout, 10);
-				wpResults.update(["","","",[]]);
-				wpResults.refresh();
+				// wpResults.update(["","","",[]]);
+				// wpResults.refresh();
 				const gui = true;
 				const res = await client.sendRequest('provePO', [file_name, function_name, property_name, int_proof_timeout, gui]);
 				wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
@@ -354,8 +354,8 @@ export function activate(context: ExtensionContext) {
 						return null; // Return null to indicate valid input
 				}});
 				const int_proof_timeout = parseInt(proof_timeout, 10);
-				wpResults.update(["","","",[]]);
-				wpResults.refresh();
+				// wpResults.update(["","","",[]]);
+				// wpResults.refresh();
 				const gui = false;
 				const res = await client.sendRequest('provePOStrategies', [file_name, function_name, property_name, int_proof_timeout, gui]);
 				wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
@@ -388,8 +388,8 @@ export function activate(context: ExtensionContext) {
 						return null; // Return null to indicate valid input
 				}});
 				const int_proof_timeout = parseInt(proof_timeout, 10);
-				wpResults.update(["","","",[]]);
-				wpResults.refresh();
+				// wpResults.update(["","","",[]]);
+				// wpResults.refresh();
 				const gui = true;
 				const res = await client.sendRequest('provePOStrategies', [file_name, function_name, property_name, int_proof_timeout, gui]);
 				wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
@@ -429,8 +429,8 @@ export function activate(context: ExtensionContext) {
                     return null; // Return null to indicate valid input
             }});
 			const int_proof_timeout = parseInt(proof_timeout, 10);
-			wpResults.update(["","","",[]]);
-			wpResults.refresh();
+			// wpResults.update(["","","",[]]);
+			// wpResults.refresh();
 			const gui = false;
             const res = await client.sendRequest('provePO', [window.activeTextEditor.document.fileName, function_name, property_name, int_proof_timeout, gui]);
 			wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
@@ -468,8 +468,8 @@ export function activate(context: ExtensionContext) {
                     return null; // Return null to indicate valid input
             }});
 			const int_proof_timeout = parseInt(proof_timeout, 10);
-			wpResults.update(["","","",[]]);
-			wpResults.refresh();
+			// wpResults.update(["","","",[]]);
+			// wpResults.refresh();
 			const gui = true;
             const res = await client.sendRequest('provePO', [window.activeTextEditor.document.fileName, function_name, property_name, int_proof_timeout, gui]);
 			wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
@@ -507,8 +507,8 @@ export function activate(context: ExtensionContext) {
                     return null; // Return null to indicate valid input
             }});
 			const int_proof_timeout = parseInt(proof_timeout, 10);
-			wpResults.update(["","","",[]]);
-			wpResults.refresh();
+			// wpResults.update(["","","",[]]);
+			// wpResults.refresh();
 			const gui = false;
             const res = await client.sendRequest('provePOStrategies', [window.activeTextEditor.document.fileName, function_name, property_name, int_proof_timeout, gui]);
 			wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
@@ -546,8 +546,8 @@ export function activate(context: ExtensionContext) {
                     return null; // Return null to indicate valid input
             }});
 			const int_proof_timeout = parseInt(proof_timeout, 10);
-			wpResults.update(["","","",[]]);
-			wpResults.refresh();
+			// wpResults.update(["","","",[]]);
+			// wpResults.refresh();
 			const gui = true;
             const res = await client.sendRequest('provePOStrategies', [window.activeTextEditor.document.fileName, function_name, property_name, int_proof_timeout, gui]);
 			wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
