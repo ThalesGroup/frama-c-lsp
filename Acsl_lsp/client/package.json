@@ -26,7 +26,7 @@
             {"command": "-editor.action.goToDefinition", "key": "ctrl+click", "when": "editorTextFocus"}
         ],
         "viewsContainers": {
-            "panel": [{"id": "myPanel", "title": "Properties", "icon": "images/logo-frama-c.png"}]
+            "panel": [{"id": "myPanel", "title": "WP Goals", "icon": "images/logo-frama-c.png"}]
         },
         "views": {
             "myPanel": [{"id": "WPPan", "name": "WP pan"}]
