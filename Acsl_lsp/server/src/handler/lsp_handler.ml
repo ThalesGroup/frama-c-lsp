@@ -516,8 +516,8 @@ let execute_command prog args feature =
   let status  = Unix.close_process_full (ic, oc, ec) in
   let special_errors = DidSave.StringMap.fold get_notification_list !DidSave.diag_map [] in
   Lsp.Self.debug ~level:1 "Read ic completed !!!\n%!";
-  match status with
-  | Unix.WEXITED 0 ->
+  match status, prog with
+  | Unix.WEXITED 0, "frama-c" ->
     (
     match feature with
       | DidSave_feature
@@ -568,13 +568,13 @@ let execute_command prog args feature =
         data
     )
 
-  | Unix.WEXITED _
-  | Unix.WSIGNALED _ 
-  | Unix.WSTOPPED _ ->
+  | Unix.WEXITED _, _
+  | Unix.WSIGNALED _, _
+  | Unix.WSTOPPED _, _ ->
     (
       match feature with
       | DidSave_feature ->
-          Lsp.Self.debug ~level:1 "Executed frama-c command (frama-c did not exit normally)\n%!";
+          Lsp.Self.debug ~level:1 "Executed frama-c command (frama-c may have exited with errors)\n%!";
           let (plugin_sock, _) = Unix.accept wrapper_sock in
           let _data_size = getnumber (readcontlen plugin_sock) in
           (* let buffer = Bytes.make data_size '0' in
@@ -598,8 +598,8 @@ let execute_command prog args feature =
       | ComputeProofObligation_feature (_, id, _, _, _)
       | ComputeProofObligationID_feature (id, _)
       | Prove_feature (id, _, _, _) ->
-        Lsp.Self.debug ~level:1 "Error while executing frama-c command\n%!";
-        let msg = Printf.sprintf "Frama-C Error ! Check OUTPUT !" in
+        Lsp.Self.debug ~level:1 "\n%!";
+        let msg = Printf.sprintf "Frama-c may have exited with errors" in
         let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:msg () in
         let lsp_message = (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~error:lsp_error_message ()) in
         let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_message) in
