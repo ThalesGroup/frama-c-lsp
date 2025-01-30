@@ -11,19 +11,12 @@
     "main": "./out/extension",
     "contributes": {
         "keybindings": [
-            {"command": "provePO", "key": "alt+oem_8", "when": "editorTextFocus"},
-            {"command": "provePOStrategies", "key": "alt+oem_2", "when": "editorTextFocus"},
-            {"command": "provePOGUI", "key": "shift+alt+oem_8", "when": "editorTextFocus"},
-            {"command": "provePOStrategiesGUI", "key": "shift+alt+oem_2", "when": "editorTextFocus"},
-            {"command": "smokeTests", "key": "alt+oem_period", "when": "editorTextFocus"},
+            {"command": "provePO", "key": "shift+oem_8", "when": "editorTextFocus"},
+            {"command": "provePOStrategies", "key": "shift+oem_2", "when": "editorTextFocus"},
 
-            {"command": "displayCIL", "key": "alt+right", "when": "editorTextFocus"},
-            {"command": "displayCIL_noannot", "key": "shift+alt+right", "when": "editorTextFocus"},
-            {"command": "showLocalMetrics", "key": "alt+up", "when": "editorTextFocus"},
-            {"command": "showGlobalMetrics", "key": "shift+alt+up", "when": "editorTextFocus"},
-            {"command": "computeCG", "key": "alt+down", "when": "editorTextFocus"},
-
-            {"command": "-editor.action.goToDefinition", "key": "ctrl+click", "when": "editorTextFocus"}
+            {"command": "displayCIL", "key": "shift+right", "when": "editorTextFocus"},
+            {"command": "showLocalMetrics", "key": "shift+up", "when": "editorTextFocus"},
+            {"command": "computeCG", "key": "shift+down", "when": "editorTextFocus"}
         ],
         "viewsContainers": {
             "panel": [{"id": "myPanel", "title": "WP Goals", "icon": "images/logo-frama-c.png"}]
