@@ -13,6 +13,7 @@
         "keybindings": [
             {"command": "provePO", "key": "shift+enter", "when": "editorTextFocus"},
             {"command": "provePOStrategies", "key": "shift+backspace", "when": "editorTextFocus"},
+            {"command": "provePOStrategiesGUI", "key": "shift+delete", "when": "editorTextFocus"},
 
             {"command": "displayCIL_noannot", "key": "shift+space", "when": "editorTextFocus"},
             {"command": "displayCILProject_noannot", "key": "shift+tab", "when": "editorTextFocus"},
