@@ -11,12 +11,13 @@
     "main": "./out/extension",
     "contributes": {
         "keybindings": [
-            {"command": "provePO", "key": "shift+oem_8", "when": "editorTextFocus"},
-            {"command": "provePOStrategies", "key": "shift+oem_2", "when": "editorTextFocus"},
+            {"command": "provePO", "key": "shift+enter", "when": "editorTextFocus"},
+            {"command": "provePOStrategies", "key": "shift+backspace", "when": "editorTextFocus"},
 
-            {"command": "displayCIL", "key": "shift+right", "when": "editorTextFocus"},
-            {"command": "showLocalMetrics", "key": "shift+up", "when": "editorTextFocus"},
-            {"command": "computeCG", "key": "shift+down", "when": "editorTextFocus"}
+            {"command": "displayCIL_noannot", "key": "shift+space", "when": "editorTextFocus"},
+            {"command": "displayCILProject_noannot", "key": "shift+tab", "when": "editorTextFocus"},
+            {"command": "stop", "key": "shift+escape", "when": "editorTextFocus"}
+            
         ],
         "viewsContainers": {
             "panel": [{"id": "myPanel", "title": "WP Goals", "icon": "images/logo-frama-c.png"}]
