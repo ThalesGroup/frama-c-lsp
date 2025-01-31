@@ -61,7 +61,7 @@ export function activate(context: ExtensionContext) {
 			const fileUri = vscode.Uri.parse(fileNameOut);
 			const document = await workspace.openTextDocument(fileUri);
 			await languages.setTextDocumentLanguage(document, 'acsl');
-			const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
+			const editor = await window.showTextDocument(document, ViewColumn.One, true);
 			await client.sendNotification('displayCIL', filePath);
 		} catch (err) {
 			window.showErrorMessage('Failed to compute displayCIL: ' + err.message);
@@ -82,7 +82,7 @@ export function activate(context: ExtensionContext) {
 			const fileUri = vscode.Uri.parse(fileNameOut);
 			const document = await workspace.openTextDocument(fileUri);
 			await languages.setTextDocumentLanguage(document, 'acsl');
-			const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
+			const editor = await window.showTextDocument(document, ViewColumn.One, true);
 			await client.sendNotification('displayCIL_noannot', filePath);
 		} catch (err) {
 			window.showErrorMessage('Failed to compute displayCIL_noannot: ' + err.message);
@@ -102,7 +102,7 @@ export function activate(context: ExtensionContext) {
 			const fileUri = vscode.Uri.parse(fileNameOut);
 			const document = await workspace.openTextDocument(fileUri);
 			await languages.setTextDocumentLanguage(document, 'acsl');
-			const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
+			const editor = await window.showTextDocument(document, ViewColumn.One, true);
 			await client.sendNotification('displayCILProject');
 		} catch (err) {
 			window.showErrorMessage('Failed to compute displayCILProject: ' + err.message);
@@ -122,7 +122,7 @@ export function activate(context: ExtensionContext) {
 			const fileUri = vscode.Uri.parse(fileNameOut);
 			const document = await workspace.openTextDocument(fileUri);
 			await languages.setTextDocumentLanguage(document, 'acsl');
-			const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
+			const editor = await window.showTextDocument(document, ViewColumn.One, true);
 			await client.sendNotification('displayCILProject_noannot');
 		} catch (err) {
 			window.showErrorMessage('Failed to compute displayCILProject_noannot: ' + err.message);
@@ -165,7 +165,7 @@ export function activate(context: ExtensionContext) {
 			const newUri = Uri.parse('untitled:Proof Obligation');
 			const document = await workspace.openTextDocument(newUri);
 			await languages.setTextDocumentLanguage(document, 'plaintext');
-			const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
+			const editor = await window.showTextDocument(document, ViewColumn.One, true);
 
 			// delete previous content if any and set the content of the new document
 			editor.edit(editBuilder => {
@@ -195,7 +195,7 @@ export function activate(context: ExtensionContext) {
 				fileUri = vscode.Uri.parse(`${workspacePath}/.frama-c/${selectedItem.goal_id}.txt`);
 				const document = await workspace.openTextDocument(fileUri);
 				await languages.setTextDocumentLanguage(document, 'plaintext');
-				const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
+				const editor = await window.showTextDocument(document, ViewColumn.One, true);
 			}
 			else {vscode.window.showInformationMessage('No item selected');}
 		} catch (err) {
@@ -218,7 +218,7 @@ export function activate(context: ExtensionContext) {
 				const newUri = Uri.parse('untitled:Proof Obligation');
 				const document = await workspace.openTextDocument(newUri);
 				await languages.setTextDocumentLanguage(document, 'plaintext');
-				const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
+				const editor = await window.showTextDocument(document, ViewColumn.One, true);
 
 				// delete previous content if any and set the content of the new document
 				editor.edit(editBuilder => {
@@ -259,7 +259,7 @@ export function activate(context: ExtensionContext) {
 				fileUri = vscode.Uri.parse(`${workspacePath}/${selectedItem.script}`);
 				const document = await workspace.openTextDocument(fileUri);
 				await languages.setTextDocumentLanguage(document, 'plaintext');
-				const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
+				const editor = await window.showTextDocument(document, ViewColumn.One, true);
 			}
 			else {vscode.window.showInformationMessage('No item selected');}
 		} catch (err) {
@@ -586,7 +586,7 @@ export function activate(context: ExtensionContext) {
 			const fileUri = vscode.Uri.parse(filePath_metrics);
 			const document = await workspace.openTextDocument(fileUri);
 			await languages.setTextDocumentLanguage(document, 'plaintext');
-			const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
+			const editor = await window.showTextDocument(document, ViewColumn.One, true);
 			client.sendNotification('showLocalMetrics', filePath);
 		} catch (err) {
 			window.showErrorMessage('Failed to get local metrics: ' + err.message);
@@ -606,7 +606,7 @@ export function activate(context: ExtensionContext) {
 			const fileUri = vscode.Uri.parse(filePath);
 			const document = await workspace.openTextDocument(fileUri);
 			await languages.setTextDocumentLanguage(document, 'plaintext');
-			const editor = await window.showTextDocument(document, ViewColumn.Beside, true);
+			const editor = await window.showTextDocument(document, ViewColumn.One, true);
 			client.sendNotification('showGlobalMetrics');
 		} catch (err) {
 			window.showErrorMessage('Failed to get global metrics: ' + err.message);
