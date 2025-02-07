@@ -723,7 +723,11 @@ async function get_workspace(){
 		create_frama_c_folder(workspacePath);
 		return workspacePath;
 	} else {
-		const editor = vscode.window.activeTextEditor;
+		const currentFolder = process.cwd();
+		create_frama_c_folder(currentFolder);
+		return currentFolder
+
+/*		const editor = vscode.window.activeTextEditor;
 		if (editor) {
 			const fileUri = editor.document.uri;
 			const filePath = fileUri.fsPath;
@@ -740,9 +744,8 @@ async function get_workspace(){
 			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 			create_frama_c_folder(workspacePath);
 			return workspaceDir;
-		}
+		} */
 	}
-	
 }
 
 
