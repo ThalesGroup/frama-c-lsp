@@ -143,7 +143,7 @@
             "properties": {
                 "diagnostics.wp": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -wp", "default": false},
                 "wp.rte": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -wp-rte", "default": false},
-                "wp.prover": {"scope": "workspace", "type": "string", "default": "none", "description": "Frama-C option: -wp-prover"},
+                "wp.prover": {"scope": "workspace", "type": "string", "default": "script,alt-ergo", "description": "Frama-C option: -wp-prover"},
                 "wp.timeout": {"scope": "workspace", "type": "integer", "default": 4, "description": "Frama-C option: -wp-timeout"},
                 "wp.par": {"scope": "workspace", "type": "integer", "default": 4, "description": "Frama-C option: -wp-par"},
                 "wp.session": {"scope": "workspace", "type": "string", "default": "", "description": "Frama-C option: -wp-session"},
