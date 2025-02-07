@@ -567,7 +567,34 @@ let execute_command prog args feature =
         Unix.close wrapper_sock;
         data
     )
-
+  | _, "frama-c-gui" -> (
+    match feature with
+    | DidSave_feature
+    | ComputeCIL_feature
+    | ComputeCallGraph_feature _
+    | ComputeMetrics_feature ->
+      Lsp.Self.debug ~level:1 "Frama-C GUI ended !! \n%!";
+      let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Frama-C GUI ended !!") () in
+      let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
+      let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
+      Unix.close wrapper_sock;
+      data
+    | FindDefinition_feature (id, _, _, _)
+    | FindDeclaration_feature (id, _, _, _)
+    | ComputeProofObligation_feature (_, id, _, _, _)
+    | ComputeProofObligationID_feature (id, _) ->
+      Lsp.Self.debug ~level:1 "Frama-C GUI ended ! \n%!";
+      let lsp_response = Lsp_types.ResponseMessage.json_of_t (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:(`Null) ()) in
+      let data = Json.save_string lsp_response in
+      Unix.close wrapper_sock;
+      data
+    | Prove_feature (id, _, _, _) ->
+      Lsp.Self.debug ~level:1 "Frama-C GUI ended ! \n%!";
+      let lsp_response = Lsp_types.ResponseMessage.json_of_t (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:(`List [`String ""; `String ""; `List []]) ()) in
+      let data = Json.save_string lsp_response in
+      Unix.close wrapper_sock;
+      data
+    )
   | Unix.WEXITED _, _
   | Unix.WSIGNALED _, _
   | Unix.WSTOPPED _, _ ->

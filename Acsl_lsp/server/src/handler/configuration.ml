@@ -206,7 +206,7 @@ let global_params = ref
   ~wpRte:false
   ~wpCheckMemoryModel:false
   ~wpVolatile:false
-  ~wpProver: ""
+  ~wpProver: "script,alt-ergo"
   ~wpTimeout: 2
   ~wpSession: ""
   ~wpScript: ""
