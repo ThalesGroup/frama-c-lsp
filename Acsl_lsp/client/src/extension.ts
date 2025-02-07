@@ -52,7 +52,8 @@ export function activate(context: ExtensionContext) {
 		try {
 			const filePath = window.activeTextEditor.document.fileName;
     		const fileName = path.basename(filePath);   // Extract the file name
-			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+			const workspacePath = get_workspace ();
+			//  const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 			const fileNameOut = workspacePath + "/.frama-c/fc_" + fileName;
 			if (!fs.existsSync(fileNameOut)) {
 				try {fs.writeFileSync(fileNameOut, 'Task in progress ...')}
@@ -73,7 +74,8 @@ export function activate(context: ExtensionContext) {
 		try {
 			const filePath = window.activeTextEditor.document.fileName;
     		const fileName = path.basename(filePath);   // Extract the file name
-			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+			const workspacePath = get_workspace ();
+			// const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 			const fileNameOut = workspacePath + "/.frama-c/fc_" + fileName;
 			if (!fs.existsSync(fileNameOut)) {
 				try {fs.writeFileSync(fileNameOut, 'Task in progress ...')}
@@ -93,7 +95,8 @@ export function activate(context: ExtensionContext) {
 	const displayCILProject = commands.registerCommand('displayCILProject', async () => {
 		try {
     		const fileName = "project.c";   // Extract the file name
-			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+			const workspacePath = get_workspace ();
+			// const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 			const fileNameOut = workspacePath + "/.frama-c/fc_" + fileName;
 			if (!fs.existsSync(fileNameOut)) {
 				try {fs.writeFileSync(fileNameOut, 'Task in progress ...')}
@@ -113,7 +116,8 @@ export function activate(context: ExtensionContext) {
 	const displayCILProject_noannot = commands.registerCommand('displayCILProject_noannot', async () => {
 		try {
     		const fileName = "project.c";   // Extract the file name
-			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+			const workspacePath = get_workspace ();
+			// const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 			const fileNameOut = workspacePath + "/.frama-c/fc_" + fileName;
 			if (!fs.existsSync(fileNameOut)) {
 				try {fs.writeFileSync(fileNameOut, 'Task in progress ...')}
@@ -137,7 +141,8 @@ export function activate(context: ExtensionContext) {
     		const fileName = path.basename(filePath);   // Extract the file name
 			const extension = path.extname(filePath);  // Get the file extension
 			const fileNameBase = fileName.slice(0, -extension.length); // Remove the extension
-			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+			const workspacePath = get_workspace ();
+			// const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 			const filePathOut = workspacePath + "/.frama-c/fc_" + fileNameBase + ".dot.pdf";
 			// const filePathOut = workspacePath + "/.frama-c";
 			if (!fs.existsSync(filePathOut)) {
@@ -189,7 +194,8 @@ export function activate(context: ExtensionContext) {
 			const selectedItems = wpResultsView.selection;
         	if (selectedItems.length > 0) {
 				const selectedItem = selectedItems[0];
-				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+				const workspacePath = get_workspace ();
+				// const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 				// const uriScheme = vscode.env.remoteName;
 				let fileUri: vscode.Uri;
 				fileUri = vscode.Uri.parse(`${workspacePath}/.frama-c/${selectedItem.goal_id}.txt`);
@@ -253,7 +259,8 @@ export function activate(context: ExtensionContext) {
 			const selectedItems = wpResultsView.selection;
         	if (selectedItems.length > 0) {
 				const selectedItem = selectedItems[0];
-				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+				const workspacePath = get_workspace ();
+				// const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 				// const uriScheme = vscode.env.remoteName;
 				let fileUri: vscode.Uri;
 				fileUri = vscode.Uri.parse(`${workspacePath}/${selectedItem.script}`);
@@ -273,7 +280,8 @@ export function activate(context: ExtensionContext) {
 			const selectedItems = wpResultsView.selection;
         	if (selectedItems.length > 0) {
 				const selectedItem = selectedItems[0];
-				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+				const workspacePath = get_workspace ();
+				// const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 				const file_name = selectedItem.file_id;
 				const function_name = selectedItem.fct_id;
 				const property_name = selectedItem.prop_id;
@@ -307,7 +315,8 @@ export function activate(context: ExtensionContext) {
 			const selectedItems = wpResultsView.selection;
         	if (selectedItems.length > 0) {
 				const selectedItem = selectedItems[0];
-				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+				const workspacePath = get_workspace ();
+				// const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 				const file_name = selectedItem.file_id;
 				const function_name = selectedItem.fct_id;
 				const property_name = selectedItem.prop_id;
@@ -341,7 +350,8 @@ export function activate(context: ExtensionContext) {
 			const selectedItems = wpResultsView.selection;
         	if (selectedItems.length > 0) {
 				const selectedItem = selectedItems[0];
-				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+				const workspacePath = get_workspace ();
+				// const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 				const file_name = selectedItem.file_id;
 				const function_name = selectedItem.fct_id;
 				const property_name = selectedItem.prop_id;
@@ -375,7 +385,8 @@ export function activate(context: ExtensionContext) {
 			const selectedItems = wpResultsView.selection;
         	if (selectedItems.length > 0) {
 				const selectedItem = selectedItems[0];
-				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+				const workspacePath = get_workspace ();
+				// const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 				const file_name = selectedItem.file_id;
 				const function_name = selectedItem.fct_id;
 				const property_name = selectedItem.prop_id;
@@ -576,7 +587,8 @@ export function activate(context: ExtensionContext) {
 		try {
 			const filePath = window.activeTextEditor.document.fileName;
 			const file_name = "fc_metrics.txt";
-			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+			const workspacePath = get_workspace ();
+			// const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 			const filePath_metrics = workspacePath + "/.frama-c/" + file_name;
 			if (!fs.existsSync(filePath_metrics)) {
 				try {fs.writeFileSync(filePath_metrics, 'Task in progress ...')}
@@ -597,7 +609,8 @@ export function activate(context: ExtensionContext) {
 	const showGlobalMetrics = commands.registerCommand('showGlobalMetrics', async () => {
 		try {
 			const file_name = "fc_metrics.txt";
-			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+			const workspacePath = get_workspace ();
+			// const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 			const filePath = workspacePath + "/.frama-c/" + file_name;
 			if (!fs.existsSync(filePath)) {
 				try {fs.writeFileSync(filePath, 'Task in progress ...')}
@@ -646,7 +659,8 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 				let function_id = item_list[6].trim();
 				let property_id = item_list[7].trim();
 				let t_item = new TreeItem(verdict, goal_id + " " + stats, file_id, function_id, goal_id, script, filename_id, fct_id, prop_id, 'itemContext');
-				const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+				const workspacePath = get_workspace ();
+				// const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 				t_item.command = {
 					command: 'vscode.open',
 					arguments: [vscode.Uri.parse(workspacePath + "/" + file_id + "#L" + line)]
@@ -701,6 +715,24 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 	}
   }
 
+
+
+function get_workspace(){
+	if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
+		const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+		return workspacePath;
+	} else {
+		const editor = vscode.window.activeTextEditor;
+		if (editor) {
+			const fileUri = editor.document.uri;
+			const filePath = fileUri.fsPath;
+			const dirname = path.dirname(filePath);
+			return dirname;
+		} else {
+			return (path.resolve(__dirname));
+		}
+	}
+}
 
 // Function to open the directory in the system's file explorer
 function openDirectoryExternally(folderPath: string) {

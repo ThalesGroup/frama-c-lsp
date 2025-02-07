@@ -11,13 +11,13 @@
     "main": "./out/extension",
     "contributes": {
         "keybindings": [
-            {"command": "provePO", "key": "shift+enter", "when": "editorTextFocus"},
-            {"command": "provePOStrategies", "key": "shift+backspace", "when": "editorTextFocus"},
-            {"command": "provePOStrategiesGUI", "key": "shift+delete", "when": "editorTextFocus"},
+            {"command": "provePO", "key": "shift+enter", "when": "editorTextFocus && resourceLangId == acsl"},
+            {"command": "provePOStrategies", "key": "shift+backspace", "when": "editorTextFocus && resourceLangId == acsl"},
+            {"command": "provePOStrategiesGUI", "key": "shift+delete", "when": "editorTextFocus && resourceLangId == acsl"},
 
-            {"command": "displayCIL_noannot", "key": "shift+space", "when": "editorTextFocus"},
-            {"command": "displayCILProject_noannot", "key": "shift+tab", "when": "editorTextFocus"},
-            {"command": "stop", "key": "shift+escape", "when": "editorTextFocus"}
+            {"command": "displayCIL_noannot", "key": "shift+space", "when": "editorTextFocus && resourceLangId == acsl"},
+            {"command": "displayCILProject_noannot", "key": "shift+tab", "when": "editorTextFocus && resourceLangId == acsl"},
+            {"command": "stop", "key": "shift+escape", "when": "editorTextFocus && resourceLangId == acsl"}
             
         ],
         "viewsContainers": {
