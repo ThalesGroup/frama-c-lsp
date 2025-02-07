@@ -717,7 +717,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 
 
 
-function get_workspace(){
+async function get_workspace(){
 	if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
 		const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 		create_frama_c_folder(workspacePath);
@@ -729,13 +729,18 @@ function get_workspace(){
 			const filePath = fileUri.fsPath;
 			const dirname = path.dirname(filePath);
 			create_frama_c_folder(dirname);
+			const workspacePath = {uri: vscode.Uri.file(dirname), name: 'My Workspace'};
+			vscode.workspace.updateWorkspaceFolders(0, null, workspacePath);
 			return dirname;
 		} else {
 			const dirname = path.resolve(__dirname);
 			create_frama_c_folder(dirname);
+			const workspacePath = {uri: vscode.Uri.file(dirname), name: 'My Workspace'};
+			vscode.workspace.updateWorkspaceFolders(0, null, workspacePath);
 			return (path.dirname);
 		}
 	}
+	
 }
 
 
