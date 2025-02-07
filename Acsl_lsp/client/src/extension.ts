@@ -728,16 +728,18 @@ async function get_workspace(){
 			const fileUri = editor.document.uri;
 			const filePath = fileUri.fsPath;
 			const dirname = path.dirname(filePath);
-			create_frama_c_folder(dirname);
-			const workspacePath = {uri: vscode.Uri.file(dirname)};
-			vscode.workspace.updateWorkspaceFolders(0, null, workspacePath);
-			return dirname;
+			const workspaceDir = {uri: vscode.Uri.file(dirname)};
+			vscode.workspace.updateWorkspaceFolders(0, null, workspaceDir);
+			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+			create_frama_c_folder(workspacePath);
+			return workspaceDir;
 		} else {
 			const dirname = path.resolve(__dirname);
-			create_frama_c_folder(dirname);
-			const workspacePath = {uri: vscode.Uri.file(dirname)};
-			vscode.workspace.updateWorkspaceFolders(0, null, workspacePath);
-			return (path.dirname);
+			const workspaceDir = {uri: vscode.Uri.file(dirname)};
+			vscode.workspace.updateWorkspaceFolders(0, null, workspaceDir);
+			const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+			create_frama_c_folder(workspacePath);
+			return workspaceDir;
 		}
 	}
 	
