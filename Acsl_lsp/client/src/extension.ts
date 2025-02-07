@@ -717,7 +717,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 
 
 
-async function get_workspace(){
+function get_workspace(){
 	if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
 		const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
 		create_frama_c_folder(workspacePath);
