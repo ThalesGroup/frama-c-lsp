@@ -21,6 +21,7 @@ let sections = {| {"items": [
           {"section": "wp.noVolatile"},
           {"section": "wp.prover"},
           {"section": "wp.timeout"},
+          {"section": "wp.par"},
           {"section": "wp.session"},
           {"section": "wp.script"},
           {"section": "wp.cache"},
@@ -69,6 +70,7 @@ let sections = {| {"items": [
     wpVolatile : bool;
     wpProver : string;
     wpTimeout : int;
+    wpPar : int;
     wpSession : string;
     wpScript : string;
     wpCache : string;
@@ -115,6 +117,7 @@ let sections = {| {"items": [
     ~wpVolatile 
     ~wpProver
     ~wpTimeout
+    ~wpPar
     ~wpSession
     ~wpScript
     ~wpCache
@@ -161,6 +164,7 @@ let sections = {| {"items": [
       wpVolatile;
       wpProver;
       wpTimeout;
+      wpPar;
       wpSession;
       wpScript;
       wpCache;
@@ -208,6 +212,7 @@ let global_params = ref
   ~wpVolatile:false
   ~wpProver: "script,alt-ergo"
   ~wpTimeout: 2
+  ~wpPar: 4
   ~wpSession: ""
   ~wpScript: ""
   ~wpCache: ""
@@ -263,6 +268,7 @@ let save_configs (result:  Json.json) =
         `Bool json_wpVolatile;
         `String json_wpProver;
         `Int json_wpTimeout;
+        `Int json_wpPar;
         `String json_wpSession;
         `String json_wpScript;
         `String json_wpCache;
@@ -309,6 +315,7 @@ let save_configs (result:  Json.json) =
       ~wpVolatile: json_wpVolatile
       ~wpProver: json_wpProver
       ~wpTimeout: json_wpTimeout
+      ~wpPar: json_wpPar
       ~wpSession: json_wpSession
       ~wpScript: json_wpScript
       ~wpCache: json_wpCache

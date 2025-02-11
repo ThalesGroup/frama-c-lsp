@@ -23,44 +23,19 @@ let glob_visitor symbol declarations = object
         Cil.DoChildren
       
       | GVarDecl (vi, loc) -> 
-          (* if (String.equal symbol vi.vname) && (not vi.vformal) then *)
-          (* if (not vi.vformal) 
-            then Cil.DoChildren
-          else *)
         if (String.equal symbol vi.vname) then 
         begin
           declarations := loc :: !declarations;
-          (* (match vi.vlogic_var_assoc with 
-          | Some lvar -> 
-            (match lvar.lv_origin with 
-            | Some _ -> declarations := loc :: !declarations;
-            | None -> ())
-          | None -> ()); *)
         end; 
         Cil.DoChildren
       
       | GFunDecl (_,vi,loc) -> 
-        (* if (String.equal symbol vi.vname) && (not vi.vformal) then *)
         if (String.equal symbol vi.vname) then 
           begin
             declarations := loc :: !declarations;
           end;
         Cil.DoChildren
 
-      (* | GVar (vi, _, loc) -> 
-        if (String.equal symbol vi.vname) then
-          begin
-            declarations := loc :: !declarations;
-          end;
-        Cil.DoChildren
-      
-      | GFun (fd,loc) -> 
-        if (String.equal symbol fd.svar.vname) then
-          begin
-            declarations := loc :: !declarations;
-          end;
-        Cil.DoChildren *)
-    
       | _ -> Cil.DoChildren
   end
 
@@ -70,22 +45,10 @@ let vrbl_visitor symbol declarations = object
   method! vlval (lh,_) = 
     match lh with 
     | Var v -> 
-      (* Lsp.Self.debug ~level:1 "Lval : %s\n%!" (Pretty_utils.to_string Printer.pp_varinfo v); *)
       if (String.equal symbol v.vname) && (not v.vformal) then 
         declarations := v.vdecl :: !declarations;
       Cil.DoChildren;
-    | Mem _ -> 
-      (* Lsp.Self.debug ~level:1 "Exp : %s\n%!" (Pretty_utils.to_string Printer.pp_exp e); *)
-
-      (* match e.enode with 
-      | Const c -> 
-          (match c with 
-          | CStr s -> 
-            if (String.equal symbol s) = true then 
-              loca := Some e.eloc; Cil.DoChildren
-          | _ -> Cil.DoChildren)
-      | _ ->  *)
-        Cil.DoChildren;
+    | Mem _ -> Cil.DoChildren;
   end 
 
   

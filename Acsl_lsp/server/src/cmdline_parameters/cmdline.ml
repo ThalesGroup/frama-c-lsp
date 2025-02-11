@@ -9,14 +9,6 @@ module Enabled = Self.False
   let help = "when on (off by default), activates lsp support for ACSL/C"
 end)
 
-(* module Did_open = Self.String (* filename *)
-(struct
-  let option_name = "-lsp-did-open"
-  let help = "didOpen request"
-  let arg_name = "opened file"
-  let default = ""
-
-end) *)
 
 let () = Parameter_customize.do_not_projectify ()
 module Did_save = Self.False (* filename *)
@@ -25,15 +17,6 @@ module Did_save = Self.False (* filename *)
   let help = "Publish diagnostics each time a file is saved"
 end)
 
-(*
-module Did_close = Self.String (* filename *)
-(struct
-  let option_name = "-lsp-did-close"
-  let help = "didClose request"
-  let arg_name = "file"
-  let default = ""
-end)
- *)
 
 let () = Parameter_customize.do_not_projectify ()
 module Handler_opt = Self.False
@@ -65,13 +48,6 @@ module Find_decl = Self.String
   let default = ""
 end)
 
-(* module Find_comp = Self.String 
-(struct
-  let option_name = "-lsp-completion"
-  let help = "completion request"
-  let arg_name = "file:line:character"
-  let default = ""
-end) *)
 
 module Id = Self.Int
 (struct
@@ -141,12 +117,6 @@ let send_response plugin_sock response =
   let response_str = Printf.sprintf "Content-Length: %d\r\n\r\n%s" (String.length response) response in
   let chunk_size = 65530 in
   send_in_chunks plugin_sock response_str chunk_size
-  (*
-  let response_bytes = Bytes.of_string response_str in
-  let response_size = (String.length response_str) in
-  let sent = Unix.send plugin_sock response_bytes 0 response_size [] in
-  Self.debug ~level:2 "size : %d content : %s\n%!" sent response_str
-  *)
 
 let send_response_list plugin_sock response_list =
   let response_list = List.rev response_list in
@@ -214,12 +184,6 @@ let get_Prove_args () =
 let get_active_option () =
   let active_options = ref [] in
   if is_active_DidSave () then active_options := Lsp_handler.DidSave_feature :: !active_options;
-  (*
-  (match get_DidClose_args () with
-  | None -> ()
-  | Some (file) -> active_options := Lsp_handler.DidClose_feature(file) :: !active_options
-  );
-  *)
   (match get_FindDefinition_args () with
   | None -> ()
   | Some (id, file, line, ch) -> active_options := Lsp_handler.FindDefinition_feature(id, file, line, ch) :: !active_options
@@ -272,21 +236,6 @@ let diagnostics_handler (event : Log.event) =
     in
     let diag_list = DidSave.StringMap.find_opt !publish_to !DidSave.diag_map in
     let diag_list = match diag_list with | None -> [] | Some l -> l in
-    (*
-    if (Utils.contains msg ~suffix:"syntax error" 
-      || Utils.contains msg ~suffix:"There were parsing errors in"
-      || Utils.contains msg ~suffix:"User Error"
-      || Utils.contains msg ~suffix:"invalid user input"
-      || Utils.contains msg ~suffix:"Invalid symbol"
-      || Utils.contains msg ~suffix:"before or at token"
-    ) then
-      (
-      Lsp.Self.debug ~level:1 "Error caught \n%!";
-      let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
-      DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
-      )
-    else
-      *)
     match event.evt_kind with 
     | Log.Error ->  
       Lsp.Self.debug ~level:1 "Error\n%!";
@@ -362,7 +311,6 @@ let run () =
       let feature = get_active_option () in
       match feature with
       | Some Lsp_handler.DidSave_feature -> let data = List.map Json.save_string (DidSave.handle ()) in Lsp.Self.feedback ~level:1 "Updated Diagnostics !\n%!"; send_result data
-      (*| Some Lsp_handler.DidClose_feature(file) -> [Json.save_string (DidClose.handle (file))] *)
       | Some Lsp_handler.FindDefinition_feature(id, file, line, ch) -> let data = [(Definition.find id file line ch)] in Lsp.Self.feedback ~level:1 "Find definition attempt done !\n%!"; send_result data
       | Some Lsp_handler.FindDeclaration_feature(id, file, line, ch) -> let data = [(Declaration.find id file line ch)] in Lsp.Self.feedback ~level:1 "Find declaration attempt done !\n%!"; send_result data
       | Some Lsp_handler.ComputeCIL_feature -> send_result []

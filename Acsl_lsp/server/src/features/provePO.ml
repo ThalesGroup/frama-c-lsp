@@ -34,19 +34,13 @@ let get_property_status id file fct prop: string =
   let verdict_msg = ref [] in
   Wp.Wpo.iter_on_goals (fun po -> 
     Lsp.Self.debug ~level:1 "gid:%s label:%s done!\n%!" (Wp.Wpo.get_gid po) (Wp.Wpo.get_label po);
-    (* let prover_result_list = (Wp.Wpo.get_results po) in
-    let prover_result_list = (List.map (fun (p, r) -> (Printf.sprintf "%s==>%s" (Pretty_utils.to_string Wp.VCS.pp_prover p) (Pretty_utils.to_string Wp.VCS.pp_result r))) prover_result_list) in
-    let prover_results = String.concat " " prover_result_list in *)
     let stats = Wp.ProofEngine.consolidated po in
     let prover_results = (Pretty_utils.to_string Wp.Stats.pretty stats) in
     let proof_status, property = (Wp.Wpo.get_proof po) in
     let function_name = match Wp.Wpo.get_index po with
     | Axiomatic _a -> "@axiomatic"
     | Function (kf, _) -> Ast_info.Function.get_name kf.fundec
-    (*| Function (kf, s) -> Pretty_utils.to_string (fun x y -> Wp.Wpo.pp_function x y s) kf *)
     in
-    (* let property_name = Property.Names.get_prop_name_id property in *)
-    (* let property_name = Property.Names.get_prop_basename property in *)
     let property_name = match Property.get_names property with 
     [] -> "No labels given"
     | l :: _ -> l
@@ -59,8 +53,6 @@ let get_property_status id file fct prop: string =
     in 
     let goal_id = Wp.Wpo.get_gid po in
     let po_file = Printf.sprintf "%s/%s.txt" root_dir goal_id in
-    (* let po_str = (Pretty_utils.to_string (Wp.Wpo.pp_goal) po) in *)
-    (* let po_str = (Pretty_utils.to_string (Wp.Wpo.pp_goal_flow) po) in *)
     let po_tree = Wp.ProofEngine.proof ~main:po in
     let po_node = Wp.ProofEngine.root po_tree in
     let rec get_leaves acc node =
@@ -69,7 +61,6 @@ let get_property_status id file fct prop: string =
       | l -> (List.fold_left get_leaves acc l)
     in
     let po_node_list = get_leaves [] po_node in
-    (* let po_node_list = Wp.ProofEngine.children po_node in *)
     let get_tactics po_node =
       let po_path = Wp.ProofEngine.path po_node in
       let po_tactics = List.map (fun x -> match Wp.ProofEngine.tactic_label x with None -> "." | Some s -> s) po_path in

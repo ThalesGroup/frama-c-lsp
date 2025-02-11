@@ -5,50 +5,25 @@ let server_port = 8005
 let defaultProtocolType = 0
 let addr = Unix.inet_addr_of_string "127.0.0.1"
 
-(*
-module StringLoc = struct
-  type t = string * Log.event
-
-  let compare (x0, y0) (x1 , y1) : (string * Log.event) -> (string * Log.event) -> int =
-    match String.compare x0 x1 with
-      | 0 ->
-        let msg_0 = y0.evt_message in
-        let msg_1 = y1.evt_message in
-        (match String.compare msg_0 msg_1 with
-          | 0 ->
-            let src_0 = y0.evt_source in
-            let src_1 = y1.evt_source in
-            (match src_0, src_1 with
-            | None, None -> 0
-            | None, Some _ -> -1
-            | Some _, None -> 1
-            | Some pos_0, Some pos_1 ->
-              (match Stdlib.compare pos_0.pos_lnum pos_1.pos_lnum with
-                | 0 -> (match Stdlib.compare pos_0.pos_bol pos_1.pos_bol with
-                        | 0 -> Stdlib.compare pos_0.pos_cnum pos_1.pos_cnum 
-                        | c -> c)
-                | c -> c))
-          | c -> c)
-      | c -> c
-end
-
-module StringLocMap = Map.Make(StringLoc)
-*)
-
-
-
 let getnumber str = 
   let regex = Str.regexp {|[0-9]+|} in 
   ignore (Str.search_forward regex str 0);
   int_of_string (Str.matched_string str)
 
-let send_request server_sock response =
+let rec send_request server_sock response =
   let response_str = Printf.sprintf "Content-Length: %d\r\n\r\n%s" (String.length response) response in
   Lsp.Self.debug ~level:1 "Size of response : %d, Response: %s\n%!" (String.length response_str) response_str;
   let response_bytes = Bytes.of_string response_str in
   if ((Bytes.length response_bytes) < 65530) then
     let sent = Unix.send server_sock response_bytes 0 (Bytes.length response_bytes) [] in
     Lsp.Self.debug ~level:1 "Size of sent content : %d\n%!" sent
+  else (
+    Lsp.Self.debug ~level:1 "Too long message can not be sent ! ";
+    let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Error ~message: "Too long message can not be sent !!" () in
+    let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
+    let json_notification = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
+    send_request server_sock json_notification;
+  )
 
 let update_empty_diagnostics string_json =
   Lsp.Self.debug ~level:2 "json data: %s\n" string_json;
@@ -139,19 +114,15 @@ let connect () =
   Lsp.Self.debug ~level:1 "Connecting on port %d\n%!" server_port;
   let (ic, oc) = Unix.open_connection (Unix.ADDR_INET (addr, server_port)) in 
   Lsp.Self.feedback ~level:1 "Connected on port %d\n%!" server_port;
-  (* let plugin_lst = Config_data.Plugins.Plugins.list () in
-  List.iter (Lsp.Self.feedback ~level:1 "plugin: %s") plugin_lst; *)
   let server_sock = Unix.descr_of_in_channel ic in
   while true do
     let pid = handle_request server_sock in
     flush oc;
     if (pid = 0) then (Lsp.Self.debug ~level:1 "Exit of SUB PROCESS !!!!" ; Unix._exit 0)
-    (* else if (pid = 1) then () *)
     else (
       try
         let pid, _status = Unix.waitpid [Unix.WNOHANG] (-1) in
         if (pid = !Lsp_handler.fork_pid) then Lsp_handler.fork_pid := 0;
       with _ -> ()
       )
-    (*  pid_set := IntSet.remove pid !pid_set; *)
   done;

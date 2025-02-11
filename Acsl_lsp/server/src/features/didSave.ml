@@ -85,33 +85,5 @@ let handle () : Json.json list =
     data
   )
 
-  (*
-  Log.add_listener ~plugin:"kernel" (diagnostics_handler);
-  Lsp.Self.debug ~level:1 "kernel listener added\n%!";
-  Log.add_listener ~plugin:"wp" (diagnostics_handler);
-  Lsp.Self.debug ~level:1 "wp listener added\n%!";
-  *)
-
-  (* file := filename; *)
-  (* let filepath = Filepath.Normalized.of_string filename in *)
-  (* let _file = File.from_filename (filepath) in *)
-  (* Kernel.Files.unsafe_set [filepath]; *)
-  (* try *)
-    (* Project.set_current (Project.create "didSave"); *)
-    (* Kernel.Unicode.off (); *)
-    (* File.init_from_c_files [_file]; *)
-    (* Ast.compute(); *)
-    (* Wp.Wp_parameters.RTE.on (); *)
-    (* Wp.Wp_parameters.RTE.mark_as_computed (); *)
-    (* let factory_setup = Wp.Generator.user_setup () in *)
-    (* let generator = Wp.Generator.create ~setup:factory_setup () in *)
-    (* let _proof_obligations = generator#compute_main() in *)
-    (* StringMap.fold publishDiagnostics_notification !diag_map [] *)
-
-  (* with *)
-  (* | _exn -> *)
-    (* Lsp.Self.debug ~level:1 "DidSave error :  %s, Backtrace : %s\n%!" (Printexc.exn_slot_name _exn) (Printexc.get_backtrace ()); *)
-    (* StringMap.fold publishDiagnostics_notification !diag_map [] *)
-
   
 

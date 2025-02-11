@@ -1,20 +1,5 @@
-(*
-            "completionProvider": {
-              "triggerCharacters": [],
-              "allCommitCharacters": [],
-              "resolveProvider": false,
-              "completionItem": {
-                "labelDetailsSupport": false
-              }
-            },
-*)
 
 let initialize : Json.json = 
-
-    
-    (* List.iter (fun x ->
-      Lsp.Self.debug ~level:1 "warn category : %s\n%!" x
-    ) PublishDiagnostics.evt_categories; *)
 
       let result = {|{
         "jsonrpc": "2.0",
@@ -49,4 +34,3 @@ let initialize : Json.json =
       }|}
       in
       Json.load_string result
-      (* todo : get uri of first and only path in workspaceFolders array *)
