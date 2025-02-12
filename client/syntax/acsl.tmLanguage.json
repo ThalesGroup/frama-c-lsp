@@ -1,6 +1,5 @@
 {
-	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-	"name": "Lite ACSL language support for Visual Studio Code",
+	"name": "ACSL language support for Visual Studio Code",
 	"patterns": [
 		{ "include": "#annotation" },
 		{ "include": "#inline-annotation" },
