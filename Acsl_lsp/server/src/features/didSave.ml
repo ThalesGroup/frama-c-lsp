@@ -1,3 +1,9 @@
+(*
+ * File Name: didSave.ml
+ * Purpose: Module for "Did Save" feature of the Language Server Protocol.
+ * Authors: Djamila MOHAMED, Adel DJOUDI
+ * Licence: GNU GENERAL PUBLIC LICENSE (GPL)
+*)
 
 module StringMap = Map.Make(String)
 

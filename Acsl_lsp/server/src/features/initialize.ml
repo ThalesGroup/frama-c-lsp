@@ -1,3 +1,9 @@
+(*
+ * File Name: initialize.ml
+ * Purpose: Definition of server capabilities compliant with the Language Server Protocol.
+ * Authors: Djamila MOHAMED, Adel DJOUDI
+ * Licence: GNU GENERAL PUBLIC LICENSE (GPL)
+*)
 
 let initialize : Json.json = 
 

@@ -1,4 +1,9 @@
-
+(*
+ * File Name: showPOVC.ml
+ * Purpose: Module for "Show property" feature specific to VsCode.
+ * Authors: Djamila MOHAMED, Adel DJOUDI
+ * Licence: GNU GENERAL PUBLIC LICENSE (GPL)
+*)
 
 let get_all () : Json.json = 
   let proof_oblgs = ref [] in

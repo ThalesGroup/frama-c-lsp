@@ -1,8 +1,11 @@
+(*
+ * File Name: declaration.ml
+ * Purpose: Module for "Go To Declaration" feature of the Language Server Protocol.
+ * Authors: Djamila MOHAMED, Adel DJOUDI
+ * Licence: GNU GENERAL PUBLIC LICENSE (GPL)
+*)
 
-(** 
-    Description : 
-    Module for Go To Declaration feature of the Language Server Protocol.
-
+(*
     Version : 1.0
     - Finds C function, variable, struct, union and enum declarations
     - If several declarations exist for the same func/var, it will go to the first include file listed at the beginning

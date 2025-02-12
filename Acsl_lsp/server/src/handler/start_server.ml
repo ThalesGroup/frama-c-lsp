@@ -1,3 +1,10 @@
+(*
+ * File Name: start_server.ml
+ * Purpose: Ensure sustainable connection between server and client.
+ * Authors: Djamila MOHAMED, Adel DJOUDI
+ * Licence: GNU GENERAL PUBLIC LICENSE (GPL)
+*)
+
 let server_port = 8005
 (* let wrapper_port = 8006 *)
 (* let maxContLenBufSize = 50 *)

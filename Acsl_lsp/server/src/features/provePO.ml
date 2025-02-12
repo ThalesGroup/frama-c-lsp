@@ -1,3 +1,9 @@
+(*
+ * File Name: provePO.ml
+ * Purpose: Module for "Prove property" feature specific to VsCode.
+ * Authors: Djamila MOHAMED, Adel DJOUDI
+ * Licence: GNU GENERAL PUBLIC LICENSE (GPL)
+*)
 
 
 let get_all () : Json.json = 

@@ -1,3 +1,10 @@
+(*
+ * File Name: didClose.ml
+ * Purpose: Module for "Did Close" feature of the Language Server Protocol (TBD).
+ * Authors: Djamila MOHAMED
+ * Licence: GNU GENERAL PUBLIC LICENSE (GPL)
+*)
+
 let clear_diagnostics filename =
   let normalized_filename = Utils.file_str (Filepath.Normalized.of_string (Filepath.normalize filename)) in
   

@@ -1,3 +1,10 @@
+(*
+ * File Name: configuration.ml
+ * Purpose: Declaration of workspace configuration.
+ * Authors: Djamila MOHAMED, Adel DJOUDI
+ * Licence: GNU GENERAL PUBLIC LICENSE (GPL)
+*)
+
 let sections = {| {"items": [
           {"section": "kernel.lspDebug"}, 
           {"section": "kernel.includePaths"},

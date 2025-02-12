@@ -1,5 +1,8 @@
 (*
-  LSP API
+ * File Name: lsp.ml
+ * Purpose: LSP module registration
+ * Authors: Djamila MOHAMED
+ * Licence: GNU GENERAL PUBLIC LICENSE (GPL)
 *)
 
 module Self = Plugin.Register 

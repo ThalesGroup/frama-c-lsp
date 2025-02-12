@@ -1,3 +1,10 @@
+(*
+ * File Name: cmdline.ml
+ * Purpose: Handle all LSP plugin options
+ * Authors: Djamila MOHAMED, Adel DJOUDI
+ * Licence: GNU GENERAL PUBLIC LICENSE (GPL)
+*)
+
 module Self = Lsp.Self
 
 let plugin_sock = (Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0)

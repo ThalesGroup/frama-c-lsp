@@ -1,13 +1,15 @@
+(*
+ * File Name: definition.ml
+ * Purpose: Module for "Go To Definition" feature of the Language Server Protocol.
+ * Authors: Djamila MOHAMED, Adel DJOUDI
+ * Licence: GNU GENERAL PUBLIC LICENSE (GPL)
+*)
 
-(** 
-    Description : 
-    Module for Go To Definition feature of the Language Server Protocol.
-
+(*
     Version : 1.0
     - Finds frama_c terms and predicates (valid_read_string, valid_string, minimum, maximum, ...)
     - Finds user defined terms and predicates
     - Finds C function, struct, union and enum definitions
-
 *)
 
 let glob_visitor loca symbol = object 

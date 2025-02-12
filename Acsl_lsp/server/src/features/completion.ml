@@ -1,3 +1,11 @@
+(*
+ * File Name: completion.ml
+ * Purpose: Module for "Completion" feature of the Language Server Protocol (TBD).
+ * Authors: Djamila MOHAMED
+ * Licence: GNU GENERAL PUBLIC LICENSE (GPL)
+*)
+
+
 let acsl_keywords = 
   [
     ("admits", Lsp_types.CompletionItemKind.Folder);
@@ -84,61 +92,3 @@ let json_of_completions (completions : (string * Lsp_types.CompletionItemKind.t)
     (Json.of_list (json_of_completions completions))
     ()
   )
-
-
-
-
-
-
-
-
-
-
-(* pseudo code :
-  for line in file :
-    if line contains "/*@":
-      start_line = line
-    if line contains "*/":
-      end_line = line
-    
-    return pos.line >= start_line && pos.line <= end_line
-*)
-(* let is_in_acsl_block (filename : string) (line : int) : bool =
-  let ic = open_in filename in
-  let start_line = ref 0 in
-  let end_line = ref 0 in
-  let cnt = ref (-1) in
-  let curr_line = ref "" in
-  let acsl_block_started = ref false in
-  let res = ref false in
-  Lsp.Self.debug ~level:1 "Requested line: %d\n%!" line;
-
-  try 
-    while true do
-      cnt := !cnt + 1;
-      curr_line := Stdlib.input_line ic;
-      match Utils.contains !curr_line ~suffix:"/*@" with
-      | true ->  
-          Lsp.Self.debug ~level:1 "Found beginning of acsl block: %d\n%!" !cnt;
-          start_line := !cnt;
-          acsl_block_started := true;
-      | false -> 
-        (match Utils.contains !curr_line ~suffix:"*/" with 
-        | true ->
-            Lsp.Self.debug ~level:1 "Found end of acsl block: %d\n%!" !cnt;
-            end_line := !cnt;
-            acsl_block_started := false; 
-            res := !res || (line >= !start_line && line <= !end_line) ; (* todo : how to interrupt the loop when found *)
-            (match !res with 
-            | true -> Lsp.Self.debug ~level:1 "Is in acsl block\n%!";
-            | false -> Lsp.Self.debug ~level:1 "Is not in acsl block\n%!";)
-        | false -> ();)
-        done;
-        Stdlib.close_in ic;
-        !res
-    with _ -> 
-      Lsp.Self.debug ~level:1 "END OF FILE REACHED FOR ACSL BLOCK CHECK\n%!";
-      Stdlib.close_in ic;
-      !res *)
-
- 

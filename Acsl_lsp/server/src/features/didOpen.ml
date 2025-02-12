@@ -1,4 +1,9 @@
-
+(*
+ * File Name: didOpen.ml
+ * Purpose: Module for "Did Open" feature of the Language Server Protocol (TBD).
+ * Authors: Djamila MOHAMED
+ * Licence: GNU GENERAL PUBLIC LICENSE (GPL)
+*)
 
 let file = ref ""
 let diag_list = ref []

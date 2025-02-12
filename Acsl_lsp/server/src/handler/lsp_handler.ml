@@ -1,3 +1,10 @@
+(*
+ * File Name: lsp_handler.ml
+ * Purpose: Handle all requests/notifications
+ * Authors: Djamila MOHAMED, Adel DJOUDI
+ * Licence: GNU GENERAL PUBLIC LICENSE (GPL)
+*)
+
 
 let rootPath = ref ""
 let receivedShutdown = ref false
