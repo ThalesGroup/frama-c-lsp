@@ -1,12 +1,14 @@
 {
     "name": "vscodeacsl",
-    "displayName": "ACSL/C",
-    "description": "Visual Studio Code Client for ACSL Language Server",
     "version": "0.1.0",
+    "publisher": "innov-org",
+    "engines": {"vscode": "^1.85.0"},
+    "description": "Visual Studio Code Client for ACSL Language Server",
+    "license": "SEE LICENCE IN LICENSE.md",
+    "displayName": "frama-c-acsl-lsp",
     "repository": {"type": "git", "url": "https://bitbucket.gemalto.com/users/t0244734/repos/acsl_lsp/browse/Acsl_lsp"},
     "categories": ["Programming Languages"],
     "keywords": ["acsl", "c", "frama-c"],
-    "engines": {"vscode": "^1.85.0"},
     "activationEvents": ["onLanguage:acsl"],
     "main": "./out/extension",
     "contributes": {
