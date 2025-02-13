@@ -10,6 +10,7 @@
     "categories": ["Programming Languages"],
     "keywords": ["acsl", "c", "frama-c"],
     "activationEvents": ["onLanguage:acsl"],
+    "icon": "images/logo-frama-c.png",
     "main": "./out/extension",
     "contributes": {
         "keybindings": [
