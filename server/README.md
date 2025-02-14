@@ -20,7 +20,11 @@ It is a Frama-C plugin that aims to offer an enhanced coding experience with fun
 
 
 ## Installation
-From root directory run:
+
+### Via opam
+opam pin add .
+
+### Manual installation
 dune build
 dune install
 
