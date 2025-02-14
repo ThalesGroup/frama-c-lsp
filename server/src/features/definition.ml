@@ -40,7 +40,7 @@ let glob_visitor loca symbol = object
           loca := Some loc;
         Cil.DoChildren
       | GVar (vi, _, loc) -> 
-          Lsp.Self.debug ~level:1 "var : %s, symbol : %s \n%!" vi.vname symbol;
+          Options.Self.debug ~level:1 "var : %s, symbol : %s \n%!" vi.vname symbol;
           if (String.equal symbol vi.vname) then
           begin
             loca := Some loc;
@@ -51,7 +51,7 @@ let glob_visitor loca symbol = object
       | GFun (fd,loc) -> 
         if (String.equal symbol fd.svar.vname;) then
           begin
-            Lsp.Self.debug ~level:1 "fun : %s\n%!" fd.svar.vname;
+            Options.Self.debug ~level:1 "fun : %s\n%!" fd.svar.vname;
             loca := Some loc;
           end;
         Cil.DoChildren
@@ -60,40 +60,40 @@ let glob_visitor loca symbol = object
           loca := Some loc;
         Cil.DoChildren
       | GPragma (_,_) -> 
-        Lsp.Self.debug ~level:1 "Pragma : %s\n%!" (Pretty_utils.to_string Printer.pp_global g);
+        Options.Self.debug ~level:1 "Pragma : %s\n%!" (Pretty_utils.to_string Printer.pp_global g);
         Cil.DoChildren
       | GAnnot (ga, _) -> 
         (match ga with 
         | Dinvariant (li, loc) -> 
           if (String.equal symbol li.l_var_info.lv_name) then
             begin
-              Lsp.Self.debug ~level:1 "invariant : %s\n%!" li.l_var_info.lv_name;
+              Options.Self.debug ~level:1 "invariant : %s\n%!" li.l_var_info.lv_name;
               loca := Some loc;
             end;
           Cil.DoChildren;
         | Dtype (lti, loc) -> 
           if (String.equal symbol lti.lt_name) then
             begin
-              Lsp.Self.debug ~level:1 "logic type : %s\n%!" lti.lt_name;
+              Options.Self.debug ~level:1 "logic type : %s\n%!" lti.lt_name;
               loca := Some loc;
             end;
           Cil.DoChildren
         | Dtype_annot (li, loc) -> 
           if (String.equal symbol li.l_var_info.lv_name) then
             begin
-              Lsp.Self.debug ~level:1 "type annot : %s\n%!" li.l_var_info.lv_name;
+              Options.Self.debug ~level:1 "type annot : %s\n%!" li.l_var_info.lv_name;
               loca := Some loc;
             end;
           Cil.DoChildren
         | Dfun_or_pred (li,loc) ->
           if (String.equal symbol li.l_var_info.lv_name) then
             begin
-              Lsp.Self.debug ~level:1 "fun or pred : %s\n%!" li.l_var_info.lv_name;
+              Options.Self.debug ~level:1 "fun or pred : %s\n%!" li.l_var_info.lv_name;
               loca := Some loc;
             end;
           Cil.DoChildren
         | Dlemma (str,_,_,_,_,loc) ->
-          Lsp.Self.debug ~level:1 "lemma : %s\n%!" str;
+          Options.Self.debug ~level:1 "lemma : %s\n%!" str;
           if (String.equal symbol str) then
             begin
               loca := Some loc;
@@ -132,9 +132,9 @@ let print_attrs () =
     List.iter (fun (attr : Cil_types.attribute) -> 
       match attr with 
       | Attr (name, params) -> 
-        Lsp.Self.debug ~level:1 "attribute : %s\n%!" name;
+        Options.Self.debug ~level:1 "attribute : %s\n%!" name;
         List.iter (fun (param : Cil_types.attrparam) ->
-          Lsp.Self.debug ~level:1 "Attr param : %s\n%!" (Pretty_utils.to_string Printer.pp_attrparam param)
+          Options.Self.debug ~level:1 "Attr param : %s\n%!" (Pretty_utils.to_string Printer.pp_attrparam param)
         ) params;
       | _ -> ()
     ) (Cil.global_attributes glob)

@@ -135,7 +135,7 @@ let diagnostics_handler (event : Log.event) =
   else
   match event.evt_kind with 
   | Log.Error ->  
-    Lsp.Self.debug ~level:1 "Error\n%!";
+    Options.Self.debug ~level:1 "Error\n%!";
     diag_list :=  (diagnostic
         (loc)
         Lsp_types.DiagnosticSeverity.Error 
@@ -143,7 +143,7 @@ let diagnostics_handler (event : Log.event) =
         event.evt_plugin
         )::!diag_list
   | Log.Failure ->
-      Lsp.Self.debug ~level:1 "Failure\n%!";
+      Options.Self.debug ~level:1 "Failure\n%!";
       diag_list :=  (diagnostic 
         (loc)
         Lsp_types.DiagnosticSeverity.Error 
@@ -151,19 +151,19 @@ let diagnostics_handler (event : Log.event) =
         event.evt_plugin
         )::!diag_list
   | Log.Warning -> 
-    Lsp.Self.debug ~level:1 "Warning\n%!";
+    Options.Self.debug ~level:1 "Warning\n%!";
     diag_list :=  (diagnostic 
         (loc)
         Lsp_types.DiagnosticSeverity.Warning 
         (escape_double_quotes (escape_unicode msg))
         event.evt_plugin
         )::!diag_list;
-(* Lsp.Self.debug ~level:1 "diags handler warning : nb diags = %d\n%!" (List.length !diag_list); *)
+(* Options.Self.debug ~level:1 "diags handler warning : nb diags = %d\n%!" (List.length !diag_list); *)
 
   | Log.Result -> 
-    Lsp.Self.debug ~level:1 "Result\n%!";
+    Options.Self.debug ~level:1 "Result\n%!";
   | Log.Debug -> 
-    Lsp.Self.debug ~level:1 "Debug\n%!";
+    Options.Self.debug ~level:1 "Debug\n%!";
     diag_list := ( (diagnostic
         (loc)
         Lsp_types.DiagnosticSeverity.Information 
@@ -171,7 +171,7 @@ let diagnostics_handler (event : Log.event) =
         event.evt_plugin
         ))::!diag_list
   | Log.Feedback ->
-    Lsp.Self.debug ~level:1 "Feedback\n%!";
+    Options.Self.debug ~level:1 "Feedback\n%!";
       ()
 
 let remove_file_scheme uri =
@@ -189,7 +189,7 @@ let remove_newline str =
 
 let handle filename : Json.json = 
   Log.add_listener (diagnostics_handler);
-  Lsp.Self.debug ~level:1 "listener added\n%!";
+  Options.Self.debug ~level:1 "listener added\n%!";
 
   file := filename;
 

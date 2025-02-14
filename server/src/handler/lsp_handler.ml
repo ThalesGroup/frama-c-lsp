@@ -421,11 +421,11 @@ let getnumber str =
 
 let send_request server_sock response =
   let response_str = Printf.sprintf "Content-Length: %d\r\n\r\n%s" (String.length response) response in
-  Lsp.Self.debug ~level:1 "Size of response : %d, Response: %s\n%!" (String.length response_str) response_str;
+  Options.Self.debug ~level:1 "Size of response : %d, Response: %s\n%!" (String.length response_str) response_str;
   let response_bytes = Bytes.of_string response_str in
   if ((Bytes.length response_bytes) < 65530) then
     let sent = Unix.send server_sock response_bytes 0 (Bytes.length response_bytes) [] in
-    Lsp.Self.debug ~level:1 "Size of sent content : %d\n%!" sent
+    Options.Self.debug ~level:1 "Size of sent content : %d\n%!" sent
 
 let readcontlen sock : string = 
   let contlenbuf = Bytes.create 1 in
@@ -456,7 +456,7 @@ let update_diag_data msg severity =
         | filename :: pos :: _ -> filename, (Stdlib.int_of_string pos)
         | _ -> "", 0
     in
-    Lsp.Self.debug ~level:1 "\t%s ---- %d\n%!" (filename) pos;
+    Options.Self.debug ~level:1 "\t%s ---- %d\n%!" (filename) pos;
     let pos = Utils.to_filepath_position filename pos 0 in
     let loc = Utils.real_loc (pos, pos) in
     let source = "kernel" in
@@ -473,7 +473,7 @@ let update_diag_data msg severity =
 let rec had_errors_in_channel oc =
   try
     let msg = Stdlib.input_line oc in
-    Lsp.Self.feedback ~level:1 "\t%s\n%!" (msg);
+    Options.Self.feedback ~level:1 "\t%s\n%!" (msg);
     if (Utils.contains msg ~suffix: "FRAMA-C EXIT CODE: 0") then false
     else if (Utils.contains msg ~suffix: ": fatal error:") then (
       update_diag_data msg Lsp_types.DiagnosticSeverity.Error;
@@ -488,19 +488,19 @@ let rec had_errors_in_channel oc =
       update_diag_data msg Lsp_types.DiagnosticSeverity.Warning;
       had_errors_in_channel oc)
     else had_errors_in_channel oc
-  with End_of_file -> Lsp.Self.debug ~level:1 "\n%!"; true
+  with End_of_file -> Options.Self.debug ~level:1 "\n%!"; true
 
 
   let read_socket_in_chunks socket chunk_size =
     let buffer = Bytes.create chunk_size in
     let rec read_data accumulated_data =
       let bytes_received = Unix.read socket buffer 0 chunk_size in
-      Lsp.Self.debug ~level:2 "Read chunk size %d: \n%!" bytes_received;
+      Options.Self.debug ~level:2 "Read chunk size %d: \n%!" bytes_received;
       if bytes_received = 0 then
         accumulated_data  (* Connection closed *)
       else
         let chunk = Bytes.sub_string buffer 0 bytes_received in
-        Lsp.Self.debug ~level:2 "Read chunk %s: \n%!" chunk;
+        Options.Self.debug ~level:2 "Read chunk %s: \n%!" chunk;
         read_data (accumulated_data ^ chunk)  (* Accumulate the data *)
     in
     read_data ""
@@ -528,7 +528,7 @@ let execute_command prog args feature =
   let _ = had_errors_in_channel ec in
   let status  = Unix.close_process_full (ic, oc, ec) in
   let special_errors = DidSave.StringMap.fold get_notification_list !DidSave.diag_map [] in
-  Lsp.Self.debug ~level:1 "Read ic completed !!!\n%!";
+  Options.Self.debug ~level:1 "Read ic completed !!!\n%!";
   match status, prog with
   | Unix.WEXITED 0, "frama-c" ->
     (
@@ -539,7 +539,7 @@ let execute_command prog args feature =
       | ComputeProofObligation_feature (_, _, _, _, _)
       | ComputeProofObligationID_feature (_, _)
       | Prove_feature (_, _, _, _) ->
-      Lsp.Self.debug ~level:1 "Executed frama-c command (frama-c exited normally)\n%!";
+      Options.Self.debug ~level:1 "Executed frama-c command (frama-c exited normally)\n%!";
       let (plugin_sock, _) = Unix.accept wrapper_sock in
       let _data_size = getnumber (readcontlen plugin_sock) in
       let chunk_size = 65530 in
@@ -557,7 +557,7 @@ let execute_command prog args feature =
     
       | ComputeCIL_feature
       | ComputeMetrics_feature ->
-        Lsp.Self.debug ~level:1 "No Error after executing frama-c command\n%!";
+        Options.Self.debug ~level:1 "No Error after executing frama-c command\n%!";
         let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Successful operation !") () in
         let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
         let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
@@ -570,7 +570,7 @@ let execute_command prog args feature =
         let prog = "evince" in
         let args = [|"evince"; Printf.sprintf "%s.pdf" ofile|] in
         let _status = execute_extra_command prog args in
-        Lsp.Self.debug ~level:1 "No Error after executing frama-c command\n%!";
+        Options.Self.debug ~level:1 "No Error after executing frama-c command\n%!";
         let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Successful operation !") () in
         let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
         let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
@@ -583,7 +583,7 @@ let execute_command prog args feature =
     | ComputeCIL_feature
     | ComputeCallGraph_feature _
     | ComputeMetrics_feature ->
-      Lsp.Self.debug ~level:1 "Frama-C GUI ended !! \n%!";
+      Options.Self.debug ~level:1 "Frama-C GUI ended !! \n%!";
       let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Frama-C GUI ended !!") () in
       let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
       let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
@@ -593,13 +593,13 @@ let execute_command prog args feature =
     | FindDeclaration_feature (id, _, _, _)
     | ComputeProofObligation_feature (_, id, _, _, _)
     | ComputeProofObligationID_feature (id, _) ->
-      Lsp.Self.debug ~level:1 "Frama-C GUI ended ! \n%!";
+      Options.Self.debug ~level:1 "Frama-C GUI ended ! \n%!";
       let lsp_response = Lsp_types.ResponseMessage.json_of_t (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:(`Null) ()) in
       let data = Json.save_string lsp_response in
       Unix.close wrapper_sock;
       data
     | Prove_feature (id, _, _, _) ->
-      Lsp.Self.debug ~level:1 "Frama-C GUI ended ! \n%!";
+      Options.Self.debug ~level:1 "Frama-C GUI ended ! \n%!";
       let lsp_response = Lsp_types.ResponseMessage.json_of_t (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:(`List [`String ""; `String ""; `List []]) ()) in
       let data = Json.save_string lsp_response in
       Unix.close wrapper_sock;
@@ -611,7 +611,7 @@ let execute_command prog args feature =
     (
       match feature with
       | DidSave_feature ->
-          Lsp.Self.debug ~level:1 "Executed frama-c command (frama-c may have exited with errors)\n%!";
+          Options.Self.debug ~level:1 "Executed frama-c command (frama-c may have exited with errors)\n%!";
           let (plugin_sock, _) = Unix.accept wrapper_sock in
           let _data_size = getnumber (readcontlen plugin_sock) in
           let chunk_size = 65530 in
@@ -632,7 +632,7 @@ let execute_command prog args feature =
       | ComputeProofObligation_feature (_, id, _, _, _)
       | ComputeProofObligationID_feature (id, _)
       | Prove_feature (id, _, _, _) ->
-        Lsp.Self.debug ~level:1 "\n%!";
+        Options.Self.debug ~level:1 "\n%!";
         let msg = Printf.sprintf "Frama-c may have exited with errors" in
         let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:msg () in
         let lsp_message = (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~error:lsp_error_message ()) in
@@ -654,7 +654,7 @@ let fork_execute_command prog args feature =
   let pid = Unix.fork () in
   if not (pid = 0) then (
     fork_pid := pid;
-    Lsp.Self.debug ~level:1 "Request sent to Frama-C !\n%!";
+    Options.Self.debug ~level:1 "Request sent to Frama-C !\n%!";
     let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Request sent to Frama-C !") () in
     let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
     let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
@@ -669,13 +669,13 @@ let fork_execute_command prog args feature =
       | ComputeProofObligation_feature (_, id, _, _, _)
       | ComputeProofObligationID_feature (id, _)
       | Prove_feature (id, _, _, _) ->
-        Lsp.Self.debug ~level:1 "Server is busy !:! : %s, %s\n" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
+        Options.Self.debug ~level:1 "Server is busy !:! : %s, %s\n" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
         let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:"Server is busy !:!" () in
         let lsp_message = (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~error:lsp_error_message ()) in
         let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_message) in
         data, pid
       | _ ->
-        Lsp.Self.debug ~level:1 "Server is busy !::! : %s, %s\n" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
+        Options.Self.debug ~level:1 "Server is busy !::! : %s, %s\n" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
         let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Error ~message: "Server is busy !::!" () in
         let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
         let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
@@ -732,16 +732,16 @@ let rq_handler json_string =
   try
     match curr_method with 
     | "initialize" -> 
-      Lsp.Self.debug ~level:1 "initialize\n%!";
+      Options.Self.debug ~level:1 "initialize\n%!";
       let req_json = (Lsp_types.RequestMessage.json_of_t request) in
       let temp = Utils.remove_newline (Utils.remove_quotes (Json.save_string (Json.field "rootPath" (Json.field "params" req_json)))) in
       rootPath := temp;
       Lsp_types.CONTENT (capabilities_str), 1;
     | "textDocument/definition" -> 
-      Lsp.Self.debug ~level:1 "definition\n%!";
+      Options.Self.debug ~level:1 "definition\n%!";
       let params = match request.params with 
         | Some p -> Lsp_types.DefinitionParams.t_of_json p
-        | None -> Lsp.Self.debug ~level:1 "No definition params \n%!"; assert false
+        | None -> Options.Self.debug ~level:1 "No definition params \n%!"; assert false
       in
       let uri = params.textDocument.uri in 
       let src_file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
@@ -752,16 +752,16 @@ let rq_handler json_string =
       let lsp_opt = LspOpt.create (feature) in
       let command = Command.create ~strategies:false ~kernel:kernel_opt ~lsp:lsp_opt () in
       let command_str = (Command.string_of_t command) in
-      Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
+      Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT data, pid;
       
     | "textDocument/declaration" -> 
-      Lsp.Self.debug ~level:1 "declaration\n%!";
+      Options.Self.debug ~level:1 "declaration\n%!";
       let params = match request.params with 
         | Some p -> Lsp_types.DeclarationParams.t_of_json p
-        | None -> Lsp.Self.debug ~level:1 "No declaration params \n%!"; assert false
+        | None -> Options.Self.debug ~level:1 "No declaration params \n%!"; assert false
       in
       let uri = params.textDocument.uri in 
       let src_file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
@@ -772,14 +772,14 @@ let rq_handler json_string =
       let lsp_opt = LspOpt.create (feature) in
       let command = Command.create ~strategies:false ~kernel:kernel_opt ~lsp:lsp_opt () in
       let command_str = (Command.string_of_t command) in
-      Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
+      Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT (data), pid;
 
     | "showPOVC" -> (* show proof obligation of specific function *)
       let id = (Utils.id_to_int request.id) in
-      Lsp.Self.debug ~level:1 "showPOVC, %d\n%!" id;
+      Options.Self.debug ~level:1 "showPOVC, %d\n%!" id;
       let (file, line, ch) = match request.params with 
           | Some `List 
             [`List 
@@ -788,7 +788,7 @@ let rq_handler json_string =
                 "character", `Int c;
               ]]] -> 
             (Utils.remove_newline (Utils.remove_quotes (f)), l, c)
-          | _ -> Lsp.Self.debug ~level:1 "No params for showPOVC \n%!"; assert false
+          | _ -> Options.Self.debug ~level:1 "No params for showPOVC \n%!"; assert false
         in
       let kernel_opt = KernelOpt.create ~strategies:false () in
       let uncast_opt = UncastOpt.create () in
@@ -801,20 +801,20 @@ let rq_handler json_string =
         | false -> Command.create ~strategies:false ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
       in
       let command_str = (Command.string_of_t command) in
-      Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
+      Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT (data), pid;
 
       | "showPO" -> (* show proof obligation of specific function *)
       let id = (Utils.id_to_int request.id) in
-      Lsp.Self.debug ~level:1 "showPO, %d\n%!" id;
+      Options.Self.debug ~level:1 "showPO, %d\n%!" id;
       let (_file_id, function_id, goal_id) = match request.params with 
           | Some `List [`List [`String file_id; `String function_id; `String goal_id;]] ->
             (Utils.remove_newline (Utils.remove_quotes (file_id)),
              Utils.remove_newline (Utils.remove_quotes (function_id)),
              Utils.remove_newline (Utils.remove_quotes (goal_id)))
-          | _ -> Lsp.Self.debug ~level:1 "No params for showPO \n%!"; assert false
+          | _ -> Options.Self.debug ~level:1 "No params for showPO \n%!"; assert false
       in
       let function_ids = check_fct function_id in
       let kernel_opt = KernelOpt.create ~strategies:false () in
@@ -824,14 +824,14 @@ let rq_handler json_string =
       let lsp_opt = LspOpt.create (feature) in
       let command = Command.create ~strategies:false ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt () in
       let command_str = (Command.string_of_t command) in
-      Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
+      Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT (data), pid;
 
       | "provePO" -> (* prove with WP *)
       let id = (Utils.id_to_int request.id) in
-      Lsp.Self.debug ~level:1 "provePO, %d\n%!" id;
+      Options.Self.debug ~level:1 "provePO, %d\n%!" id;
       let (file, fct, prop, timeout, gui) = match request.params with
           | Some `List
             [`List 
@@ -842,7 +842,7 @@ let rq_handler json_string =
               `Bool gui
               ]] -> 
             (Utils.remove_newline (Utils.remove_quotes (f)), function_name, property_name, timeout, gui)
-          | _ -> Lsp.Self.debug ~level:1 "No params for showPOVC \n%!"; assert false
+          | _ -> Options.Self.debug ~level:1 "No params for showPOVC \n%!"; assert false
       in
       let prop = check_prop fct prop in
       let fct = check_fct fct in
@@ -858,14 +858,14 @@ let rq_handler json_string =
         | false -> Command.create ~strategies:false ~gui:gui ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
       in
       let command_str = (Command.string_of_t command) in
-      Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
+      Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT (data), pid;
 
       | "provePOStrategies" -> (* prove with WP strategies *)
       let id = (Utils.id_to_int request.id) in
-      Lsp.Self.debug ~level:1 "provePOStrategies, %d\n%!" id;
+      Options.Self.debug ~level:1 "provePOStrategies, %d\n%!" id;
       let (file, fct, prop, timeout, gui) = match request.params with
           | Some `List
             [`List 
@@ -876,7 +876,7 @@ let rq_handler json_string =
               `Bool gui
               ]] -> 
             (Utils.remove_newline (Utils.remove_quotes (f)), function_name, property_name, timeout, gui)
-          | _ -> Lsp.Self.debug ~level:1 "No params for showPOStrategies \n%!"; assert false
+          | _ -> Options.Self.debug ~level:1 "No params for showPOStrategies \n%!"; assert false
         in
       let prop = check_prop fct prop in
       let fct = check_fct fct in
@@ -892,13 +892,13 @@ let rq_handler json_string =
         | false -> Command.create ~strategies:true ~gui:gui ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
       in
       let command_str = (Command.string_of_t command) in
-      Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
+      Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT (data), pid;
 
     | "stop" -> (
-        Lsp.Self.debug ~level:1 "Kill pid %d!%!" !fork_pid;
+        Options.Self.debug ~level:1 "Kill pid %d!%!" !fork_pid;
         if not (!fork_pid = 0) then Unix.kill !fork_pid Sys.sigint;
         fork_pid := 0;
         let lsp_response = Lsp_types.ResponseMessage.json_of_t (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:request.id ~result:`Null ()) in
@@ -910,7 +910,7 @@ let rq_handler json_string =
     | _ -> 
       Lsp_types.CONTENT (Json.save_string `Null), 1
   with exn ->  
-    Lsp.Self.debug ~level:1 "Backtrace : %s\n" (Printexc.get_backtrace ());
+    Options.Self.debug ~level:1 "Backtrace : %s\n" (Printexc.get_backtrace ());
     Lsp_types.CONTENT (Json.save_string (Utils.make_error (Printexc.to_string (exn)) (Utils.id_to_int id))), 1
 
 
@@ -920,7 +920,7 @@ let notif_handler json_string server_sock =
   let curr_method = notif.method_ in 
   match curr_method with 
   | "initialized" -> 
-    Lsp.Self.debug ~level:1 "initialized\n%!";
+    Options.Self.debug ~level:1 "initialized\n%!";
     send_request server_sock (Json.save_string Configuration.request_configurations);
     let registrations = [Lsp_types.Registration.create ~id:"registration" ~method_:"workspace/didChangeConfiguration" ()] in
     let lsp_registration_param = Lsp_types.RegistrationParams.create ~registrations:registrations () in
@@ -931,7 +931,7 @@ let notif_handler json_string server_sock =
     Lsp_types.CONTENT (data), 1
 
   | "textDocument/didSave" ->
-    Lsp.Self.debug ~level:1 "didSave\n%!";
+    Options.Self.debug ~level:1 "didSave\n%!";
     let params = match notif.params with
       | Some p -> Lsp_types.DidSaveTextDocumentParams.t_of_json p
       | None -> assert false
@@ -948,7 +948,7 @@ let notif_handler json_string server_sock =
         let lsp_opt = LspOpt.create (feature) in
         let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file_name] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt () in
         let command_str = (Command.string_of_t command) in
-        Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
+        Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
         let prog, args = (Command.args_of_t command) in
         let data = execute_command prog args feature in
         Lsp_types.CONTENT (data), 1;
@@ -956,22 +956,22 @@ let notif_handler json_string server_sock =
     else Lsp_types.EMPTY (), 1
 
   | "showGlobalMetrics" -> 
-    Lsp.Self.debug ~level:1 "global metrics\n%!";
+    Options.Self.debug ~level:1 "global metrics\n%!";
     let kernel_opt = KernelOpt.create ~strategies:false () in
     let metrics_opt = MetricsOpt.create () in
     let feature = ComputeMetrics_feature in
     let command = Command.create ~strategies:false ~kernel:kernel_opt ~metrics:metrics_opt () in
     let command_str = (Command.string_of_t command) in
-    Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
+    Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
     let prog, args = (Command.args_of_t command) in
     let data, pid = fork_execute_command prog args feature in
     Lsp_types.CONTENT (data), pid;
 
   | "smokeTests" -> 
-      Lsp.Self.debug ~level:1 "smokeTests\n%!";
+      Options.Self.debug ~level:1 "smokeTests\n%!";
       let file_name = match notif.params with 
         | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
-        | _ -> Lsp.Self.debug ~level:1 "No params for smokeTests \n%!"; assert false
+        | _ -> Options.Self.debug ~level:1 "No params for smokeTests \n%!"; assert false
       in
       let kernel_opt = KernelOpt.create ~strategies:false () in
       let uncast_opt = UncastOpt.create () in
@@ -980,13 +980,13 @@ let notif_handler json_string server_sock =
       let lsp_opt = LspOpt.create (feature) in
       let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file_name] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt () in
       let command_str = (Command.string_of_t command) in
-      Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
+      Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data = execute_command prog args feature in
       Lsp_types.CONTENT (data), 1;
 
   | "ccdoc" -> 
-      Lsp.Self.debug ~level:1 "ccdoc\n%!";
+      Options.Self.debug ~level:1 "ccdoc\n%!";
       let kernel_opt = KernelOpt.create ~strategies:false () in
       let uncast_opt = UncastOpt.create () in
       let ccdoc_opt = CcdocOpt.create () in
@@ -994,16 +994,16 @@ let notif_handler json_string server_sock =
       let lsp_opt = LspOpt.create (feature) in
       let command = Command.create ~strategies:false ~kernel:kernel_opt ~uncast:uncast_opt ~ccdoc:ccdoc_opt ~lsp:lsp_opt () in
       let command_str = (Command.string_of_t command) in
-      Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
+      Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data = execute_command prog args feature in
       Lsp_types.CONTENT (data), 1;
 
   | "displayCIL" -> 
-      Lsp.Self.debug ~level:1 "displayCIL\n%!";
+      Options.Self.debug ~level:1 "displayCIL\n%!";
       let file = match notif.params with 
         | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
-        | _ -> Lsp.Self.debug ~level:1 "No params for displayCIL \n%!"; assert false
+        | _ -> Options.Self.debug ~level:1 "No params for displayCIL \n%!"; assert false
       in
       let feature = ComputeCIL_feature in
       let kernel_opt = KernelOpt.create ~strategies:false () in
@@ -1011,29 +1011,29 @@ let notif_handler json_string server_sock =
       let pprint_opt = PprintOpt.create ~file:file_basename () in
       let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file] ~pprint:pprint_opt () in
       let command_str = (Command.string_of_t command) in
-      Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
+      Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT (data), pid;
 
   | "displayCILProject" -> 
-      Lsp.Self.debug ~level:1 "displayCILProject\n%!";
+      Options.Self.debug ~level:1 "displayCILProject\n%!";
       let feature = ComputeCIL_feature in
       let kernel_opt = KernelOpt.create ~strategies:false () in
       let file_basename = "project" in
       let pprint_opt = PprintOpt.create ~file:file_basename () in
       let command = Command.create ~strategies:false ~kernel:kernel_opt ~pprint:pprint_opt () in
       let command_str = (Command.string_of_t command) in
-      Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
+      Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT (data), pid;
 
   | "displayCIL_noannot" -> 
-      Lsp.Self.debug ~level:1 "displayCIL_noannot\n%!";
+      Options.Self.debug ~level:1 "displayCIL_noannot\n%!";
       let file = match notif.params with 
         | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
-        | _ -> Lsp.Self.debug ~level:1 "No params for displayCIL \n%!"; assert false
+        | _ -> Options.Self.debug ~level:1 "No params for displayCIL \n%!"; assert false
       in
       let feature = ComputeCIL_feature in
       let kernel_opt = KernelOpt.create ~strategies:false () in
@@ -1041,45 +1041,45 @@ let notif_handler json_string server_sock =
       let pprint_opt = PprintOpt.create ~file:file_basename ~no_annot:true () in
       let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file] ~pprint:pprint_opt () in
       let command_str = (Command.string_of_t command) in
-      Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
+      Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT (data), pid;
 
   | "displayCILProject_noannot" -> 
-      Lsp.Self.debug ~level:1 "displayCILProject_noannot\n%!";
+      Options.Self.debug ~level:1 "displayCILProject_noannot\n%!";
       let feature = ComputeCIL_feature in
       let kernel_opt = KernelOpt.create ~strategies:false () in
       let file_basename = "project" in
       let pprint_opt = PprintOpt.create ~file:file_basename ~no_annot:true () in
       let command = Command.create ~strategies:false ~kernel:kernel_opt ~pprint:pprint_opt () in
       let command_str = (Command.string_of_t command) in
-      Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
+      Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature in
       Lsp_types.CONTENT (data), pid;
   
   | "showLocalMetrics" -> 
-    Lsp.Self.debug ~level:1 "local metrics\n%!";
+    Options.Self.debug ~level:1 "local metrics\n%!";
     let file = match notif.params with 
         | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
-        | _ -> Lsp.Self.debug ~level:1 "No params for metrics \n%!"; assert false
+        | _ -> Options.Self.debug ~level:1 "No params for metrics \n%!"; assert false
     in
     let feature = ComputeMetrics_feature in
     let kernel_opt = KernelOpt.create ~strategies:false () in
     let metrics_opt = MetricsOpt.create () in
     let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file] ~metrics:metrics_opt () in
     let command_str = (Command.string_of_t command) in
-    Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
+    Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
     let prog, args = (Command.args_of_t command) in
     let data, pid = fork_execute_command prog args feature in
     Lsp_types.CONTENT (data), pid
   
   | "computeCG" -> 
-    Lsp.Self.debug ~level:1 "computeCG\n%!";
+    Options.Self.debug ~level:1 "computeCG\n%!";
     let file = match notif.params with 
         | Some `List [f] -> Utils.remove_newline (Utils.remove_quotes (Json.save_string f))
-        | _ -> Lsp.Self.debug ~level:1 "No params for computeCG \n%!"; assert false
+        | _ -> Options.Self.debug ~level:1 "No params for computeCG \n%!"; assert false
     in
   
     let file_basename = (Filename.remove_extension (Filename.basename (String.trim file))) in
@@ -1088,13 +1088,13 @@ let notif_handler json_string server_sock =
     let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file] ~cg:cg_opt () in
     let feature = ComputeCallGraph_feature cg_opt.cg in
     let command_str = (Command.string_of_t command) in
-    Lsp.Self.feedback ~level:1 "Command = %s\n%!" command_str;
+    Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
     let prog, args = (Command.args_of_t command) in
     let data, pid = fork_execute_command prog args feature in
     Lsp_types.CONTENT (data), pid
 
   | "workspace/didChangeConfiguration" ->
-    Lsp.Self.debug ~level:1 "didChangeConfiguration\n%!";
+    Options.Self.debug ~level:1 "didChangeConfiguration\n%!";
     let data = Json.save_string (Configuration.request_configurations) in
     Lsp_types.CONTENT (data), 1;
 
@@ -1109,7 +1109,7 @@ let result_handler json_string =
   let request = Lsp_types.ResponseMessage.t_of_json json in
   let result = match request.result with
     | Some r -> r
-    | None -> Lsp.Self.debug ~level:1 "No result \n%!"; assert false
+    | None -> Options.Self.debug ~level:1 "No result \n%!"; assert false
   in
   let id = request.id in
   match id with
@@ -1125,7 +1125,7 @@ let error_handler json_string =
   let error = 
     match request.error with 
     | Some err -> err 
-    | None -> Lsp.Self.debug ~level:1 "No error \n%!"; assert false
+    | None -> Options.Self.debug ~level:1 "No error \n%!"; assert false
   in 
   let data = Json.save_string (Lsp_types.ResponseError.json_of_t (error)) in
   Lsp_types.CONTENT (data), 1
@@ -1141,27 +1141,27 @@ let handle (json_string : string) server_sock : (Lsp_types.lsp_result * int) =
     | `Assoc fields ->
       if (List.exists (fun (key, _) -> key = "result") fields) then
         begin
-          Lsp.Self.debug ~level:1 "result_handler\n%!";
+          Options.Self.debug ~level:1 "result_handler\n%!";
           result_handler json_string 
         end
       else if (List.exists (fun (key, _) -> key = "error") fields) then 
         begin
-          Lsp.Self.debug ~level:1 "error_handler\n%!";
+          Options.Self.debug ~level:1 "error_handler\n%!";
           error_handler json_string
         end
       else if (not (List.exists (fun (key, _) -> key = "id") fields)) then 
         begin
-          Lsp.Self.debug ~level:1 "notif_handler\n%!";
+          Options.Self.debug ~level:1 "notif_handler\n%!";
           notif_handler json_string server_sock
         end
       else if (List.exists (fun (key, _) -> key = "id") fields) then 
         begin
-          Lsp.Self.debug ~level:1 "rq_handler\n%!";
+          Options.Self.debug ~level:1 "rq_handler\n%!";
           rq_handler json_string
         end
       else
         raise (UnknownRequest 1)
-    | _ -> Lsp.Self.debug ~level:1 "no result\n%!"; raise (UnknownRequest 1)
+    | _ -> Options.Self.debug ~level:1 "no result\n%!"; raise (UnknownRequest 1)
   with
   | Json.Error _ -> raise (UnknownRequest 1)
     

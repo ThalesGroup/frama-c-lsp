@@ -17,96 +17,9 @@
  *************************************************************************)
 
 
-module Self = Lsp.Self
+module Self = Options.Self
 
 let plugin_sock = (Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0)
-
-let () = Parameter_customize.do_not_projectify ()
-module Enabled = Self.False
-(struct
-  let option_name = "-lsp"
-  let help = "when on (off by default), activates lsp support for ACSL/C"
-end)
-
-
-let () = Parameter_customize.do_not_projectify ()
-module Did_save = Self.False (* filename *)
-(struct
-  let option_name = "-lsp-did-save"
-  let help = "Publish diagnostics each time a file is saved"
-end)
-
-
-let () = Parameter_customize.do_not_projectify ()
-module Handler_opt = Self.False
-(struct
-  let option_name = "-lsp-handler"
-  let help = "activates handler mode (useful for editors), off by default"
-end)
-
-let () = Parameter_customize.do_not_projectify ()
-module Cmdline_opt = Self.True
-(struct
-  let option_name = "-lsp-cmdline"
-  let help = "activates command line mode mode (useful for editors), on by default"
-end)
-
-module Find_def = Self.String 
-(struct
-  let option_name = "-lsp-definition"
-  let help = "definition request"
-  let arg_name = "file:line:character"
-  let default = ""
-end)
-
-module Find_decl = Self.String 
-(struct
-  let option_name = "-lsp-declaration"
-  let help = "declaration request"
-  let arg_name = "file:line:character"
-  let default = ""
-end)
-
-
-module Id = Self.Int
-(struct
-  let option_name = "-lsp-id"
-  let help = "id of the request"
-  let arg_name = "id"
-  let default = 0
-end)
-
-module Root_path = Self.String
-(struct
-  let option_name = "-lsp-root-path"
-  let help = "path to the workspace folder"
-  let arg_name = "path"
-  let default = ""
-end)
-
-module Show_POVC = Self.String
-(struct
-  let option_name = "-lsp-show-povc"
-  let help = "send back the povc of the located property"
-  let arg_name = "file:line:character"
-  let default = ""
-end)
-
-module Show_PO = Self.String
-(struct
-  let option_name = "-lsp-show-po"
-  let help = "send back the po of the located property"
-  let arg_name = "goal_id"
-  let default = ""
-end)
-
-module Prove = Self.String
-(struct
-  let option_name = "-lsp-prove"
-  let help = "send back the proof status"
-  let arg_name = "fct and prop"
-  let default = ""
-end)
 
 let wrapper_port_framac = 8006
 let maxContLenBufSize = 50
@@ -122,7 +35,7 @@ let send_in_chunks socket data chunk_size =
   let rec send_data offset =
     if offset < data_len then
       let chunk = String.sub data offset (min chunk_size (data_len - offset)) in
-      Lsp.Self.debug ~level:1 "Sending chunck: %s\n%!" chunk;
+      Options.Self.debug ~level:1 "Sending chunck: %s\n%!" chunk;
       let bytes_sent = Unix.send socket (Bytes.of_string chunk) 0 (String.length chunk) [] in
       if bytes_sent = String.length chunk then
         send_data (offset + bytes_sent)  (* Continue sending remaining data *)
@@ -142,61 +55,61 @@ let send_response_list plugin_sock response_list =
   let response = String.concat ":::" response_list in
   send_response plugin_sock response
 
-let is_active_DidSave () = (Did_save.get ())
+let is_active_DidSave () = (Options.Did_save.get ())
 
 let get_FindDefinition_args () = 
-  let args = Find_def.get () in
+  let args = Options.Find_def.get () in
   if not (String.trim args = "") then
     (
-    let req_info = String.split_on_char ':' (Find_def.get ()) in
+    let req_info = String.split_on_char ':' (Options.Find_def.get ()) in
     let file = (List.nth req_info 0) in
     let line = (Stdlib.int_of_string (List.nth req_info 1)) in
     let ch = (Stdlib.int_of_string (List.nth req_info 2)) in
-    Some (Id.get (), file, line, ch)
+    Some (Options.Id.get (), file, line, ch)
     )
   else None
 let get_FindDeclaration_args () = 
-  let args = Find_decl.get () in
+  let args = Options.Find_decl.get () in
   if not (String.trim args = "") then
     (
-    let req_info = String.split_on_char ':' (Find_decl.get ()) in
+    let req_info = String.split_on_char ':' (Options.Find_decl.get ()) in
     let file = (List.nth req_info 0) in
     let line = (Stdlib.int_of_string (List.nth req_info 1)) in
     let ch = (Stdlib.int_of_string (List.nth req_info 2)) in
-    Some (Id.get (), file, line, ch)
+    Some (Options.Id.get (), file, line, ch)
     )
   else None
 
 let get_ComputeProofObligation_args () =
-  let args = Show_POVC.get () in
+  let args = Options.Show_POVC.get () in
   if not (String.trim args = "") then
     (
-    let req_info = String.split_on_char ':' (Show_POVC.get ()) in
+    let req_info = String.split_on_char ':' (Options.Show_POVC.get ()) in
     let file = (List.nth req_info 0) in
     let line = (Stdlib.int_of_string (List.nth req_info 1)) in
     let ch = (Stdlib.int_of_string (List.nth req_info 2)) in
-    Some (Root_path.get (), Id.get (), file, line, ch)
+    Some (Options.Root_path.get (), Options.Id.get (), file, line, ch)
     )
   else None
 
 let get_ComputeProofObligationID_args () =
-    let args = Show_PO.get () in
+    let args = Options.Show_PO.get () in
     if not (String.trim args = "") then
       (
-      let goal_id = (Show_PO.get ()) in
-      Some (Id.get (), goal_id)
+      let goal_id = (Options.Show_PO.get ()) in
+      Some (Options.Id.get (), goal_id)
       )
     else None
 
 let get_Prove_args () =
-    let args = Prove.get () in
+    let args = Options.Prove.get () in
     if not (String.trim args = "") then
       (
-      let req_info = String.split_on_char ':' (Prove.get ()) in
+      let req_info = String.split_on_char ':' (Options.Prove.get ()) in
       let file = (List.nth req_info 0) in
       let fct = (List.nth req_info 1) in
       let prop = (List.nth req_info 2) in
-      Some (Id.get (), file, fct, prop)
+      Some (Options.Id.get (), file, fct, prop)
       )
     else None
 
@@ -257,70 +170,70 @@ let diagnostics_handler (event : Log.event) =
     let diag_list = match diag_list with | None -> [] | Some l -> l in
     match event.evt_kind with 
     | Log.Error ->  
-      Lsp.Self.debug ~level:1 "Error\n%!";
+      Options.Self.debug ~level:1 "Error\n%!";
       let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
       DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
     | Log.Failure ->
-      Lsp.Self.debug ~level:1 "Failure\n%!";
+      Options.Self.debug ~level:1 "Failure\n%!";
       let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
       DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
     | Log.Warning ->
-      Lsp.Self.debug ~level:1 "Warning\n%!";
+      Options.Self.debug ~level:1 "Warning\n%!";
       let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Warning (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
       DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
     | Log.Result -> 
-      Lsp.Self.debug ~level:1 "Result\n%!";
+      Options.Self.debug ~level:1 "Result\n%!";
     | Log.Debug -> 
-      Lsp.Self.debug ~level:1 "Debug\n%!";
+      Options.Self.debug ~level:1 "Debug\n%!";
       let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Information (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
       DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
     | Log.Feedback ->
-      Lsp.Self.debug ~level:1 "Feedback\n%!";
+      Options.Self.debug ~level:1 "Feedback\n%!";
       let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Information (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
       DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
   
 
 let set_listerners () =
     Log.add_listener ~plugin:"kernel" (diagnostics_handler);
-    Lsp.Self.debug ~level:1 "kernel listener added\n%!";
+    Options.Self.debug ~level:1 "kernel listener added\n%!";
     Log.add_listener ~plugin:"wp" (diagnostics_handler);
-    Lsp.Self.debug ~level:1 "wp listener added\n%!";
+    Options.Self.debug ~level:1 "wp listener added\n%!";
     Log.add_listener ~plugin:"metacsl" (diagnostics_handler);
-    Lsp.Self.debug ~level:1 "matacsl listener added\n%!";
+    Options.Self.debug ~level:1 "matacsl listener added\n%!";
     Log.add_listener ~plugin:"cc_doc" (diagnostics_handler);
-    Lsp.Self.debug ~level:1 "cc_doc listener added\n%!"
+    Options.Self.debug ~level:1 "cc_doc listener added\n%!"
 
 let send_dignostics exn =
-  if Enabled.get () then
+  if Options.Enabled.get () then
     (
     Self.debug ~level:1 "Error while processing request : %s, Backtrace : %s\n%!" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
     let data = DidSave.StringMap.fold DidSave.publishDiagnostics_notification !DidSave.diag_map [] in
     let data = List.map Json.save_string (data) in
-    match Cmdline_opt.get () with
+    match Options.Cmdline_opt.get () with
       | false ->
         Self.debug ~level:1 "Output results in case of failure !!!";
         Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
         ignore (send_response_list plugin_sock data)
-      | true -> List.iter (Lsp.Self.result "JSON result : %s\n%!" ) data
+      | true -> List.iter (Options.Self.result "JSON result : %s\n%!" ) data
     )
 
 
 let send_result data =
-  match data, (Cmdline_opt.get ()) with
+  match data, (Options.Cmdline_opt.get ()) with
   | data, false ->
     Self.debug ~level:1 "Sending data to LSP handler ...";
     Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
     ignore (send_response_list plugin_sock data)
-  | data, true -> List.iter (Lsp.Self.result "%s\n%!" ) data
+  | data, true -> List.iter (Options.Self.result "%s\n%!" ) data
 
 
 let run () = 
-  if Enabled.get () then
+  if Options.Enabled.get () then
   (
-    if Handler_opt.get () then
+    if Options.Handler_opt.get () then
       (
         try Start_server.connect ();
-        with exn -> Lsp.Self.debug ~level:1 "There was an error in the server %s:\n Backtrace : %s\n%!" (Printexc.to_string exn) (Printexc.get_backtrace ())
+        with exn -> Options.Self.debug ~level:1 "There was an error in the server %s:\n Backtrace : %s\n%!" (Printexc.to_string exn) (Printexc.get_backtrace ())
       )
     else
       let framac_share = Utils.file_str Fc_config.datadir in
@@ -329,15 +242,15 @@ let run () =
       Filepath.add_symbolic_dir framac_share share;
       let feature = get_active_option () in
       match feature with
-      | Some Lsp_handler.DidSave_feature -> let data = List.map Json.save_string (DidSave.handle ()) in Lsp.Self.feedback ~level:1 "Updated Diagnostics !\n%!"; send_result data
-      | Some Lsp_handler.FindDefinition_feature(id, file, line, ch) -> let data = [(Definition.find id file line ch)] in Lsp.Self.feedback ~level:1 "Find definition attempt done !\n%!"; send_result data
-      | Some Lsp_handler.FindDeclaration_feature(id, file, line, ch) -> let data = [(Declaration.find id file line ch)] in Lsp.Self.feedback ~level:1 "Find declaration attempt done !\n%!"; send_result data
+      | Some Lsp_handler.DidSave_feature -> let data = List.map Json.save_string (DidSave.handle ()) in Options.Self.feedback ~level:1 "Updated Diagnostics !\n%!"; send_result data
+      | Some Lsp_handler.FindDefinition_feature(id, file, line, ch) -> let data = [(Definition.find id file line ch)] in Options.Self.feedback ~level:1 "Find definition attempt done !\n%!"; send_result data
+      | Some Lsp_handler.FindDeclaration_feature(id, file, line, ch) -> let data = [(Declaration.find id file line ch)] in Options.Self.feedback ~level:1 "Find declaration attempt done !\n%!"; send_result data
       | Some Lsp_handler.ComputeCIL_feature -> send_result []
       | Some Lsp_handler.ComputeCallGraph_feature _ -> send_result []
       | Some Lsp_handler.ComputeMetrics_feature -> send_result []
-      | Some Lsp_handler.ComputeProofObligation_feature(root_path, id, file, line, ch) -> let data = [(ShowPOVC.get_property root_path id file line ch)] in Lsp.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; send_result data
-      | Some Lsp_handler.ComputeProofObligationID_feature(id, goal_id) -> let data = [(ShowPOVC.get_property_from_id id goal_id)] in Lsp.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; send_result data
-      | Some Lsp_handler.Prove_feature(id, file, fct, prop) -> let data = [(ProvePO.get_property_status id file fct prop)] in Lsp.Self.feedback ~level:1 "Proof attempt done !\n%!"; send_result data
+      | Some Lsp_handler.ComputeProofObligation_feature(root_path, id, file, line, ch) -> let data = [(ShowPOVC.get_property root_path id file line ch)] in Options.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; send_result data
+      | Some Lsp_handler.ComputeProofObligationID_feature(id, goal_id) -> let data = [(ShowPOVC.get_property_from_id id goal_id)] in Options.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; send_result data
+      | Some Lsp_handler.Prove_feature(id, file, fct, prop) -> let data = [(ProvePO.get_property_status id file fct prop)] in Options.Self.feedback ~level:1 "Proof attempt done !\n%!"; send_result data
       | None ->  Self.debug ~level:1 "LSP started !!!"
   )
 

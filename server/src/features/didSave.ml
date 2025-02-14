@@ -90,7 +90,7 @@ let remove_newline str =
 let handle () : Json.json list =
   if StringMap.is_empty !diag_map then
     (
-    Lsp.Self.debug ~level:1 "Updated Empty Diagnostics !\n%!";
+    Options.Self.debug ~level:1 "Updated Empty Diagnostics !\n%!";
     let lsp_notification_params = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Updated diagnostics !") () in
     let json_notification_params = Lsp_types.ShowMessageParams.json_of_t lsp_notification_params in
     let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params:json_notification_params () in

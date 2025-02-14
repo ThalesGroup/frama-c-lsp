@@ -49,7 +49,7 @@ let get_property_status id file fct prop: string =
   if not (Sys.file_exists root_dir) then Unix.mkdir root_dir 0o755;
   let verdict_msg = ref [] in
   Wp.Wpo.iter_on_goals (fun po -> 
-    Lsp.Self.debug ~level:1 "gid:%s label:%s done!\n%!" (Wp.Wpo.get_gid po) (Wp.Wpo.get_label po);
+    Options.Self.debug ~level:1 "gid:%s label:%s done!\n%!" (Wp.Wpo.get_gid po) (Wp.Wpo.get_label po);
     let stats = Wp.ProofEngine.consolidated po in
     let prover_results = (Pretty_utils.to_string Wp.Stats.pretty stats) in
     let proof_status, property = (Wp.Wpo.get_proof po) in
@@ -61,7 +61,7 @@ let get_property_status id file fct prop: string =
     [] -> "No labels given"
     | l :: _ -> l
     in
-    Lsp.Self.debug ~level:1 "function:%s label:%s done!\n%!" function_name property_name;
+    Options.Self.debug ~level:1 "function:%s label:%s done!\n%!" function_name property_name;
     let script_file = Pretty_utils.to_string Wp.ProofSession.pp_file (Wp.ProofSession.filename ~force:false po) in
     let position = match Property.source property with
     | None -> ""

@@ -30,13 +30,13 @@ let getnumber str =
 
 let rec send_request server_sock response =
   let response_str = Printf.sprintf "Content-Length: %d\r\n\r\n%s" (String.length response) response in
-  Lsp.Self.debug ~level:1 "Size of response : %d, Response: %s\n%!" (String.length response_str) response_str;
+  Options.Self.debug ~level:1 "Size of response : %d, Response: %s\n%!" (String.length response_str) response_str;
   let response_bytes = Bytes.of_string response_str in
   if ((Bytes.length response_bytes) < 65530) then
     let sent = Unix.send server_sock response_bytes 0 (Bytes.length response_bytes) [] in
-    Lsp.Self.debug ~level:1 "Size of sent content : %d\n%!" sent
+    Options.Self.debug ~level:1 "Size of sent content : %d\n%!" sent
   else (
-    Lsp.Self.debug ~level:1 "Too long message can not be sent ! ";
+    Options.Self.debug ~level:1 "Too long message can not be sent ! ";
     let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Error ~message: "Too long message can not be sent !!" () in
     let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
     let json_notification = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
@@ -44,7 +44,7 @@ let rec send_request server_sock response =
   )
 
 let update_empty_diagnostics string_json =
-  Lsp.Self.debug ~level:2 "json data: %s\n" string_json;
+  Options.Self.debug ~level:2 "json data: %s\n" string_json;
   let json_result = Json.load_string string_json in
    match json_result with
     | `Assoc fields ->
@@ -60,11 +60,11 @@ let update_empty_diagnostics string_json =
                   let params = Lsp_types.PublishDiagnosticsParams.t_of_json params in
                   let file_uri = params.uri in
                   DidSave.diag_map := DidSave.StringMap.add file_uri [] !DidSave.diag_map;
-                  Lsp.Self.debug ~level:1 "Updated map for  %s" file_uri
-                | None -> Lsp.Self.debug ~level:1 "Updated map for  1"; ()
-            else Lsp.Self.debug ~level:1 "Updated map for  2"; ()
+                  Options.Self.debug ~level:1 "Updated map for  %s" file_uri
+                | None -> Options.Self.debug ~level:1 "Updated map for  1"; ()
+            else Options.Self.debug ~level:1 "Updated map for  2"; ()
           with  exn -> 
-            Lsp.Self.debug ~level:1 "Could not handle the previous request : %s, %s\n" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ())        
+            Options.Self.debug ~level:1 "Could not handle the previous request : %s, %s\n" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ())        
       else ()
     | _ -> ()
 
@@ -94,16 +94,16 @@ let readcontlen sock : string =
 let handle_request server_sock =
     try 
       let data_size = getnumber (readcontlen server_sock) in 
-      Lsp.Self.debug ~level:1 "Received from client : %d data size \n\n%!" data_size;
+      Options.Self.debug ~level:1 "Received from client : %d data size \n\n%!" data_size;
       let data_buf = Bytes.make data_size '0' in
       let _req_data_len = Unix.read server_sock data_buf 0 data_size in
       let request_str = (Bytes.to_string data_buf) in
-      Lsp.Self.debug ~level:1 "Received from client : %s\n\n%!" request_str;
+      Options.Self.debug ~level:1 "Received from client : %s\n\n%!" request_str;
       (* DidSave.StringMap.iter (send_empty_diagnostics server_sock) !DidSave.diag_map; *)
       let (response, pid) : (Lsp_types.lsp_result * int) = Lsp_handler.handle request_str server_sock in
       match response with
       | CONTENT string_json ->
-        Lsp.Self.debug ~level:1 "Sending to client : %s\n\n%!" string_json;
+        Options.Self.debug ~level:1 "Sending to client : %s\n\n%!" string_json;
         let string_json_list = Str.split (Str.regexp ":::") string_json in
         List.iter update_empty_diagnostics string_json_list;
         DidSave.StringMap.iter (send_empty_diagnostics server_sock) !DidSave.diag_map;
@@ -112,14 +112,14 @@ let handle_request server_sock =
       | EMPTY _ -> pid
     with 
     | Lsp_handler.UnknownRequest id as exn ->
-      Lsp.Self.debug ~level:1 "Main Server is busy : %s, %s\n" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
+      Options.Self.debug ~level:1 "Main Server is busy : %s, %s\n" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
       let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Error ~message: "Server is busy !!!" () in
       let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
       let json_notification = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
       send_request server_sock json_notification;
       id
     | exn ->
-      Lsp.Self.debug ~level:1 "Server is busy ! : %s, %s\n" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
+      Options.Self.debug ~level:1 "Server is busy ! : %s, %s\n" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
       let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Error ~message: "Server is busy !!" () in
       let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
       let json_notification = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
@@ -129,14 +129,14 @@ let handle_request server_sock =
 
 let connect () =
   (* vs code / wrapper communication *)
-  Lsp.Self.debug ~level:1 "Connecting on port %d\n%!" server_port;
+  Options.Self.debug ~level:1 "Connecting on port %d\n%!" server_port;
   let (ic, oc) = Unix.open_connection (Unix.ADDR_INET (addr, server_port)) in 
-  Lsp.Self.feedback ~level:1 "Connected on port %d\n%!" server_port;
+  Options.Self.feedback ~level:1 "Connected on port %d\n%!" server_port;
   let server_sock = Unix.descr_of_in_channel ic in
   while true do
     let pid = handle_request server_sock in
     flush oc;
-    if (pid = 0) then (Lsp.Self.debug ~level:1 "Exit of SUB PROCESS !!!!" ; Unix._exit 0)
+    if (pid = 0) then (Options.Self.debug ~level:1 "Exit of SUB PROCESS !!!!" ; Unix._exit 0)
     else (
       try
         let pid, _status = Unix.waitpid [Unix.WNOHANG] (-1) in

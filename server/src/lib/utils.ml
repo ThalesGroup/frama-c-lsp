@@ -140,15 +140,15 @@ let get_warn_status_of_string s =
   | _ -> Log.Wactive (* note : default behavior *)
 
 let is_header_of cfile hfile = 
-  Lsp.Self.debug ~level:1 "c file : %s , h file : %s\n%!" cfile hfile;
-  Lsp.Self.debug ~level:1 "c file basename : %s , h file basename : %s\n%!" (Filename.basename cfile) (Filename.basename hfile);
+  Options.Self.debug ~level:1 "c file : %s , h file : %s\n%!" cfile hfile;
+  Options.Self.debug ~level:1 "c file basename : %s , h file basename : %s\n%!" (Filename.basename cfile) (Filename.basename hfile);
   String.equal 
     (Filename.remove_extension (Filename.basename (String.trim cfile))) 
     (Filename.remove_extension (Filename.basename (String.trim hfile)))
 
 let get_corr_cfile rootPath hfile : string list = 
   if (String.equal rootPath "") then 
-    (Lsp.Self.debug ~level:1 "No source files and no root path provided.\n%!"; assert false)
+    (Options.Self.debug ~level:1 "No source files and no root path provided.\n%!"; assert false)
   else
   let c_files = ref [] in
   let rec init_files_rec path = 
@@ -172,7 +172,7 @@ let get_corr_cfile rootPath hfile : string list =
 
 let get_workspace_files rootPath : string list = 
   if (String.equal rootPath "") then 
-    (Lsp.Self.debug ~level:1 "No source files and no root path provided.\n%!"; assert false)
+    (Options.Self.debug ~level:1 "No source files and no root path provided.\n%!"; assert false)
   else
   let c_files = ref [] in
   let rec init_files_rec path = 

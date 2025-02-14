@@ -76,23 +76,23 @@ let decl_visitor symbol declarations = object
 
 let iter_decl () = 
   Globals.Vars.iter_in_file_order (fun v _ -> 
-      Lsp.Self.debug ~level:1 "Iter file order : %s\n%!" v.vname
+      Options.Self.debug ~level:1 "Iter file order : %s\n%!" v.vname
     )   
 
 let print_fxs file = 
-  Lsp.Self.debug ~level:1 "Printing fxs ...\n%!";
+  Options.Self.debug ~level:1 "Printing fxs ...\n%!";
   let fxs = Globals.FileIndex.get_functions ~declarations:true file in
   List.iter (fun (f : Cil_types.kernel_function) ->
     match f.fundec with 
     | Definition (fd, _) -> 
-      Lsp.Self.debug ~level:1 "function definition name : %s\n%!" fd.svar.vname
+      Options.Self.debug ~level:1 "function definition name : %s\n%!" fd.svar.vname
     | Declaration (_,vi,_,_) -> 
-      Lsp.Self.debug ~level:1 "function declaration name : %s\n%!" vi.vname
+      Options.Self.debug ~level:1 "function declaration name : %s\n%!" vi.vname
   ) fxs
 
 let get_workspace_files rootPath : string list = 
   if (String.equal rootPath "") then 
-    (Lsp.Self.debug ~level:1 "No source files and no root path provided.\n%!"; assert false)
+    (Options.Self.debug ~level:1 "No source files and no root path provided.\n%!"; assert false)
   else
   let c_files = ref [] in
   let rec init_files_rec path = 
@@ -129,10 +129,10 @@ let retrieve_location2 (pos : Filepath.position) (cil_files : Cil_types.file lis
   let counter = ref 0 in
   List.iter (fun f ->
     counter := !counter + 1;
-    Lsp.Self.debug ~level:1 "retrieve_location setting project : %s\n%!" ("file"^(Stdlib.string_of_int !counter));
+    Options.Self.debug ~level:1 "retrieve_location setting project : %s\n%!" ("file"^(Stdlib.string_of_int !counter));
     Project.set_current (Project.from_unique_name ("file"^(Stdlib.string_of_int !counter)));
     Visitor.visitFramacFile (glob_visitor symbol declarations) (f); 
-    (* Lsp.Self.debug ~level:1 "Ast of %s : %s\n%!" ("file"^(Stdlib.string_of_int !counter)) (Pretty_utils.to_string Printer.pp_file f); *)
+    (* Options.Self.debug ~level:1 "Ast of %s : %s\n%!" ("file"^(Stdlib.string_of_int !counter)) (Pretty_utils.to_string Printer.pp_file f); *)
 
   ) cil_files;
   !declarations
@@ -144,11 +144,11 @@ let retrieve_location3 (pos : Filepath.position) new_globals =
     List.iter(fun (v : Cil_types.varinfo) ->
       if (String.equal symbol v.vname) then 
         (
-          Lsp.Self.debug ~level:1 "Symbol : %s, vname : %s\n%!" symbol v.vname;
+          Options.Self.debug ~level:1 "Symbol : %s, vname : %s\n%!" symbol v.vname;
           declarations := v.vdecl :: !declarations;
           match v.vdefined with 
-          | true -> Lsp.Self.debug ~level:1 "New defined global : %s with location : %s\n%!" (Pretty_utils.to_string Printer.pp_varinfo v) (Pretty_utils.to_string Printer.pp_location v.vdecl)
-          | false -> Lsp.Self.debug ~level:1 "New global : %s with location : %s\n%!" (Pretty_utils.to_string Printer.pp_varinfo v) (Pretty_utils.to_string Printer.pp_location v.vdecl)
+          | true -> Options.Self.debug ~level:1 "New defined global : %s with location : %s\n%!" (Pretty_utils.to_string Printer.pp_varinfo v) (Pretty_utils.to_string Printer.pp_location v.vdecl)
+          | false -> Options.Self.debug ~level:1 "New global : %s with location : %s\n%!" (Pretty_utils.to_string Printer.pp_varinfo v) (Pretty_utils.to_string Printer.pp_location v.vdecl)
         )
     ) !new_globals;
 

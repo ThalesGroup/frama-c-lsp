@@ -356,7 +356,7 @@ let save_configs (result:  Json.json) =
       ~ccdocCoverageVerif: json_ccdocCoverageVerif
       ~ccdocLatex: json_ccdocLatex
       ();
-      Lsp.Self.Debug.set json_acslLsp; (* !Configuration.global_params.acslLsp *)
-      Lsp.Self.debug ~level:1 "save_configs : global_params length : %d\n%!" (List.length (Json.list result))
+      Options.Self.Debug.set json_acslLsp; (* !Configuration.global_params.acslLsp *)
+      Options.Self.debug ~level:1 "save_configs : global_params length : %d\n%!" (List.length (Json.list result))
   | x -> 
-    Lsp.Self.error "Requested unknown configuration(s), error : %s\n\t%s\n%!" (Json.save_string ~pretty:true x) (Printexc.get_backtrace ())
+    Options.Self.error "Requested unknown configuration(s), error : %s\n\t%s\n%!" (Json.save_string ~pretty:true x) (Printexc.get_backtrace ())
