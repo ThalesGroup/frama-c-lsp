@@ -324,9 +324,7 @@ export function activate(context: ExtensionContext) {
 		try {
             const args = await get_proof_args(true);
             const res = await client.sendRequest('provePO', args);
-			wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
-			wpResults.refresh();
-			window.showInformationMessage('Proof results updated');
+			window.showInformationMessage('frama-c-gui closed');
         }
         catch (err) {
 			const errorMessage = err instanceof Error ? err.message : String(err);
@@ -354,9 +352,7 @@ export function activate(context: ExtensionContext) {
 		try {
             const args = await get_proof_args(true);
             const res = await client.sendRequest('provePOStrategies', args);
-			wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
-			wpResults.refresh();
-			window.showInformationMessage('Proof results updated');
+			window.showInformationMessage('frama-c-gui closed');
         }
         catch (err) {
 			const errorMessage = err instanceof Error ? err.message : String(err);

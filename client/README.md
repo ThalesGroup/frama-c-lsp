@@ -29,8 +29,8 @@ Code adapted from https://github.com/microsoft/vscode-extension-samples/tree/mai
 ```
 
 ## Installation 
-Simply import the vscodeacsl-0.1.0.vsix file present in this directory in VS Code
-Or run this command: code --install-extension vscodeacsl-0.1.0.vsix
+Simply import the acsl-lsp-linux-x64-0.1.0.vsix file present in this directory in VS Code
+Or run this command: code --install-extension acsl-lsp-linux-x64-0.1.0.vsix
 
 
 ## nvm installation:
