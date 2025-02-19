@@ -21,10 +21,10 @@ module Self = Options.Self
 
 let plugin_sock = (Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0)
 
-let wrapper_port_framac = 8006
-let maxContLenBufSize = 50
-let maxPendingRequests = 20
-let defaultProtocolType = 0
+(* let wrapper_port = 8006 *)
+(* let maxContLenBufSize = 50 *)
+(* let maxPendingRequests = 20 *)
+(* let defaultProtocolType = 0 *)
 let addr = Unix.inet_addr_of_string "127.0.0.1"
 
 
@@ -52,10 +52,26 @@ let send_response plugin_sock response =
 
 let send_response_list plugin_sock response_list =
   let response_list = List.rev response_list in
+  (* ":::" used to separate diagnostics belonging to different files. *)
   let response = String.concat ":::" response_list in
   send_response plugin_sock response
 
 let is_active_DidSave () = (Options.Did_save.get ())
+
+let get_Handler_args () = 
+  let args = Options.Handler_opt.get () in
+  if not (String.trim args = "") then (
+    let req_info = String.split_on_char ':' (Options.Handler_opt.get ()) in
+    let server_port = (Stdlib.int_of_string (List.nth req_info 0)) in
+    let wrapper_port = (Stdlib.int_of_string (List.nth req_info 1)) in
+    Some (server_port, wrapper_port)
+  )
+  else None
+
+let get_Wrapper_args () = 
+  let wrapper_port = Options.Wrapper_opt.get () in
+  if (wrapper_port == 0) then None
+  else Some (wrapper_port)
 
 let get_FindDefinition_args () = 
   let args = Options.Find_def.get () in
@@ -188,9 +204,12 @@ let diagnostics_handler (event : Log.event) =
       let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Information (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
       DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
     | Log.Feedback ->
-      Options.Self.debug ~level:1 "Feedback\n%!";
-      let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Information (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
-      DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
+      if (String.starts_with ~prefix:"Goal" msg) && ((String.ends_with ~suffix:"not tried" msg) || (String.ends_with ~suffix:"trivial" msg)) then ()
+      else (
+        Options.Self.debug ~level:1 "Feedback\n%!";
+        let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Information (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
+        DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
+      )
   
 
 let set_listerners () =
@@ -209,33 +228,34 @@ let send_dignostics exn =
     Self.debug ~level:1 "Error while processing request : %s, Backtrace : %s\n%!" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
     let data = DidSave.StringMap.fold DidSave.publishDiagnostics_notification !DidSave.diag_map [] in
     let data = List.map Json.save_string (data) in
-    match Options.Cmdline_opt.get () with
-      | false ->
+    match get_Wrapper_args() with
+      | Some (wrapper_port) ->
         Self.debug ~level:1 "Output results in case of failure !!!";
-        Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
+        Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port));
         ignore (send_response_list plugin_sock data)
-      | true -> List.iter (Options.Self.result "JSON result : %s\n%!" ) data
+      | None -> List.iter (Options.Self.result "JSON result : %s\n%!" ) data
     )
 
 
 let send_result data =
-  match data, (Options.Cmdline_opt.get ()) with
-  | data, false ->
+  match data, (get_Wrapper_args()) with
+  | data, Some (wrapper_port) ->
     Self.debug ~level:1 "Sending data to LSP handler ...";
-    Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port_framac));
+    Unix.connect plugin_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port));
     ignore (send_response_list plugin_sock data)
-  | data, true -> List.iter (Options.Self.result "%s\n%!" ) data
+  | data, None -> List.iter (Options.Self.result "%s\n%!" ) data
 
 
 let run () = 
   if Options.Enabled.get () then
   (
-    if Options.Handler_opt.get () then
+    match get_Handler_args() with
+    | Some (server_port, wrapper_port) -> 
       (
-        try Start_server.connect ();
+        try Start_server.connect server_port wrapper_port;
         with exn -> Options.Self.debug ~level:1 "There was an error in the server %s:\n Backtrace : %s\n%!" (Printexc.to_string exn) (Printexc.get_backtrace ())
       )
-    else
+    | None ->
       let framac_share = Utils.file_str Fc_config.datadir in
       Kernel.Share.set (Fc_config.datadir);
       let share = Kernel.Share.get () in

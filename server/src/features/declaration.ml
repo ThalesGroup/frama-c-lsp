@@ -90,30 +90,6 @@ let print_fxs file =
       Options.Self.debug ~level:1 "function declaration name : %s\n%!" vi.vname
   ) fxs
 
-let get_workspace_files rootPath : string list = 
-  if (String.equal rootPath "") then 
-    (Options.Self.debug ~level:1 "No source files and no root path provided.\n%!"; assert false)
-  else
-  let c_files = ref [] in
-  let rec init_files_rec path = 
-    let curr_files = ref [] in 
-    (* read all files and folders of current directory *)
-    let filenames = Array.to_list (Filepath.readdir (Filepath.Normalized.of_string path)) in
-    (* make paths absolute *)
-    curr_files := List.append !curr_files (List.map(fun x ->
-      path^"/"^x
-    ) filenames);
-    (* remove non source files *)
-    c_files := List.append !c_files (List.filter (fun x -> String.ends_with ~suffix:".c" x) (!curr_files));
-    (* call the function recursively if folders were found in the current directory *)
-    let folders = List.filter (fun x -> Sys.is_directory x) !curr_files in
-    List.iter (fun folder ->
-      init_files_rec (folder)
-    ) folders;
-  in
-  init_files_rec rootPath;
-  !c_files
-
 let retrieve_location (pos : Filepath.position) =
   let declarations = ref [] in
   let symbol = Utils.retrieve_symbol pos.pos_lnum (pos.pos_cnum - pos.pos_bol) (Filepath.Normalized.to_pretty_string pos.pos_path) in  

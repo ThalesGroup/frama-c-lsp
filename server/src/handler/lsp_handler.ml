@@ -333,6 +333,7 @@ end
 
 module Command = struct
   type t = {
+  wrapper_port: int;
   frama_c_exe: string;
   verbose: int;
   files : string list option;
@@ -346,7 +347,8 @@ module Command = struct
   ccdoc: CcdocOpt.t option;
   lsp : LspOpt.t option;
   }
-  let create ?gui ?kernel ~strategies ?files ?wp ?metacsl ?uncast ?metrics ?pprint ?cg ?ccdoc ?lsp () : t = {
+  let create ~port ?gui ?kernel ~strategies ?files ?wp ?metacsl ?uncast ?metrics ?pprint ?cg ?ccdoc ?lsp () : t = {
+    wrapper_port = port;
     frama_c_exe = (match gui with None -> "frama-c" | Some g -> if g then "frama-c-gui" else "frama-c");
     verbose = !Configuration.global_params.acslLsp;
     files =
@@ -379,7 +381,7 @@ module Command = struct
     let option_if_not_empty_string s opt = if not (String.trim s = "") then (s ^ " " ^ opt) else "" in
     let file_names = match options.files with None -> "" | Some f -> String.concat " " f in
     let debug_level = Stdlib.string_of_int options.verbose in
-    let common_opt = Printf.sprintf "%s -lsp -lsp-no-cmdline -lsp-debug=%s %s" options.frama_c_exe debug_level file_names in
+    let common_opt = Printf.sprintf "%s -lsp -lsp-wrapper=%d -lsp-debug=%s %s" options.frama_c_exe options.wrapper_port debug_level file_names in
     let kernel_opt = match options.kernel with None -> "" | Some k -> KernelOpt.string_of_t k in
     let uncast_opt = match options.uncast with None -> "" | Some u -> option_if_not_empty_string (UncastOpt.string_of_t u) "-then-last" in
     let wp_opt = match options.wp with None -> "" | Some w -> option_if_not_empty_string (WpOpt.string_of_t w) "" in
@@ -513,11 +515,11 @@ let execute_extra_command prog args =
   let status  = Unix.close_process_full (ic, oc, ec) in
   status
 
-let execute_command prog args feature =
+let execute_command prog args feature wrapper_port =
   let signal_handler signal = if signal = Sys.sigint then () in
   Sys.set_signal Sys.sigint (Sys.Signal_handle signal_handler);
   let wrapper_sock = Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in
-  Unix.bind wrapper_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, 8006));
+  Unix.bind wrapper_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port));
   Unix.listen wrapper_sock 100;
   let env = Unix.environment () in
   let ic, oc, ec = Unix.open_process_args_full prog args env in
@@ -650,7 +652,7 @@ let execute_command prog args feature =
         data
       )
 
-let fork_execute_command prog args feature =
+let fork_execute_command prog args feature wrapper_port =
   let pid = Unix.fork () in
   if not (pid = 0) then (
     fork_pid := pid;
@@ -662,7 +664,7 @@ let fork_execute_command prog args feature =
   )
   else
     try
-      (execute_command prog args feature), pid
+      (execute_command prog args feature wrapper_port), pid
     with exn -> (match feature with
       | FindDefinition_feature (id, _, _, _)
       | FindDeclaration_feature (id, _, _, _)
@@ -724,7 +726,7 @@ let check_prop fct prop =
   else if (List.exists (fun element -> element = "@axiomatic") fct_lst) then "@lemma" :: prop_lst
   else prop_lst
 
-let rq_handler json_string =
+let rq_handler json_string wrapper_port =
   let json = Json.load_string json_string in 
   let request = Lsp_types.RequestMessage.t_of_json json in 
   let curr_method = request.method_ in 
@@ -750,11 +752,11 @@ let rq_handler json_string =
       let kernel_opt = KernelOpt.create ~strategies:false () in
       let feature = FindDefinition_feature ((Utils.id_to_int request.id), src_file, line, ch) in
       let lsp_opt = LspOpt.create (feature) in
-      let command = Command.create ~strategies:false ~kernel:kernel_opt ~lsp:lsp_opt () in
+      let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~lsp:lsp_opt () in
       let command_str = (Command.string_of_t command) in
       Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
-      let data, pid = fork_execute_command prog args feature in
+      let data, pid = fork_execute_command prog args feature wrapper_port in
       Lsp_types.CONTENT data, pid;
       
     | "textDocument/declaration" -> 
@@ -770,11 +772,11 @@ let rq_handler json_string =
       let kernel_opt = KernelOpt.create ~strategies:false () in
       let feature = FindDeclaration_feature ((Utils.id_to_int request.id), src_file, line, ch) in
       let lsp_opt = LspOpt.create (feature) in
-      let command = Command.create ~strategies:false ~kernel:kernel_opt ~lsp:lsp_opt () in
+      let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~lsp:lsp_opt () in
       let command_str = (Command.string_of_t command) in
       Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
-      let data, pid = fork_execute_command prog args feature in
+      let data, pid = fork_execute_command prog args feature wrapper_port in
       Lsp_types.CONTENT (data), pid;
 
     | "showPOVC" -> (* show proof obligation of specific function *)
@@ -797,13 +799,13 @@ let rq_handler json_string =
       let lsp_opt = LspOpt.create (feature) in
       let command = 
         match (String.ends_with ~suffix:".c" file) with
-        | true -> Command.create ~strategies:false ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
-        | false -> Command.create ~strategies:false ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
+        | true -> Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
+        | false -> Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
       in
       let command_str = (Command.string_of_t command) in
       Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
-      let data, pid = fork_execute_command prog args feature in
+      let data, pid = fork_execute_command prog args feature wrapper_port in
       Lsp_types.CONTENT (data), pid;
 
       | "showPO" -> (* show proof obligation of specific function *)
@@ -822,11 +824,11 @@ let rq_handler json_string =
       let wp_opt = WpOpt.create ~wp_fct:function_ids ~wp_prover:["none"] () in
       let feature = ComputeProofObligationID_feature (id, goal_id) in
       let lsp_opt = LspOpt.create (feature) in
-      let command = Command.create ~strategies:false ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt () in
+      let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt () in
       let command_str = (Command.string_of_t command) in
       Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
-      let data, pid = fork_execute_command prog args feature in
+      let data, pid = fork_execute_command prog args feature wrapper_port in
       Lsp_types.CONTENT (data), pid;
 
       | "provePO" -> (* prove with WP *)
@@ -854,13 +856,13 @@ let rq_handler json_string =
       let lsp_opt = LspOpt.create (feature) in
       let command = 
         match (String.ends_with ~suffix:".c" file) with
-        | true -> Command.create ~strategies:false ~gui:gui ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
-        | false -> Command.create ~strategies:false ~gui:gui ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
+        | true -> Command.create ~port:wrapper_port ~strategies:false ~gui:gui ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
+        | false -> Command.create ~port:wrapper_port ~strategies:false ~gui:gui ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
       in
       let command_str = (Command.string_of_t command) in
       Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
-      let data, pid = fork_execute_command prog args feature in
+      let data, pid = fork_execute_command prog args feature wrapper_port in
       Lsp_types.CONTENT (data), pid;
 
       | "provePOStrategies" -> (* prove with WP strategies *)
@@ -888,13 +890,13 @@ let rq_handler json_string =
       let lsp_opt = LspOpt.create (feature) in
       let command = 
         match (String.ends_with ~suffix:".c" file) with
-        | true -> Command.create ~strategies:true ~gui:gui ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
-        | false -> Command.create ~strategies:true ~gui:gui ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
+        | true -> Command.create ~port:wrapper_port ~strategies:true ~gui:gui ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
+        | false -> Command.create ~port:wrapper_port ~strategies:true ~gui:gui ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
       in
       let command_str = (Command.string_of_t command) in
       Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
-      let data, pid = fork_execute_command prog args feature in
+      let data, pid = fork_execute_command prog args feature wrapper_port in
       Lsp_types.CONTENT (data), pid;
 
     | "stop" -> (
@@ -914,7 +916,7 @@ let rq_handler json_string =
     Lsp_types.CONTENT (Json.save_string (Utils.make_error (Printexc.to_string (exn)) (Utils.id_to_int id))), 1
 
 
-let notif_handler json_string server_sock =
+let notif_handler json_string server_sock wrapper_port =
   let json = Json.load_string json_string in 
   let notif = Lsp_types.NotificationMessage.t_of_json json in 
   let curr_method = notif.method_ in 
@@ -946,11 +948,11 @@ let notif_handler json_string server_sock =
         let metacsl_opt = MetacslOpt.create () in
         let feature = DidSave_feature in
         let lsp_opt = LspOpt.create (feature) in
-        let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file_name] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt () in
+        let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file_name] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt () in
         let command_str = (Command.string_of_t command) in
         Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
         let prog, args = (Command.args_of_t command) in
-        let data = execute_command prog args feature in
+        let data = execute_command prog args feature wrapper_port in
         Lsp_types.CONTENT (data), 1;
       end
     else Lsp_types.EMPTY (), 1
@@ -960,11 +962,11 @@ let notif_handler json_string server_sock =
     let kernel_opt = KernelOpt.create ~strategies:false () in
     let metrics_opt = MetricsOpt.create () in
     let feature = ComputeMetrics_feature in
-    let command = Command.create ~strategies:false ~kernel:kernel_opt ~metrics:metrics_opt () in
+    let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~metrics:metrics_opt () in
     let command_str = (Command.string_of_t command) in
     Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
     let prog, args = (Command.args_of_t command) in
-    let data, pid = fork_execute_command prog args feature in
+    let data, pid = fork_execute_command prog args feature wrapper_port in
     Lsp_types.CONTENT (data), pid;
 
   | "smokeTests" -> 
@@ -978,11 +980,11 @@ let notif_handler json_string server_sock =
       let wp_opt = WpOpt.create ~wp_prop:["smoke"] ~wp_smoke_tests:true ~wp_gen:false () in
       let feature = DidSave_feature in
       let lsp_opt = LspOpt.create (feature) in
-      let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file_name] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt () in
+      let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file_name] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt () in
       let command_str = (Command.string_of_t command) in
       Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
-      let data = execute_command prog args feature in
+      let data = execute_command prog args feature wrapper_port in
       Lsp_types.CONTENT (data), 1;
 
   | "ccdoc" -> 
@@ -992,11 +994,11 @@ let notif_handler json_string server_sock =
       let ccdoc_opt = CcdocOpt.create () in
       let feature = DidSave_feature in
       let lsp_opt = LspOpt.create (feature) in
-      let command = Command.create ~strategies:false ~kernel:kernel_opt ~uncast:uncast_opt ~ccdoc:ccdoc_opt ~lsp:lsp_opt () in
+      let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~uncast:uncast_opt ~ccdoc:ccdoc_opt ~lsp:lsp_opt () in
       let command_str = (Command.string_of_t command) in
       Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
-      let data = execute_command prog args feature in
+      let data = execute_command prog args feature wrapper_port in
       Lsp_types.CONTENT (data), 1;
 
   | "displayCIL" -> 
@@ -1009,11 +1011,11 @@ let notif_handler json_string server_sock =
       let kernel_opt = KernelOpt.create ~strategies:false () in
       let file_basename = (Filename.remove_extension (Filename.basename (String.trim file))) in
       let pprint_opt = PprintOpt.create ~file:file_basename () in
-      let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file] ~pprint:pprint_opt () in
+      let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file] ~pprint:pprint_opt () in
       let command_str = (Command.string_of_t command) in
       Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
-      let data, pid = fork_execute_command prog args feature in
+      let data, pid = fork_execute_command prog args feature wrapper_port in
       Lsp_types.CONTENT (data), pid;
 
   | "displayCILProject" -> 
@@ -1022,11 +1024,11 @@ let notif_handler json_string server_sock =
       let kernel_opt = KernelOpt.create ~strategies:false () in
       let file_basename = "project" in
       let pprint_opt = PprintOpt.create ~file:file_basename () in
-      let command = Command.create ~strategies:false ~kernel:kernel_opt ~pprint:pprint_opt () in
+      let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~pprint:pprint_opt () in
       let command_str = (Command.string_of_t command) in
       Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
-      let data, pid = fork_execute_command prog args feature in
+      let data, pid = fork_execute_command prog args feature wrapper_port in
       Lsp_types.CONTENT (data), pid;
 
   | "displayCIL_noannot" -> 
@@ -1039,11 +1041,11 @@ let notif_handler json_string server_sock =
       let kernel_opt = KernelOpt.create ~strategies:false () in
       let file_basename = (Filename.remove_extension (Filename.basename (String.trim file))) in
       let pprint_opt = PprintOpt.create ~file:file_basename ~no_annot:true () in
-      let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file] ~pprint:pprint_opt () in
+      let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file] ~pprint:pprint_opt () in
       let command_str = (Command.string_of_t command) in
       Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
-      let data, pid = fork_execute_command prog args feature in
+      let data, pid = fork_execute_command prog args feature wrapper_port in
       Lsp_types.CONTENT (data), pid;
 
   | "displayCILProject_noannot" -> 
@@ -1052,11 +1054,11 @@ let notif_handler json_string server_sock =
       let kernel_opt = KernelOpt.create ~strategies:false () in
       let file_basename = "project" in
       let pprint_opt = PprintOpt.create ~file:file_basename ~no_annot:true () in
-      let command = Command.create ~strategies:false ~kernel:kernel_opt ~pprint:pprint_opt () in
+      let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~pprint:pprint_opt () in
       let command_str = (Command.string_of_t command) in
       Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
-      let data, pid = fork_execute_command prog args feature in
+      let data, pid = fork_execute_command prog args feature wrapper_port in
       Lsp_types.CONTENT (data), pid;
   
   | "showLocalMetrics" -> 
@@ -1068,11 +1070,11 @@ let notif_handler json_string server_sock =
     let feature = ComputeMetrics_feature in
     let kernel_opt = KernelOpt.create ~strategies:false () in
     let metrics_opt = MetricsOpt.create () in
-    let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file] ~metrics:metrics_opt () in
+    let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file] ~metrics:metrics_opt () in
     let command_str = (Command.string_of_t command) in
     Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
     let prog, args = (Command.args_of_t command) in
-    let data, pid = fork_execute_command prog args feature in
+    let data, pid = fork_execute_command prog args feature wrapper_port in
     Lsp_types.CONTENT (data), pid
   
   | "computeCG" -> 
@@ -1085,12 +1087,12 @@ let notif_handler json_string server_sock =
     let file_basename = (Filename.remove_extension (Filename.basename (String.trim file))) in
     let kernel_opt = KernelOpt.create ~strategies:false () in
     let cg_opt = CgOpt.create ~file:file_basename () in
-    let command = Command.create ~strategies:false ~kernel:kernel_opt ~files:[file] ~cg:cg_opt () in
+    let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file] ~cg:cg_opt () in
     let feature = ComputeCallGraph_feature cg_opt.cg in
     let command_str = (Command.string_of_t command) in
     Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
     let prog, args = (Command.args_of_t command) in
-    let data, pid = fork_execute_command prog args feature in
+    let data, pid = fork_execute_command prog args feature wrapper_port in
     Lsp_types.CONTENT (data), pid
 
   | "workspace/didChangeConfiguration" ->
@@ -1132,7 +1134,7 @@ let error_handler json_string =
 
 exception UnknownRequest of int
 
-let handle (json_string : string) server_sock : (Lsp_types.lsp_result * int) =
+let handle (json_string : string) server_sock wrapper_port : (Lsp_types.lsp_result * int) =
   let root_dir = ".frama-c" in
   if not (Sys.file_exists root_dir) then Unix.mkdir root_dir 0o755;
   try
@@ -1152,12 +1154,12 @@ let handle (json_string : string) server_sock : (Lsp_types.lsp_result * int) =
       else if (not (List.exists (fun (key, _) -> key = "id") fields)) then 
         begin
           Options.Self.debug ~level:1 "notif_handler\n%!";
-          notif_handler json_string server_sock
+          notif_handler json_string server_sock wrapper_port
         end
       else if (List.exists (fun (key, _) -> key = "id") fields) then 
         begin
           Options.Self.debug ~level:1 "rq_handler\n%!";
-          rq_handler json_string
+          rq_handler json_string wrapper_port
         end
       else
         raise (UnknownRequest 1)

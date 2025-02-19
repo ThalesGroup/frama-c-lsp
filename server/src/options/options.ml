@@ -40,19 +40,25 @@
  
  
  let () = Parameter_customize.do_not_projectify ()
- module Handler_opt = Self.False
+ module Handler_opt = Self.String
  (struct
    let option_name = "-lsp-handler"
-   let help = "activates handler mode (useful for editors), off by default"
+   let help = "activates handler mode"
+   let arg_name = "server_port:wrapper_port"
+   let default = ""
  end)
  
+
  let () = Parameter_customize.do_not_projectify ()
- module Cmdline_opt = Self.True
+ module Wrapper_opt = Self.Int
  (struct
-   let option_name = "-lsp-cmdline"
-   let help = "activates command line mode mode (useful for editors), on by default"
+   let option_name = "-lsp-wrapper"
+   let help = "activates wrapper mode"
+   let arg_name = "server_port"
+   let default = 0
  end)
- 
+
+
  module Find_def = Self.String 
  (struct
    let option_name = "-lsp-definition"

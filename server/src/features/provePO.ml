@@ -84,10 +84,22 @@ let get_property_status id file fct prop: string =
     in
     let po_subgoals = List.map (fun x -> (Wp.ProofEngine.goal x, get_tactics x)) po_node_list in
     let po_str = String.concat "\n" (List.map (fun (x,y) -> ((Pretty_utils.to_string Wp.Wpo.pp_goal_flow) x) ^ "\n" ^ y) po_subgoals) in
-
+(*
     let output_channel = open_out po_file in
     output_string output_channel po_str;
     close_out output_channel;
+*)
+    let fd = Unix.openfile po_file [O_RDWR; O_CREAT] 0o644 in
+    let _ =
+    try
+      let data = Bytes.of_string po_str in
+      Unix.lockf fd F_LOCK 0;
+      let _ = Unix.write fd data 0 (Bytes.length data) in
+      Unix.lockf fd F_ULOCK 0;
+      Unix.close fd
+    with
+    | e -> Unix.close fd; raise e
+    in
     let _property_id = (Property.Names.get_prop_name_id property) in
     match proof_status with
     | `Passed -> verdict_msg := `String (Printf.sprintf "passed:%s:%s:%s:%s:%s:%s\n%!" goal_id position prover_results script_file function_name property_name) :: !verdict_msg

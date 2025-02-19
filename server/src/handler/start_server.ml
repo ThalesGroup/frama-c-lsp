@@ -16,7 +16,7 @@
  *                                                                        *
  *************************************************************************)
  
-let server_port = 8005
+(* let server_port = 8005 *)
 (* let wrapper_port = 8006 *)
 (* let maxContLenBufSize = 50 *)
 (* let maxPendingRequests = 20 *)
@@ -91,7 +91,7 @@ let readcontlen sock : string =
   ignore (Unix.read sock contlenbuf 0 1);
   !res
 
-let handle_request server_sock =
+let handle_request server_sock wrapper_port =
     try 
       let data_size = getnumber (readcontlen server_sock) in 
       Options.Self.debug ~level:1 "Received from client : %d data size \n\n%!" data_size;
@@ -100,7 +100,7 @@ let handle_request server_sock =
       let request_str = (Bytes.to_string data_buf) in
       Options.Self.debug ~level:1 "Received from client : %s\n\n%!" request_str;
       (* DidSave.StringMap.iter (send_empty_diagnostics server_sock) !DidSave.diag_map; *)
-      let (response, pid) : (Lsp_types.lsp_result * int) = Lsp_handler.handle request_str server_sock in
+      let (response, pid) : (Lsp_types.lsp_result * int) = Lsp_handler.handle request_str server_sock wrapper_port in
       match response with
       | CONTENT string_json ->
         Options.Self.debug ~level:1 "Sending to client : %s\n\n%!" string_json;
@@ -127,14 +127,14 @@ let handle_request server_sock =
       1
       
 
-let connect () =
+let connect server_port wrapper_port =
   (* vs code / wrapper communication *)
   Options.Self.debug ~level:1 "Connecting on port %d\n%!" server_port;
   let (ic, oc) = Unix.open_connection (Unix.ADDR_INET (addr, server_port)) in 
   Options.Self.feedback ~level:1 "Connected on port %d\n%!" server_port;
   let server_sock = Unix.descr_of_in_channel ic in
   while true do
-    let pid = handle_request server_sock in
+    let pid = handle_request server_sock wrapper_port in
     flush oc;
     if (pid = 0) then (Options.Self.debug ~level:1 "Exit of SUB PROCESS !!!!" ; Unix._exit 0)
     else (

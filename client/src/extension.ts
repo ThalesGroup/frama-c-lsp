@@ -9,14 +9,16 @@ let client: LanguageClient;
 
 export function activate(context: ExtensionContext) {
 	// The server is implemented in OCaml
-	const serverModuleRun = context.asAbsolutePath(path.join('run.sh'));
-	const serverModuleDebug = context.asAbsolutePath(path.join('run.sh'));
+	const serverPort = vscode.workspace.getConfiguration('vscodeacsl').get<number>('serverPort') || 8005;
+	const wrapperPort = vscode.workspace.getConfiguration('vscodeacsl').get<number>('wrapperPort') || (serverPort + 1);
+	const serverModuleRun = context.asAbsolutePath(path.join('run.sh')) + " " + serverPort + " " + wrapperPort;
+	const serverModuleDebug = context.asAbsolutePath(path.join('run.sh')) + " " + serverPort + " " + wrapperPort;
 
 	// If the extension is launched in debug mode then the debug server options are used
 	// Otherwise the run options are used
 	const serverOptions: ServerOptions = {
-		run: {command: serverModuleRun,	transport: { kind: TransportKind.socket, port: 8005 }, options: { shell: true }},
-		debug: {command: serverModuleDebug,	transport: { kind: TransportKind.socket, port: 8005 }, options: { shell: true }}
+		run: {command: serverModuleRun,	transport: { kind: TransportKind.socket, port: serverPort }, options: { shell: true }},
+		debug: {command: serverModuleDebug,	transport: { kind: TransportKind.socket, port: serverPort }, options: { shell: true }}
 	};
 
 	// Options to control the language client
@@ -32,9 +34,15 @@ export function activate(context: ExtensionContext) {
 
 	const smokeTests = commands.registerCommand('smokeTests', async () => {
 		try {
-			await client.sendNotification('smokeTests', window.activeTextEditor.document.fileName);
+			const editor = window.activeTextEditor;
+       		if (!editor) {
+           		window.showErrorMessage('No active editor found.');
+           		return;
+       		}
+			await client.sendNotification('smokeTests', editor.document.fileName);
 		} catch (err) {
-			window.showErrorMessage('Failed to run smoke tests: ' + err.message);
+			const errorMessage = err instanceof Error ? err.message : String(err);
+			window.showErrorMessage('Failed to run smoke tests: ' + errorMessage);
 			console.error('Error computing smoke tests:', err);
 		}
 	});
@@ -43,31 +51,44 @@ export function activate(context: ExtensionContext) {
 		try {
 			await client.sendNotification('ccdoc');
 		} catch (err) {
-			window.showErrorMessage('Failed to run ccdoc: ' + err.message);
+			const errorMessage = err instanceof Error ? err.message : String(err);
+			window.showErrorMessage('Failed to run ccdoc: ' + errorMessage);
 			console.error('Error computing ccdoc:', err);
 		}
 	});
 
 	const displayCIL = commands.registerCommand('displayCIL', async () => {
 		try {
-			const filePath = window.activeTextEditor.document.fileName;
+			const editor = window.activeTextEditor;
+       		if (!editor) {
+           		window.showErrorMessage('No active editor found.');
+           		return;
+       		}
+			const filePath = editor.document.fileName;
     		const fileName = path.basename(filePath);
-			create_file(fileName, 'acsl');
+			await create_file(fileName, 'acsl');
 			await client.sendNotification('displayCIL', filePath);
 		} catch (err) {
-			window.showErrorMessage('Failed to compute displayCIL: ' + err.message);
+			const errorMessage = err instanceof Error ? err.message : String(err);
+			window.showErrorMessage('Failed to compute displayCIL: ' + errorMessage);
 			console.error('Error computing displayCIL:', err);
 		}
 	});
 
 	const displayCIL_noannot = commands.registerCommand('displayCIL_noannot', async () => {
 		try {
-			const filePath = window.activeTextEditor.document.fileName;
+			const editor = window.activeTextEditor;
+       		if (!editor) {
+           		window.showErrorMessage('No active editor found.');
+           		return;
+       		}
+			const filePath = editor.document.fileName;
     		const fileName = path.basename(filePath);
-			create_file(fileName, 'acsl');
+			await create_file(fileName, 'acsl');
 			await client.sendNotification('displayCIL_noannot', filePath);
 		} catch (err) {
-			window.showErrorMessage('Failed to compute displayCIL_noannot: ' + err.message);
+			const errorMessage = err instanceof Error ? err.message : String(err);
+			window.showErrorMessage('Failed to compute displayCIL_noannot: ' + errorMessage);
 			console.error('Error computing displayCIL_noannot:', err);
 		}
 	});
@@ -75,10 +96,11 @@ export function activate(context: ExtensionContext) {
 	const displayCILProject = commands.registerCommand('displayCILProject', async () => {
 		try {
     		const fileName = "project.c";
-			create_file(fileName, 'acsl');
+			await create_file(fileName, 'acsl');
 			await client.sendNotification('displayCILProject');
 		} catch (err) {
-			window.showErrorMessage('Failed to compute displayCILProject: ' + err.message);
+			const errorMessage = err instanceof Error ? err.message : String(err);
+			window.showErrorMessage('Failed to compute displayCILProject: ' + errorMessage);
 			console.error('Error computing displayCILProject:', err);
 		}
 	});
@@ -86,23 +108,29 @@ export function activate(context: ExtensionContext) {
 	const displayCILProject_noannot = commands.registerCommand('displayCILProject_noannot', async () => {
 		try {
     		const fileName = "project.c";
-			create_file(fileName, 'acsl');
+			await create_file(fileName, 'acsl');
 			await client.sendNotification('displayCILProject_noannot');
 		} catch (err) {
-			window.showErrorMessage('Failed to compute displayCILProject_noannot: ' + err.message);
+			const errorMessage = err instanceof Error ? err.message : String(err);
+			window.showErrorMessage('Failed to compute displayCILProject_noannot: ' + errorMessage);
 			console.error('Error computing displayCILProject_noannot:', err);
 		}
 	});
 
 	const computeCG = commands.registerCommand('computeCG', async () => {
 		try {
-			const filePath = window.activeTextEditor.document.fileName;
+			const editor = window.activeTextEditor;
+       		if (!editor) {
+           		window.showErrorMessage('No active editor found.');
+           		return;
+       		}
+			const filePath = editor.document.fileName;
 			const dirPath = path.dirname(filePath);
     		const fileName = path.basename(filePath);
 			const extension = path.extname(filePath);
 			const fileNameBase = fileName.slice(0, -extension.length);
 			const workspacePath = get_workspace ();
-			const filePathOut = workspacePath + "/.frama-c/fc_" + fileNameBase + ".dot.pdf";
+			const filePathOut = path.join(workspacePath, ".frama-c", "fc_" + fileNameBase + ".dot.pdf");
 			if (!fs.existsSync(filePathOut)) {
 				try {fs.writeFileSync(filePathOut, 'Task in progress ...')}
 				catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
@@ -112,31 +140,38 @@ export function activate(context: ExtensionContext) {
 
 			await client.sendNotification('computeCG', filePath);
 		} catch (err) {
-			window.showErrorMessage('Failed to compute callgraph: ' + err.message);
+			const errorMessage = err instanceof Error ? err.message : String(err);
+			window.showErrorMessage('Failed to compute callgraph: ' + errorMessage);
 			console.error('Error computing callgraph:', err);
 		}
 	});
 
 	const showPOVC = commands.registerCommand('showPOVC', async () => {
 		try {
-			const res = await client.sendRequest('showPOVC', [window.activeTextEditor.document.fileName, window.activeTextEditor.selection.active]);
+			const editor = window.activeTextEditor;
+       		if (!editor) {
+           		window.showErrorMessage('No active editor found.');
+           		return;
+       		}
+			const res = await client.sendRequest('showPOVC', [editor.document.fileName, editor.selection.active]);
 			const wpResult = JSON.parse(JSON.stringify(res, null, 1));
 			const newUri = Uri.parse('untitled:Proof Obligation');
 			const document = await workspace.openTextDocument(newUri);
 			await languages.setTextDocumentLanguage(document, 'plaintext');
-			const editor = await window.showTextDocument(document, ViewColumn.One, true);
+			const textDocument = await window.showTextDocument(document, ViewColumn.One, true);
 
-			editor.edit(editBuilder => {
+			textDocument.edit(editBuilder => {
 				const start = new Position(0, 0);
 				const end = new Position(document.lineCount, 0);
 				const fullRange = new Range(start, end);
 				editBuilder.delete(fullRange);
-				editBuilder.insert(editor.selection.start, wpResult);
+				editBuilder.insert(textDocument.selection.start, wpResult);
 			});
 			window.showInformationMessage('Proof obligation computed');
 
 		} catch (err) {
-			window.showErrorMessage('Failed to fetch and display WP proof obligation: ' + err.message);
+			const errorMessage = err instanceof Error ? err.message : String(err);
+			window.showErrorMessage('Failed to fetch and display WP proof obligation: ' + errorMessage);
 			console.error('Error fetching WP proof obligation:', err);
 		}
 	});
@@ -149,14 +184,16 @@ export function activate(context: ExtensionContext) {
 				const selectedItem = selectedItems[0];
 				const workspacePath = get_workspace ();
 				let fileUri: vscode.Uri;
-				fileUri = vscode.Uri.parse(`${workspacePath}/.frama-c/${selectedItem.goal_id}.txt`);
+				const path_name = path.join(workspacePath, ".frama-c", `${selectedItem.goal_id}.txt`);
+				fileUri = vscode.Uri.parse(path_name);
 				const document = await workspace.openTextDocument(fileUri);
 				await languages.setTextDocumentLanguage(document, 'plaintext');
 				const editor = await window.showTextDocument(document, ViewColumn.One, true);
 			}
 			else {vscode.window.showInformationMessage('No item selected');}
 		} catch (err) {
-			window.showErrorMessage('Failed to fetch and display WP proof obligation: ' + err.message);
+			const errorMessage = err instanceof Error ? err.message : String(err);
+			window.showErrorMessage('Failed to fetch and display WP proof obligation: ' + errorMessage);
 			console.error('Error fetching WP proof obligation:', err);
 		}
 	});
@@ -182,7 +219,8 @@ export function activate(context: ExtensionContext) {
 			}
 			else {vscode.window.showInformationMessage('No item selected');}
 		} catch (err) {
-			window.showErrorMessage('Failed to fetch and display script: ' + err.message);
+			const errorMessage = err instanceof Error ? err.message : String(err);
+			window.showErrorMessage('Failed to fetch and display script: ' + errorMessage);
 			console.error('Error fetching script:', err);
 		}
 	});
@@ -192,7 +230,7 @@ export function activate(context: ExtensionContext) {
 			const selectedItems = wpResultsView.selection;
         	if (selectedItems.length > 0) {
 				const selectedItem = selectedItems[0];
-				const args = get_args_from_item(selectedItem, false);
+				const args = await get_args_from_item(selectedItem, false);
 				const res = await client.sendRequest('provePO', args);
 				wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
 				wpResults.refresh();
@@ -201,7 +239,8 @@ export function activate(context: ExtensionContext) {
 			}
 			else {vscode.window.showInformationMessage('No item selected');}
 		} catch (err) {
-			window.showErrorMessage('Failed to fetch and display script: ' + err.message);
+			const errorMessage = err instanceof Error ? err.message : String(err);
+			window.showErrorMessage('Failed to fetch and display script: ' + errorMessage);
 			console.error('Error fetching script:', err);
 		}
 	});
@@ -211,7 +250,7 @@ export function activate(context: ExtensionContext) {
 			const selectedItems = wpResultsView.selection;
         	if (selectedItems.length > 0) {
 				const selectedItem = selectedItems[0];
-				const args = get_args_from_item(selectedItem, true);
+				const args = await get_args_from_item(selectedItem, true);
 				const res = await client.sendRequest('provePO', args);
 				wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
 				wpResults.refresh();
@@ -220,7 +259,8 @@ export function activate(context: ExtensionContext) {
 			}
 			else {vscode.window.showInformationMessage('No item selected');}
 		} catch (err) {
-			window.showErrorMessage('Failed to fetch and display script: ' + err.message);
+			const errorMessage = err instanceof Error ? err.message : String(err);
+			window.showErrorMessage('Failed to fetch and display script: ' + errorMessage);
 			console.error('Error fetching script:', err);
 		}
 	});
@@ -230,7 +270,7 @@ export function activate(context: ExtensionContext) {
 			const selectedItems = wpResultsView.selection;
         	if (selectedItems.length > 0) {
 				const selectedItem = selectedItems[0];
-				const args = get_args_from_item(selectedItem, false);
+				const args = await get_args_from_item(selectedItem, false);
 				const res = await client.sendRequest('provePOStrategies', args);
 				wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
 				wpResults.refresh();
@@ -239,7 +279,8 @@ export function activate(context: ExtensionContext) {
 			}
 			else {vscode.window.showInformationMessage('No item selected');}
 		} catch (err) {
-			window.showErrorMessage('Failed to fetch and display script: ' + err.message);
+			const errorMessage = err instanceof Error ? err.message : String(err);
+			window.showErrorMessage('Failed to fetch and display script: ' + errorMessage);
 			console.error('Error fetching script:', err);
 		}
 	});
@@ -249,7 +290,7 @@ export function activate(context: ExtensionContext) {
 			const selectedItems = wpResultsView.selection;
         	if (selectedItems.length > 0) {
 				const selectedItem = selectedItems[0];
-				const args = get_args_from_item(selectedItem, true);
+				const args = await get_args_from_item(selectedItem, true);
 				const res = await client.sendRequest('provePOStrategies', args);
 				wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
 				wpResults.refresh();
@@ -258,63 +299,68 @@ export function activate(context: ExtensionContext) {
 			}
 			else {vscode.window.showInformationMessage('No item selected');}
 		} catch (err) {
-			window.showErrorMessage('Failed to fetch and display script: ' + err.message);
+			const errorMessage = err instanceof Error ? err.message : String(err);
+			window.showErrorMessage('Failed to fetch and display script: ' + errorMessage);
 			console.error('Error fetching script:', err);
 		}
 	});
 
     const provePO = commands.registerCommand('provePO', async () => {
 		try {
-			const args = get_proof_args(false);
+			const args = await get_proof_args(false);
             const res = await client.sendRequest('provePO', args);
 			wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
 			wpResults.refresh();
 			window.showInformationMessage('Proof results updated');
         }
         catch (err) {
-            window.showErrorMessage('Failed to fetch and display WP proof: ' + err.message);
+			const errorMessage = err instanceof Error ? err.message : String(err);
+            window.showErrorMessage('Failed to fetch and display WP proof: ' + errorMessage);
             console.error('Error fetching WP proof:', err);
         }
     });
 
 	const provePOGUI = commands.registerCommand('provePOGUI', async () => {
 		try {
-            const args = get_proof_args(true);
+            const args = await get_proof_args(true);
             const res = await client.sendRequest('provePO', args);
 			wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
 			wpResults.refresh();
 			window.showInformationMessage('Proof results updated');
         }
         catch (err) {
-            window.showErrorMessage('Failed to fetch and display WP proof: ' + err.message);
+			const errorMessage = err instanceof Error ? err.message : String(err);
+            window.showErrorMessage('Failed to fetch and display WP proof: ' + errorMessage);
             console.error('Error fetching WP proof:', err);
         }
     });
 
     const provePOStrategies = commands.registerCommand('provePOStrategies', async () => {
 		try {
-            const args = get_proof_args(false);
+            const args = await get_proof_args(false);
             const res = await client.sendRequest('provePOStrategies', args);
 			wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
 			wpResults.refresh();
 			window.showInformationMessage('Proof results updated');
         }
         catch (err) {
-            window.showErrorMessage('Failed to fetch and display WP proof: ' + err.message);
+			const errorMessage = err instanceof Error ? err.message : String(err);
+            window.showErrorMessage('Failed to fetch and display WP proof: ' + errorMessage);
             console.error('Error fetching WP proof:', err);
         }
     });
 
     const provePOStrategiesGUI = commands.registerCommand('provePOStrategiesGUI', async () => {
 		try {
-            const args = get_proof_args(true);
+            const args = await get_proof_args(true);
             const res = await client.sendRequest('provePOStrategies', args);
 			wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
 			wpResults.refresh();
 			window.showInformationMessage('Proof results updated');
         }
         catch (err) {
-            window.showErrorMessage('Failed to fetch and display WP proof: ' + err.message);
+			const errorMessage = err instanceof Error ? err.message : String(err);
+            window.showErrorMessage('Failed to fetch and display WP proof: ' + errorMessage);
             console.error('Error fetching WP proof:', err);
         }
     });
@@ -325,7 +371,8 @@ export function activate(context: ExtensionContext) {
 			window.showInformationMessage('Stopped processes');
         }
         catch (err) {
-            window.showErrorMessage('Failed to stop Frama-C: ' + err.message);
+			const errorMessage = err instanceof Error ? err.message : String(err);
+            window.showErrorMessage('Failed to stop Frama-C: ' + errorMessage);
             console.error('Error stropping Frama-C:', err);
         }
     });
@@ -333,12 +380,18 @@ export function activate(context: ExtensionContext) {
 
 	const showLocalMetrics = commands.registerCommand('showLocalMetrics', async () => {
 		try {
-			const filePath = window.activeTextEditor.document.fileName;
+			const editor = window.activeTextEditor;
+       		if (!editor) {
+           		window.showErrorMessage('No active editor found.');
+           		return;
+       		}
+			const filePath = editor.document.fileName;
 			const file_name = "fc_metrics.txt";
-			create_file(file_name, 'plaintext');
+			await create_file(file_name, 'plaintext');
 			client.sendNotification('showLocalMetrics', filePath);
 		} catch (err) {
-			window.showErrorMessage('Failed to get local metrics: ' + err.message);
+			const errorMessage = err instanceof Error ? err.message : String(err);
+			window.showErrorMessage('Failed to get local metrics: ' + errorMessage);
 			console.error('Error getting local metrics:', err);
 		}
 	});
@@ -346,10 +399,11 @@ export function activate(context: ExtensionContext) {
 	const showGlobalMetrics = commands.registerCommand('showGlobalMetrics', async () => {
 		try {
 			const file_name = "fc_metrics.txt";
-			create_file(file_name, 'plaintext');
+			await create_file(file_name, 'plaintext');
 			client.sendNotification('showGlobalMetrics');
 		} catch (err) {
-			window.showErrorMessage('Failed to get global metrics: ' + err.message);
+			const errorMessage = err instanceof Error ? err.message : String(err);
+			window.showErrorMessage('Failed to get global metrics: ' + errorMessage);
 			console.error('Error getting global metrics:', err);
 		}
 	});
@@ -389,7 +443,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 				const workspacePath = get_workspace ();
 				t_item.command = {
 					command: 'vscode.open',
-					arguments: [vscode.Uri.parse(workspacePath + "/" + file_id + "#L" + line)]
+					arguments: [vscode.Uri.parse(path.join(workspacePath, file_id) + "#L" + line)]
 				} as vscode.Command;
 				this.data.push(t_item);
 			});
@@ -424,6 +478,10 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 		this.refresh(); // Update the tree when an item is removed
 	}
 
+	dispose() {
+		this._onDidChangeTreeData.dispose();
+	}
+
   }
   
 class TreeItem extends vscode.TreeItem {
@@ -444,7 +502,7 @@ class TreeItem extends vscode.TreeItem {
 
 async function create_file(fileName:string, type:string){
 	const workspacePath = get_workspace ();
-	const fileNameOut = workspacePath + "/.frama-c/fc_" + fileName;
+	const fileNameOut = path.join(workspacePath, ".frama-c", `fc_${fileName}`);
 	if (!fs.existsSync(fileNameOut)) {
 		try {fs.writeFileSync(fileNameOut, 'Task in progress ...')}
 		catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
@@ -502,7 +560,12 @@ async function get_proof_args(gui:boolean){
 	// If need to empty the list of item:
 	// wpResults.update(["","","",[]]);
 	// wpResults.refresh();
-	return([window.activeTextEditor.document.fileName, function_name, property_name, int_proof_timeout, gui]);
+	const editor = window.activeTextEditor;
+    if (!editor) {
+    	window.showErrorMessage('No active editor found.');
+        return;
+    }
+	return([editor.document.fileName, function_name, property_name, int_proof_timeout, gui]);
 }
 
 function get_workspace(){
@@ -520,14 +583,25 @@ function get_workspace(){
 
 async function create_frama_c_folder(workspace:string){
 	try {
-		await fs.promises.mkdir(workspace + "/.frama-c", {recursive: true})
+		const path_name = path.join(workspace, ".frama-c");
+		await fs.promises.mkdir(path_name, {recursive: true})
 	} catch(err) {
 	}
 }
 
+/*
 export function deactivate(): Thenable<void> | undefined {
 	if (!client) {
 		return undefined;
 	}
 	return client.stop();
+}
+*/
+
+export function deactivate(context: ExtensionContext): Thenable<void> | undefined {
+	if (client) {
+		client.stop();
+	}
+	context.subscriptions.forEach(subscription => subscription.dispose());
+	return undefined;
 }
