@@ -1,6 +1,6 @@
 # C/ACSL Features Implementation
 
-This software implments a C/ACSL Language Server compliant with the Language Server Protocol (LSP).
+This software implements a C/ACSL Language Server compliant with the Language Server Protocol (LSP).
 It is a Frama-C plugin that aims to offer an enhanced coding experience with functionalities that cater to various development needs.
 
 

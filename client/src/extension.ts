@@ -52,16 +52,7 @@ export function activate(context: ExtensionContext) {
 		try {
 			const filePath = window.activeTextEditor.document.fileName;
     		const fileName = path.basename(filePath);
-			const workspacePath = get_workspace ();
-			const fileNameOut = workspacePath + "/.frama-c/fc_" + fileName;
-			if (!fs.existsSync(fileNameOut)) {
-				try {fs.writeFileSync(fileNameOut, 'Task in progress ...')}
-				catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
-			}
-			const fileUri = vscode.Uri.parse(fileNameOut);
-			const document = await workspace.openTextDocument(fileUri);
-			await languages.setTextDocumentLanguage(document, 'acsl');
-			const editor = await window.showTextDocument(document, ViewColumn.One, true);
+			create_file(fileName, 'acsl');
 			await client.sendNotification('displayCIL', filePath);
 		} catch (err) {
 			window.showErrorMessage('Failed to compute displayCIL: ' + err.message);
@@ -73,16 +64,7 @@ export function activate(context: ExtensionContext) {
 		try {
 			const filePath = window.activeTextEditor.document.fileName;
     		const fileName = path.basename(filePath);
-			const workspacePath = get_workspace ();
-			const fileNameOut = workspacePath + "/.frama-c/fc_" + fileName;
-			if (!fs.existsSync(fileNameOut)) {
-				try {fs.writeFileSync(fileNameOut, 'Task in progress ...')}
-				catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
-			}
-			const fileUri = vscode.Uri.parse(fileNameOut);
-			const document = await workspace.openTextDocument(fileUri);
-			await languages.setTextDocumentLanguage(document, 'acsl');
-			const editor = await window.showTextDocument(document, ViewColumn.One, true);
+			create_file(fileName, 'acsl');
 			await client.sendNotification('displayCIL_noannot', filePath);
 		} catch (err) {
 			window.showErrorMessage('Failed to compute displayCIL_noannot: ' + err.message);
@@ -93,16 +75,7 @@ export function activate(context: ExtensionContext) {
 	const displayCILProject = commands.registerCommand('displayCILProject', async () => {
 		try {
     		const fileName = "project.c";
-			const workspacePath = get_workspace ();
-			const fileNameOut = workspacePath + "/.frama-c/fc_" + fileName;
-			if (!fs.existsSync(fileNameOut)) {
-				try {fs.writeFileSync(fileNameOut, 'Task in progress ...')}
-				catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
-			}
-			const fileUri = vscode.Uri.parse(fileNameOut);
-			const document = await workspace.openTextDocument(fileUri);
-			await languages.setTextDocumentLanguage(document, 'acsl');
-			const editor = await window.showTextDocument(document, ViewColumn.One, true);
+			create_file(fileName, 'acsl');
 			await client.sendNotification('displayCILProject');
 		} catch (err) {
 			window.showErrorMessage('Failed to compute displayCILProject: ' + err.message);
@@ -113,16 +86,7 @@ export function activate(context: ExtensionContext) {
 	const displayCILProject_noannot = commands.registerCommand('displayCILProject_noannot', async () => {
 		try {
     		const fileName = "project.c";
-			const workspacePath = get_workspace ();
-			const fileNameOut = workspacePath + "/.frama-c/fc_" + fileName;
-			if (!fs.existsSync(fileNameOut)) {
-				try {fs.writeFileSync(fileNameOut, 'Task in progress ...')}
-				catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
-			}
-			const fileUri = vscode.Uri.parse(fileNameOut);
-			const document = await workspace.openTextDocument(fileUri);
-			await languages.setTextDocumentLanguage(document, 'acsl');
-			const editor = await window.showTextDocument(document, ViewColumn.One, true);
+			create_file(fileName, 'acsl');
 			await client.sendNotification('displayCILProject_noannot');
 		} catch (err) {
 			window.showErrorMessage('Failed to compute displayCILProject_noannot: ' + err.message);
@@ -228,23 +192,8 @@ export function activate(context: ExtensionContext) {
 			const selectedItems = wpResultsView.selection;
         	if (selectedItems.length > 0) {
 				const selectedItem = selectedItems[0];
-				const workspacePath = get_workspace ();
-				const file_name = selectedItem.file_id;
-				const function_name = selectedItem.fct_id;
-				const property_name = selectedItem.prop_id;
-				const proof_timeout = await window.showInputBox({
-					placeHolder: 'timeout',
-					prompt: 'Please specify timeout for provers (c.f. -wp-timeout )',
-					validateInput: (input) => {
-						if (input.length === 0) {return 'Input cannot be empty!';}
-						if (!/^\d+$/.test(input)) {return 'Please enter a valid integer';}
-						return null; // Return null to indicate valid input
-				}});
-				const int_proof_timeout = parseInt(proof_timeout, 10);
-				// wpResults.update(["","","",[]]);
-				// wpResults.refresh();
-				const gui = false;
-				const res = await client.sendRequest('provePO', [file_name, function_name, property_name, int_proof_timeout, gui]);
+				const args = get_args_from_item(selectedItem, false);
+				const res = await client.sendRequest('provePO', args);
 				wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
 				wpResults.refresh();
 				window.showInformationMessage('Proof results updated');
@@ -262,23 +211,8 @@ export function activate(context: ExtensionContext) {
 			const selectedItems = wpResultsView.selection;
         	if (selectedItems.length > 0) {
 				const selectedItem = selectedItems[0];
-				const workspacePath = get_workspace ();
-				const file_name = selectedItem.file_id;
-				const function_name = selectedItem.fct_id;
-				const property_name = selectedItem.prop_id;
-				const proof_timeout = await window.showInputBox({
-					placeHolder: 'timeout',
-					prompt: 'Please specify timeout for provers (c.f. -wp-timeout )',
-					validateInput: (input) => {
-						if (input.length === 0) {return 'Input cannot be empty!';}
-						if (!/^\d+$/.test(input)) {return 'Please enter a valid integer';}
-						return null; // Return null to indicate valid input
-				}});
-				const int_proof_timeout = parseInt(proof_timeout, 10);
-				// wpResults.update(["","","",[]]);
-				// wpResults.refresh();
-				const gui = true;
-				const res = await client.sendRequest('provePO', [file_name, function_name, property_name, int_proof_timeout, gui]);
+				const args = get_args_from_item(selectedItem, true);
+				const res = await client.sendRequest('provePO', args);
 				wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
 				wpResults.refresh();
 				window.showInformationMessage('Proof results updated');
@@ -296,23 +230,8 @@ export function activate(context: ExtensionContext) {
 			const selectedItems = wpResultsView.selection;
         	if (selectedItems.length > 0) {
 				const selectedItem = selectedItems[0];
-				const workspacePath = get_workspace ();
-				const file_name = selectedItem.file_id;
-				const function_name = selectedItem.fct_id;
-				const property_name = selectedItem.prop_id;
-				const proof_timeout = await window.showInputBox({
-					placeHolder: 'timeout',
-					prompt: 'Please specify timeout for provers (c.f. -wp-timeout )',
-					validateInput: (input) => {
-						if (input.length === 0) {return 'Input cannot be empty!';}
-						if (!/^\d+$/.test(input)) {return 'Please enter a valid integer';}
-						return null; // Return null to indicate valid input
-				}});
-				const int_proof_timeout = parseInt(proof_timeout, 10);
-				// wpResults.update(["","","",[]]);
-				// wpResults.refresh();
-				const gui = false;
-				const res = await client.sendRequest('provePOStrategies', [file_name, function_name, property_name, int_proof_timeout, gui]);
+				const args = get_args_from_item(selectedItem, false);
+				const res = await client.sendRequest('provePOStrategies', args);
 				wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
 				wpResults.refresh();
 				window.showInformationMessage('Proof results updated');
@@ -330,23 +249,8 @@ export function activate(context: ExtensionContext) {
 			const selectedItems = wpResultsView.selection;
         	if (selectedItems.length > 0) {
 				const selectedItem = selectedItems[0];
-				const workspacePath = get_workspace ();
-				const file_name = selectedItem.file_id;
-				const function_name = selectedItem.fct_id;
-				const property_name = selectedItem.prop_id;
-				const proof_timeout = await window.showInputBox({
-					placeHolder: 'timeout',
-					prompt: 'Please specify timeout for provers (c.f. -wp-timeout )',
-					validateInput: (input) => {
-						if (input.length === 0) {return 'Input cannot be empty!';}
-						if (!/^\d+$/.test(input)) {return 'Please enter a valid integer';}
-						return null; // Return null to indicate valid input
-				}});
-				const int_proof_timeout = parseInt(proof_timeout, 10);
-				// wpResults.update(["","","",[]]);
-				// wpResults.refresh();
-				const gui = true;
-				const res = await client.sendRequest('provePOStrategies', [file_name, function_name, property_name, int_proof_timeout, gui]);
+				const args = get_args_from_item(selectedItem, true);
+				const res = await client.sendRequest('provePOStrategies', args);
 				wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
 				wpResults.refresh();
 				window.showInformationMessage('Proof results updated');
@@ -361,33 +265,8 @@ export function activate(context: ExtensionContext) {
 
     const provePO = commands.registerCommand('provePO', async () => {
 		try {
-            const function_name = await window.showInputBox({
-                placeHolder: 'function',
-                prompt: 'Please specify functions to prove (c.f. -wp-fct )',
-                validateInput: (input) => {
-                    if (input.length === 0) {return 'Input cannot be empty!';}
-                    return null; // Return null to indicate valid input
-            }});
-			const property_name = await window.showInputBox({
-                placeHolder: 'property',
-                prompt: 'Please specify properties to prove (c.f. -wp-prop )',
-                validateInput: (input) => {
-                    if (input.length === 0) {return 'Input cannot be empty!';}
-                    return null; // Return null to indicate valid input
-            }});
-			const proof_timeout = await window.showInputBox({
-                placeHolder: 'timeout',
-                prompt: 'Please specify timeout for provers (c.f. -wp-timeout )',
-                validateInput: (input) => {
-                    if (input.length === 0) {return 'Input cannot be empty!';}
-					if (!/^\d+$/.test(input)) {return 'Please enter a valid integer';}
-                    return null; // Return null to indicate valid input
-            }});
-			const int_proof_timeout = parseInt(proof_timeout, 10);
-			// wpResults.update(["","","",[]]);
-			// wpResults.refresh();
-			const gui = false;
-            const res = await client.sendRequest('provePO', [window.activeTextEditor.document.fileName, function_name, property_name, int_proof_timeout, gui]);
+			const args = get_proof_args(false);
+            const res = await client.sendRequest('provePO', args);
 			wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
 			wpResults.refresh();
 			window.showInformationMessage('Proof results updated');
@@ -400,33 +279,8 @@ export function activate(context: ExtensionContext) {
 
 	const provePOGUI = commands.registerCommand('provePOGUI', async () => {
 		try {
-            const function_name = await window.showInputBox({
-                placeHolder: 'function',
-                prompt: 'Please specify functions to prove (c.f. -wp-fct )',
-                validateInput: (input) => {
-                    if (input.length === 0) {return 'Input cannot be empty!';}
-                    return null; // Return null to indicate valid input
-            }});
-			const property_name = await window.showInputBox({
-                placeHolder: 'property',
-                prompt: 'Please specify properties to prove (c.f. -wp-prop )',
-                validateInput: (input) => {
-                    if (input.length === 0) {return 'Input cannot be empty!';}
-                    return null; // Return null to indicate valid input
-            }});
-			const proof_timeout = await window.showInputBox({
-                placeHolder: 'timeout',
-                prompt: 'Please specify timeout for provers (c.f. -wp-timeout )',
-                validateInput: (input) => {
-                    if (input.length === 0) {return 'Input cannot be empty!';}
-					if (!/^\d+$/.test(input)) {return 'Please enter a valid integer';}
-                    return null; // Return null to indicate valid input
-            }});
-			const int_proof_timeout = parseInt(proof_timeout, 10);
-			// wpResults.update(["","","",[]]);
-			// wpResults.refresh();
-			const gui = true;
-            const res = await client.sendRequest('provePO', [window.activeTextEditor.document.fileName, function_name, property_name, int_proof_timeout, gui]);
+            const args = get_proof_args(true);
+            const res = await client.sendRequest('provePO', args);
 			wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
 			wpResults.refresh();
 			window.showInformationMessage('Proof results updated');
@@ -439,33 +293,8 @@ export function activate(context: ExtensionContext) {
 
     const provePOStrategies = commands.registerCommand('provePOStrategies', async () => {
 		try {
-            const function_name = await window.showInputBox({
-                placeHolder: 'function',
-                prompt: 'Please specify functions to prove (c.f. -wp-fct )',
-                validateInput: (input) => {
-                    if (input.length === 0) {return 'Input cannot be empty!';}
-                    return null; // Return null to indicate valid input
-            }});
-			const property_name = await window.showInputBox({
-                placeHolder: 'property',
-                prompt: 'Please specify properties to prove (c.f. -wp-prop )',
-                validateInput: (input) => {
-                    if (input.length === 0) {return 'Input cannot be empty!';}
-                    return null; // Return null to indicate valid input
-            }});
-			const proof_timeout = await window.showInputBox({
-                placeHolder: 'timeout',
-                prompt: 'Please specify timeout for provers (c.f. -wp-timeout )',
-                validateInput: (input) => {
-                    if (input.length === 0) {return 'Input cannot be empty!';}
-					if (!/^\d+$/.test(input)) {return 'Please enter a valid integer';}
-                    return null; // Return null to indicate valid input
-            }});
-			const int_proof_timeout = parseInt(proof_timeout, 10);
-			// wpResults.update(["","","",[]]);
-			// wpResults.refresh();
-			const gui = false;
-            const res = await client.sendRequest('provePOStrategies', [window.activeTextEditor.document.fileName, function_name, property_name, int_proof_timeout, gui]);
+            const args = get_proof_args(false);
+            const res = await client.sendRequest('provePOStrategies', args);
 			wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
 			wpResults.refresh();
 			window.showInformationMessage('Proof results updated');
@@ -478,33 +307,8 @@ export function activate(context: ExtensionContext) {
 
     const provePOStrategiesGUI = commands.registerCommand('provePOStrategiesGUI', async () => {
 		try {
-            const function_name = await window.showInputBox({
-                placeHolder: 'function',
-                prompt: 'Please specify functions to prove (c.f. -wp-fct )',
-                validateInput: (input) => {
-                    if (input.length === 0) {return 'Input cannot be empty!';}
-                    return null; // Return null to indicate valid input
-            }});
-			const property_name = await window.showInputBox({
-                placeHolder: 'property',
-                prompt: 'Please specify properties to prove (c.f. -wp-prop )',
-                validateInput: (input) => {
-                    if (input.length === 0) {return 'Input cannot be empty!';}
-                    return null; // Return null to indicate valid input
-            }});
-			const proof_timeout = await window.showInputBox({
-                placeHolder: 'timeout',
-                prompt: 'Please specify timeout for provers (c.f. -wp-timeout )',
-                validateInput: (input) => {
-                    if (input.length === 0) {return 'Input cannot be empty!';}
-					if (!/^\d+$/.test(input)) {return 'Please enter a valid integer';}
-                    return null; // Return null to indicate valid input
-            }});
-			const int_proof_timeout = parseInt(proof_timeout, 10);
-			// wpResults.update(["","","",[]]);
-			// wpResults.refresh();
-			const gui = true;
-            const res = await client.sendRequest('provePOStrategies', [window.activeTextEditor.document.fileName, function_name, property_name, int_proof_timeout, gui]);
+            const args = get_proof_args(true);
+            const res = await client.sendRequest('provePOStrategies', args);
 			wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
 			wpResults.refresh();
 			window.showInformationMessage('Proof results updated');
@@ -531,17 +335,7 @@ export function activate(context: ExtensionContext) {
 		try {
 			const filePath = window.activeTextEditor.document.fileName;
 			const file_name = "fc_metrics.txt";
-			const workspacePath = get_workspace ();
-			const filePath_metrics = workspacePath + "/.frama-c/" + file_name;
-			if (!fs.existsSync(filePath_metrics)) {
-				try {fs.writeFileSync(filePath_metrics, 'Task in progress ...')}
-				catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
-			}
-			const dirPath = path.dirname(filePath);
-			const fileUri = vscode.Uri.parse(filePath_metrics);
-			const document = await workspace.openTextDocument(fileUri);
-			await languages.setTextDocumentLanguage(document, 'plaintext');
-			const editor = await window.showTextDocument(document, ViewColumn.One, true);
+			create_file(file_name, 'plaintext');
 			client.sendNotification('showLocalMetrics', filePath);
 		} catch (err) {
 			window.showErrorMessage('Failed to get local metrics: ' + err.message);
@@ -552,16 +346,7 @@ export function activate(context: ExtensionContext) {
 	const showGlobalMetrics = commands.registerCommand('showGlobalMetrics', async () => {
 		try {
 			const file_name = "fc_metrics.txt";
-			const workspacePath = get_workspace ();
-			const filePath = workspacePath + "/.frama-c/" + file_name;
-			if (!fs.existsSync(filePath)) {
-				try {fs.writeFileSync(filePath, 'Task in progress ...')}
-				catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
-			}
-			const fileUri = vscode.Uri.parse(filePath);
-			const document = await workspace.openTextDocument(fileUri);
-			await languages.setTextDocumentLanguage(document, 'plaintext');
-			const editor = await window.showTextDocument(document, ViewColumn.One, true);
+			create_file(file_name, 'plaintext');
 			client.sendNotification('showGlobalMetrics');
 		} catch (err) {
 			window.showErrorMessage('Failed to get global metrics: ' + err.message);
@@ -641,7 +426,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 
   }
   
-  class TreeItem extends vscode.TreeItem {
+class TreeItem extends vscode.TreeItem {
 	children: TreeItem[]|undefined;
   
 	constructor(label: string, description?:string, public file_id?:string, public function_id?:string, public goal_id?:string, public script?:string, public filename_id?:string, public fct_id?:string, public prop_id?:string, context?:string, children?: TreeItem[]) {
@@ -654,9 +439,71 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 		else {this.iconPath = new vscode.ThemeIcon('error');}
 	  	this.contextValue = context;
 	}
-  }
+}
 
 
+async function create_file(fileName:string, type:string){
+	const workspacePath = get_workspace ();
+	const fileNameOut = workspacePath + "/.frama-c/fc_" + fileName;
+	if (!fs.existsSync(fileNameOut)) {
+		try {fs.writeFileSync(fileNameOut, 'Task in progress ...')}
+		catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
+	}
+	const fileUri = vscode.Uri.parse(fileNameOut);
+	const document = await workspace.openTextDocument(fileUri);
+	await languages.setTextDocumentLanguage(document, type);
+	const editor = await window.showTextDocument(document, ViewColumn.One, true);
+}
+
+async function get_args_from_item(selectedItem:TreeItem, gui:boolean){
+	const workspacePath = get_workspace ();
+	const file_name = selectedItem.file_id;
+	const function_name = selectedItem.fct_id;
+	const property_name = selectedItem.prop_id;
+	const proof_timeout = await window.showInputBox({
+		placeHolder: 'timeout',
+		prompt: 'Please specify timeout for provers (c.f. -wp-timeout )',
+		validateInput: (input) => {
+			if (input.length === 0) {return 'Input cannot be empty!';}
+			if (!/^\d+$/.test(input)) {return 'Please enter a valid integer';}
+			return null; // Return null to indicate valid input
+	}});
+	const int_proof_timeout = parseInt(proof_timeout, 10);
+	// If need to empty the list of item:
+	// wpResults.update(["","","",[]]);
+	// wpResults.refresh();
+	return [file_name, function_name, property_name, int_proof_timeout, gui]
+}
+
+async function get_proof_args(gui:boolean){
+	const function_name = await window.showInputBox({
+		placeHolder: 'function',
+		prompt: 'Please specify functions to prove (c.f. -wp-fct )',
+		validateInput: (input) => {
+			if (input.length === 0) {return 'Input cannot be empty!';}
+			return null; // Return null to indicate valid input
+	}});
+	const property_name = await window.showInputBox({
+		placeHolder: 'property',
+		prompt: 'Please specify properties to prove (c.f. -wp-prop )',
+		validateInput: (input) => {
+			if (input.length === 0) {return 'Input cannot be empty!';}
+			return null; // Return null to indicate valid input
+	}});
+	const proof_timeout = await window.showInputBox({
+		placeHolder: 'timeout',
+		prompt: 'Please specify timeout for provers (c.f. -wp-timeout )',
+		validateInput: (input) => {
+			if (input.length === 0) {return 'Input cannot be empty!';}
+			if (!/^\d+$/.test(input)) {return 'Please enter a valid integer';}
+			return null; // Return null to indicate valid input
+	}});
+	const int_proof_timeout = parseInt(proof_timeout, 10);
+	// If need to empty the list of item:
+	// wpResults.update(["","","",[]]);
+	// wpResults.refresh();
+	return([window.activeTextEditor.document.fileName, function_name, property_name, int_proof_timeout, gui]);
+}
 
 function get_workspace(){
 	if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
@@ -671,26 +518,11 @@ function get_workspace(){
 }
 
 
-async function create_frama_c_folder(workspace){
+async function create_frama_c_folder(workspace:string){
 	try {
 		await fs.promises.mkdir(workspace + "/.frama-c", {recursive: true})
 	} catch(err) {
 	}
-}
-
-// Function to open the directory in the system's file explorer (not used yet)
-function openDirectoryExternally(folderPath: string) {
-    const platform = process.platform;
-
-    if (platform === 'win32') {
-        exec(`explorer "${folderPath}"`);
-    } else if (platform === 'darwin') {
-        exec(`open "${folderPath}"`);
-    } else if (platform === 'linux') {
-        exec(`explorer.exe "${folderPath}"`);
-    } else {
-        console.error('Unsupported platform');
-    }
 }
 
 export function deactivate(): Thenable<void> | undefined {

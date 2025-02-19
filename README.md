@@ -1,6 +1,6 @@
 # ACSl LSP
 
-This repository contains both the server and client software that implment the Language Server Protocol (LSP) for C/ACSL language. 
+This repository contains both the server and client software that implement the Language Server Protocol (LSP) for C/ACSL language. 
 Refer to README files in each subdirectory for installation guidelines.
 
 
@@ -16,7 +16,7 @@ Open a pull request.
 Please ensure your code adheres to the project's coding standards and includes appropriate tests if necessary.
 
 ## License
-This project is licensed under the GPLv3 License - see the LICENSE file for details.
+This project is licensed under the LGPLv3 License - see the LICENSE file for details.
 
 ## Acknowledgments
 This software has been initiated in 2024 by Djamila MOHAMED and Adel DJOUDI.
