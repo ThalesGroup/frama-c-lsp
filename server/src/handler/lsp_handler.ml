@@ -47,6 +47,7 @@ type t = {
   no_unicode : bool;
   inline_calls : string list;
   remove_inlined : string list;
+  no_annot: bool;
   strategies : bool
   }
 let create ?fct ~strategies () =
@@ -64,6 +65,7 @@ let create ?fct ~strategies () =
     no_unicode = true;
     inline_calls = !Configuration.global_params.inlineCalls;
     remove_inlined = !Configuration.global_params.removeInlined;
+    no_annot = !Configuration.global_params.noAnnot;
     strategies = strategies;
   }
 let string_of_t (options : t) : string =
@@ -82,8 +84,9 @@ let string_of_t (options : t) : string =
   let no_unicode_opt = option_if_true options.no_unicode "-no-unicode" in
   let inline_calls_opt = option_if_not_empty_string (String.concat "," options.inline_calls) "-inline-calls=" in
   let remove_inlines_opt = option_if_not_empty_string (String.concat "," options.remove_inlined) "-remove-inlined=" in
-  Printf.sprintf "%s %s %s %s %s %s %s %s %s"
-  cpp_extra_args_opt machdep_opt generated_spec_custom_opt remove_unused_specified_functions_opt aggressive_merging_opt kernel_warn_key_opt no_unicode_opt inline_calls_opt remove_inlines_opt
+  let no_annot_opt = option_if_true options.no_annot "-no-annot" in
+  Printf.sprintf "%s %s %s %s %s %s %s %s %s %s"
+  cpp_extra_args_opt machdep_opt generated_spec_custom_opt remove_unused_specified_functions_opt aggressive_merging_opt kernel_warn_key_opt no_unicode_opt inline_calls_opt remove_inlines_opt no_annot_opt
 end
 
 module WpOpt = struct
@@ -944,7 +947,7 @@ let notif_handler json_string server_sock wrapper_port =
       begin
         let kernel_opt = KernelOpt.create ~strategies:false () in
         let uncast_opt = UncastOpt.create () in
-        let wp_opt = WpOpt.create ~wp_prop:["@assigns"] ~wp_prover:["none"] ~wp_smoke_tests:false ~wp_gen:true () in
+        let wp_opt = WpOpt.create ~wp_prop:["@assigns"; "rte"] ~wp_prover:["none"] ~wp_smoke_tests:false ~wp_gen:true () in
         let metacsl_opt = MetacslOpt.create () in
         let feature = DidSave_feature in
         let lsp_opt = LspOpt.create (feature) in

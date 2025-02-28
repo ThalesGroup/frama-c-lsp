@@ -382,7 +382,7 @@ export function activate(context: ExtensionContext) {
            		return;
        		}
 			const filePath = editor.document.fileName;
-			const file_name = "fc_metrics.txt";
+			const file_name = "metrics.txt";
 			await create_file(file_name, 'plaintext');
 			client.sendNotification('showLocalMetrics', filePath);
 		} catch (err) {
@@ -394,7 +394,7 @@ export function activate(context: ExtensionContext) {
 
 	const showGlobalMetrics = commands.registerCommand('showGlobalMetrics', async () => {
 		try {
-			const file_name = "fc_metrics.txt";
+			const file_name = "metrics.txt";
 			await create_file(file_name, 'plaintext');
 			client.sendNotification('showGlobalMetrics');
 		} catch (err) {

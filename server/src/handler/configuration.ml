@@ -30,6 +30,7 @@ let sections = {| {"items": [
           {"section": "kernel.generatedSpecCustom"},
           {"section": "kernel.inlineCalls"},
           {"section": "kernel.removeInlined"},
+          {"section": "kernel.noAnnot"},
           {"section": "metrics.byFunction"},
           {"section": "callgraph.roots"},
           {"section": "callgraph.services"},
@@ -79,6 +80,7 @@ let sections = {| {"items": [
     generatedSpecCustom : string list;
     inlineCalls: string list;
     removeInlined: string list;
+    noAnnot: bool;
     metricsByFunction : bool;
     cgRoots : string list;
     cgServices : bool;
@@ -126,6 +128,7 @@ let sections = {| {"items": [
     ~generatedSpecCustom
     ~inlineCalls
     ~removeInlined
+    ~noAnnot
     ~metricsByFunction
     ~cgRoots
     ~cgServices 
@@ -173,6 +176,7 @@ let sections = {| {"items": [
       generatedSpecCustom;
       inlineCalls;
       removeInlined;
+      noAnnot;
       metricsByFunction;
       cgRoots;
       cgServices;
@@ -221,6 +225,7 @@ let global_params = ref
   ~generatedSpecCustom:[]
   ~inlineCalls:[]
   ~removeInlined:[]
+  ~noAnnot:false
   ~metricsByFunction:false
   ~cgRoots:[]
   ~cgServices:false
@@ -277,6 +282,7 @@ let save_configs (result:  Json.json) =
         `List json_generatedSpecCustom;
         `List json_inlineCalls;
         `List json_removeInlined;
+        `Bool json_noAnnot;
         `Bool json_metricsByFunction;
         `List json_cgRoots;
         `Bool json_cgServices;
@@ -324,6 +330,7 @@ let save_configs (result:  Json.json) =
       ~generatedSpecCustom: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_generatedSpecCustom)
       ~inlineCalls: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_inlineCalls)
       ~removeInlined: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_removeInlined)
+      ~noAnnot: json_noAnnot
       ~metricsByFunction: json_metricsByFunction
       ~cgRoots: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_cgRoots)
       ~cgServices: json_cgServices
