@@ -1,44 +1,28 @@
-# Thales Open Source Template Project
+# ACSl LSP
 
-Template for creating a new project in the [Thales GitHub organization](https://github.com/ThalesGroup).
+This repository contains both the server and client software that implement the Language Server Protocol (LSP) for C/ACSL language. 
+Refer to README files in each subdirectory for installation guidelines.
 
-Each Thales OSS project repository **MUST** contain the following files at the root:
+The client part is inspired from https://github.com/Microsoft/vscode-extension-samples/tree/main/lsp-sample
 
-- a `LICENSE` which has been chosen in accordance with legal department depending on your needs
+The server part is a Frama-C plugin called "LSP" that has two usage modes:
+- handler mode: ensures sustainable exchange of TCP/IP sockets between the server and the client.
+- feature mode: ensures background frama-c process execution with parameters required for requested feature.
 
-- a `README.md` outlining the project goals, sponsoring sig, and community contact information, [GitHub tips about README.md](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/about-readmes)
-
-- a `CONTRIBUTING.md` outlining how to contribute to the project, how to submit a pull request and an issue
-
-- a `SECURITY.md` outlining how the security concerns are handled, [GitHub tips about SECURITY.md](https://docs.github.com/en/github/managing-security-vulnerabilities/adding-a-security-policy-to-your-repository)
-
-Below is an example of the common structure and information expected in a README.
-
-**Please keep this structure as is and only fill the content for each section according to your project.**
-
-If you need assistance or have question, please contact oss@thalesgroup.com
-
-## Get started
-
-XXX project purpose it to ...
-
-**Please also add the description into the About section (Description field)**
-
-## Documentation
-
-Documentation is available at [xxx/docs](https://xxx/docs/).
-
-You can use [GitHub pages](https://guides.github.com/features/pages/) to create your documentation.
-
-See an example here : https://github.com/ThalesGroup/ThalesGroup.github.io
-
-**Please also add the documentation URL into the About section (Website field)**
 
 ## Contributing
+We welcome contributions from the community! If you would like to contribute, follow these steps:
 
-If you are interested in contributing to the XXX project, start by reading the [Contributing guide](/CONTRIBUTING.md).
+Fork the repository.
+Create a new branch (git checkout -b feature/your-feature).
+Make your changes.
+Commit your changes (git commit -am 'Add new feature').
+Push to the branch (git push origin feature/your-feature).
+Open a pull request.
+Please ensure your code adheres to the project's coding standards and includes appropriate tests if necessary.
 
 ## License
+This project is licensed under the LGPLv3 License - see the LICENSE file for details.
 
-The chosen license in accordance with legal department must be defined into an explicit [LICENSE](https://github.com/ThalesGroup/template-project/blob/master/LICENSE) file at the root of the repository
-You can also link this file in this README section.
+## Acknowledgments
+This software has been initiated in 2024 by Djamila MOHAMED and Adel DJOUDI.

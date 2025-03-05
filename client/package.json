@@ -1,0 +1,179 @@
+{
+    "name": "acsl-lsp",
+    "version": "0.1.0",
+    "publisher": "innov-org",
+    "engines": {"vscode": "^1.85.0"},
+    "description": "Visual Studio Code Client for ACSL Language Server",
+    "license": "SEE LICENSE IN LICENSE.md",
+    "displayName": "acsl-lsp",
+    "repository": {"type": "git", "url": "https://github.com/ThalesGroup/frama-c-lsp.git"},
+    "categories": ["Programming Languages"],
+    "keywords": ["acsl", "c", "frama-c"],
+    "activationEvents": ["onLanguage:acsl"],
+    "icon": "images/logo-frama-c.png",
+    "main": "./out/extension",
+    "contributes": {
+        "viewsContainers": {
+            "panel": [{"id": "myPanel", "title": "WP Goals", "icon": "images/logo-frama-c.png"}]
+        },
+        "views": {
+            "myPanel": [{"id": "WPPan", "name": "WP pan"}]
+        },
+        "menus": {
+            "editor/context": [
+                {"command": "stop", "when": "resourceLangId == acsl"},
+                {"submenu": "Frama-C"},
+                {"submenu": "Frama-C/WP"}
+            ],
+            "Frama-C": [
+                {"command": "displayCIL", "when": "resourceLangId == acsl"},
+                {"command": "displayCIL_noannot", "when": "resourceLangId == acsl"},
+                {"command": "displayCILProject", "when": "resourceLangId == acsl"},
+                {"command": "displayCILProject_noannot", "when": "resourceLangId == acsl"},
+                {"command": "computeCG", "when": "resourceLangId == acsl"},
+                {"command": "showGlobalMetrics", "when": "resourceLangId == acsl"},
+                {"command": "showLocalMetrics", "when": "resourceLangId == acsl"}
+            ],
+            "Frama-C/WP": [
+                {"command": "provePO", "when": "resourceLangId == acsl"},
+                {"command": "provePOStrategies", "when": "resourceLangId == acsl"},
+                {"command": "provePOGUI", "when": "resourceLangId == acsl"},
+                {"command": "provePOStrategiesGUI", "when": "resourceLangId == acsl"},
+                {"command": "smokeTests", "when": "resourceLangId == acsl"},
+                {"command": "showPOVC", "when": "resourceLangId == acsl"}
+            ],
+            "view/item/context": [
+                {"command": "showScript", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
+                {"command": "showPO", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
+                {"command": "runAgain", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
+                {"command": "runAgainGui", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
+                {"command": "runAgainStrategies", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
+                {"command": "runAgainStrategiesGui", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"}
+            ]
+        },
+        "submenus": [
+            {"id": "Frama-C", "label": "Frama-C", "icon": "images/logo-frama-c.png"},
+            {"id": "Frama-C/WP", "label": "Frama-C/WP", "icon": "images/logo-frama-c.png"}
+        ],
+        "commands": [
+            {"command": "displayCIL", "title": "Display File CIL"},
+            {"command": "displayCIL_noannot", "title": "Display File CIL (-no-annot)"},
+            {"command": "displayCILProject", "title": "Display Project CIL"},
+            {"command": "displayCILProject_noannot", "title": "Display Project CIL (-no-annot)"},
+            {"command": "computeCG", "title": "Generate File CallGraph"},
+            {"command": "showGlobalMetrics", "title": "Display Project Metrics"},
+            {"command": "showLocalMetrics", "title": "Display File Metrics"},
+            {"command": "smokeTests", "title": "Smoke Tests"},
+            {"command": "showPOVC", "title": "Display Proof Obligation"},
+            {"command": "showScript", "title": "Goto script"},
+            {"command": "showPO", "title": "Display Proof Obligation"},
+            {"command": "runAgain", "title": "Run proof again"},
+            {"command": "runAgainGui", "title": "Run proof again (GUI)"},
+            {"command": "runAgainStrategies", "title": "Run proof again with strategies"},
+            {"command": "runAgainStrategiesGui", "title": "Run proof again wih strategies (GUI)"},
+            {"command": "provePO", "title": "Prove"},
+            {"command": "provePOStrategies", "title": "Prove with Strategies"},
+            {"command": "provePOGUI", "title": "Prove (GUI)"},
+            {"command": "provePOStrategiesGUI", "title": "Prove with Strategies (GUI)"},
+            {"command": "stop", "title": "Stop"}
+        ],
+        "languages": [{"id": "acsl", "aliases": ["ACSL", "acsl"], "extensions": [".c", ".h"], "configuration": "./syntax/language-configuration.json", "icon": {"light": "./images/logo-frama-c.png", "dark": "./images/logo-frama-c.png"}}],
+        "grammars": [{"language": "acsl", "scopeName": "source.acsl", "path": "./syntax/acsl.tmLanguage.json"}],
+        "configuration": [
+            {"title": "Generic",
+             "properties": {
+                "vscodeacsl.maxNumberOfProblems": {"scope": "resource", "type": "number", "default": 10000000, "description": "Maximum number of problems produced by the server."},
+                "vscodeacsl.serverPort": {"scope": "resource", "type": "number", "description": "Server port to ensure sustainable connection with vscode"},
+                "vscodeacsl.wrapperPort": {"scope": "resource", "type": "number", "description": "Wrapper port to allow request submission to frama-c"}
+            }
+            },
+            {
+            "title": "Frama-C/kernel",
+            "properties": {
+                "kernel.lspDebug": {"scope": "window", "type": "integer", "enum": [0, 1, 2], "default": 0, "description": "Frama-C option: -lsp-debug (2 => (1 + json messages), 1 => lsp handler output, 0 => off)."},
+                "kernel.includePaths": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Include paths for the project. Frama-C option: -cpp-extra-args \"-I ...\""},
+                "kernel.sourceFiles": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Source files."},
+                "kernel.macros": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Frama-C option: -cpp-extra-args \"-D ...\""},
+                "kernel.macroStrategiesFunctionPrefix": {"scope": "workspace", "type": "string", "description": "Frama-C option: -cpp-extra-args \"-D ...\". Define a macro for each function given with option -wp-fct"},
+                "kernel.sourceFileStrategies": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Source files providing strategies."},
+                "kernel.sourceFileMetacsl": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Source files providing metaproperties."},
+                "kernel.machdep": {"scope": "workspace", "type": "string", "description": "Frama-C option: -machdep"},
+                "kernel.removeUnusedSpecifiedFunctions": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -remove-unused-specified-functions", "default": true},
+                "kernel.aggressiveMerging": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -aggressive-merging", "default": false},
+                "kernel.generatedSpecCustom": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Frama-C option: -generated-spec-custom"},
+                "kernel.inlineCalls": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Frama-C option: -inline-calls"},
+                "kernel.removeInlined": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Frama-C option: -remove-inlined"},
+                "kernel.noAnnot": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -no-annot"}
+                }
+            },
+            {
+            "title": "Frama-C/Metrics",
+            "properties": {
+                "metrics.byFunction": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -metrics-by-function", "default": false}
+                }
+            },
+            {
+            "title": "Frama-C/Cg",
+            "properties": {
+                "callgraph.roots": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Frama-C option: -cg-roots"},
+                "callgraph.services": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -cg-no-services", "default": true}
+                }
+            },
+            {
+            "title": "Frama-C/WP",
+            "properties": {
+                "diagnostics.wp": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -wp", "default": false},
+                "wp.rte": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -wp-rte", "default": false},
+                "wp.prover": {"scope": "workspace", "type": "string", "default": "script,alt-ergo", "description": "Frama-C option: -wp-prover"},
+                "wp.timeout": {"scope": "workspace", "type": "integer", "default": 4, "description": "Frama-C option: -wp-timeout"},
+                "wp.par": {"scope": "workspace", "type": "integer", "default": 4, "description": "Frama-C option: -wp-par"},
+                "wp.session": {"scope": "workspace", "type": "string", "default": "", "description": "Frama-C option: -wp-session"},
+                "wp.script": {"scope": "workspace", "type": "string", "default": "", "description": "Frama-C option: -wp-script"},
+                "wp.cache": {"scope": "workspace", "type": "string", "default": "", "description": "Frama-C option: -wp-cache"},
+                "wp.model": {"scope": "workspace", "type": "string", "default": "", "description": "Frama-C option: -wp-model"},
+                "wp.noPruning": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -wp-no-pruning", "default": true},
+                "wp.checkMemoryModel": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -wp-check-memory-model", "default": false},
+                "wp.noVolatile": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -wp-no-volatile", "default": true},
+                "wp.autoDepth": {"scope": "workspace", "type": "integer", "default": 4, "description": "Frama-C option: -wp-auto-depth"},
+                "wp.autoWidth": {"scope": "workspace", "type": "integer", "default": 4, "description": "Frama-C option: -wp-auto-width"},
+                "wp.autoBacktrack": {"scope": "workspace", "type": "integer", "default": 4, "description": "Frama-C option: -wp-auto-backtrack"},
+                "wp.filenameTruncation": {"scope": "workspace", "type": "integer", "default": 220, "description": "Frama-C option: -wp-filename-truncation"}
+                }
+            },
+            {
+            "title": "Frama-C/MetAcsl",
+            "properties": {
+                "metacsl.active": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -meta", "default": false},
+                "metacsl.checks": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -meta-checks", "default": true},
+                "metacsl.noSimpl": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -meta-no-simpl", "default": true},
+                "metacsl.noCheckExt": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -meta-no-check-ext", "default": true},
+                "metacsl.numberAssertions": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -meta-number-assertions", "default": true},
+                "metacsl.checkCalleeAssigns": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Frama-C option: -meta-check-callee-assigns"}
+                }
+            }
+        ]
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -b",
+        "watch": "tsc -b -w",
+        "lint": "eslint ./src --ext .ts,.tsx",
+        "test": "sh ./scripts/e2e.sh"
+    },
+    "devDependencies": {
+        "@types/mocha": "^10.0.7",
+        "@types/node": "^18.19.44",
+        "@types/vscode": "^1.85.0",
+        "@typescript-eslint/eslint-plugin": "^7.18.0",
+        "@typescript-eslint/parser": "^7.18.0",
+        "eslint": "^8.57.0",
+        "minimatch": "^3.1.2",
+        "mocha": "^11.0.1",
+        "typescript": "^5.5.4"
+    },
+    "dependencies": {
+        "@types/vscode-webview": "^1.57.5",
+        "types": "^0.1.1",
+        "vscode-languageclient": "^9.0.1"
+    }
+}

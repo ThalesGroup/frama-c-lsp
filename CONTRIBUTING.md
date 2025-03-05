@@ -1,30 +1,8 @@
 Describe in this file:
 
-- team organization, roles, communication
-- the rules to be respected by your future contributors
-
 # Contributing guidelines
+Contributors are free to clone this repository and add their modifications under the terms of License described in LICENCE.md
 
-## Team organization
+## Testing
 
-### Roles
-
-## How to become a contributor
-
-### Contributor License Agreements
-
-### Contributing code
-
-## Pull Request Checklist
-
-### License
-
-### Coding style
-
-### Testing
-
-#### Running sanity check
-
-#### Running unit tests
-
-### Issues management
+Contibutors are encouraged to enrich the provided code examples with code samples that illustrate the contributed features.
