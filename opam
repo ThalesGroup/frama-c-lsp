@@ -1,5 +1,5 @@
 opam-version: "2.0"
-synopsis: "Your project description"
+synopsis: "This frama-c-lsp project offers an implementation of the Language Server Protocol (LSP) for C/ACSL language."
 maintainer: "adel.djoudi@thalesgroup.com"
 authors: "Adel DJOUDI"
 license: "LGPL-3.0-or-later"
@@ -8,7 +8,7 @@ depends: [
   "frama-c" {>= "29.0"}
 ]
 dev-repo: "https://github.com/ThalesGroup/frama-c-lsp.git"
-version: "0.1"
+version: "0.1.0"
 build: [
   ["sh" "-c" "cd" "server" "&&" "dune" "build"]
   ["sh" "-c" "cd" "server" "&&" "dune" "install" "-p" name "--create-install-files" name]
