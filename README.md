@@ -13,13 +13,13 @@ The server part is a Frama-C plugin called "LSP" that has two usage modes:
 ## Contributing
 We welcome contributions from the community! If you would like to contribute, follow these steps:
 
-Fork the repository.
-Create a new branch (git checkout -b feature/your-feature).
-Make your changes.
-Commit your changes (git commit -am 'Add new feature').
-Push to the branch (git push origin feature/your-feature).
-Open a pull request.
-Please ensure your code adheres to the project's coding standards and includes appropriate tests if necessary.
+- Fork the repository.
+- Create a new branch (git checkout -b feature/your-feature).
+- Make your changes.
+- Commit your changes (git commit -am 'Add new feature').
+- Push to the branch (git push origin feature/your-feature).
+- Open a pull request.
+- Please ensure your code adheres to the project's coding standards and includes appropriate tests if necessary.
 
 ## License
 This project is licensed under the LGPLv3 License - see the LICENSE file for details.

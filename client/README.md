@@ -39,9 +39,9 @@ Or run this command: code --install-extension acsl-lsp-linux-x64-0.1.0.vsix
 
 
 ## nvm installation:
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-nvm install 20
-nvm use 20
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash  
+nvm install 20  
+nvm use 20  
 
 ## For developpers (compilation)
 npm install

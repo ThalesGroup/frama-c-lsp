@@ -28,8 +28,8 @@ This server part is a Frama-C plugin called "LSP" that has two usage modes:
 opam pin add .
 
 ### Manual installation
-dune build
-dune install
+dune build  
+dune install  
 
 
 ## Contributing
