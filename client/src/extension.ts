@@ -532,14 +532,14 @@ async function get_args_from_item(selectedItem:TreeItem, gui:boolean){
 async function get_proof_args(gui:boolean){
 	const function_name = await window.showInputBox({
 		placeHolder: 'function',
-		prompt: 'Please specify functions to prove (c.f. -wp-fct )',
+		prompt: 'Please specify functions to prove (c.f. -wp-fct ) (@all for all functions)',
 		validateInput: (input) => {
 			if (input.length === 0) {return 'Input cannot be empty!';}
 			return null; // Return null to indicate valid input
 	}});
 	const property_name = await window.showInputBox({
 		placeHolder: 'property',
-		prompt: 'Please specify properties to prove (c.f. -wp-prop )',
+		prompt: 'Please specify properties to prove (c.f. -wp-prop ) (@all for all properites)',
 		validateInput: (input) => {
 			if (input.length === 0) {return 'Input cannot be empty!';}
 			return null; // Return null to indicate valid input

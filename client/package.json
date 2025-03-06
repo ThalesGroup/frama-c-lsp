@@ -6,7 +6,7 @@
     "description": "Visual Studio Code Client for ACSL Language Server",
     "license": "SEE LICENSE IN LICENSE.md",
     "displayName": "acsl-lsp",
-    "repository": {"type": "git", "url": "https://bitbucket.gemalto.com/users/t0244734/repos/acsl_lsp/browse/Acsl_lsp"},
+    "repository": {"type": "git", "url": "https://github.com/ThalesGroup/frama-c-lsp.git"},
     "categories": ["Programming Languages"],
     "keywords": ["acsl", "c", "frama-c"],
     "activationEvents": ["onLanguage:acsl"],

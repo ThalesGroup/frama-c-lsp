@@ -64,7 +64,7 @@ let get_property_status id file fct prop: string =
     Options.Self.debug ~level:1 "function:%s label:%s done!\n%!" function_name property_name;
     let script_file = Pretty_utils.to_string Wp.ProofSession.pp_file (Wp.ProofSession.filename ~force:false po) in
     let position = match Property.source property with
-    | None -> ""
+    | None -> " : "
     | Some position -> (Pretty_utils.to_string Filepath.pp_pos position) 
     in 
     let goal_id = Wp.Wpo.get_gid po in

@@ -7,7 +7,7 @@ depends: [
   "dune" {>= "3.7"}
   "frama-c" {>= "29.0"}
 ]
-dev-repo: "git+https://bitbucket.gemalto.com/scm/~t0244734/acsl_lsp.git"
+dev-repo: "https://github.com/ThalesGroup/frama-c-lsp.git"
 version: "0.1"
 build: [
   ["sh" "-c" "cd" "server" "&&" "dune" "build"]
