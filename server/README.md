@@ -22,6 +22,10 @@ This server part is a Frama-C plugin called "LSP" that has two usage modes:
 - Show proof obligations (specific to Frama-C/WP plugin)
 
 
+## Configuration
+This software is compatible with Frama-C v29.0 and Linux ubuntu 22.04 LTS.
+No other configuration is supported currently.
+
 ## Installation
 
 ### Via opam
