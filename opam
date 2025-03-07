@@ -7,7 +7,9 @@ depends: [
   "dune" {>= "3.7"}
   "frama-c" {= "30.0"}
 ]
-dev-repo: "https://github.com/ThalesGroup/frama-c-lsp.git"
+homepage: "https://github.com/ThalesGroup/frama-c-lsp"
+dev-repo: "git+https://github.com/ThalesGroup/frama-c-lsp.git"
+bug-reports: "https://github.com/ThalesGroup/frama-c-lsp/issues"
 version: "0.1"
 build: [
   ["sh" "-c" "cd" "server" "&&" "dune" "build"]
