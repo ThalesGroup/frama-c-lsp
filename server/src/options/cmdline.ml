@@ -256,8 +256,8 @@ let run () =
         with exn -> Options.Self.debug ~level:1 "There was an error in the server %s:\n Backtrace : %s\n%!" (Printexc.to_string exn) (Printexc.get_backtrace ())
       )
     | None ->
-      let framac_share = Utils.file_str Fc_config.datadir in
-      Kernel.Share.set (Fc_config.datadir);
+      let framac_share = Utils.file_str System_config.Share.main in
+      Kernel.Share.set System_config.Share.main;
       let share = Kernel.Share.get () in
       Filepath.add_symbolic_dir framac_share share;
       let feature = get_active_option () in
