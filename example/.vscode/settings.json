@@ -12,7 +12,7 @@
     "kernel.sourceFileStrategies": [""],
     "kernel.sourceFileMetacsl": [""],
     "kernel.aggressiveMerging": false,
-    "kernel.removeUnusedSpecifiedFunctions": true,
+    "kernel.removeUnusedSpecifiedFunctions": false,
     "kernel.machdep": "x86_32",
     "kernel.inlineCalls": [],
     "kernel.removeInlined": [],
