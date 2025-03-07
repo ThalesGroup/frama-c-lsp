@@ -1,5 +1,5 @@
 opam-version: "2.0"
-synopsis: "Your project description"
+synopsis: "Frama-C plugin for LSP support of ACSL annotations"
 maintainer: "adel.djoudi@thalesgroup.com"
 authors: "Adel DJOUDI"
 license: "LGPL-3.0-or-later"
