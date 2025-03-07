@@ -29,9 +29,14 @@ No other configuration is supported currently.
 ## Installation
 
 ### Via opam
-opam pin add .
+With Frama-C 29.0:  
+opam pin add frama-c-lsp https://github.com/ThalesGroup/frama-c-lsp.git#0.1  
+
+With Frama-C 30.0:  
+opam pin add frama-c-lsp https://github.com/ThalesGroup/frama-c-lsp.git#0.2  
 
 ### Manual installation
+From server forlder:  
 dune build  
 dune install  
 
