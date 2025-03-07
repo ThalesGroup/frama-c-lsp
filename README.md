@@ -9,6 +9,9 @@ The server part is a Frama-C plugin called "LSP" that has two usage modes:
 - handler mode: ensures sustainable exchange of TCP/IP sockets between the server and the client.
 - feature mode: ensures background frama-c process execution with parameters required for requested feature.
 
+## Configuration
+This software is compatible with Frama-C v29.0 and Linux ubuntu 22.04 LTS.
+No other configuration is supported currently.
 
 ## Contributing
 We welcome contributions from the community! If you would like to contribute, follow these steps:
