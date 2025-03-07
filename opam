@@ -5,7 +5,7 @@ authors: "Adel DJOUDI"
 license: "LGPL-3.0-or-later"
 depends: [
   "dune" {>= "3.7"}
-  "frama-c" {>= "29.0"}
+  "frama-c" {== "30.0"}
 ]
 dev-repo: "https://github.com/ThalesGroup/frama-c-lsp.git"
 version: "0.1"
