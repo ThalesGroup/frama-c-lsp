@@ -25,8 +25,7 @@ let sections = {| {"items": [
           {"section": "kernel.sourceFileStrategies"},
           {"section": "kernel.sourceFileMetacsl"},
           {"section": "kernel.machdep"},
-          {"section": "kernel.removeUnusedSpecifiedFunctions"},
-          {"section": "kernel.aggressiveMerging"},
+          {"section": "kernel.keepUnusedFunctions"},
           {"section": "kernel.generatedSpecCustom"},
           {"section": "kernel.inlineCalls"},
           {"section": "kernel.removeInlined"},
@@ -75,8 +74,7 @@ let sections = {| {"items": [
     sourceFileStrategies : string list;
     sourceFileMetacsl : string list;
     machdep : string;
-    removeUnusedSpecifiedFunctions : bool;
-    aggressiveMerging : bool;
+    keepUnusedFunctions : string;
     generatedSpecCustom : string list;
     inlineCalls: string list;
     removeInlined: string list;
@@ -123,8 +121,7 @@ let sections = {| {"items": [
     ~sourceFileStrategies
     ~sourceFileMetacsl
     ~machdep 
-    ~removeUnusedSpecifiedFunctions 
-    ~aggressiveMerging 
+    ~keepUnusedFunctions
     ~generatedSpecCustom
     ~inlineCalls
     ~removeInlined
@@ -171,8 +168,7 @@ let sections = {| {"items": [
       sourceFileStrategies;
       sourceFileMetacsl;
       machdep;
-      removeUnusedSpecifiedFunctions;
-      aggressiveMerging;
+      keepUnusedFunctions;
       generatedSpecCustom;
       inlineCalls;
       removeInlined;
@@ -220,8 +216,7 @@ let global_params = ref
   ~sourceFileStrategies:[]
   ~sourceFileMetacsl: []
   ~machdep:""
-  ~removeUnusedSpecifiedFunctions:false
-  ~aggressiveMerging:false
+  ~keepUnusedFunctions:"none"
   ~generatedSpecCustom:[]
   ~inlineCalls:[]
   ~removeInlined:[]
@@ -277,8 +272,7 @@ let save_configs (result:  Json.json) =
         `List json_sourceFileStrategies;
         `List json_sourceFileMetacsl;
         `String json_machdep;
-        `Bool json_removeUnusedSpecifiedFunctions;
-        `Bool json_aggressiveMerging;
+        `String json_keepUnusedFunctions;
         `List json_generatedSpecCustom;
         `List json_inlineCalls;
         `List json_removeInlined;
@@ -325,8 +319,7 @@ let save_configs (result:  Json.json) =
       ~sourceFileStrategies: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_sourceFileStrategies)
       ~sourceFileMetacsl: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_sourceFileMetacsl)
       ~machdep: (Utils.remove_newline (Utils.remove_quotes (json_machdep)))
-      ~removeUnusedSpecifiedFunctions: json_removeUnusedSpecifiedFunctions
-      ~aggressiveMerging: json_aggressiveMerging
+      ~keepUnusedFunctions: json_keepUnusedFunctions
       ~generatedSpecCustom: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_generatedSpecCustom)
       ~inlineCalls: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_inlineCalls)
       ~removeInlined: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_removeInlined)

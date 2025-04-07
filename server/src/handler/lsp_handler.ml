@@ -41,8 +41,7 @@ type t = {
   cpp_extra_args : string;
   machdep : string;
   generated_spec_custom : string list;
-  keep_unused_specified_functions : bool;
-  aggressive_merging : bool;
+  keep_unused_functions : string;
   kernel_warn_key : string;
   no_unicode : bool;
   inline_calls : string list;
@@ -59,8 +58,7 @@ let create ?fct ~strategies () =
     cpp_extra_args = "-CC";
     machdep = !Configuration.global_params.machdep;
     generated_spec_custom = !Configuration.global_params.generatedSpecCustom;
-    keep_unused_specified_functions = !Configuration.global_params.removeUnusedSpecifiedFunctions;
-    aggressive_merging = !Configuration.global_params.aggressiveMerging;
+    keep_unused_functions = !Configuration.global_params.keepUnusedFunctions;
     kernel_warn_key = "annot-error=active,too-large-array=active";
     no_unicode = true;
     inline_calls = !Configuration.global_params.inlineCalls;
@@ -78,15 +76,14 @@ let string_of_t (options : t) : string =
   let cpp_extra_args_opt = "-cpp-extra-args=\""^(options.cpp_extra_args)^""^(String.concat "" include_paths_opt)^""^(String.concat "" macros_opt)^""^(String.concat "" macroStrategiesFunctionPrefix_opt)^"\"" in
   let machdep_opt = (option_if_not_empty_string options.machdep "-machdep=") in
   let generated_spec_custom_opt = option_if_not_empty_string (String.concat "," options.generated_spec_custom) "-generated-spec-custom=" in
-  let remove_unused_specified_functions_opt = option_if_true options.keep_unused_specified_functions "-remove-unused-specified-functions" in
-  let aggressive_merging_opt = option_if_true options.aggressive_merging "-aggressive-merging" in
+  let keep_unused_functions_opt = option_if_not_empty_string options.keep_unused_functions "-keep-unused-functions=" in
   let kernel_warn_key_opt = option_if_not_empty_string options.kernel_warn_key "-kernel-warn-key=" in
   let no_unicode_opt = option_if_true options.no_unicode "-no-unicode" in
   let inline_calls_opt = option_if_not_empty_string (String.concat "," options.inline_calls) "-inline-calls=" in
   let remove_inlines_opt = option_if_not_empty_string (String.concat "," options.remove_inlined) "-remove-inlined=" in
   let no_annot_opt = option_if_true options.no_annot "-no-annot" in
-  Printf.sprintf "%s %s %s %s %s %s %s %s %s %s"
-  cpp_extra_args_opt machdep_opt generated_spec_custom_opt remove_unused_specified_functions_opt aggressive_merging_opt kernel_warn_key_opt no_unicode_opt inline_calls_opt remove_inlines_opt no_annot_opt
+  Printf.sprintf "%s %s %s %s %s %s %s %s %s"
+  cpp_extra_args_opt machdep_opt generated_spec_custom_opt keep_unused_functions_opt kernel_warn_key_opt no_unicode_opt inline_calls_opt remove_inlines_opt no_annot_opt
 end
 
 module WpOpt = struct
