@@ -176,11 +176,11 @@ let diagnostics_handler (event : Log.event) =
     in
     let loc = match event.evt_source with 
       | Some pos -> 
-        publish_to := Filepath.normalize (Filepath.Normalized.to_pretty_string pos.pos_path); 
+        publish_to := Filepath.to_string pos.pos_path; 
         Utils.real_loc (pos,pos); 
       | None -> (
-        publish_to := Filepath.normalize !file;
-        Utils.dummyLoc (Filepath.normalize !file))
+        publish_to := !file;
+        Utils.dummyLoc !file)
     in
     let diag_list = DidSave.StringMap.find_opt !publish_to !DidSave.diag_map in
     let diag_list = match diag_list with | None -> [] | Some l -> l in
