@@ -162,9 +162,12 @@ let find id definitionFile line ch : string =
       let lsp_position_1 = Lsp_types.Position.create (pos1.pos_lnum - 1) (pos1.pos_cnum - pos1.pos_bol) in
       let lsp_position_2 = Lsp_types.Position.create (pos2.pos_lnum - 1) (pos2.pos_cnum - pos2.pos_bol) in
       let lsp_range = Lsp_types.Range.create lsp_position_1 lsp_position_2 in
-      let lsp_location = Lsp_types.Location.create (Filepath.to_string pos1.pos_path) lsp_range in
+      
+      let filename_str = Filepath.to_string pos1.pos_path in
+      let lsp_location = Lsp_types.Location.create (Utils.to_lsp_uri filename_str) lsp_range in
+
       let json_location = Lsp_types.Location.json_of_t lsp_location in
       let lsp_response = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:json_location () in
       let json_response = Lsp_types.ResponseMessage.json_of_t lsp_response in
       Json.save_string json_response
-  with exn -> Json.save_string (Utils.make_error (Printexc.to_string (exn)) (id))
+  with exn -> Json.save_string (Utils.make_error (Printexc.to_string (exn)) (id)) 

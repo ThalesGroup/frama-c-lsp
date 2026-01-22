@@ -218,3 +218,12 @@ let id_to_str id =
   | Lsp_types.Int i -> Stdlib.string_of_int i
   | Lsp_types.Str s -> s 
   | Lsp_types.Null -> ""
+
+let to_lsp_uri (filename : string) : string =
+  let absolute_path =
+    if Filename.is_relative filename then
+      Filename.concat (Sys.getcwd ()) filename
+    else
+      filename
+  in
+  "file://" ^ absolute_path
