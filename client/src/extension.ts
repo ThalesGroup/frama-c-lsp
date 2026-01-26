@@ -529,39 +529,33 @@ async function get_args_from_item(selectedItem:TreeItem, gui:boolean){
 	return [file_name, function_name, property_name, int_proof_timeout, gui]
 }
 
-async function get_proof_args(gui:boolean){
-	const function_name = await window.showInputBox({
-		placeHolder: 'function',
-		prompt: 'Please specify functions to prove (c.f. -wp-fct ) (@all for all functions)',
-		validateInput: (input) => {
-			if (input.length === 0) {return 'Input cannot be empty!';}
-			return null; // Return null to indicate valid input
-	}});
-	const property_name = await window.showInputBox({
-		placeHolder: 'property',
-		prompt: 'Please specify properties to prove (c.f. -wp-prop ) (@all for all properites)',
-		validateInput: (input) => {
-			if (input.length === 0) {return 'Input cannot be empty!';}
-			return null; // Return null to indicate valid input
-	}});
-	const proof_timeout = await window.showInputBox({
-		placeHolder: 'timeout',
-		prompt: 'Please specify timeout for provers (c.f. -wp-timeout )',
-		validateInput: (input) => {
-			if (input.length === 0) {return 'Input cannot be empty!';}
-			if (!/^\d+$/.test(input)) {return 'Please enter a valid integer';}
-			return null; // Return null to indicate valid input
-	}});
-	const int_proof_timeout = parseInt(proof_timeout, 10);
-	// If need to empty the list of item:
-	// wpResults.update(["","","",[]]);
-	// wpResults.refresh();
-	const editor = window.activeTextEditor;
+async function get_proof_args(gui: boolean) {
+    const editor = window.activeTextEditor;
     if (!editor) {
-    	window.showErrorMessage('No active editor found.');
+        window.showErrorMessage('No active editor found.');
         return;
     }
-	return([editor.document.fileName, function_name, property_name, int_proof_timeout, gui]);
+
+    // 1. On demande le timeout (seule action UI)
+    const proof_timeout = await window.showInputBox({
+        placeHolder: 'timeout',
+        prompt: 'Specify timeout (seconds)',
+        value: '10',
+        validateInput: (input) => {
+            if (!/^\d+$/.test(input)) return 'Integer required';
+            return null;
+        }
+    });
+    if (!proof_timeout) return; // Annulation
+    const int_proof_timeout = parseInt(proof_timeout, 10);
+
+    // 2. On récupère juste la position
+    const position = editor.selection.active;
+    const filename = editor.document.fileName;
+
+    // 3. On envoie : Fichier, Ligne, Colonne, Timeout, GUI
+    // Note : On n'envoie plus les noms de fonctions !
+    return [filename, position.line + 1, position.character, int_proof_timeout, gui];
 }
 
 function get_workspace(){

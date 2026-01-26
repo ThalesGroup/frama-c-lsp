@@ -112,3 +112,95 @@ let get_property_status id file fct prop: string =
   let json_message = Lsp_types.ResponseMessage.json_of_t lsp_message in
   Json.save_string json_message
 
+
+
+
+let distance_cursor_prop (cursor_line : int) (p : Property.t) : int =
+  let (pos_start, pos_end) = Property.location p in
+  let l_start = pos_start.pos_lnum in
+  let l_end = pos_end.pos_lnum in
+  if cursor_line >= l_start && cursor_line <= l_end then 0
+  else min (abs (cursor_line - l_start)) (abs (cursor_line - l_end))
+
+
+let find_context_at (file : string) (line : int) (_col : int) : (string * string * bool) =
+  if Kernel.Files.is_empty () then begin
+      try
+        Kernel.Files.add (Filepath.of_string file);
+        if not (Ast.is_computed ()) then Ast.compute ();
+      with e -> Options.Self.feedback "[ERREUR] Chargement: %s" (Printexc.to_string e)
+  end;
+
+  let best_prop = ref None in
+  let min_distance = ref 1000 in
+  
+  begin try
+      if not (Ast.is_computed ()) then Ast.compute ();
+
+      let check_candidate p =
+        let (pos_start, _) = Property.location p in
+        let p_file = Filepath.to_string pos_start.pos_path in
+        if (Filename.basename p_file) = (Filename.basename file) then begin
+          let dist = distance_cursor_prop line p in
+          if dist < 5 && dist < !min_distance then begin
+             min_distance := dist;
+             best_prop := Some p
+          end
+        end
+      in
+
+      Globals.Functions.iter (fun kf ->
+        let contract_props = 
+          let spec = Annotations.funspec kf in
+          Property.ip_of_spec kf Cil_types.Kglobal ~active:[] spec 
+        in
+        let body_props = ref [] in
+        if Kernel_function.is_definition kf then begin
+           let def = Kernel_function.get_definition kf in
+           List.iter (fun stmt ->
+              let annots = Annotations.code_annot stmt in
+              List.iter (fun annot -> 
+                 body_props := !body_props @ (Property.ip_of_code_annot kf stmt annot)
+              ) annots
+           ) def.sallstmts
+        end;
+        List.iter check_candidate (contract_props @ !body_props)
+      );
+    with _ -> ()
+  end;
+
+  match !best_prop with
+  | Some p ->
+      let fct_name = match Property.get_kf p with Some kf -> Kernel_function.get_name kf | None -> "@axiomatic" in
+      let explicit_names = Property.get_names p in
+
+      let (final_name, needs_warning) = 
+        match p with
+        
+        (* 1. ASSIGNS *)
+        | Property.IPAssigns _ -> 
+             ("@assigns", false) 
+
+        (* Requires, Ensures *)
+        | Property.IPPredicate { Property.ip_kind = kind; _ } -> 
+             begin match explicit_names with
+             | name :: _ -> (name, false)
+             | [] -> 
+                 match kind with
+                 | Property.PKEnsures _ -> ("@ensures", true)
+                 | Property.PKRequires _ -> ("@requires", true)
+                 | _ -> ("@all", true)
+             end
+
+        | Property.IPDecrease _ -> ("@variant", false)
+
+
+        | _ -> 
+             match explicit_names with
+             | name :: _ -> (name, false)
+             | [] -> ("@all", true)
+      in
+      (fct_name, final_name, needs_warning)
+
+  | None ->
+      ("@all", "@all", false)

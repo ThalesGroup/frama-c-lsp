@@ -834,38 +834,39 @@ let rq_handler json_string wrapper_port =
       | "provePO" -> (* prove with WP *)
       let id = (Utils.id_to_int request.id) in
       Options.Self.debug ~level:1 "provePO, %d\n%!" id;
-      let (file, fct, prop, timeout, gui) = match request.params with
-          | Some `List
-            [`List 
-              [`String f;
-              `String function_name;
-              `String property_name;
-              `Int timeout;
-              `Bool gui
-              ]] -> 
-            (Utils.remove_newline (Utils.remove_quotes (f)), function_name, property_name, timeout, gui)
-          | _ -> Options.Self.debug ~level:1 "No params for showPOVC \n%!"; assert false
+      let (file, line, col, timeout, gui) = match request.params with
+          | Some `List [`List [`String f; `Int l; `Int c; `Int t; `Bool g]] -> 
+               (Utils.remove_newline (Utils.remove_quotes (f)), l, c, t, g)
+          | _ ->  Options.Self.debug ~level:1 "No params for showPOVC \n%!"; assert false
       in
-      let prop = check_prop fct prop in
-      let fct = check_fct fct in
+
+      let (fct_detected, prop_detected, needs_warning) = ProvePO.find_context_at file line col in
+      if needs_warning then begin
+         Options.Self.feedback "[LSP] Property unnamed. Targeting full group '%s' for coverage." prop_detected;
+      end;
+
+      let fct = check_fct fct_detected in
+      let prop = check_prop fct_detected prop_detected in 
       let kernel_opt = KernelOpt.create ~strategies:false () in
       let uncast_opt = UncastOpt.create () in
       let wp_opt = WpOpt.create ~wp_fct:fct ~wp_prop:prop ~wp_gen:false ~wp_timeout:timeout () in
       let metacsl_opt = MetacslOpt.create () in
-      let feature = Prove_feature (id, file, (String.concat "," fct), (String.concat ","prop)) in
+      let feature = Prove_feature (id, file, (String.concat "," fct), (String.concat "," prop)) in
       let lsp_opt = LspOpt.create (feature) in
       let command = 
         match (String.ends_with ~suffix:".c" file) with
         | true -> Command.create ~port:wrapper_port ~strategies:false ~gui:gui ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
         | false -> Command.create ~port:wrapper_port ~strategies:false ~gui:gui ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
       in
+      
       let command_str = (Command.string_of_t command) in
       Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
+      
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature wrapper_port in
       Lsp_types.CONTENT (data), pid;
 
-      | "provePOStrategies" -> (* prove with WP strategies *)
+      | "provePOStrategies" -> 
       let id = (Utils.id_to_int request.id) in
       Options.Self.debug ~level:1 "provePOStrategies, %d\n%!" id;
       let (file, fct, prop, timeout, gui) = match request.params with
@@ -898,6 +899,7 @@ let rq_handler json_string wrapper_port =
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature wrapper_port in
       Lsp_types.CONTENT (data), pid;
+    (* --- Dans rq_handler, avant le "stop" --- *)
 
     | "stop" -> (
         Options.Self.debug ~level:1 "Kill pid %d!%!" !fork_pid;
