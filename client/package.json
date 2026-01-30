@@ -22,6 +22,7 @@
         "menus": {
             "editor/context": [
                 {"command": "stop", "when": "resourceLangId == acsl"},
+                {"command": "provePOCursor","when": "resourceLangId == acsl", "group": "Frama-C/WP"},
                 {"submenu": "Frama-C"},
                 {"submenu": "Frama-C/WP"},
                 {"submenu": "Frama-C/CCDOC"}
@@ -81,6 +82,7 @@
             {"command": "provePOGUI", "title": "Prove (GUI)"},
             {"command": "provePOStrategiesGUI", "title": "Prove with Strategies (GUI)"},
             {"command": "stop", "title": "Stop"},
+            { "command": "provePOCursor", "title": "ProvePOCursor", "category": "Frama-C/WP"},
             {"command": "ccdoc", "title": "Run"}
         ],
         "languages": [{"id": "acsl", "aliases": ["ACSL", "acsl"], "extensions": [".c", ".h"], "configuration": "./syntax/language-configuration.json", "icon": {"light": "./images/logo-frama-c.png", "dark": "./images/logo-frama-c.png"}}],

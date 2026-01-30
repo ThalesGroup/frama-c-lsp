@@ -19,6 +19,15 @@
 let rootPath = ref ""
 let receivedShutdown = ref false
 
+let extract_json raw_data =
+  try
+    let start_pos = String.index raw_data '{' in
+    let end_pos = String.rindex raw_data '}' in
+    if end_pos > start_pos then
+      String.sub raw_data start_pos (end_pos - start_pos + 1)
+    else raw_data
+  with Not_found -> raw_data
+
 let fork_pid = ref 0
 
 type lsp_feature =
@@ -31,6 +40,8 @@ type lsp_feature =
   | ComputeProofObligation_feature of (string * int * string * int * int)
   | ComputeProofObligationID_feature of (int * string)
   | Prove_feature of (int * string * string * string)
+  | GetContext_feature of (int * string * int * int)
+
 
 module KernelOpt = struct
 type t = {
@@ -328,6 +339,7 @@ module LspOpt = struct
     | ComputeProofObligation_feature (root_path, id, file, line, column) -> Printf.sprintf "-lsp-root-path=\"%s\" -lsp-id=\"%d\" -lsp-show-povc=%s:%d:%d" root_path id file line column
     | ComputeProofObligationID_feature (id, goal_id) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-show-po=%s" id goal_id
     | Prove_feature (id, file, fct, prop) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-prove=%s:%s:%s" id file fct prop
+    | GetContext_feature (id, file, line, col) ->Printf.sprintf "-lsp-id=\"%d\" -lsp-get-context=%s:%d:%d" id file line col
 end
 
 
@@ -535,12 +547,21 @@ let execute_command prog args feature wrapper_port =
   | Unix.WEXITED 0, "frama-c" ->
     (
     match feature with
+      | GetContext_feature (_, _, _, _)
+      | Prove_feature (_, _, _, _) ->
+        Options.Self.debug ~level:1 "Executed frama-c command (JSON Socket)\n%!";
+          let (plugin_sock, _) = Unix.accept wrapper_sock in
+          let _data_size = getnumber (readcontlen plugin_sock) in
+          let chunk_size = 65530 in
+          let request_str = read_socket_in_chunks plugin_sock chunk_size in
+          Unix.close plugin_sock;
+          Unix.close wrapper_sock;
+          request_str
       | DidSave_feature
       | FindDefinition_feature (_, _, _, _)
       | FindDeclaration_feature (_, _, _, _)
       | ComputeProofObligation_feature (_, _, _, _, _)
-      | ComputeProofObligationID_feature (_, _)
-      | Prove_feature (_, _, _, _) ->
+      | ComputeProofObligationID_feature (_, _) ->
       Options.Self.debug ~level:1 "Executed frama-c command (frama-c exited normally)\n%!";
       let (plugin_sock, _) = Unix.accept wrapper_sock in
       let _data_size = getnumber (readcontlen plugin_sock) in
@@ -600,7 +621,8 @@ let execute_command prog args feature wrapper_port =
       let data = Json.save_string lsp_response in
       Unix.close wrapper_sock;
       data
-    | Prove_feature (id, _, _, _) ->
+    | Prove_feature (id, _, _, _) 
+    | GetContext_feature (id, _, _, _) -> 
       Options.Self.debug ~level:1 "Frama-C GUI ended ! \n%!";
       let lsp_response = Lsp_types.ResponseMessage.json_of_t (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:(`List [`String ""; `String ""; `List []]) ()) in
       let data = Json.save_string lsp_response in
@@ -608,6 +630,7 @@ let execute_command prog args feature wrapper_port =
       data
     )
   | Unix.WEXITED _, _
+
   | Unix.WSIGNALED _, _
   | Unix.WSTOPPED _, _ ->
     (
@@ -633,7 +656,8 @@ let execute_command prog args feature wrapper_port =
       | FindDeclaration_feature (id, _, _, _)
       | ComputeProofObligation_feature (_, id, _, _, _)
       | ComputeProofObligationID_feature (id, _)
-      | Prove_feature (id, _, _, _) ->
+      | Prove_feature (id, _, _, _) 
+      | GetContext_feature (id, _, _, _) ->
         Options.Self.debug ~level:1 "\n%!";
         let msg = Printf.sprintf "Frama-c may have exited with errors" in
         let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:msg () in
@@ -667,6 +691,7 @@ let fork_execute_command prog args feature wrapper_port =
       (execute_command prog args feature wrapper_port), pid
     with exn -> (match feature with
       | FindDefinition_feature (id, _, _, _)
+      | GetContext_feature (id, _, _, _) 
       | FindDeclaration_feature (id, _, _, _)
       | ComputeProofObligation_feature (_, id, _, _, _)
       | ComputeProofObligationID_feature (id, _)
@@ -830,38 +855,38 @@ let rq_handler json_string wrapper_port =
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature wrapper_port in
       Lsp_types.CONTENT (data), pid;
-
       | "provePO" -> (* prove with WP *)
       let id = (Utils.id_to_int request.id) in
       Options.Self.debug ~level:1 "provePO, %d\n%!" id;
-      let (file, line, col, timeout, gui) = match request.params with
-          | Some `List [`List [`String f; `Int l; `Int c; `Int t; `Bool g]] -> 
-               (Utils.remove_newline (Utils.remove_quotes (f)), l, c, t, g)
-          | _ ->  Options.Self.debug ~level:1 "No params for showPOVC \n%!"; assert false
+      let (file, fct, prop, timeout, gui) = match request.params with
+          | Some `List
+            [`List 
+              [`String f;
+              `String function_name;
+              `String property_name;
+              `Int timeout;
+              `Bool gui
+              ]] -> 
+            (Utils.remove_newline (Utils.remove_quotes (f)), function_name, property_name, timeout, gui)
+          | Some `List [`String f; `String function_name; `String property_name; `Int timeout; `Bool gui] -> 
+              (Utils.remove_newline (Utils.remove_quotes (f)), function_name, property_name, timeout, gui)
+          | _ -> Options.Self.debug ~level:1 "No params for showPOVC \n%!"; assert false
       in
-
-      let (fct_detected, prop_detected, needs_warning) = ProvePO.find_context_at file line col in
-      if needs_warning then begin
-         Options.Self.feedback "[LSP] Property unnamed. Targeting full group '%s' for coverage." prop_detected;
-      end;
-
-      let fct = check_fct fct_detected in
-      let prop = check_prop fct_detected prop_detected in 
+      let prop = check_prop fct prop in
+      let fct = check_fct fct in
       let kernel_opt = KernelOpt.create ~strategies:false () in
       let uncast_opt = UncastOpt.create () in
       let wp_opt = WpOpt.create ~wp_fct:fct ~wp_prop:prop ~wp_gen:false ~wp_timeout:timeout () in
       let metacsl_opt = MetacslOpt.create () in
-      let feature = Prove_feature (id, file, (String.concat "," fct), (String.concat "," prop)) in
+      let feature = Prove_feature (id, file, (String.concat "," fct), (String.concat ","prop)) in
       let lsp_opt = LspOpt.create (feature) in
       let command = 
         match (String.ends_with ~suffix:".c" file) with
         | true -> Command.create ~port:wrapper_port ~strategies:false ~gui:gui ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
         | false -> Command.create ~port:wrapper_port ~strategies:false ~gui:gui ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
       in
-      
       let command_str = (Command.string_of_t command) in
       Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
-      
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature wrapper_port in
       Lsp_types.CONTENT (data), pid;
@@ -899,8 +924,27 @@ let rq_handler json_string wrapper_port =
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature wrapper_port in
       Lsp_types.CONTENT (data), pid;
-    (* --- Dans rq_handler, avant le "stop" --- *)
-
+    | "getAcslContext" -> 
+        begin
+          let id = (Utils.id_to_int request.id) in
+          let params_result = match request.params with 
+              | Some `List [`String f; `Int l; `Int c] -> Some (Utils.remove_newline (Utils.remove_quotes (f)), l, c)
+              | Some `List [`List [`String f; `Int l; `Int c]] -> Some (Utils.remove_newline (Utils.remove_quotes (f)), l, c)
+              | _ -> None
+          in
+          match params_result with
+          | Some (file, line, col) ->
+              let kernel_opt = KernelOpt.create ~strategies:false () in
+              let feature = GetContext_feature (id, file, line, col) in
+              let lsp_opt = LspOpt.create (feature) in
+              let command = Command.create 
+                  ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file] ~lsp:lsp_opt () 
+              in
+              let prog, args = (Command.args_of_t command) in
+              let data = execute_command prog args feature wrapper_port in
+              Lsp_types.CONTENT (data), 1
+          | _ -> Lsp_types.CONTENT ("null"), 1
+        end
     | "stop" -> (
         Options.Self.debug ~level:1 "Kill pid %d!%!" !fork_pid;
         if not (!fork_pid = 0) then Unix.kill !fork_pid Sys.sigint;
@@ -916,6 +960,8 @@ let rq_handler json_string wrapper_port =
   with exn ->  
     Options.Self.debug ~level:1 "Backtrace : %s\n" (Printexc.get_backtrace ());
     Lsp_types.CONTENT (Json.save_string (Utils.make_error (Printexc.to_string (exn)) (Utils.id_to_int id))), 1
+
+
 
 
 let notif_handler json_string server_sock wrapper_port =

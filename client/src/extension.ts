@@ -7,6 +7,7 @@ import { exec } from 'child_process';
 
 let client: LanguageClient;
 
+
 export function activate(context: ExtensionContext) {
 	// The server is implemented in OCaml
 	const serverPort = vscode.workspace.getConfiguration('vscodeacsl').get<number>('serverPort') || 8005;
@@ -319,7 +320,47 @@ export function activate(context: ExtensionContext) {
             console.error('Error fetching WP proof:', err);
         }
     });
+	const provePOCursor = commands.registerCommand('provePOCursor', async () => {
+    try {
+       
+        const context = await get_acsl_context(client);
+        if (!context || context.function === "@all") {
+            window.showWarningMessage("No ACSL property found");
+            return;
+        }
 
+        const proof_timeout = await window.showInputBox({
+            placeHolder: 'timeout',
+            prompt: `Prove '${context.property}' in '${context.function}' ? (Timeout en s)`,
+            value: '10',
+            validateInput: (input) => {
+                if (!/^\d+$/.test(input)) return 'Int required';
+                return null;
+            }
+        });
+
+        if (!proof_timeout) return;
+        const int_timeout = parseInt(proof_timeout, 10);
+        const editor = window.activeTextEditor!;
+        const args = [
+            editor.document.fileName,
+            context.function, 
+            context.property,
+            int_timeout,
+            false
+        ];
+
+        const res = await client.sendRequest('provePO', args);
+        wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
+        wpResults.refresh();
+        window.showInformationMessage('Proof results updated');
+    }
+    catch (err) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        window.showErrorMessage('Failed to fetch and display WP proof: ' + errorMessage);
+        console.error('Error fetching WP proof:', err);
+    }
+});
 	const provePOGUI = commands.registerCommand('provePOGUI', async () => {
 		try {
             const args = await get_proof_args(true);
@@ -404,7 +445,7 @@ export function activate(context: ExtensionContext) {
 		}
 	});
 
-	context.subscriptions.push(smokeTests, ccdoc, displayCIL, displayCIL_noannot, displayCILProject, displayCILProject_noannot, computeCG, showPOVC, showPO, runAgain, runAgainGui, runAgainStrategies, runAgainStrategiesGui, provePO, provePOGUI, provePOStrategies, provePOStrategiesGUI, showGlobalMetrics, showLocalMetrics);
+	context.subscriptions.push(smokeTests, ccdoc, displayCIL, displayCIL_noannot, displayCILProject, displayCILProject_noannot, computeCG, showPOVC, showPO, runAgain, runAgainGui, runAgainStrategies, runAgainStrategiesGui, provePO, provePOGUI, provePOStrategies, provePOStrategiesGUI, showGlobalMetrics, showLocalMetrics,provePOCursor);
 
 	// Start the client. This will also launch the server
 	client.start();
@@ -529,33 +570,81 @@ async function get_args_from_item(selectedItem:TreeItem, gui:boolean){
 	return [file_name, function_name, property_name, int_proof_timeout, gui]
 }
 
-async function get_proof_args(gui: boolean) {
+interface AcslContext {
+    function: string;
+    property: string;
+}
+
+interface AcslResponse {
+    jsonrpc?: string;
+    id?: number;
+    result?: AcslContext;
+    function?: string; 
+}
+
+async function get_acsl_context(client: LanguageClient): Promise<AcslContext | null> {
     const editor = window.activeTextEditor;
-    if (!editor) {
-        window.showErrorMessage('No active editor found.');
-        return;
-    }
+    if (!editor) { return null; }
 
-    // 1. On demande le timeout (seule action UI)
-    const proof_timeout = await window.showInputBox({
-        placeHolder: 'timeout',
-        prompt: 'Specify timeout (seconds)',
-        value: '10',
-        validateInput: (input) => {
-            if (!/^\d+$/.test(input)) return 'Integer required';
-            return null;
-        }
-    });
-    if (!proof_timeout) return; // Annulation
-    const int_proof_timeout = parseInt(proof_timeout, 10);
-
-    // 2. On récupère juste la position
     const position = editor.selection.active;
     const filename = editor.document.fileName;
 
-    // 3. On envoie : Fichier, Ligne, Colonne, Timeout, GUI
-    // Note : On n'envoie plus les noms de fonctions !
-    return [filename, position.line + 1, position.character, int_proof_timeout, gui];
+    try {
+        
+        const res = await client.sendRequest('getAcslContext', [
+            filename, 
+            position.line + 1, 
+            position.character
+        ]) as AcslResponse;
+
+        if (res && res.result) {
+            return res.result; 
+        } 
+        
+        else if (res && (res as any).function) {
+            return res as any as AcslContext;
+        }
+
+        return null;
+
+    } catch (err) {
+        console.error('Error getAcslContext:', err);
+        return null;
+    }
+}
+async function get_proof_args(gui:boolean){
+	const function_name = await window.showInputBox({
+		placeHolder: 'function',
+		prompt: 'Please specify functions to prove (c.f. -wp-fct ) (@all for all functions)',
+		validateInput: (input) => {
+			if (input.length === 0) {return 'Input cannot be empty!';}
+			return null; // Return null to indicate valid input
+	}});
+	const property_name = await window.showInputBox({
+		placeHolder: 'property',
+		prompt: 'Please specify properties to prove (c.f. -wp-prop ) (@all for all properites)',
+		validateInput: (input) => {
+			if (input.length === 0) {return 'Input cannot be empty!';}
+			return null; // Return null to indicate valid input
+	}});
+	const proof_timeout = await window.showInputBox({
+		placeHolder: 'timeout',
+		prompt: 'Please specify timeout for provers (c.f. -wp-timeout )',
+		validateInput: (input) => {
+			if (input.length === 0) {return 'Input cannot be empty!';}
+			if (!/^\d+$/.test(input)) {return 'Please enter a valid integer';}
+			return null; // Return null to indicate valid input
+	}});
+	const int_proof_timeout = parseInt(proof_timeout, 10);
+	// If need to empty the list of item:
+	// wpResults.update(["","","",[]]);
+	// wpResults.refresh();
+	const editor = window.activeTextEditor;
+    if (!editor) {
+    	window.showErrorMessage('No active editor found.');
+        return;
+    }
+	return([editor.document.fileName, function_name, property_name, int_proof_timeout, gui]);
 }
 
 function get_workspace(){
