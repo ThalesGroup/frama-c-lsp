@@ -131,20 +131,18 @@ let print_attrs () =
   Cil.iterGlobals (Ast.get ()) (fun glob -> 
     List.iter (fun (attr : Cil_types.attribute) -> 
       match attr with 
-      | Attr (name, params) -> 
+      | (name, params) -> 
         Options.Self.debug ~level:1 "attribute : %s\n%!" name;
         List.iter (fun (param : Cil_types.attrparam) ->
           Options.Self.debug ~level:1 "Attr param : %s\n%!" (Pretty_utils.to_string Printer.pp_attrparam param)
         ) params;
-      | _ -> ()
     ) (Cil.global_attributes glob)
   )
 
 
 let retrieve_location (pos : Filepath.position) =
   let loca = ref None in 
-  let symbol = Utils.retrieve_symbol pos.pos_lnum (pos.pos_cnum - pos.pos_bol) (Filepath.Normalized.to_pretty_string pos.pos_path) in  
-  
+  let symbol = Utils.retrieve_symbol pos.pos_lnum (pos.pos_cnum - pos.pos_bol) (Filepath.to_string pos.pos_path) in  
   Visitor.visitFramacFile (glob_visitor loca symbol) (Ast.get ()); 
   
   match !loca with
@@ -163,7 +161,8 @@ let find id definitionFile line ch : string =
       let lsp_position_1 = Lsp_types.Position.create (pos1.pos_lnum - 1) (pos1.pos_cnum - pos1.pos_bol) in
       let lsp_position_2 = Lsp_types.Position.create (pos2.pos_lnum - 1) (pos2.pos_cnum - pos2.pos_bol) in
       let lsp_range = Lsp_types.Range.create lsp_position_1 lsp_position_2 in
-      let lsp_location = Lsp_types.Location.create (Filepath.normalize (Filepath.Normalized.to_pretty_string pos1.pos_path)) lsp_range in
+      let filename_str = Filepath.to_string pos1.pos_path in
+      let lsp_location = Lsp_types.Location.create (Utils.to_lsp_uri filename_str) lsp_range in
       let json_location = Lsp_types.Location.json_of_t lsp_location in
       let lsp_response = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:json_location () in
       let json_response = Lsp_types.ResponseMessage.json_of_t lsp_response in

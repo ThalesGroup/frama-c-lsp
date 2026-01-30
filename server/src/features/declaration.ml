@@ -92,8 +92,7 @@ let print_fxs file =
 
 let retrieve_location (pos : Filepath.position) =
   let declarations = ref [] in
-  let symbol = Utils.retrieve_symbol pos.pos_lnum (pos.pos_cnum - pos.pos_bol) (Filepath.Normalized.to_pretty_string pos.pos_path) in  
-
+  let symbol = Utils.retrieve_symbol pos.pos_lnum (pos.pos_cnum - pos.pos_bol) (Filepath.to_string pos.pos_path) in  
   Visitor.visitFramacFile (glob_visitor symbol declarations) (Ast.get ()); 
   Visitor.visitFramacFile (vrbl_visitor symbol declarations) (Ast.get ()); 
 
@@ -101,7 +100,7 @@ let retrieve_location (pos : Filepath.position) =
 
 let retrieve_location2 (pos : Filepath.position) (cil_files : Cil_types.file list) =
   let declarations = ref [] in
-  let symbol = Utils.retrieve_symbol pos.pos_lnum (pos.pos_cnum - pos.pos_bol) (Filepath.Normalized.to_pretty_string pos.pos_path) in  
+  let symbol = Utils.retrieve_symbol pos.pos_lnum (pos.pos_cnum - pos.pos_bol) (Filepath.to_string pos.pos_path) in  
   let counter = ref 0 in
   List.iter (fun f ->
     counter := !counter + 1;
@@ -115,7 +114,7 @@ let retrieve_location2 (pos : Filepath.position) (cil_files : Cil_types.file lis
 
 let retrieve_location3 (pos : Filepath.position) new_globals =
   let declarations = ref [] in
-  let symbol = Utils.retrieve_symbol pos.pos_lnum (pos.pos_cnum - pos.pos_bol) (Filepath.Normalized.to_pretty_string pos.pos_path) in  
+  let symbol = Utils.retrieve_symbol pos.pos_lnum (pos.pos_cnum - pos.pos_bol) (Filepath.to_string pos.pos_path) in  
 
     List.iter(fun (v : Cil_types.varinfo) ->
       if (String.equal symbol v.vname) then 
@@ -134,8 +133,8 @@ let create_json_location (loc : Cil_types.location) =
   let lsp_position_1 = Lsp_types.Position.create ((Stdlib.fst loc).pos_lnum - 1) ((Stdlib.fst loc).pos_cnum - (Stdlib.fst loc).pos_bol) in
   let lsp_position_2 = Lsp_types.Position.create ((Stdlib.snd loc).pos_lnum - 1) ((Stdlib.snd loc).pos_cnum - (Stdlib.snd loc).pos_bol) in
   let lsp_range = Lsp_types.Range.create lsp_position_1 lsp_position_2 in
-  let lsp_location = Lsp_types.Location.create (Filepath.normalize (Filepath.Normalized.to_pretty_string (Stdlib.fst loc).pos_path)) lsp_range in
-  let json_location = Lsp_types.Location.json_of_t lsp_location in
+  let filename_str = Filepath.to_string (Stdlib.fst loc).pos_path in
+  let lsp_location = Lsp_types.Location.create (Utils.to_lsp_uri filename_str) lsp_range in  let json_location = Lsp_types.Location.json_of_t lsp_location in
   json_location
 
 let create_json_locations locations =

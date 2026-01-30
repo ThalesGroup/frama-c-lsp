@@ -1,0 +1,23 @@
+{
+    "kernel.aggressiveMerging": false,
+    "kernel.removeUnusedSpecifiedFunctions": true,
+    "kernel.machdep": "",
+    "kernel.sourceFiles": [
+        "test1.c"
+    ],
+  
+    "wp.checkMemoryModel": true,
+    "wp.noVolatile": false,
+    "metrics.output": "",
+    "vscodeacsl.maxNumberOfProblems": 100,
+    "acslLsp": 3,
+    "callgraph.output": "",
+    "callgraph.roots": [],
+    "wp.prover": "alt-ergo",
+    "kernel.includePaths": [
+        "include_folder",
+        "include_folder2"
+    ]
+
+}
+    

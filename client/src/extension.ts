@@ -7,6 +7,7 @@ import { exec } from 'child_process';
 
 let client: LanguageClient;
 
+
 export function activate(context: ExtensionContext) {
 	// The server is implemented in OCaml
 	const serverPort = vscode.workspace.getConfiguration('vscodeacsl').get<number>('serverPort') || 8005;
@@ -44,6 +45,16 @@ export function activate(context: ExtensionContext) {
 			const errorMessage = err instanceof Error ? err.message : String(err);
 			window.showErrorMessage('Failed to run smoke tests: ' + errorMessage);
 			console.error('Error computing smoke tests:', err);
+		}
+	});
+
+	const ccdoc = commands.registerCommand('ccdoc', async () => {
+		try {
+			await client.sendNotification('ccdoc');
+		} catch (err) {
+			const errorMessage = err instanceof Error ? err.message : String(err);
+			window.showErrorMessage('Failed to run ccdoc: ' + errorMessage);
+			console.error('Error computing ccdoc:', err);
 		}
 	});
 
@@ -309,7 +320,47 @@ export function activate(context: ExtensionContext) {
             console.error('Error fetching WP proof:', err);
         }
     });
+	const provePOCursor = commands.registerCommand('provePOCursor', async () => {
+    try {
+       
+        const context = await get_acsl_context(client);
+        if (!context || context.function === "@all") {
+            window.showWarningMessage("No ACSL property found");
+            return;
+        }
 
+        const proof_timeout = await window.showInputBox({
+            placeHolder: 'timeout',
+            prompt: `Prove '${context.property}' in '${context.function}' ? (Timeout en s)`,
+            value: '10',
+            validateInput: (input) => {
+                if (!/^\d+$/.test(input)) return 'Int required';
+                return null;
+            }
+        });
+
+        if (!proof_timeout) return;
+        const int_timeout = parseInt(proof_timeout, 10);
+        const editor = window.activeTextEditor!;
+        const args = [
+            editor.document.fileName,
+            context.function, 
+            context.property,
+            int_timeout,
+            false
+        ];
+
+        const res = await client.sendRequest('provePO', args);
+        wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
+        wpResults.refresh();
+        window.showInformationMessage('Proof results updated');
+    }
+    catch (err) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        window.showErrorMessage('Failed to fetch and display WP proof: ' + errorMessage);
+        console.error('Error fetching WP proof:', err);
+    }
+});
 	const provePOGUI = commands.registerCommand('provePOGUI', async () => {
 		try {
             const args = await get_proof_args(true);
@@ -394,7 +445,7 @@ export function activate(context: ExtensionContext) {
 		}
 	});
 
-	context.subscriptions.push(smokeTests, displayCIL, displayCIL_noannot, displayCILProject, displayCILProject_noannot, computeCG, showPOVC, showPO, runAgain, runAgainGui, runAgainStrategies, runAgainStrategiesGui, provePO, provePOGUI, provePOStrategies, provePOStrategiesGUI, showGlobalMetrics, showLocalMetrics);
+	context.subscriptions.push(smokeTests, ccdoc, displayCIL, displayCIL_noannot, displayCILProject, displayCILProject_noannot, computeCG, showPOVC, showPO, runAgain, runAgainGui, runAgainStrategies, runAgainStrategiesGui, provePO, provePOGUI, provePOStrategies, provePOStrategiesGUI, showGlobalMetrics, showLocalMetrics,provePOCursor);
 
 	// Start the client. This will also launch the server
 	client.start();
@@ -519,6 +570,48 @@ async function get_args_from_item(selectedItem:TreeItem, gui:boolean){
 	return [file_name, function_name, property_name, int_proof_timeout, gui]
 }
 
+interface AcslContext {
+    function: string;
+    property: string;
+}
+
+interface AcslResponse {
+    jsonrpc?: string;
+    id?: number;
+    result?: AcslContext;
+    function?: string; 
+}
+
+async function get_acsl_context(client: LanguageClient): Promise<AcslContext | null> {
+    const editor = window.activeTextEditor;
+    if (!editor) { return null; }
+
+    const position = editor.selection.active;
+    const filename = editor.document.fileName;
+
+    try {
+        
+        const res = await client.sendRequest('getAcslContext', [
+            filename, 
+            position.line + 1, 
+            position.character
+        ]) as AcslResponse;
+
+        if (res && res.result) {
+            return res.result; 
+        } 
+        
+        else if (res && (res as any).function) {
+            return res as any as AcslContext;
+        }
+
+        return null;
+
+    } catch (err) {
+        console.error('Error getAcslContext:', err);
+        return null;
+    }
+}
 async function get_proof_args(gui:boolean){
 	const function_name = await window.showInputBox({
 		placeHolder: 'function',
@@ -529,7 +622,7 @@ async function get_proof_args(gui:boolean){
 	}});
 	const property_name = await window.showInputBox({
 		placeHolder: 'property',
-		prompt: 'Please specify properties to prove (c.f. -wp-prop (@all for all properties))',
+		prompt: 'Please specify properties to prove (c.f. -wp-prop ) (@all for all properites)',
 		validateInput: (input) => {
 			if (input.length === 0) {return 'Input cannot be empty!';}
 			return null; // Return null to indicate valid input
@@ -575,14 +668,7 @@ async function create_frama_c_folder(workspace:string){
 	}
 }
 
-/*
-export function deactivate(): Thenable<void> | undefined {
-	if (!client) {
-		return undefined;
-	}
-	return client.stop();
-}
-*/
+
 
 export function deactivate(context: ExtensionContext): Thenable<void> | undefined {
 	if (client) {
