@@ -20,13 +20,13 @@ let max_int = (-1) lsr 1 (* stdlib function *)
 
 let file_str f = 
   let dir_list = [f] in 
-  let dir_string = Filepath.Normalized.to_string_list dir_list in 
+  let dir_string = Filepath.to_string_list dir_list in 
   List.nth dir_string 0
 
 let dummyLoc filename : Cil_types.location = 
   (
-    {pos_path=(Filepath.Normalized.of_string filename); pos_lnum=0;  pos_bol=1; pos_cnum=1},
-    {pos_path=(Filepath.Normalized.of_string filename); pos_lnum=0;  pos_bol=1; pos_cnum=1}
+    {pos_path=(Filepath.of_string filename); pos_lnum=0;  pos_bol=1; pos_cnum=1},
+    {pos_path=(Filepath.of_string filename); pos_lnum=0;  pos_bol=1; pos_cnum=1}
   )
 
 let real_loc ((pos1 : Filepath.position) , (pos2 : Filepath.position)) : Cil_types.location = 
@@ -47,18 +47,18 @@ let getnumber str =
 
 (* Converts all filenames into t type *)
 let get_t_from_filename filename_list =
-  let t_list = List.map (fun filename -> File.from_filename (Datatype.Filepath.of_string filename)) filename_list in
+  let t_list = List.map (fun filename -> File.from_filename (Filepath.of_string filename)) filename_list in
   t_list
 
 let position_t_to_filepath_position (uri : Lsp_types.DocumentUri.t) (pos : Lsp_types.Position.t) : Filepath.position =
-  let pos_path = Filepath.Normalized.of_string uri in
+  let pos_path = Filepath.of_string uri in
   let pos_lnum = pos.line in
   let pos_bol = 0 in
   let pos_cnum = pos.character in
   { Filepath.pos_path; pos_lnum; pos_bol; pos_cnum }
 
 let to_filepath_position filepath line ch : Filepath.position =
-  let pos_path = Filepath.Normalized.of_string filepath in
+  let pos_path = Filepath.of_string filepath in
   let pos_lnum = line in
   let pos_bol = 0 in
   let pos_cnum = ch in
@@ -154,7 +154,7 @@ let get_corr_cfile rootPath hfile : string list =
   let rec init_files_rec path = 
     let curr_files = ref [] in 
     (* read all files and folders of current directory *)
-    let filenames = Array.to_list (Filepath.readdir (Filepath.Normalized.of_string path)) in
+    let filenames = Filesystem.list_dir (Filepath.of_string path) in
     (* make paths absolute *)
     curr_files := List.append !curr_files (List.map(fun x ->
       path^"/"^x
@@ -178,7 +178,7 @@ let get_workspace_files rootPath : string list =
   let rec init_files_rec path = 
     let curr_files = ref [] in 
     (* read all files and folders of current directory *)
-    let filenames = Array.to_list (Filepath.readdir (Filepath.Normalized.of_string path)) in
+    let filenames =  Filesystem.list_dir (Filepath.of_string path) in
     (* make paths absolute *)
     curr_files := List.append !curr_files (List.map(fun x ->
       path^"/"^x
@@ -218,3 +218,12 @@ let id_to_str id =
   | Lsp_types.Int i -> Stdlib.string_of_int i
   | Lsp_types.Str s -> s 
   | Lsp_types.Null -> ""
+
+let to_lsp_uri (filename : string) : string =
+  let absolute_path =
+    if Filename.is_relative filename then
+      Filename.concat (Sys.getcwd ()) filename
+    else
+      filename
+  in
+  "file://" ^ absolute_path

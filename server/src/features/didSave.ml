@@ -66,8 +66,7 @@ let clear_diagnostics_no_uri =
   Lsp_types.NotificationMessage.json_of_t lsp_notification
 
 let clear_diagnostics filename = 
-  let lsp_notification_params = (Lsp_types.PublishDiagnosticsParams.create ~uri:(Utils.file_str (Filepath.Normalized.of_string (Filepath.normalize filename))) ~diagnostics:([]) ()) in
-  let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"textDocument/publishDiagnostics" ~params:(Lsp_types.PublishDiagnosticsParams.json_of_t lsp_notification_params) () in
+  let lsp_notification_params = (Lsp_types.PublishDiagnosticsParams.create ~uri:(Utils.file_str (Filepath.of_string filename)) ~diagnostics:([]) ()) in  let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"textDocument/publishDiagnostics" ~params:(Lsp_types.PublishDiagnosticsParams.json_of_t lsp_notification_params) () in
   Lsp_types.NotificationMessage.json_of_t lsp_notification
 
 let escape_double_quotes str = 

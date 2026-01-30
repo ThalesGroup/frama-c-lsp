@@ -128,7 +128,17 @@ let get_Prove_args () =
       Some (Options.Id.get (), file, fct, prop)
       )
     else None
-
+let get_GetContext_args () =
+  let args = Options.Get_context.get () in
+  if not (String.trim args = "") then
+    (
+      let req_info = String.split_on_char ':' args in
+      let file = (List.nth req_info 0) in
+      let line = (Stdlib.int_of_string (List.nth req_info 1)) in
+      let ch = (Stdlib.int_of_string (List.nth req_info 2)) in
+      Some (Options.Id.get (), file, line, ch)
+    )
+  else None
 let get_active_option () =
   let active_options = ref [] in
   if is_active_DidSave () then active_options := Lsp_handler.DidSave_feature :: !active_options;
@@ -151,6 +161,11 @@ let get_active_option () =
   (match get_Prove_args () with
   | None -> ()
   | Some (id, file, fct, prop) -> active_options := Lsp_handler.Prove_feature(id, file, fct, prop) :: !active_options
+  );
+  (match get_GetContext_args () with
+  | None -> ()
+  | Some (id, file, line, ch) -> 
+      active_options := Lsp_handler.GetContext_feature(id, file, line, ch) :: !active_options
   );
   match !active_options with
   [] -> None
@@ -176,11 +191,11 @@ let diagnostics_handler (event : Log.event) =
     in
     let loc = match event.evt_source with 
       | Some pos -> 
-        publish_to := Filepath.normalize (Filepath.Normalized.to_pretty_string pos.pos_path); 
+        publish_to := Filepath.to_string pos.pos_path; 
         Utils.real_loc (pos,pos); 
       | None -> (
-        publish_to := Filepath.normalize !file;
-        Utils.dummyLoc (Filepath.normalize !file))
+        publish_to := !file;
+        Utils.dummyLoc !file)
     in
     let diag_list = DidSave.StringMap.find_opt !publish_to !DidSave.diag_map in
     let diag_list = match diag_list with | None -> [] | Some l -> l in
@@ -271,6 +286,7 @@ let run () =
       | Some Lsp_handler.ComputeProofObligation_feature(root_path, id, file, line, ch) -> let data = [(ShowPOVC.get_property root_path id file line ch)] in Options.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; send_result data
       | Some Lsp_handler.ComputeProofObligationID_feature(id, goal_id) -> let data = [(ShowPOVC.get_property_from_id id goal_id)] in Options.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; send_result data
       | Some Lsp_handler.Prove_feature(id, file, fct, prop) -> let data = [(ProvePO.get_property_status id file fct prop)] in Options.Self.feedback ~level:1 "Proof attempt done !\n%!"; send_result data
+      | Some Lsp_handler.GetContext_feature(id, file, line, ch) ->Context_finder.run id file line ch; send_result []
       | None ->  Self.debug ~level:1 "LSP started !!!"
   )
 

@@ -22,8 +22,10 @@
         "menus": {
             "editor/context": [
                 {"command": "stop", "when": "resourceLangId == acsl"},
+                {"command": "provePOCursor","when": "resourceLangId == acsl", "group": "Frama-C/WP"},
                 {"submenu": "Frama-C"},
-                {"submenu": "Frama-C/WP"}
+                {"submenu": "Frama-C/WP"},
+                {"submenu": "Frama-C/CCDOC"}
             ],
             "Frama-C": [
                 {"command": "displayCIL", "when": "resourceLangId == acsl"},
@@ -42,6 +44,9 @@
                 {"command": "smokeTests", "when": "resourceLangId == acsl"},
                 {"command": "showPOVC", "when": "resourceLangId == acsl"}
             ],
+            "Frama-C/CCDOC": [
+                {"command": "ccdoc", "when": "resourceLangId == acsl"}
+            ],
             "view/item/context": [
                 {"command": "showScript", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
                 {"command": "showPO", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
@@ -53,7 +58,8 @@
         },
         "submenus": [
             {"id": "Frama-C", "label": "Frama-C", "icon": "images/logo-frama-c.png"},
-            {"id": "Frama-C/WP", "label": "Frama-C/WP", "icon": "images/logo-frama-c.png"}
+            {"id": "Frama-C/WP", "label": "Frama-C/WP", "icon": "images/logo-frama-c.png"},
+            {"id": "Frama-C/CCDOC", "label": "Frama-C/CCDOC", "icon": "images/logo-frama-c.png"}
         ],
         "commands": [
             {"command": "displayCIL", "title": "Display File CIL"},
@@ -75,7 +81,9 @@
             {"command": "provePOStrategies", "title": "Prove with Strategies"},
             {"command": "provePOGUI", "title": "Prove (GUI)"},
             {"command": "provePOStrategiesGUI", "title": "Prove with Strategies (GUI)"},
-            {"command": "stop", "title": "Stop"}
+            {"command": "stop", "title": "Stop"},
+            { "command": "provePOCursor", "title": "ProvePOCursor", "category": "Frama-C/WP"},
+            {"command": "ccdoc", "title": "Run"}
         ],
         "languages": [{"id": "acsl", "aliases": ["ACSL", "acsl"], "extensions": [".c", ".h"], "configuration": "./syntax/language-configuration.json", "icon": {"light": "./images/logo-frama-c.png", "dark": "./images/logo-frama-c.png"}}],
         "grammars": [{"language": "acsl", "scopeName": "source.acsl", "path": "./syntax/acsl.tmLanguage.json"}],
@@ -98,14 +106,22 @@
                 "kernel.sourceFileStrategies": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Source files providing strategies."},
                 "kernel.sourceFileMetacsl": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Source files providing metaproperties."},
                 "kernel.machdep": {"scope": "workspace", "type": "string", "description": "Frama-C option: -machdep"},
-                "kernel.removeUnusedSpecifiedFunctions": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -remove-unused-specified-functions", "default": true},
-                "kernel.aggressiveMerging": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -aggressive-merging", "default": false},
+                "kernel.keepUnusedFunctions": {"scope": "workspace", "type": "string", "enum": ["none", "specified", "all", "all_debug"], "description": "Frama-C option: -keep-unused-functions", "default": "none"},
                 "kernel.generatedSpecCustom": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Frama-C option: -generated-spec-custom"},
                 "kernel.inlineCalls": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Frama-C option: -inline-calls"},
                 "kernel.removeInlined": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Frama-C option: -remove-inlined"},
                 "kernel.noAnnot": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -no-annot"}
                 }
             },
+            {
+            "title": "Frama-C/Uncast",
+            "properties": {
+                "uncast.active": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -uncast", "default": false},
+                "uncast.lshiftAsMul": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -uncast-lshift-as-mul", "default": true},
+                "uncast.rshiftAsDiv": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -uncast-rshift-as-div", "default": true},
+                "uncast.endianness": {"scope": "workspace", "type": "string", "description": "Frama-C option: -uncast-endianness", "default": "little"}
+                }
+            },    
             {
             "title": "Frama-C/Metrics",
             "properties": {
@@ -149,6 +165,14 @@
                 "metacsl.noCheckExt": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -meta-no-check-ext", "default": true},
                 "metacsl.numberAssertions": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -meta-number-assertions", "default": true},
                 "metacsl.checkCalleeAssigns": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Frama-C option: -meta-check-callee-assigns"}
+                }
+            },
+            {
+            "title": "Frama-C/Ccdoc",
+            "properties": {
+                "ccdoc.active": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -ccdoc", "default": false},
+                "ccdoc.coverageVerif": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -ccdoc-coverage-verif", "default": true},
+                "ccdoc.latex": {"scope": "workspace", "type": "boolean", "description": "Frama-C option: -ccdoc-latex", "default": true}
                 }
             }
         ]

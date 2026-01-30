@@ -18,6 +18,15 @@
 
 let rootPath = ref ""
 let receivedShutdown = ref false
+(* --- FONCTION UTILITAIRE POUR NETTOYER LE JSON --- *)
+let extract_json raw_data =
+  try
+    let start_pos = String.index raw_data '{' in
+    let end_pos = String.rindex raw_data '}' in
+    if end_pos > start_pos then
+      String.sub raw_data start_pos (end_pos - start_pos + 1)
+    else raw_data
+  with Not_found -> raw_data
 
 let fork_pid = ref 0
 
@@ -31,6 +40,8 @@ type lsp_feature =
   | ComputeProofObligation_feature of (string * int * string * int * int)
   | ComputeProofObligationID_feature of (int * string)
   | Prove_feature of (int * string * string * string)
+  | GetContext_feature of (int * string * int * int)
+
 
 module KernelOpt = struct
 type t = {
@@ -41,8 +52,7 @@ type t = {
   cpp_extra_args : string;
   machdep : string;
   generated_spec_custom : string list;
-  keep_unused_specified_functions : bool;
-  aggressive_merging : bool;
+  keep_unused_functions : string;
   kernel_warn_key : string;
   no_unicode : bool;
   inline_calls : string list;
@@ -59,8 +69,7 @@ let create ?fct ~strategies () =
     cpp_extra_args = "-CC";
     machdep = !Configuration.global_params.machdep;
     generated_spec_custom = !Configuration.global_params.generatedSpecCustom;
-    keep_unused_specified_functions = !Configuration.global_params.removeUnusedSpecifiedFunctions;
-    aggressive_merging = !Configuration.global_params.aggressiveMerging;
+    keep_unused_functions = !Configuration.global_params.keepUnusedFunctions;
     kernel_warn_key = "annot-error=active,too-large-array=active";
     no_unicode = true;
     inline_calls = !Configuration.global_params.inlineCalls;
@@ -78,15 +87,14 @@ let string_of_t (options : t) : string =
   let cpp_extra_args_opt = "-cpp-extra-args=\""^(options.cpp_extra_args)^""^(String.concat "" include_paths_opt)^""^(String.concat "" macros_opt)^""^(String.concat "" macroStrategiesFunctionPrefix_opt)^"\"" in
   let machdep_opt = (option_if_not_empty_string options.machdep "-machdep=") in
   let generated_spec_custom_opt = option_if_not_empty_string (String.concat "," options.generated_spec_custom) "-generated-spec-custom=" in
-  let remove_unused_specified_functions_opt = option_if_true options.keep_unused_specified_functions "-remove-unused-specified-functions" in
-  let aggressive_merging_opt = option_if_true options.aggressive_merging "-aggressive-merging" in
+  let keep_unused_functions_opt = option_if_not_empty_string options.keep_unused_functions "-keep-unused-functions=" in
   let kernel_warn_key_opt = option_if_not_empty_string options.kernel_warn_key "-kernel-warn-key=" in
   let no_unicode_opt = option_if_true options.no_unicode "-no-unicode" in
   let inline_calls_opt = option_if_not_empty_string (String.concat "," options.inline_calls) "-inline-calls=" in
   let remove_inlines_opt = option_if_not_empty_string (String.concat "," options.remove_inlined) "-remove-inlined=" in
   let no_annot_opt = option_if_true options.no_annot "-no-annot" in
-  Printf.sprintf "%s %s %s %s %s %s %s %s %s %s"
-  cpp_extra_args_opt machdep_opt generated_spec_custom_opt remove_unused_specified_functions_opt aggressive_merging_opt kernel_warn_key_opt no_unicode_opt inline_calls_opt remove_inlines_opt no_annot_opt
+  Printf.sprintf "%s %s %s %s %s %s %s %s %s"
+  cpp_extra_args_opt machdep_opt generated_spec_custom_opt keep_unused_functions_opt kernel_warn_key_opt no_unicode_opt inline_calls_opt remove_inlines_opt no_annot_opt
 end
 
 module WpOpt = struct
@@ -194,6 +202,53 @@ module MetacslOpt = struct
     else ""
 end
 
+module UncastOpt = struct
+  type t = {
+    uncast: bool;
+    uncast_endianness: string;
+    uncast_lshift_as_mul: bool;
+    uncast_rshift_as_div: bool
+  }
+  let create () = {
+    uncast = !Configuration.global_params.uncastActive;
+    uncast_endianness = !Configuration.global_params.uncastEndianness;
+    uncast_lshift_as_mul = !Configuration.global_params.uncastLshiftAsMul;
+    uncast_rshift_as_div = !Configuration.global_params.uncastRshiftAsDiv
+  }
+  let string_of_t (options : t) : string =
+    let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in
+    let option_if_true b opt = if b then (opt) else "" in
+    let uncast_opt = option_if_true options.uncast "-uncast" in
+    let uncast_endianness_opt = option_if_not_empty_string options.uncast_endianness "-uncast-endianness=" in
+    let uncast_lshift_as_mul_opt = option_if_true options.uncast_lshift_as_mul "-uncast-lshift-as-mul" in
+    let uncast_rshift_as_div_opt = option_if_true options.uncast_rshift_as_div "-uncast-rshift-as-div" in
+    if options.uncast then Printf.sprintf "%s %s %s %s" uncast_opt uncast_endianness_opt uncast_lshift_as_mul_opt uncast_rshift_as_div_opt
+    else ""
+end
+
+module CcdocOpt = struct
+  type t = {
+    ccdoc : bool;
+    ccdoc_out: string;
+    ccdoc_coverage_verif: bool;
+    ccdoc_latex: bool
+  }
+  let create () = {
+    ccdoc = !Configuration.global_params.ccdocActive;
+    ccdoc_out = ".frama-c/fc_ccdoc.tex";
+    ccdoc_coverage_verif = !Configuration.global_params.ccdocCoverageVerif;
+    ccdoc_latex = !Configuration.global_params.ccdocLatex;
+  }
+  let string_of_t (options : t) : string =
+    let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in
+    let option_if_true b opt = if b then (opt) else "" in
+    let ccdoc_opt = option_if_true options.ccdoc "-ccdoc" in
+    let ccdoc_out_opt = option_if_not_empty_string options.ccdoc_out "-ccdoc-out=" in
+    let ccdoc_coverage_verif_opt = option_if_true options.ccdoc_coverage_verif "-ccdoc-coverage-verif" in
+    let ccdoc_latex_opt = option_if_true options.ccdoc_latex "-ccdoc-latex" in
+    Printf.sprintf "%s %s %s %s" ccdoc_opt ccdoc_out_opt ccdoc_coverage_verif_opt ccdoc_latex_opt
+end
+
 module MetricsOpt = struct
   type t = {
     metrics : bool;
@@ -284,6 +339,7 @@ module LspOpt = struct
     | ComputeProofObligation_feature (root_path, id, file, line, column) -> Printf.sprintf "-lsp-root-path=\"%s\" -lsp-id=\"%d\" -lsp-show-povc=%s:%d:%d" root_path id file line column
     | ComputeProofObligationID_feature (id, goal_id) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-show-po=%s" id goal_id
     | Prove_feature (id, file, fct, prop) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-prove=%s:%s:%s" id file fct prop
+    | GetContext_feature (id, file, line, col) ->Printf.sprintf "-lsp-id=\"%d\" -lsp-get-context=%s:%d:%d" id file line col
 end
 
 
@@ -296,12 +352,14 @@ module Command = struct
   kernel : KernelOpt.t option;
   wp : WpOpt.t option;
   metacsl : MetacslOpt.t option;
+  uncast : UncastOpt.t option;
   metrics : MetricsOpt.t option;
   pprint : PprintOpt.t option;
   cg : CgOpt.t option;
+  ccdoc: CcdocOpt.t option;
   lsp : LspOpt.t option;
   }
-  let create ~port ?gui ?kernel ~strategies ?files ?wp ?metacsl ?metrics ?pprint ?cg ?lsp () : t = {
+  let create ~port ?gui ?kernel ~strategies ?files ?wp ?metacsl ?uncast ?metrics ?pprint ?cg ?ccdoc ?lsp () : t = {
     wrapper_port = port;
     frama_c_exe = (match gui with None -> "frama-c" | Some g -> if g then "frama-c-gui" else "frama-c");
     verbose = !Configuration.global_params.acslLsp;
@@ -324,9 +382,11 @@ module Command = struct
     kernel = kernel;
     wp = wp;
     metacsl = metacsl;
+    uncast = uncast;
     metrics = metrics;
     pprint = pprint;
     cg = cg;
+    ccdoc = ccdoc;
     lsp = lsp
   }
   let string_of_t (options : t) : string =
@@ -335,13 +395,15 @@ module Command = struct
     let debug_level = Stdlib.string_of_int options.verbose in
     let common_opt = Printf.sprintf "%s -lsp -lsp-wrapper=%d -lsp-debug=%s %s" options.frama_c_exe options.wrapper_port debug_level file_names in
     let kernel_opt = match options.kernel with None -> "" | Some k -> KernelOpt.string_of_t k in
+    let uncast_opt = match options.uncast with None -> "" | Some u -> option_if_not_empty_string (UncastOpt.string_of_t u) "-then-last" in
     let wp_opt = match options.wp with None -> "" | Some w -> option_if_not_empty_string (WpOpt.string_of_t w) "" in
     let metrics_opt = match options.metrics with None -> "" | Some m -> option_if_not_empty_string (MetricsOpt.string_of_t m) "" in
     let pprint_opt = match options.pprint with None -> "" | Some p -> option_if_not_empty_string (PprintOpt.string_of_t p) "" in
     let metacsl_opt = match options.metacsl with None -> "" | Some m -> option_if_not_empty_string (MetacslOpt.string_of_t m) "-then-last" in
     let cg_opt = match options.cg with None -> "" | Some c -> option_if_not_empty_string (CgOpt.string_of_t c) "" in
+    let ccdoc_opt = match options.ccdoc with None -> "" | Some c -> option_if_not_empty_string (CcdocOpt.string_of_t c) "-then" in
     let lsp_opt = match options.lsp with None -> "" | Some l -> option_if_not_empty_string (LspOpt.string_of_t l) "" in
-    let frama_c_cmd = Printf.sprintf "%s %s %s %s %s %s %s %s" common_opt kernel_opt metacsl_opt wp_opt metrics_opt pprint_opt cg_opt lsp_opt in
+    let frama_c_cmd = Printf.sprintf "%s %s %s %s %s %s %s %s %s %s" common_opt kernel_opt uncast_opt metacsl_opt wp_opt metrics_opt pprint_opt cg_opt ccdoc_opt lsp_opt in
     frama_c_cmd
   
   let args_of_t (options : t) : string * string array =
@@ -469,6 +531,7 @@ let execute_command prog args feature wrapper_port =
   let signal_handler signal = if signal = Sys.sigint then () in
   Sys.set_signal Sys.sigint (Sys.Signal_handle signal_handler);
   let wrapper_sock = Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in
+  Unix.setsockopt wrapper_sock Unix.SO_REUSEADDR true;
   Unix.bind wrapper_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port));
   Unix.listen wrapper_sock 100;
   let env = Unix.environment () in
@@ -482,15 +545,27 @@ let execute_command prog args feature wrapper_port =
   let special_errors = DidSave.StringMap.fold get_notification_list !DidSave.diag_map [] in
   Options.Self.debug ~level:1 "Read ic completed !!!\n%!";
   match status, prog with
-  | Unix.WEXITED 0, "frama-c" ->
+  | Unix.WEXITED 0 , "frama-c" ->
     (
     match feature with
+      | GetContext_feature (_, _, _, _)
+      | Prove_feature (_, _, _, _) ->
+        Options.Self.debug ~level:1 "Executed frama-c command (JSON Socket)\n%!";
+          let (plugin_sock, _) = Unix.accept wrapper_sock in
+          let _data_size = getnumber (readcontlen plugin_sock) in
+          let chunk_size = 65530 in
+          let request_str = read_socket_in_chunks plugin_sock chunk_size in
+          Unix.close plugin_sock;
+          Unix.close wrapper_sock;
+          
+          (* CORRECTION 2 : On renvoie le JSON pur, on ignore special_errors ici *)
+          (* Sinon VSCode reçoit "Warning:::{"function":...}" et plante *)
+          request_str
       | DidSave_feature
       | FindDefinition_feature (_, _, _, _)
       | FindDeclaration_feature (_, _, _, _)
       | ComputeProofObligation_feature (_, _, _, _, _)
-      | ComputeProofObligationID_feature (_, _)
-      | Prove_feature (_, _, _, _) ->
+      | ComputeProofObligationID_feature (_, _) ->
       Options.Self.debug ~level:1 "Executed frama-c command (frama-c exited normally)\n%!";
       let (plugin_sock, _) = Unix.accept wrapper_sock in
       let _data_size = getnumber (readcontlen plugin_sock) in
@@ -550,7 +625,8 @@ let execute_command prog args feature wrapper_port =
       let data = Json.save_string lsp_response in
       Unix.close wrapper_sock;
       data
-    | Prove_feature (id, _, _, _) ->
+    | Prove_feature (id, _, _, _) 
+    | GetContext_feature (id, _, _, _) -> 
       Options.Self.debug ~level:1 "Frama-C GUI ended ! \n%!";
       let lsp_response = Lsp_types.ResponseMessage.json_of_t (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:(`List [`String ""; `String ""; `List []]) ()) in
       let data = Json.save_string lsp_response in
@@ -558,6 +634,7 @@ let execute_command prog args feature wrapper_port =
       data
     )
   | Unix.WEXITED _, _
+
   | Unix.WSIGNALED _, _
   | Unix.WSTOPPED _, _ ->
     (
@@ -583,7 +660,8 @@ let execute_command prog args feature wrapper_port =
       | FindDeclaration_feature (id, _, _, _)
       | ComputeProofObligation_feature (_, id, _, _, _)
       | ComputeProofObligationID_feature (id, _)
-      | Prove_feature (id, _, _, _) ->
+      | Prove_feature (id, _, _, _) 
+      | GetContext_feature (id, _, _, _) ->
         Options.Self.debug ~level:1 "\n%!";
         let msg = Printf.sprintf "Frama-c may have exited with errors" in
         let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:msg () in
@@ -617,6 +695,7 @@ let fork_execute_command prog args feature wrapper_port =
       (execute_command prog args feature wrapper_port), pid
     with exn -> (match feature with
       | FindDefinition_feature (id, _, _, _)
+      | GetContext_feature (id, _, _, _) 
       | FindDeclaration_feature (id, _, _, _)
       | ComputeProofObligation_feature (_, id, _, _, _)
       | ComputeProofObligationID_feature (id, _)
@@ -743,13 +822,14 @@ let rq_handler json_string wrapper_port =
           | _ -> Options.Self.debug ~level:1 "No params for showPOVC \n%!"; assert false
         in
       let kernel_opt = KernelOpt.create ~strategies:false () in
+      let uncast_opt = UncastOpt.create () in
       let wp_opt = WpOpt.create ~wp_prover:["none"] () in
       let feature = ComputeProofObligation_feature (!rootPath, id, file, line, ch) in
       let lsp_opt = LspOpt.create (feature) in
       let command = 
         match (String.ends_with ~suffix:".c" file) with
-        | true -> Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file] ~wp:wp_opt ~lsp:lsp_opt ()
-        | false -> Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~wp:wp_opt ~lsp:lsp_opt ()
+        | true -> Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
+        | false -> Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
       in
       let command_str = (Command.string_of_t command) in
       Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
@@ -769,16 +849,16 @@ let rq_handler json_string wrapper_port =
       in
       let function_ids = check_fct function_id in
       let kernel_opt = KernelOpt.create ~strategies:false () in
+      let uncast_opt = UncastOpt.create () in
       let wp_opt = WpOpt.create ~wp_fct:function_ids ~wp_prover:["none"] () in
       let feature = ComputeProofObligationID_feature (id, goal_id) in
       let lsp_opt = LspOpt.create (feature) in
-      let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~wp:wp_opt ~lsp:lsp_opt () in
+      let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt () in
       let command_str = (Command.string_of_t command) in
       Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature wrapper_port in
       Lsp_types.CONTENT (data), pid;
-
       | "provePO" -> (* prove with WP *)
       let id = (Utils.id_to_int request.id) in
       Options.Self.debug ~level:1 "provePO, %d\n%!" id;
@@ -792,19 +872,22 @@ let rq_handler json_string wrapper_port =
               `Bool gui
               ]] -> 
             (Utils.remove_newline (Utils.remove_quotes (f)), function_name, property_name, timeout, gui)
+          | Some `List [`String f; `String function_name; `String property_name; `Int timeout; `Bool gui] -> 
+              (Utils.remove_newline (Utils.remove_quotes (f)), function_name, property_name, timeout, gui)
           | _ -> Options.Self.debug ~level:1 "No params for showPOVC \n%!"; assert false
       in
       let prop = check_prop fct prop in
       let fct = check_fct fct in
       let kernel_opt = KernelOpt.create ~strategies:false () in
+      let uncast_opt = UncastOpt.create () in
       let wp_opt = WpOpt.create ~wp_fct:fct ~wp_prop:prop ~wp_gen:false ~wp_timeout:timeout () in
       let metacsl_opt = MetacslOpt.create () in
       let feature = Prove_feature (id, file, (String.concat "," fct), (String.concat ","prop)) in
       let lsp_opt = LspOpt.create (feature) in
       let command = 
         match (String.ends_with ~suffix:".c" file) with
-        | true -> Command.create ~port:wrapper_port ~strategies:false ~gui:gui ~kernel:kernel_opt ~files:[file] ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
-        | false -> Command.create ~port:wrapper_port ~strategies:false ~gui:gui ~kernel:kernel_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
+        | true -> Command.create ~port:wrapper_port ~strategies:false ~gui:gui ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
+        | false -> Command.create ~port:wrapper_port ~strategies:false ~gui:gui ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
       in
       let command_str = (Command.string_of_t command) in
       Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
@@ -830,21 +913,42 @@ let rq_handler json_string wrapper_port =
       let prop = check_prop fct prop in
       let fct = check_fct fct in
       let kernel_opt = KernelOpt.create ~fct:fct ~strategies:true () in
+      let uncast_opt = UncastOpt.create () in
       let wp_opt = WpOpt.create ~wp_fct:fct ~wp_prop:prop ~wp_prover:["tip"] ~wp_script:"dry" ~wp_gen:false ~wp_timeout:timeout () in
       let metacsl_opt = MetacslOpt.create () in
       let feature = Prove_feature (id, file, (String.concat "," fct), (String.concat "," prop)) in
       let lsp_opt = LspOpt.create (feature) in
       let command = 
         match (String.ends_with ~suffix:".c" file) with
-        | true -> Command.create ~port:wrapper_port ~strategies:true ~gui:gui ~kernel:kernel_opt ~files:[file] ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
-        | false -> Command.create ~port:wrapper_port ~strategies:true ~gui:gui ~kernel:kernel_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
+        | true -> Command.create ~port:wrapper_port ~strategies:true ~gui:gui ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
+        | false -> Command.create ~port:wrapper_port ~strategies:true ~gui:gui ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
       in
       let command_str = (Command.string_of_t command) in
       Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature wrapper_port in
       Lsp_types.CONTENT (data), pid;
-
+    | "getAcslContext" -> 
+        begin
+          let id = (Utils.id_to_int request.id) in
+          let params_result = match request.params with 
+              | Some `List [`String f; `Int l; `Int c] -> Some (Utils.remove_newline (Utils.remove_quotes (f)), l, c)
+              | Some `List [`List [`String f; `Int l; `Int c]] -> Some (Utils.remove_newline (Utils.remove_quotes (f)), l, c)
+              | _ -> None
+          in
+          match params_result with
+          | Some (file, line, col) ->
+              let kernel_opt = KernelOpt.create ~strategies:false () in
+              let feature = GetContext_feature (id, file, line, col) in
+              let lsp_opt = LspOpt.create (feature) in
+              let command = Command.create 
+                  ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file] ~lsp:lsp_opt () 
+              in
+              let prog, args = (Command.args_of_t command) in
+              let data = execute_command prog args feature wrapper_port in
+              Lsp_types.CONTENT (data), 1
+          | _ -> Lsp_types.CONTENT ("null"), 1
+        end
     | "stop" -> (
         Options.Self.debug ~level:1 "Kill pid %d!%!" !fork_pid;
         if not (!fork_pid = 0) then Unix.kill !fork_pid Sys.sigint;
@@ -860,6 +964,8 @@ let rq_handler json_string wrapper_port =
   with exn ->  
     Options.Self.debug ~level:1 "Backtrace : %s\n" (Printexc.get_backtrace ());
     Lsp_types.CONTENT (Json.save_string (Utils.make_error (Printexc.to_string (exn)) (Utils.id_to_int id))), 1
+
+
 
 
 let notif_handler json_string server_sock wrapper_port =
@@ -889,11 +995,12 @@ let notif_handler json_string server_sock wrapper_port =
     if String.ends_with ~suffix:".c" file_name then
       begin
         let kernel_opt = KernelOpt.create ~strategies:false () in
+        let uncast_opt = UncastOpt.create () in
         let wp_opt = WpOpt.create ~wp_prop:["@assigns"; "rte"] ~wp_prover:["none"] ~wp_smoke_tests:false ~wp_gen:true () in
         let metacsl_opt = MetacslOpt.create () in
         let feature = DidSave_feature in
         let lsp_opt = LspOpt.create (feature) in
-        let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file_name] ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt () in
+        let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file_name] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt () in
         let command_str = (Command.string_of_t command) in
         Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
         let prog, args = (Command.args_of_t command) in
@@ -921,10 +1028,25 @@ let notif_handler json_string server_sock wrapper_port =
         | _ -> Options.Self.debug ~level:1 "No params for smokeTests \n%!"; assert false
       in
       let kernel_opt = KernelOpt.create ~strategies:false () in
+      let uncast_opt = UncastOpt.create () in
       let wp_opt = WpOpt.create ~wp_prop:["smoke"] ~wp_smoke_tests:true ~wp_gen:false () in
       let feature = DidSave_feature in
       let lsp_opt = LspOpt.create (feature) in
-      let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file_name] ~wp:wp_opt ~lsp:lsp_opt () in
+      let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file_name] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt () in
+      let command_str = (Command.string_of_t command) in
+      Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
+      let prog, args = (Command.args_of_t command) in
+      let data = execute_command prog args feature wrapper_port in
+      Lsp_types.CONTENT (data), 1;
+
+  | "ccdoc" -> 
+      Options.Self.debug ~level:1 "ccdoc\n%!";
+      let kernel_opt = KernelOpt.create ~strategies:false () in
+      let uncast_opt = UncastOpt.create () in
+      let ccdoc_opt = CcdocOpt.create () in
+      let feature = DidSave_feature in
+      let lsp_opt = LspOpt.create (feature) in
+      let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~uncast:uncast_opt ~ccdoc:ccdoc_opt ~lsp:lsp_opt () in
       let command_str = (Command.string_of_t command) in
       Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
