@@ -320,74 +320,62 @@ export function activate(context: ExtensionContext) {
             console.error('Error fetching WP proof:', err);
         }
     });
-	const provePOCursor = commands.registerCommand('provePOCursor', async () => {
-    try {
-		const editor = window.activeTextEditor;
-       		if (!editor) {
-           		window.showErrorMessage('No active editor found.');
-           		return;
-       		}
-        const context = await get_acsl_context(client);
+	let provePOCursor = vscode.commands.registerCommand('provePOCursor', async () => {
+        try {
+            const editor = window.activeTextEditor;
+            if (!editor) return;
+
+            const proof_timeout = await window.showInputBox({
+                placeHolder: 'timeout',
+                prompt: `Launch Auto-Proof (Timeout in s)`,
+                value: '10',
+                validateInput: (input) => /^\d+$/.test(input) ? null : 'Int required'
+            });
+
+            if (!proof_timeout) return;
+
+            const args = [
+                editor.document.fileName,
+                editor.selection.active.line,
+                parseInt(proof_timeout, 10)
+            ];
+
+            const res: any = await client.sendRequest('custom/proveAuto', args);
+    
+    if (res && Array.isArray(res) && res.length >= 3) {
+        const funcName = res[1];
+        const propName = res[2];
+        const goals = res[3];
+
+        // --- DISTINCTION DES 3 CAS ---
         
-   
-        if (!context || context.function === "@none" || (context.function === "@all" && context.property === "@all")) {
-            commands.executeCommand('provePO'); 
-            return;
+        if (propName === "@all" || propName === "") {
+            // CAS 1 : Clic sur le nom de la fonction
+            window.showInformationMessage(`Function '${funcName}' selected. Proving ALL properties.`);
+        } 
+        else if (propName.startsWith('@')) {
+            // CAS 2 : Clic sur une propriété non nommée (@requires, @assigns...)
+            window.showInformationMessage(`Unnamed property (${propName}) in '${funcName}'. Proving similar properties. (Tip: name it for better precision).`);
+        } 
+        else {
+            // CAS 3 : Propriété nommée
+            window.showInformationMessage(`Targeting specific property '${propName}' in '${funcName}'.`);
         }
 
-        let functionName = context.function;
-        let propertyName = context.property;
-        
-        if (propertyName === "@all") {
-            const selection = await window.showInformationMessage(
-                `Prove ALL properties of function '${functionName}'?`,
-                "Yes, prove all", 
-                "Cancel"
-            );
-            
-            if (selection !== "Yes, prove all") return;
-            propertyName = ""; 
-        }
-        else if (propertyName.startsWith("@")) {
-            const selection = await window.showInformationMessage(
-                `Unnamed property selected (${propertyName}).`,
-                `Prove all '${propertyName}'`, 
-                "Cancel to name it"           
-            );
-
-            if (selection === "Cancel to name it") {
-                return;
-            }
-            if (!selection) return; 
-        }
-
-        const proof_timeout = await window.showInputBox({
-            placeHolder: 'timeout',
-            prompt: `Prove '${propertyName === "" ? "ALL" : propertyName}' in '${functionName}' ? (Timeout s)`,
-            value: '10',
-            validateInput: (input) => /^\d+$/.test(input) ? null : 'Int required'
-        });
-
-        if (!proof_timeout) return;
-        
-       
-        const args = [
-            editor.document.fileName,
-            functionName, 
-            propertyName, 
-            parseInt(proof_timeout, 10),
-            false
-        ];
-
-        const res = await client.sendRequest('provePO', args);
-        wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
+        // Mise à jour de la vue WP Goals (identique à provePO)
+        wpResults.update(res);
         wpResults.refresh();
-        window.showInformationMessage('Proof launched!');
+
+    } else {
+        // CAS : RIEN TROUVÉ (res est [] ou invalide)
+        window.showWarningMessage("No context detected. Please click on a function name or an ACSL property.");
     }
-    catch (err) {
-        window.showErrorMessage('Error: ' + err);
-    }
-});
+
+        }
+        catch (err) {
+            window.showErrorMessage('Error during Auto-Proof: ' + err);
+        }
+    });
 
 	const provePOGUI = commands.registerCommand('provePOGUI', async () => {
 		try {
