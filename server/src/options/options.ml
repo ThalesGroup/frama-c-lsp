@@ -75,13 +75,7 @@
    let default = ""
  end)
  
-module Get_context = Self.String
-(struct
-   let option_name = "-lsp-get-context"
-   let help = "Internal: Finds the ACSL context (function and property) at location"
-   let arg_name = "file:line:character"
-   let default = ""
-end) 
+
  module Id = Self.Int
  (struct
    let option_name = "-lsp-id"
@@ -121,3 +115,11 @@ end)
    let arg_name = "fct and prop"
    let default = ""
  end) 
+
+module Get_context = Self.String
+(struct
+  let option_name = "-lsp-get-context"
+  let default = ""
+  let arg_name = "file:line:col"
+  let help = "Internal use: context detection for LSP"
+end)

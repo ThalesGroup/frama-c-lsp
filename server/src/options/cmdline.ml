@@ -95,7 +95,17 @@ let get_FindDeclaration_args () =
     Some (Options.Id.get (), file, line, ch)
     )
   else None
-
+let get_GetContext_args () =
+  let args = Options.Get_context.get () in
+  if not (String.trim args = "") then
+    (
+      let req_info = String.split_on_char ':' args in
+      let file = (List.nth req_info 0) in
+      let line = (Stdlib.int_of_string (List.nth req_info 1)) in
+      let ch = (Stdlib.int_of_string (List.nth req_info 2)) in
+      Some (Options.Id.get (), file, line, ch)
+    )
+  else None
 let get_ComputeProofObligation_args () =
   let args = Options.Show_POVC.get () in
   if not (String.trim args = "") then
@@ -128,17 +138,7 @@ let get_Prove_args () =
       Some (Options.Id.get (), file, fct, prop)
       )
     else None
-let get_GetContext_args () =
-  let args = Options.Get_context.get () in
-  if not (String.trim args = "") then
-    (
-      let req_info = String.split_on_char ':' args in
-      let file = (List.nth req_info 0) in
-      let line = (Stdlib.int_of_string (List.nth req_info 1)) in
-      let ch = (Stdlib.int_of_string (List.nth req_info 2)) in
-      Some (Options.Id.get (), file, line, ch)
-    )
-  else None
+
 let get_active_option () =
   let active_options = ref [] in
   if is_active_DidSave () then active_options := Lsp_handler.DidSave_feature :: !active_options;
@@ -286,7 +286,7 @@ let run () =
       | Some Lsp_handler.ComputeProofObligation_feature(root_path, id, file, line, ch) -> let data = [(ShowPOVC.get_property root_path id file line ch)] in Options.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; send_result data
       | Some Lsp_handler.ComputeProofObligationID_feature(id, goal_id) -> let data = [(ShowPOVC.get_property_from_id id goal_id)] in Options.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; send_result data
       | Some Lsp_handler.Prove_feature(id, file, fct, prop) -> let data = [(ProvePO.get_property_status id file fct prop)] in Options.Self.feedback ~level:1 "Proof attempt done !\n%!"; send_result data
-      | Some Lsp_handler.GetContext_feature(id, file, line, ch) ->Context_finder.run id file line ch; send_result []
+      | Some Lsp_handler.GetContext_feature(_id, file, line, _ch) ->  let (func_name, prop_name) = Context_finder.get_context file line in let json_response = `List [`String func_name; `String prop_name] in let data = [Json.save_string json_response] in send_result data
       | None ->  Self.debug ~level:1 "LSP started !!!"
   )
 

@@ -859,6 +859,61 @@ let rq_handler json_string wrapper_port =
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature wrapper_port in
       Lsp_types.CONTENT (data), pid;
+      | "custom/proveAuto" -> 
+      Options.Self.debug ~level:1 "Auto-Prove Request triggered (No Socket Mode)\n%!";
+      
+      let (file, line, timeout) = match request.params with
+        | Some `List [`List [`String f; `Int l; `Int t]] -> (f, l, t)
+        | Some `List [`String f; `Int l; `Int t] -> (f, l, t)
+        | _ -> ("", 0, 10)
+      in
+
+      if file = "" then 
+        let resp = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:id ~result:(`List []) () in
+        Lsp_types.CONTENT (Json.save_string (Lsp_types.ResponseMessage.json_of_t resp)), 1
+      else begin
+
+          (* 1. PHASE 1 : RECUPERER LE CONTEXTE (Calcul interne Frama-C) *)
+          let ctx_feature = GetContext_feature (0, file, line, 0) in
+          let kernel_opt = KernelOpt.create ~strategies:false () in
+          let ctx_command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file] ~lsp:(LspOpt.create ctx_feature) () in
+          let (ctx_prog, ctx_args) = Command.args_of_t ctx_command in
+          let ctx_response_str = execute_command ctx_prog ctx_args ctx_feature wrapper_port in
+          
+          let (func_name, prop_name) = 
+            try match Json.load_string ctx_response_str with
+               | `List [`String f; `String p] -> (f, p)
+               | _ -> ("@none", "")
+            with _ -> ("@none", "")
+          in
+
+          if func_name = "@none" || func_name = "" then
+             (* CAS : CLIC DANS LE VIDE -> On renvoie une liste vide avec un flag spécial *)
+             (* L'extension verra que c'est une liste vide et pourra afficher son propre message *)
+             let resp = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:id ~result:(`List []) () in
+             Lsp_types.CONTENT (Json.save_string (Lsp_types.ResponseMessage.json_of_t resp)), 1
+          else begin
+             
+             (* 2. PHASE 2 : LANCER LA PREUVE (Comme provePO) *)
+
+             let prop = check_prop func_name prop_name in
+              let fct = check_fct func_name in
+
+             let uncast_opt = UncastOpt.create () in
+             let wp_opt = WpOpt.create ~wp_fct:fct ~wp_prop:prop ~wp_gen:false ~wp_timeout:timeout () in
+             let metacsl_opt = MetacslOpt.create () in
+             
+             (* On utilise le VRAI ID de la requête pour que VSCode accepte la réponse *)
+             let feature = Prove_feature ((Utils.id_to_int request.id), file, (String.concat "," fct), (String.concat "," prop)) in
+             let lsp_opt = LspOpt.create (feature) in
+             let prove_command = Command.create ~port:wrapper_port ~strategies:false ~gui:false ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt () in
+             let (prove_prog, prove_args) = Command.args_of_t prove_command in
+             
+             (* fork_execute_command fait tout le boulot et renvoie le JSON final des goals *)
+             let data, pid = fork_execute_command prove_prog prove_args feature wrapper_port in
+             Lsp_types.CONTENT (data), pid
+          end
+      end
       | "provePO" -> (* prove with WP *)
       let id = (Utils.id_to_int request.id) in
       Options.Self.debug ~level:1 "provePO, %d\n%!" id;
@@ -928,27 +983,6 @@ let rq_handler json_string wrapper_port =
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature wrapper_port in
       Lsp_types.CONTENT (data), pid;
-    | "getAcslContext" -> 
-        begin
-          let id = (Utils.id_to_int request.id) in
-          let params_result = match request.params with 
-              | Some `List [`String f; `Int l; `Int c] -> Some (Utils.remove_newline (Utils.remove_quotes (f)), l, c)
-              | Some `List [`List [`String f; `Int l; `Int c]] -> Some (Utils.remove_newline (Utils.remove_quotes (f)), l, c)
-              | _ -> None
-          in
-          match params_result with
-          | Some (file, line, col) ->
-              let kernel_opt = KernelOpt.create ~strategies:false () in
-              let feature = GetContext_feature (id, file, line, col) in
-              let lsp_opt = LspOpt.create (feature) in
-              let command = Command.create 
-                  ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file] ~lsp:lsp_opt () 
-              in
-              let prog, args = (Command.args_of_t command) in
-              let data = execute_command prog args feature wrapper_port in
-              Lsp_types.CONTENT (data), 1
-          | _ -> Lsp_types.CONTENT ("null"), 1
-        end
     | "stop" -> (
         Options.Self.debug ~level:1 "Kill pid %d!%!" !fork_pid;
         if not (!fork_pid = 0) then Unix.kill !fork_pid Sys.sigint;
@@ -983,7 +1017,7 @@ let notif_handler json_string server_sock wrapper_port =
     let json_request = Lsp_types.RequestMessage.json_of_t lsp_request in
     let data = Json.save_string (json_request) in
     Lsp_types.CONTENT (data), 1
-
+  
   | "textDocument/didSave" ->
     Options.Self.debug ~level:1 "didSave\n%!";
     let params = match notif.params with
