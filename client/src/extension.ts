@@ -322,45 +322,73 @@ export function activate(context: ExtensionContext) {
     });
 	const provePOCursor = commands.registerCommand('provePOCursor', async () => {
     try {
-       
+		const editor = window.activeTextEditor;
+       		if (!editor) {
+           		window.showErrorMessage('No active editor found.');
+           		return;
+       		}
         const context = await get_acsl_context(client);
-        if (!context || context.function === "@all") {
-            window.showWarningMessage("No ACSL property found");
+        
+   
+        if (!context || context.function === "@none" || (context.function === "@all" && context.property === "@all")) {
+            commands.executeCommand('provePO'); 
             return;
+        }
+
+        let functionName = context.function;
+        let propertyName = context.property;
+        
+        if (propertyName === "@all") {
+            const selection = await window.showInformationMessage(
+                `Prove ALL properties of function '${functionName}'?`,
+                "Yes, prove all", 
+                "Cancel"
+            );
+            
+            if (selection !== "Yes, prove all") return;
+            propertyName = ""; 
+        }
+        else if (propertyName.startsWith("@")) {
+            const selection = await window.showInformationMessage(
+                `Unnamed property selected (${propertyName}).`,
+                `Prove all '${propertyName}'`, 
+                "Cancel to name it"           
+            );
+
+            if (selection === "Cancel to name it") {
+                return;
+            }
+            if (!selection) return; 
         }
 
         const proof_timeout = await window.showInputBox({
             placeHolder: 'timeout',
-            prompt: `Prove '${context.property}' in '${context.function}' ? (Timeout en s)`,
+            prompt: `Prove '${propertyName === "" ? "ALL" : propertyName}' in '${functionName}' ? (Timeout s)`,
             value: '10',
-            validateInput: (input) => {
-                if (!/^\d+$/.test(input)) return 'Int required';
-                return null;
-            }
+            validateInput: (input) => /^\d+$/.test(input) ? null : 'Int required'
         });
 
         if (!proof_timeout) return;
-        const int_timeout = parseInt(proof_timeout, 10);
-        const editor = window.activeTextEditor!;
+        
+       
         const args = [
             editor.document.fileName,
-            context.function, 
-            context.property,
-            int_timeout,
+            functionName, 
+            propertyName, 
+            parseInt(proof_timeout, 10),
             false
         ];
 
         const res = await client.sendRequest('provePO', args);
         wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
         wpResults.refresh();
-        window.showInformationMessage('Proof results updated');
+        window.showInformationMessage('Proof launched!');
     }
     catch (err) {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        window.showErrorMessage('Failed to fetch and display WP proof: ' + errorMessage);
-        console.error('Error fetching WP proof:', err);
+        window.showErrorMessage('Error: ' + err);
     }
 });
+
 	const provePOGUI = commands.registerCommand('provePOGUI', async () => {
 		try {
             const args = await get_proof_args(true);
