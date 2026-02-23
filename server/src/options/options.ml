@@ -123,3 +123,11 @@ module Get_context = Self.String
   let arg_name = "file:line:col"
   let help = "Internal use: context detection for LSP"
 end)
+
+module Get_AST = Self.String 
+(struct
+  let option_name = "-lsp-ast"
+  let help = "get AST of a file"
+  let arg_name = "file"
+  let default = ""
+end)
