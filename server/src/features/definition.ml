@@ -22,142 +22,60 @@
     - Finds user defined terms and predicates
     - Finds C function, struct, union and enum definitions
 *)
-
 let glob_visitor loca symbol = object 
   inherit Visitor.frama_c_inplace
     method !vglob_aux g =
       match g with 
-      | GEnumTag (ei,loc) -> 
-        if (String.equal symbol ei.eorig_name) then
-          loca := Some loc;
-        Cil.DoChildren
-      | GCompTag (ci,loc) -> 
-        if (String.equal symbol ci.corig_name) then
-          loca := Some loc;
-        Cil.DoChildren
-      | GType (ti,loc) -> 
-        if (String.equal symbol ti.torig_name) then
-          loca := Some loc;
-        Cil.DoChildren
-      | GVar (vi, _, loc) -> 
-          Options.Self.debug ~level:1 "var : %s, symbol : %s \n%!" vi.vname symbol;
-          if (String.equal symbol vi.vname) then
-          begin
-            loca := Some loc;
-          end;
-        Cil.DoChildren
-      | GText _ -> 
-        Cil.DoChildren
-      | GFun (fd,loc) -> 
-        if (String.equal symbol fd.svar.vname;) then
-          begin
-            Options.Self.debug ~level:1 "fun : %s\n%!" fd.svar.vname;
-            loca := Some loc;
-          end;
-        Cil.DoChildren
-      | GAsm (s,loc) -> 
-        if (String.equal symbol s) then
-          loca := Some loc;
-        Cil.DoChildren
-      | GPragma (_,_) -> 
-        Options.Self.debug ~level:1 "Pragma : %s\n%!" (Pretty_utils.to_string Printer.pp_global g);
-        Cil.DoChildren
+      | GEnumTag (ei,loc) -> if (String.equal symbol ei.eorig_name) then loca := Some loc; Cil.DoChildren
+      | GCompTag (ci,loc) -> if (String.equal symbol ci.corig_name) then loca := Some loc; Cil.DoChildren
+      | GType (ti,loc) -> if (String.equal symbol ti.torig_name) then loca := Some loc; Cil.DoChildren
+      | GVar (vi, _, loc) -> if (String.equal symbol vi.vname) then loca := Some loc; Cil.DoChildren
+      | GFun (fd,loc) -> if (String.equal symbol fd.svar.vname) then loca := Some loc; Cil.DoChildren
       | GAnnot (ga, _) -> 
         (match ga with 
-        | Dinvariant (li, loc) -> 
-          if (String.equal symbol li.l_var_info.lv_name) then
-            begin
-              Options.Self.debug ~level:1 "invariant : %s\n%!" li.l_var_info.lv_name;
-              loca := Some loc;
-            end;
-          Cil.DoChildren;
-        | Dtype (lti, loc) -> 
-          if (String.equal symbol lti.lt_name) then
-            begin
-              Options.Self.debug ~level:1 "logic type : %s\n%!" lti.lt_name;
-              loca := Some loc;
-            end;
-          Cil.DoChildren
-        | Dtype_annot (li, loc) -> 
-          if (String.equal symbol li.l_var_info.lv_name) then
-            begin
-              Options.Self.debug ~level:1 "type annot : %s\n%!" li.l_var_info.lv_name;
-              loca := Some loc;
-            end;
-          Cil.DoChildren
-        | Dfun_or_pred (li,loc) ->
-          if (String.equal symbol li.l_var_info.lv_name) then
-            begin
-              Options.Self.debug ~level:1 "fun or pred : %s\n%!" li.l_var_info.lv_name;
-              loca := Some loc;
-            end;
-          Cil.DoChildren
-        | Dlemma (str,_,_,_,_,loc) ->
-          Options.Self.debug ~level:1 "lemma : %s\n%!" str;
-          if (String.equal symbol str) then
-            begin
-              loca := Some loc;
-            end;
-          Cil.DoChildren
-        | _ -> ();
-        Cil.DoChildren)
+        | Dinvariant (li, loc) | Dtype_annot (li, loc) | Dfun_or_pred (li, loc) -> 
+            if (String.equal symbol li.l_var_info.lv_name) then loca := Some loc; Cil.DoChildren
+        | Dtype (lti, loc) -> if (String.equal symbol lti.lt_name) then loca := Some loc; Cil.DoChildren
+        | Dlemma (str,_,_,_,_,loc) -> if (String.equal symbol str) then loca := Some loc; Cil.DoChildren
+        | _ -> Cil.DoChildren)
       | _ -> Cil.DoChildren
-  end
+end
 
+(* Utile pour les variables locales aux fonctions et aux contrats *)
 let vrbl_visitor loca symbol = object 
   inherit Visitor.frama_c_inplace
   method! vvdec v = 
-    if (String.equal symbol v.vname) = true then 
-      begin
-        loca := Some v.vdecl; Cil.DoChildren
-      end
-    else
-    Cil.DoChildren;
-  end 
- 
-
-let func_visitor loca symbol = object 
-  inherit Visitor.frama_c_inplace
-  method! vfunc v = 
-    if (String.equal symbol v.svar.vname) = true then 
-      begin
-        loca := Some v.svar.vdecl; Cil.DoChildren
-      end
-    else
-    Cil.DoChildren;
-  end 
-
-let print_attrs () = 
-  Cil.iterGlobals (Ast.get ()) (fun glob -> 
-    List.iter (fun (attr : Cil_types.attribute) -> 
-      match attr with 
-      | (name, params) -> 
-        Options.Self.debug ~level:1 "attribute : %s\n%!" name;
-        List.iter (fun (param : Cil_types.attrparam) ->
-          Options.Self.debug ~level:1 "Attr param : %s\n%!" (Pretty_utils.to_string Printer.pp_attrparam param)
-        ) params;
-    ) (Cil.global_attributes glob)
-  )
-
+    if (String.equal symbol v.vname) then (loca := Some v.vdecl; Cil.DoChildren)
+    else Cil.DoChildren
+end 
 
 let retrieve_location (pos : Filepath.position) =
   let loca = ref None in 
-  let symbol = Utils.retrieve_symbol pos.pos_lnum (pos.pos_cnum - pos.pos_bol) (Filepath.to_string pos.pos_path) in  
+  let current_file = Filepath.to_string pos.pos_path in
+  let symbol = Utils.retrieve_symbol pos.pos_lnum (pos.pos_cnum - pos.pos_bol) current_file in  
+  
+  (* 1. On interroge l'AST de Frama-C (Objets C et Annotations ACSL) *)
   Visitor.visitFramacFile (glob_visitor loca symbol) (Ast.get ()); 
   
   match !loca with
   | Some loc -> loc
-  | None -> (pos,pos) 
+  | None -> 
+      (* 2. Si non trouvé dans l'AST, on renvoie (pos, pos). 
+         Cela forcera la réponse `null` dans la fonction `find` ci-dessous,
+         permettant à Clangd ou CppTools de prendre le relais. *)
+      (pos, pos) 
 
 let find id definitionFile line ch : string =
   let pos = Utils.to_filepath_position definitionFile line ch in
   try 
     let (pos1, pos2) = retrieve_location pos in
+    
+    (* CONDITION CRITIQUE : Si pos1 = pos2, on répond `null` pour déléguer *)
     if pos1 = pos2 then 
       let lsp_response = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:`Null () in
-      let json_response = Lsp_types.ResponseMessage.json_of_t lsp_response in
-      Json.save_string json_response
+      Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_response)
     else
+      (* On a trouvé un objet précis (ACSL ou C parsé) *)
       let lsp_position_1 = Lsp_types.Position.create (pos1.pos_lnum - 1) (pos1.pos_cnum - pos1.pos_bol) in
       let lsp_position_2 = Lsp_types.Position.create (pos2.pos_lnum - 1) (pos2.pos_cnum - pos2.pos_bol) in
       let lsp_range = Lsp_types.Range.create lsp_position_1 lsp_position_2 in
@@ -165,6 +83,7 @@ let find id definitionFile line ch : string =
       let lsp_location = Lsp_types.Location.create (Utils.to_lsp_uri filename_str) lsp_range in
       let json_location = Lsp_types.Location.json_of_t lsp_location in
       let lsp_response = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:json_location () in
-      let json_response = Lsp_types.ResponseMessage.json_of_t lsp_response in
-      Json.save_string json_response
-  with exn -> Json.save_string (Utils.make_error (Printexc.to_string (exn)) (id))
+      Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_response)
+  with exn -> 
+    (* En cas d'erreur interne, on préfère renvoyer null que de bloquer le client *)
+    Json.save_string (Utils.make_error (Printexc.to_string exn) id)

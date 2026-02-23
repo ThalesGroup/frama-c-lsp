@@ -67,7 +67,12 @@ let get_Handler_args () =
     Some (server_port, wrapper_port)
   )
   else None
-
+let get_AST_args () =
+  let file = Options.Get_AST.get () in
+  if not (String.trim file = "") then
+    Some (Options.Id.get (), file)
+  else 
+    None
 let get_Wrapper_args () = 
   let wrapper_port = Options.Wrapper_opt.get () in
   if (wrapper_port == 0) then None
@@ -145,6 +150,10 @@ let get_active_option () =
   (match get_FindDefinition_args () with
   | None -> ()
   | Some (id, file, line, ch) -> active_options := Lsp_handler.FindDefinition_feature(id, file, line, ch) :: !active_options
+  );
+  (match get_AST_args () with
+  | None -> ()
+  | Some (id, file) -> active_options := Lsp_handler.ComputeAST_feature(id, file) :: !active_options
   );
   (match get_FindDeclaration_args () with
   | None -> ()
@@ -287,6 +296,8 @@ let run () =
       | Some Lsp_handler.ComputeProofObligationID_feature(id, goal_id) -> let data = [(ShowPOVC.get_property_from_id id goal_id)] in Options.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; send_result data
       | Some Lsp_handler.Prove_feature(id, file, fct, prop) -> let data = [(ProvePO.get_property_status id file fct prop)] in Options.Self.feedback ~level:1 "Proof attempt done !\n%!"; send_result data
       | Some Lsp_handler.GetContext_feature(_id, file, line, _ch) ->  let (func_name, prop_name) = Context_finder.get_context file line in let json_response = `List [`String func_name; `String prop_name] in let data = [Json.save_string json_response] in send_result data
+      | Some Lsp_handler.ComputeAST_feature(id, file) -> let data = [(Extract_ast.compute_and_serialize id file)] in Options.Self.feedback ~level:1 "AST Extraction done !\n%!"; send_result data
+    
       | None ->  Self.debug ~level:1 "LSP started !!!"
   )
 

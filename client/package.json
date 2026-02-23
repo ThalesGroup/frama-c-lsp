@@ -9,43 +9,49 @@
     "repository": {"type": "git", "url": "https://github.com/ThalesGroup/frama-c-lsp.git"},
     "categories": ["Programming Languages"],
     "keywords": ["acsl", "c", "frama-c"],
-    "activationEvents": ["onLanguage:acsl"],
+    "activationEvents": ["onLanguage:acsl","onLanguage:c","workspaceContains:**/*.{c,h}"],
     "icon": "images/logo-frama-c.png",
     "main": "./out/extension",
+    "capabilities": {
+    "definitionProvider": true
+},
     "contributes": {
         "viewsContainers": {
+            "activitybar": [{   "id": "frama-c-sidebar","title": "Frama-C Analysis","icon": "images/logo-frama-c.png" }],
             "panel": [{"id": "myPanel", "title": "WP Goals", "icon": "images/logo-frama-c.png"}]
         },
         "views": {
+            "frama-c-sidebar": [{"id": "framaCExplorer", "name": "Explorer"}],
             "myPanel": [{"id": "WPPan", "name": "WP pan"}]
         },
         "menus": {
             "editor/context": [
-                {"command": "stop", "when": "resourceLangId == acsl"},
-                {"command": "provePOCursor","when": "resourceLangId == acsl", "group": "Frama-C/WP"},
+                {"command": "acsl-lsp.debugAST","when": "resourceLangId == c || resourceLangId == acsl","group": "Frama-C"},
+                {"command": "stop", "when": "resourceLangId == c || resourceLangId == acsl"},
+                {"command": "provePOCursor","when": "resourceLangId == c || resourceLangId == acsl", "group": "Frama-C/WP"},
                 {"submenu": "Frama-C"},
                 {"submenu": "Frama-C/WP"},
                 {"submenu": "Frama-C/CCDOC"}
             ],
             "Frama-C": [
-                {"command": "displayCIL", "when": "resourceLangId == acsl"},
-                {"command": "displayCIL_noannot", "when": "resourceLangId == acsl"},
-                {"command": "displayCILProject", "when": "resourceLangId == acsl"},
-                {"command": "displayCILProject_noannot", "when": "resourceLangId == acsl"},
-                {"command": "computeCG", "when": "resourceLangId == acsl"},
-                {"command": "showGlobalMetrics", "when": "resourceLangId == acsl"},
-                {"command": "showLocalMetrics", "when": "resourceLangId == acsl"}
+                {"command": "displayCIL", "when": "resourceLangId == c || resourceLangId == acsl"},
+                {"command": "displayCIL_noannot", "when": "resourceLangId == c || resourceLangId == acsl"},
+                {"command": "displayCILProject", "when": "resourceLangId == c || resourceLangId == acsl"},
+                {"command": "displayCILProject_noannot", "when": "resourceLangId == c || resourceLangId == acsl"},
+                {"command": "computeCG", "when": "resourceLangId == c || resourceLangId == acsl"},
+                {"command": "showGlobalMetrics", "when": "resourceLangId == c || resourceLangId == acsl"},
+                {"command": "showLocalMetrics", "when": "resourceLangId == c || resourceLangId == acsl"}
             ],
             "Frama-C/WP": [
-                {"command": "provePO", "when": "resourceLangId == acsl"},
-                {"command": "provePOStrategies", "when": "resourceLangId == acsl"},
-                {"command": "provePOGUI", "when": "resourceLangId == acsl"},
-                {"command": "provePOStrategiesGUI", "when": "resourceLangId == acsl"},
-                {"command": "smokeTests", "when": "resourceLangId == acsl"},
-                {"command": "showPOVC", "when": "resourceLangId == acsl"}
+                {"command": "provePO", "when": "resourceLangId == c || resourceLangId == acsl"},
+                {"command": "provePOStrategies", "when": "resourceLangId == c || resourceLangId == acsl"},
+                {"command": "provePOGUI", "when": "resourceLangId == c || resourceLangId == acsl"},
+                {"command": "provePOStrategiesGUI", "when": "resourceLangId == c || resourceLangId == acsl"},
+                {"command": "smokeTests", "when": "resourceLangId == c || resourceLangId == acsl"},
+                {"command": "showPOVC", "when": "resourceLangId == c || resourceLangId == acsl"}
             ],
             "Frama-C/CCDOC": [
-                {"command": "ccdoc", "when": "resourceLangId == acsl"}
+                {"command": "ccdoc", "when": "resourceLangId == c || resourceLangId == acsl"}
             ],
             "view/item/context": [
                 {"command": "showScript", "when": "view == WPPan && viewItem == itemContext", "group": "navigation"},
@@ -62,6 +68,7 @@
             {"id": "Frama-C/CCDOC", "label": "Frama-C/CCDOC", "icon": "images/logo-frama-c.png"}
         ],
         "commands": [
+            {"command": "acsl-lsp.debugAST","title": "Display AST","category": "Frama-C"},
             {"command": "displayCIL", "title": "Display File CIL"},
             {"command": "displayCIL_noannot", "title": "Display File CIL (-no-annot)"},
             {"command": "displayCILProject", "title": "Display Project CIL"},
@@ -85,8 +92,24 @@
             { "command": "provePOCursor", "title": "ProvePOCursor", "category": "Frama-C/WP"},
             {"command": "ccdoc", "title": "Run"}
         ],
-        "languages": [{"id": "acsl", "aliases": ["ACSL", "acsl"], "extensions": [".c", ".h"], "configuration": "./syntax/language-configuration.json", "icon": {"light": "./images/logo-frama-c.png", "dark": "./images/logo-frama-c.png"}}],
-        "grammars": [{"language": "acsl", "scopeName": "source.acsl", "path": "./syntax/acsl.tmLanguage.json"}],
+"languages": [
+  {
+    "id": "c", 
+    "extensions": [".c", ".h"],
+    "aliases": ["C", "c", "ACSL", "acsl"]
+  }
+],
+"activationEvents": [
+  "onLanguage:c"
+],    
+    "grammars": [
+      {
+        "injectTo": ["source.c"],
+        "language": "c", 
+        "scopeName": "source.c.acsl",
+        "path": "./syntax/acsl.tmLanguage.json" 
+      }
+    ],
         "configuration": [
             {"title": "Generic",
              "properties": {
