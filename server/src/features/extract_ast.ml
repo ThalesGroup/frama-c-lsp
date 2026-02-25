@@ -2,7 +2,14 @@ open Cil_types
 
 let property_to_string p =
   Format.asprintf "%a" Property.pretty p
-
+let split_string s size =
+  let rec aux i acc =
+    if i >= String.length s then List.rev acc
+    else
+      let len = min size (String.length s - i) in
+      aux (i + len) ((String.sub s i len) :: acc)
+  in
+  aux 0 []
 let extract_acsl_spec kf =
   let spec = Annotations.funspec kf in
   let props = Property.ip_of_spec kf Kglobal ~active:[] spec in
@@ -60,6 +67,15 @@ let compute_and_serialize id _file =
     () 
   in
 
-  let json_message = Lsp_types.ResponseMessage.json_of_t lsp_message in
-  
-  Json.save_string json_message
+  let json_message =
+  Json.save_string
+    (Lsp_types.ResponseMessage.json_of_t lsp_message)
+in
+
+let chunk_size = 60000 in
+
+let chunks = split_string json_message chunk_size in
+
+let fragmented_response = String.concat ":::" chunks in
+
+fragmented_response
