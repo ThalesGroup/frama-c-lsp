@@ -77,29 +77,6 @@ let get_Wrapper_args () =
   let wrapper_port = Options.Wrapper_opt.get () in
   if (wrapper_port == 0) then None
   else Some (wrapper_port)
-
-let get_FindDefinition_args () = 
-  let args = Options.Find_def.get () in
-  if not (String.trim args = "") then
-    (
-    let req_info = String.split_on_char ':' (Options.Find_def.get ()) in
-    let file = (List.nth req_info 0) in
-    let line = (Stdlib.int_of_string (List.nth req_info 1)) in
-    let ch = (Stdlib.int_of_string (List.nth req_info 2)) in
-    Some (Options.Id.get (), file, line, ch)
-    )
-  else None
-let get_FindDeclaration_args () = 
-  let args = Options.Find_decl.get () in
-  if not (String.trim args = "") then
-    (
-    let req_info = String.split_on_char ':' (Options.Find_decl.get ()) in
-    let file = (List.nth req_info 0) in
-    let line = (Stdlib.int_of_string (List.nth req_info 1)) in
-    let ch = (Stdlib.int_of_string (List.nth req_info 2)) in
-    Some (Options.Id.get (), file, line, ch)
-    )
-  else None
 let get_GetContext_args () =
   let args = Options.Get_context.get () in
   if not (String.trim args = "") then
@@ -154,10 +131,7 @@ let get_Prove_args () =
 let get_active_option () =
   let active_options = ref [] in
   if is_active_DidSave () then active_options := Lsp_handler.DidSave_feature :: !active_options;
-  (match get_FindDefinition_args () with
-  | None -> ()
-  | Some (id, file, line, ch) -> active_options := Lsp_handler.FindDefinition_feature(id, file, line, ch) :: !active_options
-  );
+  
 (match get_GetDetails_args () with
 | None -> ()
 | Some (id, file, fct) -> 
@@ -166,10 +140,6 @@ let get_active_option () =
   (match get_AST_args () with
   | None -> ()
   | Some (id, file) -> active_options := Lsp_handler.ComputeAST_feature(id, file) :: !active_options
-  );
-  (match get_FindDeclaration_args () with
-  | None -> ()
-  | Some (id, file, line, ch) -> active_options := Lsp_handler.FindDeclaration_feature(id, file, line, ch) :: !active_options
   );
   (match get_ComputeProofObligation_args () with
   | None -> ()
@@ -299,8 +269,6 @@ let run () =
       let feature = get_active_option () in
       match feature with
       | Some Lsp_handler.DidSave_feature -> let data = List.map Json.save_string (DidSave.handle ()) in Options.Self.feedback ~level:1 "Updated Diagnostics !\n%!"; send_result data
-      | Some Lsp_handler.FindDefinition_feature(id, file, line, ch) -> let data = [(Definition.find id file line ch)] in Options.Self.feedback ~level:1 "Find definition attempt done !\n%!"; send_result data
-      | Some Lsp_handler.FindDeclaration_feature(id, file, line, ch) -> let data = [(Declaration.find id file line ch)] in Options.Self.feedback ~level:1 "Find declaration attempt done !\n%!"; send_result data
       | Some Lsp_handler.ComputeCIL_feature -> send_result []
       | Some Lsp_handler.ComputeCallGraph_feature _ -> send_result []
       | Some Lsp_handler.ComputeMetrics_feature -> send_result []

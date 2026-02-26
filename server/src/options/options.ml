@@ -57,25 +57,6 @@
    let arg_name = "server_port"
    let default = 0
  end)
-
-
- module Find_def = Self.String 
- (struct
-   let option_name = "-lsp-definition"
-   let help = "definition request"
-   let arg_name = "file:line:character"
-   let default = ""
- end)
- 
- module Find_decl = Self.String 
- (struct
-   let option_name = "-lsp-declaration"
-   let help = "declaration request"
-   let arg_name = "file:line:character"
-   let default = ""
- end)
- 
-
  module Id = Self.Int
  (struct
    let option_name = "-lsp-id"
