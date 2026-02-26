@@ -393,7 +393,12 @@ export function activate(context: ExtensionContext) {
             window.showErrorMessage('Error during Auto-Proof: ' + err);
         }
     });
-
+    const refreshDetails = commands.registerCommand('acsl-lsp.refreshDetails', async (item: FramaCItem) => {
+    if (item.contextValue === "function") {
+        framaCProvider.refresh(); 
+    }
+});
+context.subscriptions.push(refreshDetails);
 	const provePOGUI = commands.registerCommand('provePOGUI', async () => {
 		try {
             const args = await get_proof_args(true);
@@ -755,7 +760,6 @@ export class FramaCProvider implements vscode.TreeDataProvider<FramaCItem> {
     getTreeItem(element: FramaCItem): vscode.TreeItem { return element; }
 
     async getChildren(element?: FramaCItem): Promise<FramaCItem[]> {
-    // Dans FramaCProvider.getChildren
 if (!element) {
     const files = await vscode.workspace.findFiles('**/*.{c,h}'); // Vérifie que c'est bien ça
     return files.map(uri => new FramaCItem(
@@ -798,13 +802,33 @@ if (!element) {
     }
 
     if (element.contextValue === "function") {
-        const children = element.extraData || [];
-        return children.map((c: any) => new FramaCItem(
+    const fileUri = element.resourceUri?.toString();
+    if (element.extraData && element.extraData.length > 0) {
+        return element.extraData.map((c: any) => new FramaCItem(
             c.name, 
             vscode.TreeItemCollapsibleState.None, 
-            c.type //
+            c.type
         ));
     }
+
+    try {
+        const response: any = await client.sendRequest("custom/getFunctionDetails", { 
+            uri: fileUri, 
+            functionName: element.label 
+        });
+
+        if (response && Array.isArray(response)) {
+            return response.map((c: any) => new FramaCItem(
+                c.name, 
+                vscode.TreeItemCollapsibleState.None, 
+                c.type
+            ));
+        }
+    } catch (error) {
+        console.error("Erreur détails fonction:", error);
+        return [new FramaCItem("Error loading details", vscode.TreeItemCollapsibleState.None, "info")];
+    }
+}
 
     if (element.contextValue === "cat_vars") {
         return data.globals?.map((g: any) => 
