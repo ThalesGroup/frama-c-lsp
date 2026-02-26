@@ -131,3 +131,11 @@ module Get_AST = Self.String
   let arg_name = "file"
   let default = ""
 end)
+
+module Get_details = Self.String
+(struct
+  let option_name = "-lsp-details"
+  let help = "Internal use: get ACSL details for a function"
+  let arg_name = "file:func_name"
+  let default = ""
+end)

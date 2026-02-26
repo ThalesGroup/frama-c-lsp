@@ -28,19 +28,13 @@ let extract_acsl_spec kf =
 let compute_and_serialize id _file =
   let functions = ref [] in
   let globals = ref [] in
-  let types = ref [] in
-  let predicates = ref [] in
 
   Globals.Functions.iter (fun kf ->
     if Kernel_function.is_definition kf then
-      let (req, ens) = extract_acsl_spec kf in
       let func_json = `Assoc [
         ("name", `String (Kernel_function.get_name kf));
         ("type", `String "function");
-        ("children", `List (
-          (List.map (fun s -> `Assoc [("name", `String s); ("type", `String "requires")]) req) @
-          (List.map (fun s -> `Assoc [("name", `String s); ("type", `String "ensures")]) ens)
-        ))
+        ("hasChildren", `Bool true) (* Indicateur pour le client *)
       ] in
       functions := func_json :: !functions
   );
@@ -49,15 +43,16 @@ let compute_and_serialize id _file =
     if not (Ast_types.is_fun vi.vtype) then
       globals := `Assoc [
         ("name", `String vi.vname); 
-        ("type", `String "variable")
+        ("type", `String "variable");
+        ("hasChildren", `Bool false)
       ] :: !globals
   );
 
   let result_data = `Assoc [
     ("functions", `List !functions);
     ("globals", `List !globals);
-    ("types", `List !types);
-    ("predicates", `List !predicates)
+    ("types", `List []);
+    ("predicates", `List [])
   ] in
 
   let lsp_message = Lsp_types.ResponseMessage.create 
@@ -66,16 +61,25 @@ let compute_and_serialize id _file =
     ~result:result_data 
     () 
   in
+  Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_message)
+let get_function_details id func_name =
+  try
+    let kf = Globals.Functions.find_by_name func_name in
+    let (req, ens) = extract_acsl_spec kf in
+    
+    let children = 
+      (List.map (fun s -> `Assoc [("name", `String s); ("type", `String "requires")]) req) @
+      (List.map (fun s -> `Assoc [("name", `String s); ("type", `String "ensures")]) ens)
+    in
 
-  let json_message =
-  Json.save_string
-    (Lsp_types.ResponseMessage.json_of_t lsp_message)
-in
-
-let chunk_size = 60000 in
-
-let chunks = split_string json_message chunk_size in
-
-let fragmented_response = String.concat ":::" chunks in
-
-fragmented_response
+    let lsp_message = Lsp_types.ResponseMessage.create 
+      ~jsonrpc:"2.0" 
+      ~id:(Lsp_types.Int id) 
+      ~result:(`List children) 
+      () 
+    in
+    Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_message)
+  with Not_found ->
+    let lsp_message = Lsp_types.ResponseMessage.create 
+      ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:(`List []) () in
+    Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_message)

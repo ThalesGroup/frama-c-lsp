@@ -131,7 +131,14 @@ let get_ComputeProofObligationID_args () =
       Some (Options.Id.get (), goal_id)
       )
     else None
-
+let get_GetDetails_args () =
+  let args = Options.Get_details.get () in
+  if not (String.trim args = "") then
+    let req_info = String.split_on_char ':' args in
+    let file = List.nth req_info 0 in
+    let fct = List.nth req_info 1 in
+    Some (Options.Id.get (), file, fct)
+  else None
 let get_Prove_args () =
     let args = Options.Prove.get () in
     if not (String.trim args = "") then
@@ -151,6 +158,11 @@ let get_active_option () =
   | None -> ()
   | Some (id, file, line, ch) -> active_options := Lsp_handler.FindDefinition_feature(id, file, line, ch) :: !active_options
   );
+(match get_GetDetails_args () with
+| None -> ()
+| Some (id, file, fct) -> 
+    active_options := Lsp_handler.GetDetails_feature(id, file, fct) :: !active_options
+);
   (match get_AST_args () with
   | None -> ()
   | Some (id, file) -> active_options := Lsp_handler.ComputeAST_feature(id, file) :: !active_options
@@ -297,7 +309,7 @@ let run () =
       | Some Lsp_handler.Prove_feature(id, file, fct, prop) -> let data = [(ProvePO.get_property_status id file fct prop)] in Options.Self.feedback ~level:1 "Proof attempt done !\n%!"; send_result data
       | Some Lsp_handler.GetContext_feature(_id, file, line, _ch) ->  let (func_name, prop_name) = Context_finder.get_context file line in let json_response = `List [`String func_name; `String prop_name] in let data = [Json.save_string json_response] in send_result data
       | Some Lsp_handler.ComputeAST_feature(id, file) -> let data = [(Extract_ast.compute_and_serialize id file)] in Options.Self.feedback ~level:1 "AST Extraction done !\n%!"; send_result data
-    
+      | Some Lsp_handler.GetDetails_feature(id, _file, fct) ->  let data = [(Extract_ast.get_function_details id fct)] in Options.Self.feedback ~level:1 "Function details extraction done for %s!\n%!" fct; send_result data
       | None ->  Self.debug ~level:1 "LSP started !!!"
   )
 
