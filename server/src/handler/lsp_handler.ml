@@ -32,8 +32,6 @@ let fork_pid = ref 0
 
 type lsp_feature =
   | DidSave_feature
-  | FindDefinition_feature of (int * string * int * int)
-  | FindDeclaration_feature of (int * string * int * int)
   | ComputeCIL_feature
   | ComputeCallGraph_feature of string
   | ComputeMetrics_feature
@@ -334,8 +332,6 @@ module LspOpt = struct
     | DidSave_feature -> "-lsp-did-save"
     (* | DidClose_feature (file) -> Printf.sprintf "-lsp-did-close=%s" file *)
     | ComputeAST_feature (id, file) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-ast=%s" id file
-    | FindDefinition_feature (id, file, line, column) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-definition=%s:%d:%d" id file line column
-    | FindDeclaration_feature (id, file, line, column) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-declaration=%s:%d:%d" id file line column
     | ComputeCIL_feature -> ""
     | ComputeCallGraph_feature _ -> ""
     | ComputeMetrics_feature -> ""
@@ -568,8 +564,7 @@ let execute_command prog args feature wrapper_port =
           (* Sinon VSCode reçoit "Warning:::{"function":...}" et plante *)
           request_str
       | DidSave_feature
-      | FindDefinition_feature (_, _, _, _)
-      | FindDeclaration_feature (_, _, _, _)
+     
       | ComputeProofObligation_feature (_, _, _, _, _)
       | ComputeProofObligationID_feature (_, _) ->
       Options.Self.debug ~level:1 "Executed frama-c command (frama-c exited normally)\n%!";
@@ -622,8 +617,6 @@ let execute_command prog args feature wrapper_port =
       let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
       Unix.close wrapper_sock;
       data
-    | FindDefinition_feature (id, _, _, _)
-    | FindDeclaration_feature (id, _, _, _)
     | ComputeProofObligation_feature (_, id, _, _, _)
     | ComputeProofObligationID_feature (id, _) ->
       Options.Self.debug ~level:1 "Frama-C GUI ended ! \n%!";
@@ -663,9 +656,6 @@ let execute_command prog args feature wrapper_port =
             | l, false -> (String.concat ":::" l) ^ ":::" ^ request_str
           in
           data
-  
-      | FindDefinition_feature (id, _, _, _)
-      | FindDeclaration_feature (id, _, _, _)
       | ComputeProofObligation_feature (_, id, _, _, _)
       | ComputeProofObligationID_feature (id, _)
       | Prove_feature (id, _, _, _) 
@@ -704,9 +694,7 @@ let fork_execute_command prog args feature wrapper_port =
     try
       (execute_command prog args feature wrapper_port), pid
     with exn -> (match feature with
-      | FindDefinition_feature (id, _, _, _)
       | GetContext_feature (id, _, _, _) 
-      | FindDeclaration_feature (id, _, _, _)
       | ComputeProofObligation_feature (_, id, _, _, _)
       | ComputeProofObligationID_feature (id, _)
       | Prove_feature (id, _, _, _) ->
@@ -733,8 +721,6 @@ let capabilities_str = {|{
         "change": 0,
         "save": { "includeText": false }
       },
-      "definitionProvider": true,
-      "declarationProvider": true,
       "diagnosticProvider": {
         "interFileDependencies": false,
         "workspaceDiagnostics": true
@@ -778,45 +764,6 @@ let rq_handler json_string wrapper_port =
       let temp = Utils.remove_newline (Utils.remove_quotes (Json.save_string (Json.field "rootPath" (Json.field "params" req_json)))) in
       rootPath := temp;
       Lsp_types.CONTENT (capabilities_str), 1;
-    | "textDocument/definition" -> 
-      Options.Self.debug ~level:1 "definition\n%!";
-      let params = match request.params with 
-        | Some p -> Lsp_types.DefinitionParams.t_of_json p
-        | None -> Options.Self.debug ~level:1 "No definition params \n%!"; assert false
-      in
-      let uri = params.textDocument.uri in 
-      let src_file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
-      let line = params.position.line in 
-      let ch = params.position.character in
-      let kernel_opt = KernelOpt.create ~strategies:false () in
-      let feature = FindDefinition_feature ((Utils.id_to_int request.id), src_file, line, ch) in
-      let lsp_opt = LspOpt.create (feature) in
-      let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~lsp:lsp_opt () in
-      let command_str = (Command.string_of_t command) in
-      Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
-      let prog, args = (Command.args_of_t command) in
-      let data, pid = fork_execute_command prog args feature wrapper_port in
-      Lsp_types.CONTENT data, pid;
-      
-    | "textDocument/declaration" -> 
-      Options.Self.debug ~level:1 "declaration\n%!";
-      let params = match request.params with 
-        | Some p -> Lsp_types.DeclarationParams.t_of_json p
-        | None -> Options.Self.debug ~level:1 "No declaration params \n%!"; assert false
-      in
-      let uri = params.textDocument.uri in 
-      let src_file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
-      let line = params.position.line in 
-      let ch = params.position.character in
-      let kernel_opt = KernelOpt.create ~strategies:false () in
-      let feature = FindDeclaration_feature ((Utils.id_to_int request.id), src_file, line, ch) in
-      let lsp_opt = LspOpt.create (feature) in
-      let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~lsp:lsp_opt () in
-      let command_str = (Command.string_of_t command) in
-      Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
-      let prog, args = (Command.args_of_t command) in
-      let data, pid = fork_execute_command prog args feature wrapper_port in
-      Lsp_types.CONTENT (data), pid;
 
     | "showPOVC" -> (* show proof obligation of specific function *)
       let id = (Utils.id_to_int request.id) in
