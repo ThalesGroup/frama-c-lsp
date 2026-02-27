@@ -18,6 +18,7 @@
  
 let sections = {| {"items": [
           {"section": "kernel.lspDebug"}, 
+          {"section": "kernel.serverPort"},
           {"section": "kernel.includePaths"},
           {"section": "kernel.sourceFiles"},
           {"section": "kernel.macros"},
@@ -67,6 +68,7 @@ let sections = {| {"items": [
 
   type t = {
     acslLsp : int;
+    serverPort:int;
     includePaths : string list;
     sourceFiles : string list;
     macros : string list;
@@ -114,6 +116,7 @@ let sections = {| {"items": [
 
   let create
     ~acslLsp 
+    ~serverPort
     ~includePaths
     ~sourceFiles
     ~macros
@@ -161,6 +164,7 @@ let sections = {| {"items": [
     =
     {
       acslLsp;
+      serverPort;
       includePaths;
       sourceFiles;
       macros;
@@ -209,6 +213,7 @@ let sections = {| {"items": [
 let global_params = ref
   (create 
   ~acslLsp:0
+  ~serverPort:0
   ~includePaths:[]
   ~sourceFiles:[]
   ~macros:[]
@@ -265,6 +270,7 @@ let save_configs (result:  Json.json) =
   match result with
   | `List [
         `Int json_acslLsp;
+        `Int json_serverPort;
         `List json_includePaths;
         `List json_sourceFiles;
         `List json_macros;
@@ -312,6 +318,7 @@ let save_configs (result:  Json.json) =
     -> 
       global_params := create 
       ~acslLsp: json_acslLsp
+      ~serverPort: json_serverPort
       ~includePaths: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_includePaths )
       ~sourceFiles: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_sourceFiles)
       ~macros: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_macros)

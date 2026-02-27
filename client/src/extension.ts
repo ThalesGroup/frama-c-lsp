@@ -11,8 +11,9 @@ let isDelegating = false;
 
 export function activate(context: ExtensionContext) {
 	// The server is implemented in OCaml
-	const serverPort = vscode.workspace.getConfiguration('vscodeacsl').get<number>('serverPort') || 8005;
-	const wrapperPort = vscode.workspace.getConfiguration('vscodeacsl').get<number>('wrapperPort') || (serverPort + 1);
+	const config = vscode.workspace.getConfiguration();
+	const serverPort = config.get<number>('kernel.serverPort') || 8005;
+	const wrapperPort = config.get<number>('kernel.wrapperPort') || (serverPort + 1);
 	const serverModuleRun = context.asAbsolutePath(path.join('run.sh')) + " " + serverPort + " " + wrapperPort;
 	const serverModuleDebug = context.asAbsolutePath(path.join('run.sh')) + " " + serverPort + " " + wrapperPort;
 
