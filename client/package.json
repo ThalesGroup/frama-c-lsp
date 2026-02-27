@@ -92,36 +92,37 @@
             { "command": "provePOCursor", "title": "ProvePOCursor", "category": "Frama-C/WP"},
             {"command": "ccdoc", "title": "Run"}
         ],
-"languages": [
-  {
-    "id": "c", 
-    "extensions": [".c", ".h"],
-    "aliases": ["C", "c", "ACSL", "acsl"]
-  }
-],
-"activationEvents": [
-  "onLanguage:c"
-],    
-    "grammars": [
-      {
-        "injectTo": ["source.c"],
-        "language": "c", 
-        "scopeName": "source.c.acsl",
-        "path": "./syntax/acsl.tmLanguage.json" 
-      }
-    ],
+        "languages": [
+        {
+            "id": "c", 
+            "extensions": [".c", ".h"],
+            "aliases": ["C", "c", "ACSL", "acsl"]
+        }
+        ],
+        "activationEvents": [
+        "onLanguage:c"
+        ],    
+            "grammars": [
+            {
+                "injectTo": ["source.c"],
+                "language": "c", 
+                "scopeName": "source.c.acsl",
+                "path": "./syntax/acsl.tmLanguage.json" 
+            }
+            ],
         "configuration": [
             {"title": "Generic",
              "properties": {
-                "vscodeacsl.maxNumberOfProblems": {"scope": "resource", "type": "number", "default": 10000000, "description": "Maximum number of problems produced by the server."},
-                "vscodeacsl.serverPort": {"scope": "resource", "type": "number", "description": "Server port to ensure sustainable connection with vscode"},
-                "vscodeacsl.wrapperPort": {"scope": "resource", "type": "number", "description": "Wrapper port to allow request submission to frama-c"}
+                "vscodeacsl.maxNumberOfProblems": {"scope": "resource", "type": "number", "default": 10000000, "description": "Maximum number of problems produced by the server."}
+
             }
             },
             {
             "title": "Frama-C/kernel",
             "properties": {
                 "kernel.lspDebug": {"scope": "window", "type": "integer", "enum": [0, 1, 2], "default": 0, "description": "Frama-C option: -lsp-debug (2 => (1 + json messages), 1 => lsp handler output, 0 => off)."},
+                "kernel.serverPort": {"scope": "resource", "type": "integer","default": 8005, "description": "Server port to ensure sustainable connection with vscode"},
+                "kernel.wrapperPort": {"scope": "resource", "type": "integer","default": 8006, "description": "Wrapper port to allow request submission to frama-c"},
                 "kernel.includePaths": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Include paths for the project. Frama-C option: -cpp-extra-args \"-I ...\""},
                 "kernel.sourceFiles": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Source files."},
                 "kernel.macros": {"scope": "workspace", "type": "array", "items": {"type": "string"}, "description": "Frama-C option: -cpp-extra-args \"-D ...\""},
