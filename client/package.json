@@ -21,7 +21,7 @@
             "panel": [{"id": "myPanel", "title": "WP Goals", "icon": "images/logo-frama-c.png"}]
         },
         "views": {
-            "frama-c-sidebar": [{"id": "framaCExplorer", "name": "Explorer"}],
+            "frama-c-sidebar": [{"id": "framaCExplorer", "name": "Explorer","filterOnType": true}],
             "myPanel": [{"id": "WPPan", "name": "WP pan"}]
         },
         "menus": {
@@ -50,6 +50,13 @@
                 {"command": "smokeTests", "when": "resourceLangId == c || resourceLangId == acsl"},
                 {"command": "showPOVC", "when": "resourceLangId == c || resourceLangId == acsl"}
             ],
+            "view/title": [
+            { "command": "framaCExplorer.search", "when": "view == framaCExplorer", "group": "navigation@1" },
+            { "command": "framaC.toggleFunctions", "when": "view == framaCExplorer", "group": "navigation@1" },
+        { "command": "framaC.toggleVariables", "when": "view == framaCExplorer", "group": "navigation@2" },
+        { "command": "framaC.toggleTypes", "when": "view == framaCExplorer", "group": "navigation@3" },
+        { "command": "framaC.toggleAnnotations", "when": "view == framaCExplorer", "group": "navigation@4" }
+        ],
             "Frama-C/CCDOC": [
                 {"command": "ccdoc", "when": "resourceLangId == c || resourceLangId == acsl"}
             ],
@@ -67,7 +74,17 @@
             {"id": "Frama-C/WP", "label": "Frama-C/WP", "icon": "images/logo-frama-c.png"},
             {"id": "Frama-C/CCDOC", "label": "Frama-C/CCDOC", "icon": "images/logo-frama-c.png"}
         ],
+        
         "commands": [
+            {
+            "command": "framaCExplorer.search",
+            "title": "Filter Explorer",
+            "icon": "$(search)"
+        },
+        { "command": "framaC.toggleFunctions", "title": "Hide Functions", "icon": "$(symbol-function)" },
+    { "command": "framaC.toggleVariables", "title": "Hide Variables", "icon": "$(symbol-variable)" },
+    { "command": "framaC.toggleTypes", "title": "Hide Types", "icon": "$(symbol-class)" },
+    { "command": "framaC.toggleAnnotations", "title": "Hide Annotations", "icon": "$(shield)" },
             {"command": "acsl-lsp.debugAST","title": "Display AST","category": "Frama-C"},
             {"command": "displayCIL", "title": "Display File CIL"},
             {"command": "displayCIL_noannot", "title": "Display File CIL (-no-annot)"},
