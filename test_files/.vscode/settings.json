@@ -17,7 +17,11 @@
     "kernel.includePaths": [
         "include_folder",
         "include_folder2"
-    ]
+    ],
+    "kernel.serverPort": 8005,
+    "kernel.wrapperPort": 8006
+
+ 
 
 }
     

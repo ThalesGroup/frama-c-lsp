@@ -37,7 +37,19 @@ export function activate(context: ExtensionContext) {
 	// Create the language client and start the client.
 	client = new LanguageClient('vscodeacsl', 'ACSL Language Server', serverOptions, clientOptions);
 
-	framaCProvider = new FramaCProvider();
+framaCProvider = new FramaCProvider();
+
+
+context.subscriptions.push(
+    vscode.commands.registerCommand('framaCExplorer.search', async () => {
+        const val = await vscode.window.showInputBox({ prompt: "Filtrer l'arborescence..." });
+        framaCProvider.setFilter(val || "");
+    }),
+   vscode.commands.registerCommand('framaC.toggleFunctions', () => framaCProvider.toggleFunctions()),
+    vscode.commands.registerCommand('framaC.toggleVariables', () => framaCProvider.toggleVariables()),
+    vscode.commands.registerCommand('framaC.toggleTypes', () => framaCProvider.toggleTypes()),
+    vscode.commands.registerCommand('framaC.toggleAnnotations', () => framaCProvider.toggleAnnotations())
+);
     let wpResultsView = vscode.window.createTreeView('framaCExplorer', {
         treeDataProvider: framaCProvider,
         showCollapseAll: true,
@@ -485,8 +497,8 @@ context.subscriptions.push(refreshDetails);
 	
 
 	context.subscriptions.push(smokeTests, ccdoc, displayCIL, displayCIL_noannot, displayCILProject, displayCILProject_noannot, computeCG, showPOVC, showPO, runAgain, runAgainGui, runAgainStrategies, runAgainStrategiesGui, provePO, provePOGUI, provePOStrategies, provePOStrategiesGUI, showGlobalMetrics, showLocalMetrics,provePOCursor,debugAstCommand);
-	
 
+	
     // ----------------------------------------------------------------
 	// Start the client. This will also launch the server
 	client.start();
@@ -724,36 +736,48 @@ export class FramaCProvider implements vscode.TreeDataProvider<FramaCItem> {
     readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
     private astData: Map<string, any> = new Map();
-    private wpData: FramaCItem[] = []; 
+    private wpDataByFile: Map<string, FramaCItem[]> = new Map();
+    
+    private searchQuery: string = "";
+    private hideVariables: boolean = false;
+    private hideFunctions: boolean = false;
+    private hideTypes: boolean = false;
+    private hideAnnotations: boolean = false;
 
     refresh(): void {
         this._onDidChangeTreeData.fire();
     }
 
-    updateAST(uri: string, data: any) {
-    if (data) {
-        this.astData.set(uri, data);
+    setFilter(query: string) {
+        this.searchQuery = query.toLowerCase().trim();
         this.refresh();
-    }} 
+    }
+    toggleVariables() { this.hideVariables = !this.hideVariables; this.refresh(); }
+    toggleFunctions() { this.hideFunctions = !this.hideFunctions; this.refresh(); }
+    toggleTypes() { this.hideTypes = !this.hideTypes; this.refresh(); }
+    toggleAnnotations() { this.hideAnnotations = !this.hideAnnotations; this.refresh(); }
+    updateAST(uri: string, data: any) {
+        if (data) {
+            this.astData.set(uri, data);
+            this.refresh();
+        }}
     updateWP(data: any) {
         if (Array.isArray(data)) {
-            const [filename_id, fct_id, prop_id, jsonData] = data;
-            this.wpData = jsonData.map((item: string) => {
-                const parts = item.trim().split(":");
-                const verdict = parts[0]?.trim();
-                const goalName = parts[1]?.trim();
-                const location = parts[3]?.trim();
-                const stats = parts[4]?.trim();
+            const [filename_id, , , jsonData] = data;
+            const fileUri = vscode.Uri.file(filename_id).toString();
 
-                const item_obj = new FramaCItem(
-                    `${goalName} [Line ${location}]`,
+            const items = jsonData.map((item: string) => {
+                const p = item.trim().split(":");
+                return new FramaCItem(
+                    `${p[1]} [Line ${p[3]}]`,
                     vscode.TreeItemCollapsibleState.None,
                     "goal",
-                    goalName, parts[5], parts[2], parts[6], parts[7], verdict
+                    false,
+                    vscode.Uri.file(filename_id),
+                    p[1], p[5], p[2], p[6], p[7], p[0]
                 );
-                item_obj.description = stats;
-                return item_obj;
             });
+            this.wpDataByFile.set(fileUri, items);
         }
         this.refresh();
     }
@@ -761,167 +785,139 @@ export class FramaCProvider implements vscode.TreeDataProvider<FramaCItem> {
     getTreeItem(element: FramaCItem): vscode.TreeItem { return element; }
 
     async getChildren(element?: FramaCItem): Promise<FramaCItem[]> {
-if (!element) {
-    const files = await vscode.workspace.findFiles('**/*.{c,h}'); // Vérifie que c'est bien ça
-    return files.map(uri => new FramaCItem(
-        path.basename(uri.fsPath), 
-        vscode.TreeItemCollapsibleState.Collapsed, 
-        "file", 
-            undefined, undefined, undefined, undefined, undefined, undefined, 
-            uri
-        ));
-    }
+        const matches = (name: string) => name.toLowerCase().includes(this.searchQuery);
 
-    const fileUri = element.resourceUri?.toString();
-    const data = fileUri ? this.astData.get(fileUri) : null;
+        if (!element || element.contextValue === "folder") {
+            const rootPath = vscode.workspace.workspaceFolders?.[0].uri.fsPath || "";
+            const currentDir = element ? element.resourceUri!.fsPath : rootPath;
+            
+            try {
+                const entries = await fs.promises.readdir(currentDir, { withFileTypes: true });
+                let items: FramaCItem[] = [];
 
-    if (element.contextValue === "file") {
-        return [
-            new FramaCItem("Functions", vscode.TreeItemCollapsibleState.Collapsed, "cat_func", undefined, undefined, undefined, undefined, undefined, undefined, element.resourceUri),
-            new FramaCItem("Global Variables", vscode.TreeItemCollapsibleState.Collapsed, "cat_vars", undefined, undefined, undefined, undefined, undefined, undefined, element.resourceUri),
-            new FramaCItem("Types", vscode.TreeItemCollapsibleState.Collapsed, "cat_types", undefined, undefined, undefined, undefined, undefined, undefined, element.resourceUri),
-            new FramaCItem("Predicates", vscode.TreeItemCollapsibleState.Collapsed, "cat_preds", undefined, undefined, undefined, undefined, undefined, undefined, element.resourceUri),
-            new FramaCItem("WP Goals", vscode.TreeItemCollapsibleState.Collapsed, "root_wp", undefined, undefined, undefined, undefined, undefined, undefined, element.resourceUri)
-        ];
-    }
+                for (const entry of entries) {
+                    const fullPath = path.join(currentDir, entry.name);
+                    const uri = vscode.Uri.file(fullPath);
 
-    if (!data && element.contextValue !== "root_wp") {
-        return [new FramaCItem("No data (Run debugAST)", vscode.TreeItemCollapsibleState.None, "info")];
-    }
-
-    if (element.contextValue === "cat_func") {
-        return data.functions?.map((f: any) => 
-            new FramaCItem(
-                f.name, 
-                vscode.TreeItemCollapsibleState.Collapsed, 
-                "function", 
-                undefined, undefined, undefined, undefined, undefined, undefined, 
-                element.resourceUri, 
-                f.children 
-            )
-        ) || [];
-    }
-
-    if (element.contextValue === "function") {
-    const fileUri = element.resourceUri?.toString();
-    if (element.extraData && element.extraData.length > 0) {
-        return element.extraData.map((c: any) => new FramaCItem(
-            c.name, 
-            vscode.TreeItemCollapsibleState.None, 
-            c.type
-        ));
-    }
-
-    try {
-        const response: any = await client.sendRequest("custom/getFunctionDetails", { 
-            uri: fileUri, 
-            functionName: element.label 
-        });
-
-        if (response && Array.isArray(response)) {
-            return response.map((c: any) => new FramaCItem(
-                c.name, 
-                vscode.TreeItemCollapsibleState.None, 
-                c.type
-            ));
+                    if (entry.isDirectory() && !entry.name.startsWith('.')) {
+                        items.push(new FramaCItem(entry.name, vscode.TreeItemCollapsibleState.Collapsed, "folder", false, uri));
+                    } 
+                    else if (entry.isFile() && (entry.name.endsWith('.c') || entry.name.endsWith('.h'))) {
+                        if (this.searchQuery === "" || this.fileHasMatch(uri.toString(), matches)) {
+                            items.push(new FramaCItem(entry.name, vscode.TreeItemCollapsibleState.Collapsed, "file", false, uri));
+                        }
+                    }
+                }
+                return items.sort((a, b) => a.label.toString().localeCompare(b.label.toString()));
+            } catch (err) {
+                return [];
+            }
         }
-    } catch (error) {
-        console.error("Erreur détails fonction:", error);
-        return [new FramaCItem("Error loading details", vscode.TreeItemCollapsibleState.None, "info")];
+
+        if (element.contextValue === "file") {
+            const fileUri = element.resourceUri?.toString() || "";
+            const data = this.astData.get(fileUri);
+            let children: FramaCItem[] = [];
+
+            if (data) {
+				
+                if (!this.hideFunctions && data.functions) {
+                    data.functions.filter((f: any) => matches(f.name)).forEach((f: any) => {
+                        children.push(new FramaCItem(f.name, vscode.TreeItemCollapsibleState.None, "function", true, element.resourceUri));
+                    });
+                }
+                if (!this.hideVariables && data.globals) {
+                    data.globals.filter((g: any) => matches(g.name)).forEach((g: any) => {
+                        children.push(new FramaCItem(g.name, vscode.TreeItemCollapsibleState.None, "variable", false, element.resourceUri));
+                    });
+                }
+                if (!this.hideTypes && data.types) {
+                    data.types.filter((t: any) => matches(t.name)).forEach((t: any) => {
+                        children.push(new FramaCItem(t.name, vscode.TreeItemCollapsibleState.None, "type", false, element.resourceUri));
+                    });
+                }
+                if (!this.hideAnnotations && data.annotations) {
+                    data.annotations.filter((a: any) => matches(a.name)).forEach((a: any) => {
+                        children.push(new FramaCItem(a.name, vscode.TreeItemCollapsibleState.None, "predicate", false, element.resourceUri));
+                    });
+                }
+            }
+
+            const fileWp = this.wpDataByFile.get(fileUri) || [];
+            const filteredWp = fileWp.filter(goal => matches(goal.label.toString()));
+            if (filteredWp.length > 0) {
+                const wpRoot = new FramaCItem(`WP Goals (${filteredWp.length})`, vscode.TreeItemCollapsibleState.Collapsed, "cat_wp", false, element.resourceUri);
+                wpRoot.extraData = filteredWp;
+                children.push(wpRoot);
+            }
+
+            return children.sort((a, b) => a.label.toString().localeCompare(b.label.toString()));
+        }
+
+        if (element.contextValue === "cat_wp") {
+            return element.extraData || [];
+        }
+
+        return [];
+    }
+
+    
+    private fileHasMatch(uri: string, matches: (n: string) => boolean): boolean {
+        const data = this.astData.get(uri);
+        const wp = this.wpDataByFile.get(uri) || [];
+        
+        const matchAst = data ? (
+            (data.functions?.some((f: any) => matches(f.name))) || 
+            (data.globals?.some((g: any) => matches(g.name))) ||
+            (data.types?.some((t: any) => matches(t.name))) ||
+            (data.annotations?.some((a: any) => matches(a.name)))
+        ) : false;
+
+        const matchWp = wp.some(goal => matches(goal.label.toString()));
+
+        return matchAst || matchWp;
     }
 }
 
-    if (element.contextValue === "cat_vars") {
-        return data.globals?.map((g: any) => 
-            new FramaCItem(g.name, vscode.TreeItemCollapsibleState.None, "variable")
-        ) || [];
-    }
+export class FramaCItem extends vscode.TreeItem {
+    public extraData?: any[]; 
 
-    if (element.contextValue === "cat_types") {
-        return data.types?.map((t: any) => 
-            new FramaCItem(t.name, vscode.TreeItemCollapsibleState.None, "type")
-        ) || [];
-    }
-
-    if (element.contextValue === "cat_preds") {
-        return data.predicates?.map((p: any) => 
-            new FramaCItem(p.name, vscode.TreeItemCollapsibleState.None, "predicate")
-        ) || [];
-    }
-
-    if (element.contextValue === "root_wp") {
-        return this.wpData; // wpData est déjà un tableau de FramaCItem
-    }
-
-    return [];
-}}
-
-class FramaCItem extends vscode.TreeItem {
     constructor(
         public readonly label: string,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState,
         public readonly contextValue: string,
-        public goal_id?: string,
-        public script?: string,
-        public file_id?: string,
-        public fct_id?: string,
-        public prop_id?: string,
-        public verdict?: string,
+        private underlined: boolean = false, 
         public resourceUri?: vscode.Uri,
-        public readonly extraData?: any[] 
+        public goal_id?: string, 
+        public script?: string, 
+        public file_id?: string,
+        public fct_id?: string, 
+        public prop_id?: string, 
+        public verdict?: string
     ) {
         super(label, collapsibleState);
         this.assignIcon();
-        
-        if (this.contextValue === "function") {
-            this.tooltip = `Function: ${this.label}`;
-        }
     }
 
     private assignIcon() {
-        const iconMap: { [key: string]: string } = {
-            "cat_func": "symbol-function",
-            "cat_vars": "symbol-variable",
-            "cat_types": "symbol-class",
-            "cat_preds": "shield",
-            "root_wp": "verified-filled",
-            "requires": "list-ordered", 
-            "ensures": "list-selection" 
-        };
-
-        if (this.contextValue === "file") {
+        if (this.contextValue === "folder") {
+            this.iconPath = vscode.ThemeIcon.Folder;
+        } else if (this.contextValue === "file") {
             this.iconPath = vscode.ThemeIcon.File;
+        } else if (this.contextValue === "function") {
+            this.iconPath = new vscode.ThemeIcon("symbol-function");
+            if (this.underlined) this.description = "ƒ";
+        } else if (this.contextValue === "variable") {
+            this.iconPath = new vscode.ThemeIcon("symbol-variable");
+        } else if (this.contextValue === "type") {
+            this.iconPath = new vscode.ThemeIcon("symbol-type-parameter");
+        } else if (this.contextValue === "predicate") {
+            this.iconPath = new vscode.ThemeIcon("shield");
         } else if (this.contextValue === "goal") {
+            // Icônes de statut de preuve (Passed / Failed / Pending)
+            const icon = this.verdict === "passed" ? "pass" : (this.verdict === "failed" ? "error" : "circle-outline");
             const color = this.verdict === "passed" ? "testing.iconPassed" : (this.verdict === "failed" ? "testing.iconFailed" : "testing.iconQueued");
-            const icon = this.verdict === "passed" ? "pass" : "error";
             this.iconPath = new vscode.ThemeIcon(icon, new vscode.ThemeColor(color));
-        } else {
-            this.iconPath = new vscode.ThemeIcon(iconMap[this.contextValue] || "circle-outline");
         }
-    }
-}
-
-
-function parseFramaCLocation(data: any): vscode.Location | null {
-    try {
-        const json = typeof data === 'string' ? JSON.parse(data) : data;
-        if (!json || !json.uri || !json.range) return null;
-
-        const uri = vscode.Uri.parse(json.uri);
-        
-
-        const startLine = json.range.start.line; 
-        const startChar = json.range.start.character;
-
-        return new vscode.Location(
-            uri,
-            new vscode.Range(
-                new vscode.Position(startLine, startChar),
-                new vscode.Position(json.range.end.line, json.range.end.character)
-            )
-        );
-    } catch (e) {
-        console.error("[DEBUG-LSP] Erreur Parsing Location:", e);
-        return null;
     }
 }
