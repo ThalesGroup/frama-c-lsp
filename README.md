@@ -3,20 +3,21 @@
 This repository contains both the server and client software that implement the Language Server Protocol (LSP) for C/ACSL language. 
 Refer to README files in each subdirectory for installation guidelines.
 
-The client part is inspired from https://github.com/Microsoft/vscode-extension-samples/tree/main/lsp-sample
+The client part is inspired by https://github.com/Microsoft/vscode-extension-samples/tree/main/lsp-sample
 
-The server part is a Frama-C plugin called "LSP" that has two usage modes:
+The server part is a Frama-C plugin called "lsp" that has two usage modes:
 - handler mode: ensures sustainable exchange of TCP/IP sockets between the server and the client.
-- feature mode: ensures background frama-c process execution with parameters required for requested feature.
+- feature mode: ensures background Frama-C process execution with parameters required for each requested feature.
 
 ## Configuration
 This software is compatible with Frama-C v29.0/v30.0 and Linux ubuntu 22.04 LTS.
-No other configuration is supported currently.
+No other configuration has been tested so far.
 
 ## Contributing
-We welcome contributions from the community! If you would like to contribute, follow these steps:
+We welcome contributions to both the server and client parts of this solution !
+If you would like to contribute, follow these steps:
 
-- Fork the repository.
+- Clone or fork the repository.
 - Create a new branch (git checkout -b feature/your-feature).
 - Make your changes.
 - Commit your changes (git commit -am 'Add new feature').
@@ -25,7 +26,7 @@ We welcome contributions from the community! If you would like to contribute, fo
 - Please ensure your code adheres to the project's coding standards and includes appropriate tests if necessary.
 
 ## License
-This project is licensed under the LGPLv3 License - see the LICENSE file for details.
+This project is under the LGPLv3 License - see the LICENSE file for details.
 
 ## Acknowledgments
 This software has been initiated in 2024 by Djamila MOHAMED and Adel DJOUDI.
