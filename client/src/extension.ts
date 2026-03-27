@@ -8,7 +8,7 @@ import { ProjectImporter } from './projectImporter';
 let client: LanguageClient;
 let framaCProvider: FramaCProvider; 
 let isDelegating = false;
-
+//test remote
 export function activate(context: ExtensionContext) {
 	// The server is implemented in OCaml
 	const config = vscode.workspace.getConfiguration();
