@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import {LanguageClient,	LanguageClientOptions, ServerOptions, TransportKind} from 'vscode-languageclient/node';
 import { exec } from 'child_process';
-
+import { ProjectImporter } from './projectImporter';
 let client: LanguageClient;
 let framaCProvider: FramaCProvider; 
 let isDelegating = false;
@@ -16,6 +16,19 @@ export function activate(context: ExtensionContext) {
 	const wrapperPort = config.get<number>('kernel.wrapperPort') || (serverPort + 1);
 	const serverModuleRun = context.asAbsolutePath(path.join('run.sh')) + " " + serverPort + " " + wrapperPort;
 	const serverModuleDebug = context.asAbsolutePath(path.join('run.sh')) + " " + serverPort + " " + wrapperPort;
+	const importer = new ProjectImporter();
+
+    
+    let disposable = vscode.commands.registerCommand('acsl.importProjectConfig', async () => {
+        await importer.showProjectSelector();
+    });
+	const importStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+    importStatusBarItem.command = 'acsl.importProjectConfig'; 
+    importStatusBarItem.text = '$(project) JCAT: Import IDE';
+    importStatusBarItem.tooltip = 'Cliquer to Import Config File';
+    importStatusBarItem.show();
+
+    context.subscriptions.push(disposable);
 
 	// If the extension is launched in debug mode then the debug server options are used
 	// Otherwise the run options are used
