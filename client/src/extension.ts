@@ -1,35 +1,37 @@
 import * as path from 'path';
-import { workspace, ExtensionContext, commands, extensions, window, ViewColumn, TabInputWebview, TextEditor, Uri, languages, Position, Range, env } from 'vscode';
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import {LanguageClient,	LanguageClientOptions, ServerOptions, TransportKind} from 'vscode-languageclient/node';
-import { exec } from 'child_process';
+import { workspace, ExtensionContext, commands, window, ViewColumn, Uri, languages, Position, Range } from 'vscode';
+import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node';
 import { ProjectImporter } from './projectImporter';
+
 let client: LanguageClient;
 let framaCProvider: FramaCProvider; 
-let isDelegating = false;
-//test remote
+let wpDataProvider: MyTreeDataProvider; 
+let wpResultsView: vscode.TreeView<TreeItem>;
+
+
 export function activate(context: ExtensionContext) {
 	// The server is implemented in OCaml
-	const config = vscode.workspace.getConfiguration();
-	const serverPort = config.get<number>('kernel.serverPort') || 8005;
-	const wrapperPort = config.get<number>('kernel.wrapperPort') || (serverPort + 1);
-	const serverModuleRun = context.asAbsolutePath(path.join('run.sh')) + " " + serverPort + " " + wrapperPort;
-	const serverModuleDebug = context.asAbsolutePath(path.join('run.sh')) + " " + serverPort + " " + wrapperPort;
-	const importer = new ProjectImporter();
+    const config = vscode.workspace.getConfiguration();
+    const serverPort = config.get<number>('kernel.serverPort') || 8005;
+    const wrapperPort = config.get<number>('kernel.wrapperPort') || (serverPort + 1);
+    const serverModuleRun = context.asAbsolutePath(path.join('run.sh')) + " " + serverPort + " " + wrapperPort;
+    const serverModuleDebug = context.asAbsolutePath(path.join('run.sh')) + " " + serverPort + " " + wrapperPort;
+    const importer = new ProjectImporter();
 
-    
-    let disposable = vscode.commands.registerCommand('acsl.importProjectConfig', async () => {
+    // 2. Project Importer Command & Status Bar
+    let importDisposable = vscode.commands.registerCommand('acsl.importProjectConfig', async () => {
         await importer.showProjectSelector();
     });
-	const importStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+    context.subscriptions.push(importDisposable);
+
+    const importStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
     importStatusBarItem.command = 'acsl.importProjectConfig'; 
     importStatusBarItem.text = '$(project) JCAT: Import IDE';
-    importStatusBarItem.tooltip = 'Cliquer to Import Config File';
+    importStatusBarItem.tooltip = 'Click to Import Config File';
     importStatusBarItem.show();
-
-    context.subscriptions.push(disposable);
-
+    context.subscriptions.push(importStatusBarItem);
 	// If the extension is launched in debug mode then the debug server options are used
 	// Otherwise the run options are used
 	const serverOptions: ServerOptions = {
@@ -49,888 +51,578 @@ export function activate(context: ExtensionContext) {
 
 	// Create the language client and start the client.
 	client = new LanguageClient('vscodeacsl', 'ACSL Language Server', serverOptions, clientOptions);
-
-framaCProvider = new FramaCProvider();
-
-
-context.subscriptions.push(
-    vscode.commands.registerCommand('framaCExplorer.search', async () => {
-        const val = await vscode.window.showInputBox({ prompt: "Filtrer l'arborescence..." });
-        framaCProvider.setFilter(val || "");
-    }),
-   vscode.commands.registerCommand('framaC.toggleFunctions', () => framaCProvider.toggleFunctions()),
-    vscode.commands.registerCommand('framaC.toggleVariables', () => framaCProvider.toggleVariables()),
-    vscode.commands.registerCommand('framaC.toggleTypes', () => framaCProvider.toggleTypes()),
-    vscode.commands.registerCommand('framaC.toggleAnnotations', () => framaCProvider.toggleAnnotations())
-);
-    let wpResultsView = vscode.window.createTreeView('framaCExplorer', {
-        treeDataProvider: framaCProvider,
+    // 3. TreeViews Initialization (Sidebar + Bottom Panel)
+    wpDataProvider = new MyTreeDataProvider();
+    wpResultsView = vscode.window.createTreeView('wpGoalsView', { 
+        treeDataProvider: wpDataProvider,
         showCollapseAll: true,
-        canSelectMany: true
+        canSelectMany: true 
     });
 
-	client.onNotification("custom/getWPResponse", (data) => {
-		framaCProvider.updateWP(data);
-	});
-	const smokeTests = commands.registerCommand('smokeTests', async () => {
-		try {
-			const editor = window.activeTextEditor;
-       		if (!editor) {
-           		window.showErrorMessage('No active editor found.');
-           		return;
-       		}
-			await client.sendNotification('smokeTests', editor.document.fileName);
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to run smoke tests: ' + errorMessage);
-			console.error('Error computing smoke tests:', err);
-		}
-	});
-	
-	let debugAstCommand = commands.registerCommand('acsl-lsp.debugAST', async () => {
-    const editor = window.activeTextEditor;
-    if (!editor) return;
+    framaCProvider = new FramaCProvider();
+    vscode.window.createTreeView('framaCExplorer', {
+        treeDataProvider: framaCProvider
+    });
 
-    const uri = editor.document.uri.toString();
+
+
     
-    try {
-        const response = await client.sendRequest("custom/getAST", { uri: uri });
-        
-        if (response) {
-            framaCProvider.updateAST(uri, response);
-            window.showInformationMessage("AST Charged!");
-        } else {
-            window.showWarningMessage("No AST Found");
-        }
-    } catch (error) {
-        console.error(error);
-    }
-});
-	
-	const ccdoc = commands.registerCommand('ccdoc', async () => {
-		try {
-			await client.sendNotification('ccdoc');
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to run ccdoc: ' + errorMessage);
-			console.error('Error computing ccdoc:', err);
-		}
-	});
 
-	const displayCIL = commands.registerCommand('displayCIL', async () => {
-		try {
-			const editor = window.activeTextEditor;
-       		if (!editor) {
-           		window.showErrorMessage('No active editor found.');
-           		return;
-       		}
-			const filePath = editor.document.fileName;
-    		const fileName = path.basename(filePath);
-			await create_file(fileName, 'c');
-			await client.sendNotification('displayCIL', filePath);
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to compute displayCIL: ' + errorMessage);
-			console.error('Error computing displayCIL:', err);
-		}
-	});
-
-	const displayCIL_noannot = commands.registerCommand('displayCIL_noannot', async () => {
-		try {
-			const editor = window.activeTextEditor;
-       		if (!editor) {
-           		window.showErrorMessage('No active editor found.');
-           		return;
-       		}
-			const filePath = editor.document.fileName;
-    		const fileName = path.basename(filePath);
-			await create_file(fileName, 'c');
-			await client.sendNotification('displayCIL_noannot', filePath);
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to compute displayCIL_noannot: ' + errorMessage);
-			console.error('Error computing displayCIL_noannot:', err);
-		}
-	});
-
-	const displayCILProject = commands.registerCommand('displayCILProject', async () => {
-		try {
-    		const fileName = "project.c";
-			await create_file(fileName, 'c');
-			await client.sendNotification('displayCILProject');
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to compute displayCILProject: ' + errorMessage);
-			console.error('Error computing displayCILProject:', err);
-		}
-	});
-
-	const displayCILProject_noannot = commands.registerCommand('displayCILProject_noannot', async () => {
-		try {
-    		const fileName = "project.c";
-			await create_file(fileName, 'c');
-			await client.sendNotification('displayCILProject_noannot');
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to compute displayCILProject_noannot: ' + errorMessage);
-			console.error('Error computing displayCILProject_noannot:', err);
-		}
-	});
-
-	const computeCG = commands.registerCommand('computeCG', async () => {
-		try {
-			const editor = window.activeTextEditor;
-       		if (!editor) {
-           		window.showErrorMessage('No active editor found.');
-           		return;
-       		}
-			const filePath = editor.document.fileName;
-			const dirPath = path.dirname(filePath);
-    		const fileName = path.basename(filePath);
-			const extension = path.extname(filePath);
-			const fileNameBase = fileName.slice(0, -extension.length);
-			const workspacePath = get_workspace ();
-			const filePathOut = path.join(workspacePath, ".frama-c", "fc_" + fileNameBase + ".dot.pdf");
-			if (!fs.existsSync(filePathOut)) {
-				try {fs.writeFileSync(filePathOut, 'Task in progress ...')}
-				catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
-			}
-			const fileUri = vscode.Uri.parse(filePathOut);
-			await vscode.commands.executeCommand('revealInExplorer', fileUri);
-
-			await client.sendNotification('computeCG', filePath);
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to compute callgraph: ' + errorMessage);
-			console.error('Error computing callgraph:', err);
-		}
-	});
-
-	const showPOVC = commands.registerCommand('showPOVC', async () => {
-		try {
-			const editor = window.activeTextEditor;
-       		if (!editor) {
-           		window.showErrorMessage('No active editor found.');
-           		return;
-       		}
-			const res = await client.sendRequest('showPOVC', [editor.document.fileName, editor.selection.active]);
-			const wpResult = JSON.parse(JSON.stringify(res, null, 1));
-			const newUri = Uri.parse('untitled:Proof Obligation');
-			const document = await workspace.openTextDocument(newUri);
-			await languages.setTextDocumentLanguage(document, 'plaintext');
-			const textDocument = await window.showTextDocument(document, ViewColumn.One, true);
-
-			textDocument.edit(editBuilder => {
-				const start = new Position(0, 0);
-				const end = new Position(document.lineCount, 0);
-				const fullRange = new Range(start, end);
-				editBuilder.delete(fullRange);
-				editBuilder.insert(textDocument.selection.start, wpResult);
-			});
-			window.showInformationMessage('Proof obligation computed');
-
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to fetch and display WP proof obligation: ' + errorMessage);
-			console.error('Error fetching WP proof obligation:', err);
-		}
-	});
-
-
-	const showPO = commands.registerCommand('showPO', async () => {
-		try {
-			const selectedItems = wpResultsView.selection;
-        	if (selectedItems.length > 0) {
-				const selectedItem = selectedItems[0];
-				const workspacePath = get_workspace ();
-				let fileUri: vscode.Uri;
-				const path_name = path.join(workspacePath, ".frama-c", `${selectedItem.goal_id}.txt`);
-				fileUri = vscode.Uri.parse(path_name);
-				const document = await workspace.openTextDocument(fileUri);
-				await languages.setTextDocumentLanguage(document, 'plaintext');
-				const editor = await window.showTextDocument(document, ViewColumn.One, true);
-			}
-			else {vscode.window.showInformationMessage('No item selected');}
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to fetch and display WP proof obligation: ' + errorMessage);
-			console.error('Error fetching WP proof obligation:', err);
-		}
-	});
-
-	
-
-	const showScript = commands.registerCommand('showScript', async (item: TreeItem) => {
-		try {
-			const selectedItems = wpResultsView.selection;
-        	if (selectedItems.length > 0) {
-				const selectedItem = selectedItems[0];
-				const workspacePath = get_workspace ();
-				let fileUri: vscode.Uri;
-				fileUri = vscode.Uri.parse(`${workspacePath}/${selectedItem.script}`);
-				const document = await workspace.openTextDocument(fileUri);
-				await languages.setTextDocumentLanguage(document, 'plaintext');
-				const editor = await window.showTextDocument(document, ViewColumn.One, true);
-			}
-			else {vscode.window.showInformationMessage('No item selected');}
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to fetch and display script: ' + errorMessage);
-			console.error('Error fetching script:', err);
-		}
-	});
-
-	const runAgain = commands.registerCommand('runAgain', async (item: TreeItem) => {
-		try {
-			const selectedItems = wpResultsView.selection;
-        	if (selectedItems.length > 0) {
-				const selectedItem = selectedItems[0] as FramaCItem;
-				const args = await get_args_from_item(selectedItem, false);
-				const res = await client.sendRequest('provePO', args);
-				framaCProvider.updateWP(JSON.parse(JSON.stringify(res, null, 1)));
-				window.showInformationMessage('Proof results updated');
-
-			}
-			else {vscode.window.showInformationMessage('No item selected');}
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to fetch and display script: ' + errorMessage);
-			console.error('Error fetching script:', err);
-		}
-	});
-
-	const runAgainGui = commands.registerCommand('runAgainGui', async (item: TreeItem) => {
-		try {
-			const selectedItems = wpResultsView.selection;
-        	if (selectedItems.length > 0) {
-				const selectedItem = selectedItems[0] as FramaCItem;
-				const args = await get_args_from_item(selectedItem, true);
-				const res = await client.sendRequest('provePO', args);
-				framaCProvider.updateWP(JSON.parse(JSON.stringify(res, null, 1)));
-				window.showInformationMessage('Proof results updated');
-
-			}
-			else {vscode.window.showInformationMessage('No item selected');}
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to fetch and display script: ' + errorMessage);
-			console.error('Error fetching script:', err);
-		}
-	});
-
-	const runAgainStrategies = commands.registerCommand('runAgainStrategies', async (item: TreeItem) => {
-		try {
-			const selectedItems = wpResultsView.selection;
-        	if (selectedItems.length > 0) {
-				const selectedItem = selectedItems[0];
-				const args = await get_args_from_item(selectedItem, false);
-				const res = await client.sendRequest('provePOStrategies', args);
-				framaCProvider.updateWP(JSON.parse(JSON.stringify(res, null, 1)));
-				window.showInformationMessage('Proof results updated');
-
-			}
-			else {vscode.window.showInformationMessage('No item selected');}
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to fetch and display script: ' + errorMessage);
-			console.error('Error fetching script:', err);
-		}
-	});
-
-	const runAgainStrategiesGui = commands.registerCommand('runAgainStrategiesGui', async (item: TreeItem) => {
-		try {
-			const selectedItems = wpResultsView.selection;
-        	if (selectedItems.length > 0) {
-				const selectedItem = selectedItems[0];
-				const args = await get_args_from_item(selectedItem, true);
-				const res = await client.sendRequest('provePOStrategies', args);
-				framaCProvider.updateWP(JSON.parse(JSON.stringify(res, null, 1)));
-				window.showInformationMessage('Proof results updated');
-
-			}
-			else {vscode.window.showInformationMessage('No item selected');}
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to fetch and display script: ' + errorMessage);
-			console.error('Error fetching script:', err);
-		}
-	});
-
-    const provePO = commands.registerCommand('provePO', async () => {
-		try {
-			const args = await get_proof_args(false);
-            const res = await client.sendRequest('provePO', args);
-			framaCProvider.updateWP(JSON.parse(JSON.stringify(res, null, 1)));
-			window.showInformationMessage('Proof results updated');
-        }
-        catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-            window.showErrorMessage('Failed to fetch and display WP proof: ' + errorMessage);
-            console.error('Error fetching WP proof:', err);
-        }
+    // 5. Handle Server Notifications (Redirect WP Goals to the bottom panel)
+    client.onNotification("custom/getWPResponse", (data) => {
+        wpDataProvider.update(data);
+        wpDataProvider.refresh();
+        // Automatically focus the WP Goals panel at the bottom
+        commands.executeCommand('wpGoalsView.focus');
     });
-	let provePOCursor = vscode.commands.registerCommand('provePOCursor', async () => {
-        try {
+
+    // 6. Register all Frama-C Commands
+    registerAllExtensionCommands(context);
+
+    client.start();
+}
+
+/**
+ * Register all extension commands without touching original logic or error handling
+ */
+function registerAllExtensionCommands(context: ExtensionContext) {
+    context.subscriptions.push(
+        // --- Sidebar Exploration & Toggles ---
+        commands.registerCommand('framaCExplorer.search', async () => {
+            const val = await window.showInputBox({ prompt: "Filtrer l'arborescence..." });
+            framaCProvider.setFilter(val || "");
+        }),
+        commands.registerCommand('framaC.toggleFunctions', () => framaCProvider.toggleFunctions()),
+        commands.registerCommand('framaC.toggleVariables', () => framaCProvider.toggleVariables()),
+        commands.registerCommand('framaC.toggleTypes', () => framaCProvider.toggleTypes()),
+        commands.registerCommand('framaC.toggleAnnotations', () => framaCProvider.toggleAnnotations()),
+
+        // --- Analysis & AST Commands ---
+        commands.registerCommand('acsl-lsp.debugAST', async () => {
             const editor = window.activeTextEditor;
             if (!editor) return;
+            const uri = editor.document.uri.toString();
+            try {
+                const response = await client.sendRequest("custom/getAST", { uri: uri });
+                if (response) {
+                    framaCProvider.updateAST(uri, response);
+                    window.showInformationMessage("AST Charged!");
+                } else {
+                    window.showWarningMessage("No AST Found");
+                }
+            } catch (error) { console.error(error); }
+        }),
+		// Command triggered when clicking any element in the Sidebar
+// Command to handle clicking on any Sidebar element
+commands.registerCommand('framaC.openAndDetail', async (item: FramaCItem) => {
+    if (!item.resourceUri) return;
 
-            const proof_timeout = await window.showInputBox({
-                placeHolder: 'timeout',
-                prompt: `Launch Auto-Proof (Timeout in s)`,
-                value: '10',
-                validateInput: (input) => /^\d+$/.test(input) ? null : 'Int required'
-            });
-
-            if (!proof_timeout) return;
-
-            const args = [
-                editor.document.fileName,
-                editor.selection.active.line,
-                parseInt(proof_timeout, 10)
-            ];
-
-            const res: any = await client.sendRequest('custom/proveAuto', args);
+    // 1. Open and show the file
+    const document = await workspace.openTextDocument(item.resourceUri);
+    const editor = await window.showTextDocument(document);
     
-    if (res && Array.isArray(res) && res.length >= 3) {
-        const funcName = res[1];
-        const propName = res[2];
-        const goals = res[3];
+    // 2. Search for the label in the text to jump to the right line
+    const text = document.getText();
+    const lines = text.split('\n');
+    let lineIndex = lines.findIndex(l => l.includes(item.label));
 
-        
-        if (propName === "@all" || propName === "") {
-            window.showInformationMessage(`Function '${funcName}' selected. Proving ALL properties.`);
-        } 
-        else if (propName.startsWith('@')) {
-            window.showInformationMessage(`Unnamed property (${propName}) in '${funcName}'. Proving similar properties. (Tip: name it for better precision).`);
-        } 
-        else {
-            window.showInformationMessage(`Targeting specific property '${propName}' in '${funcName}'.`);
-        }
-
-        framaCProvider.updateWP(res);
-    
-
-    } else {
-        window.showWarningMessage("No context detected. Please click on a function name or an ACSL property.");
+    if (lineIndex !== -1) {
+        const pos = new Position(lineIndex, 0);
+        editor.selection = new vscode.Selection(pos, pos);
+        editor.revealRange(new vscode.Range(pos, pos), vscode.TextEditorRevealType.InCenter);
     }
 
-        }
-        catch (err) {
-            window.showErrorMessage('Error during Auto-Proof: ' + err);
-        }
-    });
-    const refreshDetails = commands.registerCommand('acsl-lsp.refreshDetails', async (item: FramaCItem) => {
+    // 3. Specific logic for functions: fetch requires/ensures from server
     if (item.contextValue === "function") {
-        framaCProvider.refresh(); 
+        try {
+            const response: any = await client.sendRequest("custom/getFunctionDetails", { 
+                uri: item.resourceUri.toString(),
+                functionName: item.label 
+            });
+            if (response) {
+                framaCProvider.updateFunctionDetails(item.label, response);
+            }
+        } catch (e) {
+            console.error("Error fetching function details:", e);
+        }
     }
-});
-context.subscriptions.push(refreshDetails);
-	const provePOGUI = commands.registerCommand('provePOGUI', async () => {
-		try {
-            const args = await get_proof_args(true);
-            const res = await client.sendRequest('provePO', args);
-			window.showInformationMessage('frama-c-gui closed');
-        }
-        catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-            window.showErrorMessage('Failed to fetch and display WP proof: ' + errorMessage);
-            console.error('Error fetching WP proof:', err);
-        }
-    });
+}),
 
-    const provePOStrategies = commands.registerCommand('provePOStrategies', async () => {
-		try {
-            const args = await get_proof_args(false);
-            const res = await client.sendRequest('provePOStrategies', args);
-			framaCProvider.updateWP(JSON.parse(JSON.stringify(res, null, 1)));
-			window.showInformationMessage('Proof results updated');
-        }
-        catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-            window.showErrorMessage('Failed to fetch and display WP proof: ' + errorMessage);
-            console.error('Error fetching WP proof:', err);
-        }
-    });
+        commands.registerCommand('smokeTests', async () => {
+            try {
+                const editor = window.activeTextEditor;
+                if (!editor) { window.showErrorMessage('No active editor found.'); return; }
+                await client.sendNotification('smokeTests', editor.document.fileName);
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                window.showErrorMessage('Failed to run smoke tests: ' + msg);
+            }
+        }),
 
-    const provePOStrategiesGUI = commands.registerCommand('provePOStrategiesGUI', async () => {
-		try {
-            const args = await get_proof_args(true);
-            const res = await client.sendRequest('provePOStrategies', args);
-			window.showInformationMessage('frama-c-gui closed');
-        }
-        catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-            window.showErrorMessage('Failed to fetch and display WP proof: ' + errorMessage);
-            console.error('Error fetching WP proof:', err);
-        }
-    });
+        commands.registerCommand('ccdoc', async () => {
+            try { await client.sendNotification('ccdoc'); }
+            catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                window.showErrorMessage('Failed to run ccdoc: ' + msg);
+            }
+        }),
 
-    const stop = commands.registerCommand('stop', async () => {
-		try {
-            const res = await client.sendRequest('stop');
-			window.showInformationMessage('Stopped processes');
-        }
-        catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-            window.showErrorMessage('Failed to stop Frama-C: ' + errorMessage);
-            console.error('Error stropping Frama-C:', err);
-        }
-    });
+        // --- CIL Display Commands ---
+        commands.registerCommand('displayCIL', async () => {
+            try {
+                const editor = window.activeTextEditor;
+                if (!editor) { window.showErrorMessage('No active editor found.'); return; }
+                const filePath = editor.document.fileName;
+                await create_file(path.basename(filePath), 'c');
+                await client.sendNotification('displayCIL', filePath);
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                window.showErrorMessage('Failed to compute displayCIL: ' + msg);
+            }
+        }),
 
+        commands.registerCommand('displayCIL_noannot', async () => {
+            try {
+                const editor = window.activeTextEditor;
+                if (!editor) { window.showErrorMessage('No active editor found.'); return; }
+                const filePath = editor.document.fileName;
+                await create_file(path.basename(filePath), 'c');
+                await client.sendNotification('displayCIL_noannot', filePath);
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                window.showErrorMessage('Failed to compute displayCIL_noannot: ' + msg);
+            }
+        }),
 
-	const showLocalMetrics = commands.registerCommand('showLocalMetrics', async () => {
-		try {
-			const editor = window.activeTextEditor;
-       		if (!editor) {
-           		window.showErrorMessage('No active editor found.');
-           		return;
-       		}
-			const filePath = editor.document.fileName;
-			const file_name = "metrics.txt";
-			await create_file(file_name, 'plaintext');
-			client.sendNotification('showLocalMetrics', filePath);
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to get local metrics: ' + errorMessage);
-			console.error('Error getting local metrics:', err);
-		}
-	});
+        commands.registerCommand('displayCILProject', async () => {
+            try {
+                await create_file("project.c", 'c');
+                await client.sendNotification('displayCILProject');
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                window.showErrorMessage('Failed to compute displayCILProject: ' + msg);
+            }
+        }),
 
-	const showGlobalMetrics = commands.registerCommand('showGlobalMetrics', async () => {
-		try {
-			const file_name = "metrics.txt";
-			await create_file(file_name, 'plaintext');
-			client.sendNotification('showGlobalMetrics');
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to get global metrics: ' + errorMessage);
-			console.error('Error getting global metrics:', err);
-		}
-	});
-	
+        commands.registerCommand('displayCILProject_noannot', async () => {
+            try {
+                await create_file("project.c", 'c');
+                await client.sendNotification('displayCILProject_noannot');
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                window.showErrorMessage('Failed to compute displayCILProject_noannot: ' + msg);
+            }
+        }),
 
-	context.subscriptions.push(smokeTests, ccdoc, displayCIL, displayCIL_noannot, displayCILProject, displayCILProject_noannot, computeCG, showPOVC, showPO, runAgain, runAgainGui, runAgainStrategies, runAgainStrategiesGui, provePO, provePOGUI, provePOStrategies, provePOStrategiesGUI, showGlobalMetrics, showLocalMetrics,provePOCursor,debugAstCommand);
+        // --- Metrics & Graphs ---
+        commands.registerCommand('computeCG', async () => {
+            try {
+                const editor = window.activeTextEditor;
+                if (!editor) { window.showErrorMessage('No active editor found.'); return; }
+                const filePath = editor.document.fileName;
+                const workspacePath = get_workspace();
+                const fileNameBase = path.basename(filePath, path.extname(filePath));
+                const filePathOut = path.join(workspacePath, ".frama-c", "fc_" + fileNameBase + ".dot.pdf");
+                if (!fs.existsSync(filePathOut)) {
+                    try { fs.writeFileSync(filePathOut, 'Task in progress ...'); }
+                    catch (error) { vscode.window.showErrorMessage(`Failed to create file: ${error.message}`); }
+                }
+                await vscode.commands.executeCommand('revealInExplorer', vscode.Uri.file(filePathOut));
+                await client.sendNotification('computeCG', filePath);
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                window.showErrorMessage('Failed to compute callgraph: ' + msg);
+            }
+        }),
 
-	
-    // ----------------------------------------------------------------
-	// Start the client. This will also launch the server
-	client.start();
+        commands.registerCommand('showLocalMetrics', async () => {
+            try {
+                const editor = window.activeTextEditor;
+                if (!editor) { window.showErrorMessage('No active editor found.'); return; }
+                await create_file("metrics.txt", 'plaintext');
+                client.sendNotification('showLocalMetrics', editor.document.fileName);
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                window.showErrorMessage('Failed to get local metrics: ' + msg);
+            }
+        }),
+
+        commands.registerCommand('showGlobalMetrics', async () => {
+            try {
+                await create_file("metrics.txt", 'plaintext');
+                client.sendNotification('showGlobalMetrics');
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                window.showErrorMessage('Failed to get global metrics: ' + msg);
+            }
+        }),
+
+        // --- Proof Commands ---
+        commands.registerCommand('showPOVC', async () => {
+            try {
+                const editor = window.activeTextEditor;
+                if (!editor) { window.showErrorMessage('No active editor found.'); return; }
+                const res = await client.sendRequest('showPOVC', [editor.document.fileName, editor.selection.active]);
+                const wpResult = JSON.parse(JSON.stringify(res, null, 1));
+                const doc = await workspace.openTextDocument({ content: wpResult, language: 'plaintext' });
+                await window.showTextDocument(doc, ViewColumn.One, true);
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                window.showErrorMessage('Failed to display WP PO: ' + msg);
+            }
+        }),
+
+        commands.registerCommand('showPO', async () => {
+            try {
+                const selected = wpResultsView.selection[0];
+                if (selected && selected.goal_id) {
+                    const fileUri = vscode.Uri.file(path.join(get_workspace(), ".frama-c", `${selected.goal_id}.txt`));
+                    const doc = await workspace.openTextDocument(fileUri);
+                    await window.showTextDocument(doc, ViewColumn.One, true);
+                } else { window.showInformationMessage('No item selected'); }
+            } catch (err) {
+                window.showErrorMessage('Failed to display PO: ' + err);
+            }
+        }),
+
+        commands.registerCommand('showScript', async () => {
+            try {
+                const selected = wpResultsView.selection[0];
+                if (selected && selected.script) {
+                    const fileUri = vscode.Uri.file(path.join(get_workspace(), selected.script));
+                    const doc = await workspace.openTextDocument(fileUri);
+                    await window.showTextDocument(doc, ViewColumn.One, true);
+                } else { window.showInformationMessage('No item selected'); }
+            } catch (err) {
+                window.showErrorMessage('Failed to fetch script: ' + err);
+            }
+        }),
+
+        commands.registerCommand('provePO', async () => {
+            try {
+                const args = await get_proof_args(false);
+                const res = await client.sendRequest('provePO', args);
+                wpDataProvider.update(res);
+                wpDataProvider.refresh();
+                window.showInformationMessage('Proof results updated');
+            } catch (err) {
+                window.showErrorMessage('Failed to run WP proof: ' + err);
+            }
+        }),
+
+        commands.registerCommand('provePOStrategies', async () => {
+            try {
+                const args = await get_proof_args(false);
+                const res = await client.sendRequest('provePOStrategies', args);
+                wpDataProvider.update(res);
+                wpDataProvider.refresh();
+                window.showInformationMessage('Proof results updated');
+            } catch (err) {
+                window.showErrorMessage('Failed to run Strategies proof: ' + err);
+            }
+        }),
+
+        commands.registerCommand('provePOGUI', async () => {
+            try {
+                const args = await get_proof_args(true);
+                await client.sendRequest('provePO', args);
+                window.showInformationMessage('frama-c-gui closed');
+            } catch (err) { window.showErrorMessage('Failed to run WP GUI proof: ' + err); }
+        }),
+
+        commands.registerCommand('provePOStrategiesGUI', async () => {
+            try {
+                const args = await get_proof_args(true);
+                await client.sendRequest('provePOStrategies', args);
+                window.showInformationMessage('frama-c-gui closed');
+            } catch (err) { window.showErrorMessage('Failed to run Strategies GUI proof: ' + err); }
+        }),
+
+        // --- Run Again (Bottom Panel selection) ---
+        commands.registerCommand('runAgain', async () => {
+            const selected = wpResultsView.selection[0];
+            if (selected) {
+                try {
+                    const args = await get_args_from_item(selected, false);
+                    const res = await client.sendRequest('provePO', args);
+                    wpDataProvider.update(res);
+                    wpDataProvider.refresh();
+                    window.showInformationMessage('Proof results updated');
+                } catch (err) { window.showErrorMessage('Error: ' + err); }
+            }
+        }),
+
+        commands.registerCommand('runAgainGui', async () => {
+            const selected = wpResultsView.selection[0];
+            if (selected) {
+                try {
+                    const args = await get_args_from_item(selected, true);
+                    const res = await client.sendRequest('provePO', args);
+                    wpDataProvider.update(res);
+                    wpDataProvider.refresh();
+                    window.showInformationMessage('Proof results updated');
+                } catch (err) { window.showErrorMessage('Error: ' + err); }
+            }
+        }),
+
+        commands.registerCommand('runAgainStrategies', async () => {
+            const selected = wpResultsView.selection[0];
+            if (selected) {
+                try {
+                    const args = await get_args_from_item(selected, false);
+                    const res = await client.sendRequest('provePOStrategies', args);
+                    wpDataProvider.update(res);
+                    wpDataProvider.refresh();
+                    window.showInformationMessage('Proof results updated');
+                } catch (err) { window.showErrorMessage('Error: ' + err); }
+            }
+        }),
+
+        commands.registerCommand('runAgainStrategiesGui', async () => {
+            const selected = wpResultsView.selection[0];
+            if (selected) {
+                try {
+                    const args = await get_args_from_item(selected, true);
+                    const res = await client.sendRequest('provePOStrategies', args);
+                    wpDataProvider.update(res);
+                    wpDataProvider.refresh();
+                    window.showInformationMessage('Proof results updated');
+                } catch (err) { window.showErrorMessage('Error: ' + err); }
+            }
+        }),
+
+        // --- Specialized Cursor Commands ---
+        commands.registerCommand('provePOCursor', async () => {
+            try {
+                const editor = window.activeTextEditor;
+                if (!editor) return;
+                const timeout = await window.showInputBox({ prompt: `Launch Auto-Proof (Timeout in s)`, value: '10' });
+                if (!timeout) return;
+                const args = [editor.document.fileName, editor.selection.active.line, parseInt(timeout, 10)];
+                const res: any = await client.sendRequest('custom/proveAuto', args);
+                if (res && Array.isArray(res)) {
+                    window.showInformationMessage(`Targeting '${res[2]}' in '${res[1]}'.`);
+                    wpDataProvider.update(res);
+                    wpDataProvider.refresh();
+                } else { window.showWarningMessage("No context detected."); }
+            } catch (err) { window.showErrorMessage('Error: ' + err); }
+        }),
+
+        commands.registerCommand('stop', async () => {
+            try { await client.sendRequest('stop'); window.showInformationMessage('Stopped processes'); }
+            catch (err) { window.showErrorMessage('Failed to stop: ' + err); }
+        })
+    );
 }
 
+// --- DATA PROVIDER: BOTTOM PANEL (GOALS) ---
 class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
-	private _onDidChangeTreeData: vscode.EventEmitter<TreeItem | undefined | null | void> = new vscode.EventEmitter<TreeItem | undefined | null | void>();
-    readonly onDidChangeTreeData: vscode.Event<TreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
-	private data: TreeItem[];
+    private _onDidChangeTreeData = new vscode.EventEmitter<TreeItem | undefined | null | void>();
+    readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+    private data: TreeItem[] = [new TreeItem("No goals !")];
 
-	constructor() {this.data = [new TreeItem("No goals !")];}
-
-	update(data) {
-		// Check if the data is an array (list)
+    update(data: any) {
         if (Array.isArray(data)) {
-			let [filename_id, fct_id, prop_id, jsonData] = data;
-			if (jsonData.length == 0) {this.data = [new TreeItem("No goals !")];}
-			else {
-			// Iterate over each item in the list
-			this.data = [];
-			jsonData.forEach((item, index) => {
-				let item_list = item.trim().split(":");
-				let verdict = item_list[0].trim();
-				let goal_id = item_list[1].trim();
-				let file_id = item_list[2].trim();
-				let line = item_list[3].trim();
-				let stats = item_list[4].trim();
-				let script = item_list[5].trim();
-				let function_id = item_list[6].trim();
-				let property_id = item_list[7].trim();
-				let t_item = new TreeItem(verdict, goal_id + " " + stats, file_id, function_id, goal_id, script, filename_id, fct_id, prop_id, 'itemContext');
-				const workspacePath = get_workspace ();
-				t_item.command = {
-					command: 'vscode.open',
-					arguments: [vscode.Uri.parse(path.join(workspacePath, file_id) + "#L" + line)]
-				} as vscode.Command;
-				this.data.push(t_item);
-			});
-		  }} else {
-			vscode.window.showErrorMessage('Parsed JSON is not an array.');
-		  }
-	}
-  
-	getTreeItem(element: TreeItem): vscode.TreeItem|Thenable<vscode.TreeItem> {
-	  return element;
-	}
-  
-	getChildren(element?: TreeItem|undefined): vscode.ProviderResult<TreeItem[]> {
-	  if (element === undefined) {
-		return this.data;
-	  }
-	  return element.children;
-	}
-
-	refresh(): void {
-		// Trigger the update by emitting the change event
-		this._onDidChangeTreeData.fire();
-	}
-	
-	addItem(newItem: TreeItem): void {
-		this.data.push(newItem);
-		this.refresh(); // Update the tree when an item is added
-	}
-	
-	removeItem(itemToRemove: TreeItem): void {
-		this.data = this.data.filter(item => item !== itemToRemove);
-		this.refresh(); // Update the tree when an item is removed
-	}
-
-	dispose() {
-		this._onDidChangeTreeData.dispose();
-	}
-
-  }
-  
-class TreeItem extends vscode.TreeItem {
-	children: TreeItem[]|undefined;
-  
-	constructor(label: string, description?:string, public file_id?:string, public function_id?:string, public goal_id?:string, public script?:string, public filename_id?:string, public fct_id?:string, public prop_id?:string, context?:string, children?: TreeItem[]) {
-	  	super(label, children === undefined ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Expanded);
-		this.description = description;
-	  	this.children = children;
-	  	this.tooltip = `${this.label}`;
-		
-		if (this.label == "passed") {this.iconPath = new vscode.ThemeIcon('check');}
-		else {this.iconPath = new vscode.ThemeIcon('error');}
-	  	this.contextValue = context;
-	}
-}
-
-
-async function create_file(fileName:string, type:string){
-	const workspacePath = get_workspace ();
-	const fileNameOut = path.join(workspacePath, ".frama-c", `fc_${fileName}`);
-	if (!fs.existsSync(fileNameOut)) {
-		try {fs.writeFileSync(fileNameOut, 'Task in progress ...')}
-		catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
-	}
-	const fileUri = vscode.Uri.parse(fileNameOut);
-	const document = await workspace.openTextDocument(fileUri);
-	await languages.setTextDocumentLanguage(document, type);
-	const editor = await window.showTextDocument(document, ViewColumn.One, true);
-}
-
-async function get_args_from_item(selectedItem:FramaCItem, gui:boolean){
-	const workspacePath = get_workspace ();
-	const file_name = selectedItem.file_id;
-	const function_name = selectedItem.fct_id;
-	const property_name = selectedItem.prop_id;
-	const proof_timeout = await window.showInputBox({
-		placeHolder: 'timeout',
-		prompt: 'Please specify timeout for provers (c.f. -wp-timeout )',
-		validateInput: (input) => {
-			if (input.length === 0) {return 'Input cannot be empty!';}
-			if (!/^\d+$/.test(input)) {return 'Please enter a valid integer';}
-			return null; // Return null to indicate valid input
-	}});
-	const int_proof_timeout = parseInt(proof_timeout, 10);
-	// If need to empty the list of item:
-	// wpResults.update(["","","",[]]);
-	// wpResults.refresh();
-	return [file_name, function_name, property_name, int_proof_timeout, gui]
-}
-
-interface AcslContext {
-    function: string;
-    property: string;
-}
-
-interface AcslResponse {
-    jsonrpc?: string;
-    id?: number;
-    result?: AcslContext;
-    function?: string; 
-}
-
-async function get_acsl_context(client: LanguageClient): Promise<AcslContext | null> {
-    const editor = window.activeTextEditor;
-    if (!editor) { return null; }
-
-    const position = editor.selection.active;
-    const filename = editor.document.fileName;
-
-    try {
-        
-        const res = await client.sendRequest('getAcslContext', [
-            filename, 
-            position.line + 1, 
-            position.character
-        ]) as AcslResponse;
-
-        if (res && res.result) {
-            return res.result; 
-        } 
-        
-        else if (res && (res as any).function) {
-            return res as any as AcslContext;
+            let [filename_id, fct_id, prop_id, jsonData] = data;
+            if (!jsonData || jsonData.length === 0) {
+                this.data = [new TreeItem("No goals !")];
+            } else {
+                this.data = jsonData.map((item: string) => {
+                    const p = item.trim().split(":");
+                    const t_item = new TreeItem(p[0].trim(), `${p[1]} ${p[4]}`, p[2], p[6], p[1], p[5], filename_id, fct_id, prop_id, 'itemContext');
+                    const workspacePath = get_workspace();
+                    t_item.command = {
+                        command: 'vscode.open',
+                        title: 'Open File',
+                        arguments: [vscode.Uri.file(path.join(workspacePath, p[2])).with({ fragment: `L${p[3]}` })]
+                    };
+                    return t_item;
+                });
+            }
         }
+    }
+    refresh() { this._onDidChangeTreeData.fire(); }
+    getTreeItem(element: TreeItem) { return element; }
+    getChildren(element?: TreeItem) { return element ? [] : this.data; }
+}
 
-        return null;
-
-    } catch (err) {
-        console.error('Error getAcslContext:', err);
-        return null;
+class TreeItem extends vscode.TreeItem {
+    constructor(label: string, description?: string, public file_id?: string, public function_id?: string, public goal_id?: string, public script?: string, public filename_id?: string, public fct_id?: string, public prop_id?: string, context?: string) {
+        super(label, vscode.TreeItemCollapsibleState.None);
+        this.description = description;
+        this.contextValue = context;
+        const passed = label.toLowerCase() === "passed";
+        this.iconPath = new vscode.ThemeIcon(passed ? 'check' : 'error', new vscode.ThemeColor(passed ? "testing.iconPassed" : "testing.iconFailed"));
     }
 }
-async function get_proof_args(gui:boolean){
-	const function_name = await window.showInputBox({
-		placeHolder: 'function',
-		prompt: 'Please specify functions to prove (c.f. -wp-fct ) (@all for all functions)',
-		validateInput: (input) => {
-			if (input.length === 0) {return 'Input cannot be empty!';}
-			return null; // Return null to indicate valid input
-	}});
-	const property_name = await window.showInputBox({
-		placeHolder: 'property',
-		prompt: 'Please specify properties to prove (c.f. -wp-prop ) (@all for all properites)',
-		validateInput: (input) => {
-			if (input.length === 0) {return 'Input cannot be empty!';}
-			return null; // Return null to indicate valid input
-	}});
-	const proof_timeout = await window.showInputBox({
-		placeHolder: 'timeout',
-		prompt: 'Please specify timeout for provers (c.f. -wp-timeout )',
-		validateInput: (input) => {
-			if (input.length === 0) {return 'Input cannot be empty!';}
-			if (!/^\d+$/.test(input)) {return 'Please enter a valid integer';}
-			return null; // Return null to indicate valid input
-	}});
-	const int_proof_timeout = parseInt(proof_timeout, 10);
-	// If need to empty the list of item:
-	// wpResults.update(["","","",[]]);
-	// wpResults.refresh();
-	const editor = window.activeTextEditor;
-    if (!editor) {
-    	window.showErrorMessage('No active editor found.');
-        return;
-    }
-	return([editor.document.fileName, function_name, property_name, int_proof_timeout, gui]);
-}
 
-function get_workspace(){
-	if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
-		const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
-		create_frama_c_folder(workspacePath);
-		return workspacePath;
-	} else {
-		const currentFolder = process.cwd();
-		create_frama_c_folder(currentFolder);
-		return currentFolder
-	}
-}
-
-
-async function create_frama_c_folder(workspace:string){
-	try {
-		const path_name = path.join(workspace, ".frama-c");
-		await fs.promises.mkdir(path_name, {recursive: true})
-	} catch(err) {
-	}
-}
-
-
-
-export function deactivate(context: ExtensionContext): Thenable<void> | undefined {
-	if (client) {
-		client.stop();
-	}
-	context.subscriptions.forEach(subscription => subscription.dispose());
-	return undefined;
-}
-
+// --- DATA PROVIDER: SIDEBAR (EXPLORER/AST) ---
 export class FramaCProvider implements vscode.TreeDataProvider<FramaCItem> {
     private _onDidChangeTreeData = new vscode.EventEmitter<FramaCItem | undefined | void>();
     readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
     private astData: Map<string, any> = new Map();
-    private wpDataByFile: Map<string, FramaCItem[]> = new Map();
-    
-    private searchQuery: string = "";
-    private hideVariables: boolean = false;
-    private hideFunctions: boolean = false;
-    private hideTypes: boolean = false;
-    private hideAnnotations: boolean = false;
+    private functionDetails: Map<string, any[]> = new Map(); 
+    private searchQuery = "";
+    private hideVariables = false; 
+    private hideFunctions = false;
+    private hideTypes = false; 
+    private hideAnnotations = false;
 
     refresh(): void {
         this._onDidChangeTreeData.fire();
     }
 
-    setFilter(query: string) {
-        this.searchQuery = query.toLowerCase().trim();
-        this.refresh();
-    }
-    toggleVariables() { this.hideVariables = !this.hideVariables; this.refresh(); }
+    // --- Configuration methods ---
+    setFilter(q: string) { this.searchQuery = q.toLowerCase(); this.refresh(); }
     toggleFunctions() { this.hideFunctions = !this.hideFunctions; this.refresh(); }
+    toggleVariables() { this.hideVariables = !this.hideVariables; this.refresh(); }
     toggleTypes() { this.hideTypes = !this.hideTypes; this.refresh(); }
     toggleAnnotations() { this.hideAnnotations = !this.hideAnnotations; this.refresh(); }
-    updateAST(uri: string, data: any) {
-        if (data) {
-            this.astData.set(uri, data);
-            this.refresh();
-        }}
-    updateWP(data: any) {
-        if (Array.isArray(data)) {
-            const [filename_id, , , jsonData] = data;
-            const fileUri = vscode.Uri.file(filename_id).toString();
 
-            const items = jsonData.map((item: string) => {
-                const p = item.trim().split(":");
-                return new FramaCItem(
-                    `${p[1]} [Line ${p[3]}]`,
-                    vscode.TreeItemCollapsibleState.None,
-                    "goal",
-                    false,
-                    vscode.Uri.file(filename_id),
-                    p[1], p[5], p[2], p[6], p[7], p[0]
-                );
-            });
-            this.wpDataByFile.set(fileUri, items);
-        }
+    // --- Data update methods ---
+    updateAST(uri: string, data: any) {
+        this.astData.set(uri, data);
         this.refresh();
     }
 
-    getTreeItem(element: FramaCItem): vscode.TreeItem { return element; }
+    updateFunctionDetails(funcName: string, details: any[]) {
+        this.functionDetails.set(funcName, details);
+        this.refresh();
+    }
+
+    getTreeItem(element: FramaCItem): vscode.TreeItem {
+        return element;
+    }
 
     async getChildren(element?: FramaCItem): Promise<FramaCItem[]> {
         const matches = (name: string) => name.toLowerCase().includes(this.searchQuery);
+        const rootPath = workspace.workspaceFolders ? workspace.workspaceFolders[0].uri.fsPath : process.cwd();
 
+        // CASE 1: ROOT or FOLDER - Browse file system
         if (!element || element.contextValue === "folder") {
-            const rootPath = vscode.workspace.workspaceFolders?.[0].uri.fsPath || "";
             const currentDir = element ? element.resourceUri!.fsPath : rootPath;
-            
             try {
                 const entries = await fs.promises.readdir(currentDir, { withFileTypes: true });
-                let items: FramaCItem[] = [];
-
-                for (const entry of entries) {
-                    const fullPath = path.join(currentDir, entry.name);
-                    const uri = vscode.Uri.file(fullPath);
-
-                    if (entry.isDirectory() && !entry.name.startsWith('.')) {
-                        items.push(new FramaCItem(entry.name, vscode.TreeItemCollapsibleState.Collapsed, "folder", false, uri));
-                    } 
-                    else if (entry.isFile() && (entry.name.endsWith('.c') || entry.name.endsWith('.h'))) {
-                        if (this.searchQuery === "" || this.fileHasMatch(uri.toString(), matches)) {
-                            items.push(new FramaCItem(entry.name, vscode.TreeItemCollapsibleState.Collapsed, "file", false, uri));
-                        }
-                    }
-                }
-                return items.sort((a, b) => a.label.toString().localeCompare(b.label.toString()));
-            } catch (err) {
-                return [];
-            }
+                return entries
+                    .filter(e => !e.name.startsWith('.') && (e.isDirectory() || e.name.endsWith('.c') || e.name.endsWith('.h')))
+                    .map(e => new FramaCItem(
+                        e.name, 
+                        vscode.TreeItemCollapsibleState.Collapsed, 
+                        e.isDirectory() ? "folder" : "file", 
+                        vscode.Uri.file(path.join(currentDir, e.name))
+                    ));
+            } catch (e) { return []; }
         }
 
+        // CASE 2: FILE - Show AST elements (functions, variables, types)
         if (element.contextValue === "file") {
-            const fileUri = element.resourceUri?.toString() || "";
-            const data = this.astData.get(fileUri);
+            const data = this.astData.get(element.resourceUri!.toString());
+            if (!data) return [];
+            
             let children: FramaCItem[] = [];
 
-            if (data) {
-				
-                if (!this.hideFunctions && data.functions) {
-                    data.functions.filter((f: any) => matches(f.name)).forEach((f: any) => {
-                        children.push(new FramaCItem(f.name, vscode.TreeItemCollapsibleState.None, "function", true, element.resourceUri));
-                    });
-                }
-                if (!this.hideVariables && data.globals) {
-                    data.globals.filter((g: any) => matches(g.name)).forEach((g: any) => {
-                        children.push(new FramaCItem(g.name, vscode.TreeItemCollapsibleState.None, "variable", false, element.resourceUri));
-                    });
-                }
-                if (!this.hideTypes && data.types) {
-                    data.types.filter((t: any) => matches(t.name)).forEach((t: any) => {
-                        children.push(new FramaCItem(t.name, vscode.TreeItemCollapsibleState.None, "type", false, element.resourceUri));
-                    });
-                }
-                if (!this.hideAnnotations && data.annotations) {
-                    data.annotations.filter((a: any) => matches(a.name)).forEach((a: any) => {
-                        children.push(new FramaCItem(a.name, vscode.TreeItemCollapsibleState.None, "predicate", false, element.resourceUri));
-                    });
-                }
+            // Functions
+            if (!this.hideFunctions && data.functions) {
+                data.functions.filter((f: any) => matches(f.name)).forEach((f: any) => 
+                    children.push(new FramaCItem(f.name, vscode.TreeItemCollapsibleState.Collapsed, "function", element.resourceUri)));
             }
 
-            const fileWp = this.wpDataByFile.get(fileUri) || [];
-            const filteredWp = fileWp.filter(goal => matches(goal.label.toString()));
-            if (filteredWp.length > 0) {
-                const wpRoot = new FramaCItem(`WP Goals (${filteredWp.length})`, vscode.TreeItemCollapsibleState.Collapsed, "cat_wp", false, element.resourceUri);
-                wpRoot.extraData = filteredWp;
-                children.push(wpRoot);
+            // Variables
+            if (!this.hideVariables && data.globals) {
+                data.globals.filter((g: any) => matches(g.name)).forEach((g: any) => 
+                    children.push(new FramaCItem(g.name, vscode.TreeItemCollapsibleState.None, "variable", element.resourceUri)));
             }
 
-            return children.sort((a, b) => a.label.toString().localeCompare(b.label.toString()));
+            // Types
+            if (!this.hideTypes && data.types) {
+                data.types.filter((t: any) => matches(t.name)).forEach((t: any) => 
+                    children.push(new FramaCItem(t.name, vscode.TreeItemCollapsibleState.None, "type", element.resourceUri)));
+            }
+
+            // Predicates/Annotations
+            if (!this.hideAnnotations && data.annotations) {
+                data.annotations.filter((a: any) => matches(a.name)).forEach((a: any) => 
+                    children.push(new FramaCItem(a.name, vscode.TreeItemCollapsibleState.None, "predicate", element.resourceUri)));
+            }
+
+            return children;
         }
 
-        if (element.contextValue === "cat_wp") {
-            return element.extraData || [];
+        // CASE 3: FUNCTION - Show its requires/ensures (ACSL Details)
+        if (element.contextValue === "function") {
+            const details = this.functionDetails.get(element.label);
+            if (details) {
+                return details.map(d => new FramaCItem(
+                    d.name, 
+                    vscode.TreeItemCollapsibleState.None, 
+                    d.type === "requires" ? "requires" : "ensures", 
+                    element.resourceUri
+                ));
+            }
         }
 
         return [];
     }
-
-    
-    private fileHasMatch(uri: string, matches: (n: string) => boolean): boolean {
-        const data = this.astData.get(uri);
-        const wp = this.wpDataByFile.get(uri) || [];
-        
-        const matchAst = data ? (
-            (data.functions?.some((f: any) => matches(f.name))) || 
-            (data.globals?.some((g: any) => matches(g.name))) ||
-            (data.types?.some((t: any) => matches(t.name))) ||
-            (data.annotations?.some((a: any) => matches(a.name)))
-        ) : false;
-
-        const matchWp = wp.some(goal => matches(goal.label.toString()));
-
-        return matchAst || matchWp;
-    }
 }
 
 export class FramaCItem extends vscode.TreeItem {
-    public extraData?: any[]; 
-
     constructor(
-        public readonly label: string,
-        public readonly collapsibleState: vscode.TreeItemCollapsibleState,
-        public readonly contextValue: string,
-        private underlined: boolean = false, 
-        public resourceUri?: vscode.Uri,
-        public goal_id?: string, 
-        public script?: string, 
-        public file_id?: string,
-        public fct_id?: string, 
-        public prop_id?: string, 
-        public verdict?: string
+        public readonly label: string, 
+        public readonly collapsibleState: vscode.TreeItemCollapsibleState, 
+        public readonly contextValue: string, 
+		
+        public resourceUri?: vscode.Uri
     ) {
         super(label, collapsibleState);
-        this.assignIcon();
-    }
-
-    private assignIcon() {
-        if (this.contextValue === "folder") {
-            this.iconPath = vscode.ThemeIcon.Folder;
-        } else if (this.contextValue === "file") {
-            this.iconPath = vscode.ThemeIcon.File;
-        } else if (this.contextValue === "function") {
-            this.iconPath = new vscode.ThemeIcon("symbol-function");
-            if (this.underlined) this.description = "ƒ";
-        } else if (this.contextValue === "variable") {
-            this.iconPath = new vscode.ThemeIcon("symbol-variable");
-        } else if (this.contextValue === "type") {
-            this.iconPath = new vscode.ThemeIcon("symbol-type-parameter");
-        } else if (this.contextValue === "predicate") {
-            this.iconPath = new vscode.ThemeIcon("shield");
-        } else if (this.contextValue === "goal") {
-            // Icônes de statut de preuve (Passed / Failed / Pending)
-            const icon = this.verdict === "passed" ? "pass" : (this.verdict === "failed" ? "error" : "circle-outline");
-            const color = this.verdict === "passed" ? "testing.iconPassed" : (this.verdict === "failed" ? "testing.iconFailed" : "testing.iconQueued");
-            this.iconPath = new vscode.ThemeIcon(icon, new vscode.ThemeColor(color));
+        
+        // Assign the click command to any item that is not a folder
+        if (contextValue !== "folder") {
+            this.command = { 
+                command: 'framaC.openAndDetail', 
+                title: 'Open Definition', 
+                arguments: [this] 
+            };
         }
+
+        // Icon logic
+        if (contextValue === "folder") this.iconPath = vscode.ThemeIcon.Folder;
+        else if (contextValue === "file") this.iconPath = vscode.ThemeIcon.File;
+        else if (contextValue === "function") this.iconPath = new vscode.ThemeIcon("symbol-function");
+        else if (contextValue === "variable") this.iconPath = new vscode.ThemeIcon("symbol-variable");
+        else if (contextValue === "type") this.iconPath = new vscode.ThemeIcon("symbol-type-parameter");
+        else if (contextValue === "requires") this.iconPath = new vscode.ThemeIcon("shield-check", new vscode.ThemeColor("charts.blue"));
+        else if (contextValue === "ensures") this.iconPath = new vscode.ThemeIcon("shield-lock", new vscode.ThemeColor("charts.green"));
     }
 }
+
+// --- UTILS ---
+function get_workspace() { return workspace.workspaceFolders ? workspace.workspaceFolders[0].uri.fsPath : process.cwd(); }
+
+async function create_file(fileName:string, type:string){
+    const workspacePath = get_workspace();
+    const fileNameOut = path.join(workspacePath, ".frama-c", `fc_${fileName}`);
+    if (!fs.existsSync(fileNameOut)) {
+        if (!fs.existsSync(path.dirname(fileNameOut))) fs.mkdirSync(path.dirname(fileNameOut), {recursive: true});
+        fs.writeFileSync(fileNameOut, 'Task in progress ...');
+    }
+    const doc = await workspace.openTextDocument(vscode.Uri.file(fileNameOut));
+    await languages.setTextDocumentLanguage(doc, type);
+    await window.showTextDocument(doc, ViewColumn.One, true);
+}
+
+async function get_args_from_item(item: TreeItem, gui: boolean) {
+    const t = await window.showInputBox({ prompt: 'Timeout', value: '10' });
+    return [item.filename_id, item.fct_id, item.prop_id, parseInt(t || "10"), gui];
+}
+
+async function get_proof_args(gui: boolean) {
+    const f = await window.showInputBox({ prompt: 'Function (@all)' });
+    const p = await window.showInputBox({ prompt: 'Property (@all)' });
+    const t = await window.showInputBox({ prompt: 'Timeout', value: '10' });
+    const editor = window.activeTextEditor;
+    if (!editor || !f || !p) return null;
+    return [editor.document.fileName, f, p, parseInt(t || "10"), gui];
+}
+
+export function deactivate() { if (client) return client.stop(); }
