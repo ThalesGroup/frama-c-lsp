@@ -27,7 +27,7 @@
             ],
             "panel": [
                 {
-                    "id": "myPanel",
+                    "id": "wp-goals-panel",
                     "title": "WP Goals",
                     "icon": "images/logo-frama-c.png"
                 }
@@ -41,12 +41,12 @@
                     "filterOnType": true
                 }
             ],
-            "myPanel": [
-                {
-                    "id": "WPPan",
-                    "name": "WP pan"
-                }
-            ]
+            "wp-goals-panel": [
+            {
+                "id": "wpGoalsView",
+                "name": "Last Results"
+            }
+        ]    
         },
         "menus": {
             "editor/context": [
