@@ -9,11 +9,27 @@ let get_function_details id func_name =
     let props = Property.ip_of_spec kf Kglobal ~active:[] spec in
     let children = List.filter_map (fun p ->
       let s = property_to_string p in
+      let loc = Property.location p in
+      let pos_start = fst loc in
+      let line = pos_start.Filepath.pos_lnum in
+      
+      let file_path = (pos_start.Filepath.pos_path :> string) in
+      
       match p with
       | Property.IPPredicate { ip_kind = Property.PKRequires _; _ } -> 
-          Some (`Assoc [("name", `String s); ("type", `String "requires")])
+          Some (`Assoc [
+            ("name", `String s); 
+            ("type", `String "requires"); 
+            ("line", `Int line);
+            ("file", `String file_path) 
+          ])
       | Property.IPPredicate { ip_kind = Property.PKEnsures _; _ } -> 
-          Some (`Assoc [("name", `String s); ("type", `String "ensures")])
+          Some (`Assoc [
+            ("name", `String s); 
+            ("type", `String "ensures"); 
+            ("line", `Int line);
+            ("file", `String file_path)
+          ])
       | _ -> None
     ) props in
     let lsp_message = Lsp_types.ResponseMessage.create 
