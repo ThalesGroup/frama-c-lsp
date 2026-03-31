@@ -112,29 +112,39 @@ function registerAllExtensionCommands(context: ExtensionContext) {
                 }
             } catch (error) { console.error(error); }
         }),
-		// Command triggered when clicking any element in the Sidebar
+	
 // Command to handle clicking on any Sidebar element
 commands.registerCommand('framaC.openAndDetail', async (item: FramaCItem) => {
     if (!item.resourceUri) return;
 
-    // 1. Open and show the file
-    const document = await workspace.openTextDocument(item.resourceUri);
-    const editor = await window.showTextDocument(document);
-    
-    // 2. Search for the label in the text to jump to the right line
-    const text = document.getText();
-    const lines = text.split('\n');
-    let lineIndex = lines.findIndex(l => l.includes(item.label));
+    try {    // 1. Open and show the file
 
-    if (lineIndex !== -1) {
-        const pos = new Position(lineIndex, 0);
-        editor.selection = new vscode.Selection(pos, pos);
-        editor.revealRange(new vscode.Range(pos, pos), vscode.TextEditorRevealType.InCenter);
-    }
+   
+        const document = await workspace.openTextDocument(item.resourceUri);
+        const editor = await window.showTextDocument(document);
+        
+         // 2. Search for the label in the text to jump to the right line
 
-    // 3. Specific logic for functions: fetch requires/ensures from server
-    if (item.contextValue === "function") {
-        try {
+        if (item.line !== undefined) {
+            const pos = new Position(item.line - 1, 0); // Frama-C (1-based) -> VSCode (0-based)
+            editor.selection = new vscode.Selection(pos, pos);
+            editor.revealRange(new Range(pos, pos), vscode.TextEditorRevealType.InCenter);
+        } else {
+          
+            const text = document.getText();
+            const lines = text.split('\n');
+            let lineIndex = lines.findIndex(l => l.includes(item.label));
+
+            if (lineIndex !== -1) {
+                const pos = new Position(lineIndex, 0);
+                editor.selection = new vscode.Selection(pos, pos);
+                editor.revealRange(new vscode.Range(pos, pos), vscode.TextEditorRevealType.InCenter);
+            }
+        }
+
+           // 3. Specific logic for functions: fetch requires/ensures from server
+
+        if (item.contextValue === "function") {
             const response: any = await client.sendRequest("custom/getFunctionDetails", { 
                 uri: item.resourceUri.toString(),
                 functionName: item.label 
@@ -142,9 +152,9 @@ commands.registerCommand('framaC.openAndDetail', async (item: FramaCItem) => {
             if (response) {
                 framaCProvider.updateFunctionDetails(item.label, response);
             }
-        } catch (e) {
-            console.error("Error fetching function details:", e);
         }
+    } catch (e) {
+            console.error("Error fetching function details:", e);
     }
 }),
 
@@ -551,17 +561,21 @@ export class FramaCProvider implements vscode.TreeDataProvider<FramaCItem> {
 
         // CASE 3: FUNCTION - Show its requires/ensures (ACSL Details)
         if (element.contextValue === "function") {
-            const details = this.functionDetails.get(element.label);
-            if (details) {
-                return details.map(d => new FramaCItem(
-                    d.name, 
-                    vscode.TreeItemCollapsibleState.None, 
-                    d.type === "requires" ? "requires" : "ensures", 
-                    element.resourceUri
-                ));
-            }
-        }
-
+    const details = this.functionDetails.get(element.label);
+    if (details) {
+        return details.map(d => {
+            const targetUri = d.file ? vscode.Uri.file(d.file) : element.resourceUri;
+            
+            return new FramaCItem(
+                d.name, 
+                vscode.TreeItemCollapsibleState.None, 
+                d.type === "requires" ? "requires" : "ensures", 
+                targetUri, 
+                d.line     
+            );
+        });
+    }
+}
         return [];
     }
 }
@@ -572,7 +586,8 @@ export class FramaCItem extends vscode.TreeItem {
         public readonly collapsibleState: vscode.TreeItemCollapsibleState, 
         public readonly contextValue: string, 
 		
-        public resourceUri?: vscode.Uri
+        public resourceUri?: vscode.Uri,
+		public readonly line?: number
     ) {
         super(label, collapsibleState);
         
