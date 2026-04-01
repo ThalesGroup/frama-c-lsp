@@ -10,6 +10,62 @@ let framaCProvider: FramaCProvider;
 let wpDataProvider: MyTreeDataProvider; 
 let wpResultsView: vscode.TreeView<TreeItem>;
 
+const createGutterIcon = (color: string) => {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="${color}"/></svg>`;
+    const encoded = Buffer.from(svg).toString('base64');
+    return vscode.Uri.parse(`data:image/svg+xml;base64,${encoded}`);
+};
+
+const passedDecoration = vscode.window.createTextEditorDecorationType({
+    gutterIconPath: createGutterIcon('mediumseagreen'),
+    backgroundColor: 'rgba(60, 179, 113, 0.2)' // Fond vert 
+});
+
+const failedDecoration = vscode.window.createTextEditorDecorationType({
+    gutterIconPath: createGutterIcon('crimson'),
+    backgroundColor: 'rgba(220, 20, 60, 0.2)' // Fond rouge
+});
+
+const unknownDecoration = vscode.window.createTextEditorDecorationType({
+    gutterIconPath: createGutterIcon('darkorange'),
+    backgroundColor: 'rgba(255, 140, 0, 0.2)' // Fond orange
+});
+
+let lastWpData: string[] = [];
+function updateDecorations() {
+
+    const editors = vscode.window.visibleTextEditors;
+
+    editors.forEach(editor => {
+        const passedRanges: vscode.Range[] = [];
+        const failedRanges: vscode.Range[] = [];
+        const unknownRanges: vscode.Range[] = [];
+
+        const currentFileName = path.basename(editor.document.fileName);
+
+        lastWpData.forEach(item => {
+            const p = item.trim().split(":");
+            if (p.length < 4) return;
+
+            const status = p[0].trim().toLowerCase();
+            const itemFileName = path.basename(p[2].trim());
+            const line = parseInt(p[3].trim(), 10) - 1;
+
+            if (itemFileName === currentFileName && !isNaN(line)) {
+                const range = new vscode.Range(line, 0, line, 0);
+                if (status === "passed") passedRanges.push(range);
+                else if (status === "failed") failedRanges.push(range);
+                else unknownRanges.push(range);
+            }
+        });
+
+       
+
+        editor.setDecorations(passedDecoration, passedRanges);
+        editor.setDecorations(failedDecoration, failedRanges);
+        editor.setDecorations(unknownDecoration, unknownRanges);
+    });
+}
 
 export function activate(context: ExtensionContext) {
 	// The server is implemented in OCaml
@@ -72,9 +128,11 @@ export function activate(context: ExtensionContext) {
     client.onNotification("custom/getWPResponse", (data) => {
         wpDataProvider.update(data);
         wpDataProvider.refresh();
-        // Automatically focus the WP Goals panel at the bottom
         commands.executeCommand('wpGoalsView.focus');
     });
+	vscode.window.onDidChangeActiveTextEditor(editor => {
+        updateDecorations();
+    }, null, context.subscriptions);
 
     // 6. Register all Frama-C Commands
     registerAllExtensionCommands(context);
@@ -434,6 +492,12 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
     update(data: any) {
         if (Array.isArray(data)) {
             let [filename_id, fct_id, prop_id, jsonData] = data;
+			if (jsonData && Array.isArray(jsonData)) {
+                lastWpData = jsonData;
+            } else {
+                lastWpData = [];
+            }
+            updateDecorations();
             if (!jsonData || jsonData.length === 0) {
                 this.data = [new TreeItem("No goals !")];
             } else {
