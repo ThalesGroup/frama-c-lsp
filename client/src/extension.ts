@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import { workspace, ExtensionContext, commands, window, ViewColumn, Uri, languages, Position, Range } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node';
 import { ProjectImporter } from './projectImporter';
+import { exec } from 'child_process';
 
 let client: LanguageClient;
 let framaCProvider: FramaCProvider; 
@@ -325,6 +326,10 @@ commands.registerCommand('framaC.openAndDetail', async (item: FramaCItem) => {
             }
         }),
 
+        commands.registerCommand('computeIncludeGraph', async () => {
+            await generateRecursiveIncludeGraph();
+			
+        }),
         // --- Proof Commands ---
         commands.registerCommand('showPOVC', async () => {
             try {
@@ -703,5 +708,105 @@ async function get_proof_args(gui: boolean) {
     if (!editor || !f || !p) return null;
     return [editor.document.fileName, f, p, parseInt(t || "10"), gui];
 }
+async function generateRecursiveIncludeGraph() {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+        return;
+    }
 
+    const workspacePath = get_workspace();
+    const startFilePath = editor.document.fileName;
+    const startFileName = path.basename(startFilePath);
+
+    try {
+        const allLocalFiles = await vscode.workspace.findFiles('**/*.{c,h}', '**/{node_modules,.git,build,obj}/**');
+        const fileMap = new Map<string, string>();
+        for (const file of allLocalFiles) {
+            fileMap.set(path.basename(file.fsPath), file.fsPath);
+        }
+
+        const visited = new Set<string>(); 
+        const edges = new Set<string>();   
+        const systemNodes = new Set<string>();
+        const nodesToProcess: string[] = [startFilePath]; 
+        const includeRegex = /^\s*#\s*include\s*(["<])([^">]+)([">])/gm;
+
+       
+        while (nodesToProcess.length > 0) {
+            const currentPath = nodesToProcess.shift()!;
+            const currentName = path.basename(currentPath);
+
+            if (visited.has(currentName)) continue;
+            visited.add(currentName);
+
+            try {
+                const content = await fs.promises.readFile(currentPath, 'utf-8');
+                let match;
+
+                while ((match = includeRegex.exec(content)) !== null) {
+                    const includedName = path.basename(match[2]);
+                    
+                    edges.add(`    "${currentName}" -> "${includedName}";`);
+
+                    if (fileMap.has(includedName)) {
+                        if (!visited.has(includedName)) {
+                            nodesToProcess.push(fileMap.get(includedName)!);
+                        }
+                    } else {
+                        systemNodes.add(includedName);
+                    }
+                }
+            } catch (err) {  }
+        }
+
+        let dotContent = "digraph RecursiveIncludeGraph {\n";
+        dotContent += "    rankdir=LR; overlap=false; splines=true;\n";
+        dotContent += "    node [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\", fontsize=10];\n";
+        dotContent += "    edge [color=\"#7f8c8d\", penwidth=1.0, arrowsize=0.7];\n\n";
+
+        dotContent += `    "${startFileName}" [fillcolor="#fcf3cf", color="#f1c40f", penwidth=2.0];\n`;
+
+        visited.forEach(node => {
+            if (node !== startFileName) {
+                dotContent += `    "${node}" [fillcolor="#d4efdf", color="#27ae60"];\n`;
+            }
+        });
+
+        systemNodes.forEach(node => {
+            dotContent += `    "${node}" [fillcolor="#ebedef", color="#a6acaf", style=\"rounded,dashed,filled\"];\n`;
+        });
+
+        edges.forEach(edge => dotContent += edge + "\n");
+        dotContent += "}\n";
+
+        const outDir = path.join(workspacePath, ".frama-c");
+        if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+        
+        const fileNameBase = path.parse(startFileName).name;
+        const dotPath = path.join(outDir, `includes_cascade_${fileNameBase}.dot`);
+        const dotUri = vscode.Uri.file(dotPath);
+
+        fs.writeFileSync(dotPath, dotContent);
+
+        
+        const allCommands = await vscode.commands.getCommands();
+        
+       
+        const doc = await vscode.workspace.openTextDocument(dotUri);
+        
+     
+        if (allCommands.includes('graphviz-interactive-preview.preview.beside')) {
+            await vscode.window.showTextDocument(doc, vscode.ViewColumn.Active);
+            
+            await vscode.commands.executeCommand('graphviz-interactive-preview.preview.beside', dotUri);
+        } else {
+           
+            await vscode.window.showTextDocument(doc, vscode.ViewColumn.Beside);
+            vscode.window.showWarningMessage("Installe l'extension 'Graphviz Interactive Preview' pour voir le schéma visuel !");
+        }
+
+    } catch (error) { 
+        vscode.window.showErrorMessage("Erreur : " + error); 
+    }
+}
 export function deactivate() { if (client) return client.stop(); }

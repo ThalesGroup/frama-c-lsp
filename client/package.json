@@ -56,6 +56,10 @@
                     "group": "Frama-C"
                 },
                 {
+                    "command": "computeIncludeGraph",
+                    "when": "resourceLangId == c || resourceLangId == acsl"
+                },
+                {
                     "command": "stop",
                     "when": "resourceLangId == c || resourceLangId == acsl"
                 },
@@ -226,6 +230,10 @@
             "title": "ACSL: Importer Projet IDE",
             "icon": "$(project)" 
         },
+        {
+                "command": "computeIncludeGraph",
+                "title": "Compute Include Graph"
+            },
             {
                 "command": "framaCExplorer.search",
                 "title": "Filter Explorer",
