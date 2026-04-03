@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent 'GP_c-7KB4X73_VM3_Agent'
 
     stages {
         stage('Install') {
