@@ -354,21 +354,6 @@
                 "title": "Run"
             }
         ],
-        "languages": [
-            {
-                "id": "c",
-                "extensions": [
-                    ".c",
-                    ".h"
-                ],
-                "aliases": [
-                    "C",
-                    "c",
-                    "ACSL",
-                    "acsl"
-                ]
-            }
-        ],
         "activationEvents": [
            
             "onLanguage:c"
@@ -378,7 +363,6 @@
                 "injectTo": [
                     "source.c"
                 ],
-                "language": "c",
                 "scopeName": "source.c.acsl",
                 "path": "./syntax/acsl.tmLanguage.json"
             }
