@@ -2,4 +2,4 @@ out
 node_modules
 .vscode-test
 tsconfig.tsbuildinfo
-package-lock.json
+package-lock.json.vscode/
