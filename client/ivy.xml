@@ -8,7 +8,9 @@
     <dependencies>
        <dependency org="com/thalesgroup"
             name="platform.jlep.id.vscode_deps"
+            
             rev="latest.integration">
+            <artifact name="vscode-deps" type="zip" ext="zip" />
         </dependency>
     </dependencies>
 </ivy-module>

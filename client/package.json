@@ -1,6 +1,6 @@
 {
     "name": "acsl-lsp",
-    "version": "0.1.0",
+    "version": "0.4.0",
     "publisher": "innov-org",
     "engines": {"vscode": "^1.85.0"},
     "description": "Visual Studio Code Client for ACSL Language Server",
