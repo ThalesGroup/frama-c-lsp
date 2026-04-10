@@ -43,6 +43,7 @@ usernamePassword(credentialsId: "22c9bebb-a044-4183-bbe5-53c052ac9201", username
             steps {
                 dir('client') {
                     echo "Demarrage de xvfb et lancement des tests..."
+                    sh 'find .vscode-test -name "code" -exec chmod +x {} +'
                     sh 'eval $(opam env) && xvfb-run -a npm test -- --logLevel=off'
                 }
             }
