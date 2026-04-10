@@ -1,4 +1,4 @@
- (*************************************************************************
+(*************************************************************************
  *                                                                        *
  *  This file is part of Frama-C/LSP plugin.                              *
  *                                                                        *
@@ -193,27 +193,27 @@ let diagnostics_handler (event : Log.event) =
     match event.evt_kind with 
     | Log.Error ->  
       Options.Self.debug ~level:1 "Error\n%!";
-      let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
+      let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode ((String.escaped (Rich_text.to_string msg))))) event.evt_plugin in
       DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
     | Log.Failure ->
       Options.Self.debug ~level:1 "Failure\n%!";
-      let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
+      let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode ((String.escaped (Rich_text.to_string msg))))) event.evt_plugin in
       DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
     | Log.Warning ->
       Options.Self.debug ~level:1 "Warning\n%!";
-      let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Warning (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
+      let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Warning (Scanf.unescaped (escape_unicode ((String.escaped (Rich_text.to_string msg))))) event.evt_plugin in
       DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
     | Log.Result -> 
       Options.Self.debug ~level:1 "Result\n%!";
     | Log.Debug -> 
       Options.Self.debug ~level:1 "Debug\n%!";
-      let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Information (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
+      let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Information (Scanf.unescaped (escape_unicode ((String.escaped (Rich_text.to_string msg))))) event.evt_plugin in
       DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
     | Log.Feedback ->
-      if (String.starts_with ~prefix:"Goal" msg) && ((String.ends_with ~suffix:"not tried" msg) || (String.ends_with ~suffix:"trivial" msg)) then ()
+      if (String.starts_with ~prefix:"Goal" (Rich_text.to_string msg)) && ((String.ends_with ~suffix:"not tried" (Rich_text.to_string msg)) || (String.ends_with ~suffix:"trivial" (Rich_text.to_string msg))) then ()
       else (
         Options.Self.debug ~level:1 "Feedback\n%!";
-        let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Information (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
+        let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Information (Scanf.unescaped (escape_unicode (String.escaped (Rich_text.to_string msg)))) event.evt_plugin in
         DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
       )
   
@@ -286,3 +286,5 @@ let () =
 Frama_c_kernel.Cmdline.run_after_extended_stage set_listerners;
 Frama_c_kernel.Cmdline.at_error_exit send_dignostics;
 Boot.Main.extend run
+
+

@@ -13,8 +13,7 @@ let get_function_details id func_name =
       let pos_start = fst loc in
       let line = pos_start.Filepath.pos_lnum in
       
-      let file_path = (pos_start.Filepath.pos_path :> string) in
-      
+let file_path = (Filepath.to_string pos_start.Filepath.pos_path) in
       match p with
       | Property.IPPredicate { ip_kind = Property.PKRequires _; _ } -> 
           Some (`Assoc [
