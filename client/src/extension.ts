@@ -166,10 +166,12 @@ function registerAllExtensionCommands(context: ExtensionContext) {
                 if (response) {
                     framaCProvider.updateAST(uri, response);
                     window.showInformationMessage("AST Charged!");
+                    return response;
                 } else {
                     window.showWarningMessage("No AST Found");
                 }
             } catch (error) { console.error(error); }
+            
         }),
 	
 // Command to handle clicking on any Sidebar element
