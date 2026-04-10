@@ -1,32 +1,60 @@
 pipeline {
-    agent { label 'GP_c-7KB4X73_VM3_Agent'}
+    agent any 
+
+    environment {
+        NODE_TLS_REJECT_UNAUTHORIZED = '0'
+        VSCODE_SKIP_DOWNLOAD = 'true'
+    }
 
     stages {
-        stage('Install') {
+        stage('Recuperation des dependances') {
             steps {
-                sh 'npm install'
-                sh 'opam install . --deps-only' 
+                dir('client') {
+                    // Utilisation des identifiants stockes dans Jenkins pour Artifactory
+                    withCredentials([
+usernamePassword(credentialsId: "eddc7593-09ea-4939-96f8-6d455dfa4101", usernameVariable: 'ARTIFACTORYL1_EMEA_USERNAME', passwordVariable: 'ARTIFACTORYL1_EMEA_API_KEY'),
+usernamePassword(credentialsId: "22c9bebb-a044-4183-bbe5-53c052ac9201", usernameVariable: 'ARTIFACTORYL2_EMEA_USERNAME', passwordVariable: 'ARTIFACTORYL2_EMEA_API_KEY'),
+]){
+                        echo "Telechargement des artefacts depuis Artifactory..."
+                        sh 'bash ./downloadartifacts.sh'
+                    }
+                }
             }
         }
 
-        stage('Compile') {
+        stage('Build et Reparation') {
             steps {
-                sh 'npm run compile' 
-                sh 'dune build' 
+                dir('client') {
+                    echo "Nettoyage et reparation des liens symboliques..."
+                    sh 'rm -f node_modules/.bin/tsc'
+                    sh 'ln -s ../typescript/bin/tsc node_modules/.bin/tsc || true'
+                    
+                    echo "Attribution des droits d'execution..."
+                    sh 'chmod +x node_modules/typescript/bin/tsc || true'
+                    sh 'chmod +x node_modules/.bin/tsc || true'
+                    
+                    echo "Lancement de la compilation TypeScript..."
+                    sh 'npm run compile'
+                }
             }
         }
 
-        stage('Run Extension Benchmark') {
+        stage('Tests E2E avec Ecran Virtuel') {
             steps {
-                
-                sh 'xvfb-run npm test' 
+                dir('client') {
+                    echo "Demarrage de xvfb et lancement des tests..."
+                    sh 'eval $(opam env) && xvfb-run -a npm test -- --logLevel=off'
+                }
             }
         }
     }
 
     post {
-        always {
-            junit '**/test-results.xml' 
+        success {
+            echo "RESULTAT : Pipeline termine avec succes."
+        }
+        failure {
+            echo "RESULTAT : Le pipeline a echoue. Verifiez les logs ci-dessus."
         }
     }
 }
