@@ -38,7 +38,17 @@ usernamePassword(credentialsId: "22c9bebb-a044-4183-bbe5-53c052ac9201", username
                 }
             }
         }
-
+    stage('Build et Install Serveur (OCaml)') {
+            steps {
+                script {
+                    echo "Compilation et installation du serveur LSP..."
+                    sh 'eval $(opam env) && dune build'
+                    
+                    sh 'eval $(opam env) && dune install'
+                    sh 'eval $(opam env) && which frama-c-lsp || echo "ERREUR : Serveur non installe"'
+                }
+            }
+        }
         stage('Tests E2E avec Ecran Virtuel') {
             steps {
                 dir('client') {
