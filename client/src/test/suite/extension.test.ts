@@ -7,7 +7,7 @@ suite(' Test d\'Intégration : Communication LSP', () => {
     test('Extraction directe de l\'AST via le Language Client', async function() {
     this.timeout(60000);
 
-     const testFilePath = path.resolve(__dirname, '../../../../../L2/code/jlep/plugins/javacard/common/native/jcapi/src/mifare.c');
+     const testFilePath = path.resolve(__dirname, '../../../../../../../git/L2/code/jlep/plugins/javacard/common/native/jcapi/src/mifare.c');
     //const testFilePath = path.resolve(__dirname, '../../../../test_files/test1.c');
 const uri = vscode.Uri.file(testFilePath);
     const document = await vscode.workspace.openTextDocument(uri);
