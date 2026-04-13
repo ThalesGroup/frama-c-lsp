@@ -35,6 +35,7 @@ usernamePassword(credentialsId: "22c9bebb-a044-4183-bbe5-53c052ac9201", username
                     
                     echo "Lancement de la compilation TypeScript..."
                     sh 'npm run compile'
+                    sh 'chmod +x run.sh'
                 }
             }
         }
