@@ -40,7 +40,6 @@ type lsp_feature =
   | Prove_feature of (int * string * string * string)
   | GetContext_feature of (int * string * int * int)
   | ComputeAST_feature of int * string 
-  | GetDetails_feature of int * string * string
 
 
 module KernelOpt = struct
@@ -339,7 +338,6 @@ module LspOpt = struct
     | ComputeProofObligationID_feature (id, goal_id) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-show-po=%s" id goal_id
     | Prove_feature (id, file, fct, prop) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-prove=%s:%s:%s" id file fct prop
     | GetContext_feature (id, file, line, col) ->Printf.sprintf "-lsp-id=\"%d\" -lsp-get-context=%s:%d:%d" id file line col
-    | GetDetails_feature (id, file, fct) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-details=%s:%s" id file fct
 end
 
 
@@ -550,8 +548,7 @@ let execute_command prog args feature wrapper_port =
     match feature with
       | GetContext_feature (_, _, _, _)
       | Prove_feature (_, _, _, _) 
-      |ComputeAST_feature (_, _) 
-      | GetDetails_feature (_, _, _)->
+      |ComputeAST_feature (_, _) ->
         Options.Self.debug ~level:1 "Executed frama-c command (JSON Socket)\n%!";
           let (plugin_sock, _) = Unix.accept wrapper_sock in
           let _data_size = getnumber (readcontlen plugin_sock) in
@@ -626,8 +623,7 @@ let execute_command prog args feature wrapper_port =
       data
     | Prove_feature (id, _, _, _) 
     | GetContext_feature (id, _, _, _) 
-    | ComputeAST_feature (id, _) 
-    | GetDetails_feature (id, _, _)-> 
+    | ComputeAST_feature (id, _)-> 
       Options.Self.debug ~level:1 "Frama-C GUI ended ! \n%!";
       let lsp_response = Lsp_types.ResponseMessage.json_of_t (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:(`List [`String ""; `String ""; `List []]) ()) in
       let data = Json.save_string lsp_response in
@@ -660,8 +656,7 @@ let execute_command prog args feature wrapper_port =
       | ComputeProofObligationID_feature (id, _)
       | Prove_feature (id, _, _, _) 
       | GetContext_feature (id, _, _, _) 
-      | ComputeAST_feature (id, _) 
-      | GetDetails_feature (id, _, _)-> 
+      | ComputeAST_feature (id, _)-> 
         Options.Self.debug ~level:1 "\n%!";
         let msg = Printf.sprintf "Frama-c may have exited with errors" in
         let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:msg () in
@@ -905,55 +900,6 @@ let rq_handler json_string wrapper_port =
  
         Lsp_types.CONTENT (data), pid
       end
-      | "custom/getFunctionDetails" ->
-    Options.Self.debug ~level:1 "Function Details Request triggered\n%!";
-    
-    let params = match request.params with
-      | Some (`Assoc fields) -> 
-          let uri = 
-            match List.assoc_opt "uri" fields with 
-            | Some (`String s) -> s 
-            | _ -> "" 
-          in
-          let func = 
-            match List.assoc_opt "functionName" fields with 
-            | Some (`String s) -> s 
-            | _ -> "" 
-          in
-          (uri, func)
-      | _ -> ("", "")
-    in
-
-    let (uri, func_name) = params in
-
-    if uri = "" || func_name = "" then 
-      let resp = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:request.id ~result:(`List []) () in
-      Lsp_types.CONTENT (Json.save_string (Lsp_types.ResponseMessage.json_of_t resp)), 1
-    else begin
-      let src_file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
-      let id_int = Utils.id_to_int request.id in
-
-      let kernel_opt = KernelOpt.create ~strategies:false () in
-      let feature = GetDetails_feature (id_int, src_file, func_name) in
-      let lsp_opt = LspOpt.create (feature) in
-
-      let command = Command.create 
-        ~port:wrapper_port 
-        ~strategies:false 
-        ~kernel:kernel_opt 
-        ~files:[src_file] 
-        ~lsp:lsp_opt 
-        () 
-      in
-
-      let command_str = (Command.string_of_t command) in
-      Options.Self.feedback ~level:1 "Details Command = %s\n%!" command_str;
-
-      let prog, args = (Command.args_of_t command) in
-      let data, pid = fork_execute_command prog args feature wrapper_port in
-
-      Lsp_types.CONTENT (data), pid
-    end
       | "provePO" -> (* prove with WP *)
       let id = (Utils.id_to_int request.id) in
       Options.Self.debug ~level:1 "provePO, %d\n%!" id;

@@ -134,6 +134,19 @@ export function activate(context: ExtensionContext) {
 	vscode.window.onDidChangeActiveTextEditor(editor => {
         updateDecorations();
     }, null, context.subscriptions);
+    
+
+
+
+    vscode.workspace.onDidSaveTextDocument(async (document) => {
+        if (document.languageId === 'c') {
+            await vscode.commands.executeCommand('acsl-lsp.debugAST');
+        }
+    }, null, context.subscriptions);
+
+    if (vscode.window.activeTextEditor) {
+        vscode.commands.executeCommand('acsl-lsp.debugAST');
+    }
 
     // 6. Register all Frama-C Commands
     registerAllExtensionCommands(context);
@@ -175,48 +188,27 @@ function registerAllExtensionCommands(context: ExtensionContext) {
         }),
 	
 // Command to handle clicking on any Sidebar element
-commands.registerCommand('framaC.openAndDetail', async (item: FramaCItem) => {
-    if (!item.resourceUri) return;
 
-    try {    // 1. Open and show the file
+commands.registerCommand('framaC.openAndDetail', async (item: FramaCItem) => {
+    if (!item.resourceUri || item.line === undefined) return;
 
    
         const document = await workspace.openTextDocument(item.resourceUri);
         const editor = await window.showTextDocument(document);
-        
-         // 2. Search for the label in the text to jump to the right line
 
-        if (item.line !== undefined) {
-            const pos = new Position(item.line - 1, 0); // Frama-C (1-based) -> VSCode (0-based)
-            editor.selection = new vscode.Selection(pos, pos);
-            editor.revealRange(new Range(pos, pos), vscode.TextEditorRevealType.InCenter);
-        } else {
-          
-            const text = document.getText();
-            const lines = text.split('\n');
-            let lineIndex = lines.findIndex(l => l.includes(item.label));
+        if (item.line > 0) {
+            const pos = new Position(item.line - 1, 0);
+            const lineText = document.lineAt(pos.line).text;
+            const charIndex = lineText.indexOf(item.label);
+            const finalPos = new Position(pos.line, charIndex !== -1 ? charIndex : 0);
 
-            if (lineIndex !== -1) {
-                const pos = new Position(lineIndex, 0);
-                editor.selection = new vscode.Selection(pos, pos);
-                editor.revealRange(new vscode.Range(pos, pos), vscode.TextEditorRevealType.InCenter);
-            }
-        }
+            editor.selection = new vscode.Selection(finalPos, finalPos);
+            editor.revealRange(new Range(finalPos, finalPos), vscode.TextEditorRevealType.InCenter);
 
-           // 3. Specific logic for functions: fetch requires/ensures from server
-
-        if (item.contextValue === "function") {
-            const response: any = await client.sendRequest("custom/getFunctionDetails", { 
-                uri: item.resourceUri.toString(),
-                functionName: item.label 
-            });
-            if (response) {
-                framaCProvider.updateFunctionDetails(item.label, response);
-            }
-        }
-    } catch (e) {
-            console.error("Error fetching function details:", e);
-    }
+    } 
+}),
+commands.registerCommand('framaC.refreshAST', () => {
+    vscode.commands.executeCommand('acsl-lsp.debugAST');
 }),
 
         commands.registerCommand('smokeTests', async () => {
@@ -576,79 +568,70 @@ export class FramaCProvider implements vscode.TreeDataProvider<FramaCItem> {
         return element;
     }
 
-    async getChildren(element?: FramaCItem): Promise<FramaCItem[]> {
-        const matches = (name: string) => name.toLowerCase().includes(this.searchQuery);
-        const rootPath = workspace.workspaceFolders ? workspace.workspaceFolders[0].uri.fsPath : process.cwd();
+async getChildren(element?: FramaCItem): Promise<FramaCItem[]> {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) return [];
+    
+    const uriString = editor.document.uri.toString();
+    const data = this.astData.get(uriString);
 
-        // CASE 1: ROOT or FOLDER - Browse file system
-        if (!element || element.contextValue === "folder") {
-            const currentDir = element ? element.resourceUri!.fsPath : rootPath;
-            try {
-                const entries = await fs.promises.readdir(currentDir, { withFileTypes: true });
-                return entries
-                    .filter(e => !e.name.startsWith('.') && (e.isDirectory() || e.name.endsWith('.c') || e.name.endsWith('.h')))
-                    .map(e => new FramaCItem(
-                        e.name, 
-                        vscode.TreeItemCollapsibleState.Collapsed, 
-                        e.isDirectory() ? "folder" : "file", 
-                        vscode.Uri.file(path.join(currentDir, e.name))
-                    ));
-            } catch (e) { return []; }
+    if (!element) {
+        return [
+            new FramaCItem("Functions", vscode.TreeItemCollapsibleState.Expanded, "cat_func"),
+            new FramaCItem("Variables", vscode.TreeItemCollapsibleState.Collapsed, "cat_var"),
+            new FramaCItem("Types", vscode.TreeItemCollapsibleState.Collapsed, "cat_type"),
+            new FramaCItem("Annotations", vscode.TreeItemCollapsibleState.Collapsed, "cat_annot")
+        ];
+    }
+
+    if (!data) return [];
+    let children: FramaCItem[] = [];
+
+    const resolveUri = (filePath: string) => {
+        if (!filePath) return editor.document.uri;
+
+        const workspacePath = workspace.workspaceFolders ? workspace.workspaceFolders[0].uri.fsPath : process.cwd();
+
+        let cleanPath = filePath;
+        if (cleanPath.startsWith('./')) {
+            cleanPath = cleanPath.substring(2);
         }
+        const absolutePath = path.resolve(workspacePath, cleanPath);
+        return vscode.Uri.file(absolutePath);
+    };
 
-        // CASE 2: FILE - Show AST elements (functions, variables, types)
-        if (element.contextValue === "file") {
-            const data = this.astData.get(element.resourceUri!.toString());
-            if (!data) return [];
-            
-            let children: FramaCItem[] = [];
-
-            // Functions
+    switch (element.contextValue) {
+        case "cat_func":
             if (!this.hideFunctions && data.functions) {
-                data.functions.filter((f: any) => matches(f.name)).forEach((f: any) => 
-                    children.push(new FramaCItem(f.name, vscode.TreeItemCollapsibleState.Collapsed, "function", element.resourceUri)));
+                data.functions.forEach((f: any) => {
+                    children.push(new FramaCItem(f.name, vscode.TreeItemCollapsibleState.None, "function", resolveUri(f.file), f.line));
+                });
             }
-
-            // Variables
+            break;
+        case "cat_var":
             if (!this.hideVariables && data.globals) {
-                data.globals.filter((g: any) => matches(g.name)).forEach((g: any) => 
-                    children.push(new FramaCItem(g.name, vscode.TreeItemCollapsibleState.None, "variable", element.resourceUri)));
+                data.globals.forEach((g: any) => {
+                    children.push(new FramaCItem(g.name, vscode.TreeItemCollapsibleState.None, "variable", resolveUri(g.file), g.line));
+                });
             }
-
-            // Types
+            break;
+        case "cat_type":
             if (!this.hideTypes && data.types) {
-                data.types.filter((t: any) => matches(t.name)).forEach((t: any) => 
-                    children.push(new FramaCItem(t.name, vscode.TreeItemCollapsibleState.None, "type", element.resourceUri)));
+                data.types.forEach((t: any) => {
+                    children.push(new FramaCItem(t.name, vscode.TreeItemCollapsibleState.None, "type", resolveUri(t.file), t.line));
+                });
             }
-
-            // Predicates/Annotations
+            break;
+        case "cat_annot":
             if (!this.hideAnnotations && data.annotations) {
-                data.annotations.filter((a: any) => matches(a.name)).forEach((a: any) => 
-                    children.push(new FramaCItem(a.name, vscode.TreeItemCollapsibleState.None, "predicate", element.resourceUri)));
+                data.annotations.forEach((a: any) => {
+                    children.push(new FramaCItem(a.name, vscode.TreeItemCollapsibleState.None, "predicate", resolveUri(a.file), a.line));
+                });
             }
-
-            return children;
-        }
-
-        // CASE 3: FUNCTION - Show its requires/ensures (ACSL Details)
-        if (element.contextValue === "function") {
-    const details = this.functionDetails.get(element.label);
-    if (details) {
-        return details.map(d => {
-            const targetUri = d.file ? vscode.Uri.file(d.file) : element.resourceUri;
-            
-            return new FramaCItem(
-                d.name, 
-                vscode.TreeItemCollapsibleState.None, 
-                d.type === "requires" ? "requires" : "ensures", 
-                targetUri, 
-                d.line     
-            );
-        });
+            break;
     }
+    return children;
 }
-        return [];
-    }
 }
 
 export class FramaCItem extends vscode.TreeItem {
@@ -672,13 +655,15 @@ export class FramaCItem extends vscode.TreeItem {
         }
 
         // Icon logic
-        if (contextValue === "folder") this.iconPath = vscode.ThemeIcon.Folder;
-        else if (contextValue === "file") this.iconPath = vscode.ThemeIcon.File;
-        else if (contextValue === "function") this.iconPath = new vscode.ThemeIcon("symbol-function");
-        else if (contextValue === "variable") this.iconPath = new vscode.ThemeIcon("symbol-variable");
-        else if (contextValue === "type") this.iconPath = new vscode.ThemeIcon("symbol-type-parameter");
-        else if (contextValue === "requires") this.iconPath = new vscode.ThemeIcon("shield-check", new vscode.ThemeColor("charts.blue"));
-        else if (contextValue === "ensures") this.iconPath = new vscode.ThemeIcon("shield-lock", new vscode.ThemeColor("charts.green"));
+if (contextValue.startsWith("cat_")) {
+    this.iconPath = new vscode.ThemeIcon("list-flat"); 
+} else if (contextValue === "function") {
+    this.iconPath = new vscode.ThemeIcon("symbol-method");
+} else if (contextValue === "variable") {
+    this.iconPath = new vscode.ThemeIcon("symbol-variable");
+} else if (contextValue === "type") {
+    this.iconPath = new vscode.ThemeIcon("symbol-parameter");
+}
     }
 }
 
