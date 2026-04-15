@@ -46,7 +46,7 @@ let get_property rootPath id file line ch : string =
   let proof_oblgs = ref [] in
   Wp.Wpo.iter_on_goals (fun po ->
     let (start,end_) = Property.location (Wp.Wpo.get_target po) in
-    let po_file = Filepath.Normalized.to_pretty_string start.pos_path in
+    let po_file = Filepath.to_string start.pos_path in
     let line1 = start.pos_lnum in 
     let line2 = end_.pos_lnum in 
     let char1 = start.pos_cnum - start.pos_bol in 

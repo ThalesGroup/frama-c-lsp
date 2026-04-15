@@ -1,4 +1,4 @@
- (*************************************************************************
+(*************************************************************************
  *                                                                        *
  *  This file is part of Frama-C/LSP plugin.                              *
  *                                                                        *
@@ -67,35 +67,27 @@ let get_Handler_args () =
     Some (server_port, wrapper_port)
   )
   else None
-
+let get_AST_args () =
+  let file = Options.Get_AST.get () in
+  if not (String.trim file = "") then
+    Some (Options.Id.get (), file)
+  else 
+    None
 let get_Wrapper_args () = 
   let wrapper_port = Options.Wrapper_opt.get () in
   if (wrapper_port == 0) then None
   else Some (wrapper_port)
-
-let get_FindDefinition_args () = 
-  let args = Options.Find_def.get () in
+let get_GetContext_args () =
+  let args = Options.Get_context.get () in
   if not (String.trim args = "") then
     (
-    let req_info = String.split_on_char ':' (Options.Find_def.get ()) in
-    let file = (List.nth req_info 0) in
-    let line = (Stdlib.int_of_string (List.nth req_info 1)) in
-    let ch = (Stdlib.int_of_string (List.nth req_info 2)) in
-    Some (Options.Id.get (), file, line, ch)
+      let req_info = String.split_on_char ':' args in
+      let file = (List.nth req_info 0) in
+      let line = (Stdlib.int_of_string (List.nth req_info 1)) in
+      let ch = (Stdlib.int_of_string (List.nth req_info 2)) in
+      Some (Options.Id.get (), file, line, ch)
     )
   else None
-let get_FindDeclaration_args () = 
-  let args = Options.Find_decl.get () in
-  if not (String.trim args = "") then
-    (
-    let req_info = String.split_on_char ':' (Options.Find_decl.get ()) in
-    let file = (List.nth req_info 0) in
-    let line = (Stdlib.int_of_string (List.nth req_info 1)) in
-    let ch = (Stdlib.int_of_string (List.nth req_info 2)) in
-    Some (Options.Id.get (), file, line, ch)
-    )
-  else None
-
 let get_ComputeProofObligation_args () =
   let args = Options.Show_POVC.get () in
   if not (String.trim args = "") then
@@ -116,7 +108,14 @@ let get_ComputeProofObligationID_args () =
       Some (Options.Id.get (), goal_id)
       )
     else None
-
+let get_GetDetails_args () =
+  let args = Options.Get_details.get () in
+  if not (String.trim args = "") then
+    let req_info = String.split_on_char ':' args in
+    let file = List.nth req_info 0 in
+    let fct = List.nth req_info 1 in
+    Some (Options.Id.get (), file, fct)
+  else None
 let get_Prove_args () =
     let args = Options.Prove.get () in
     if not (String.trim args = "") then
@@ -132,13 +131,15 @@ let get_Prove_args () =
 let get_active_option () =
   let active_options = ref [] in
   if is_active_DidSave () then active_options := Lsp_handler.DidSave_feature :: !active_options;
-  (match get_FindDefinition_args () with
+  
+(match get_GetDetails_args () with
+| None -> ()
+| Some (id, file, fct) -> 
+    active_options := Lsp_handler.GetDetails_feature(id, file, fct) :: !active_options
+);
+  (match get_AST_args () with
   | None -> ()
-  | Some (id, file, line, ch) -> active_options := Lsp_handler.FindDefinition_feature(id, file, line, ch) :: !active_options
-  );
-  (match get_FindDeclaration_args () with
-  | None -> ()
-  | Some (id, file, line, ch) -> active_options := Lsp_handler.FindDeclaration_feature(id, file, line, ch) :: !active_options
+  | Some (id, file) -> active_options := Lsp_handler.ComputeAST_feature(id, file) :: !active_options
   );
   (match get_ComputeProofObligation_args () with
   | None -> ()
@@ -151,6 +152,11 @@ let get_active_option () =
   (match get_Prove_args () with
   | None -> ()
   | Some (id, file, fct, prop) -> active_options := Lsp_handler.Prove_feature(id, file, fct, prop) :: !active_options
+  );
+  (match get_GetContext_args () with
+  | None -> ()
+  | Some (id, file, line, ch) -> 
+      active_options := Lsp_handler.GetContext_feature(id, file, line, ch) :: !active_options
   );
   match !active_options with
   [] -> None
@@ -176,38 +182,38 @@ let diagnostics_handler (event : Log.event) =
     in
     let loc = match event.evt_source with 
       | Some pos -> 
-        publish_to := Filepath.normalize (Filepath.Normalized.to_pretty_string pos.pos_path); 
+        publish_to := Filepath.to_string pos.pos_path; 
         Utils.real_loc (pos,pos); 
       | None -> (
-        publish_to := Filepath.normalize !file;
-        Utils.dummyLoc (Filepath.normalize !file))
+        publish_to := !file;
+        Utils.dummyLoc !file)
     in
     let diag_list = DidSave.StringMap.find_opt !publish_to !DidSave.diag_map in
     let diag_list = match diag_list with | None -> [] | Some l -> l in
     match event.evt_kind with 
     | Log.Error ->  
       Options.Self.debug ~level:1 "Error\n%!";
-      let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
+      let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode ((String.escaped (Rich_text.to_string msg))))) event.evt_plugin in
       DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
     | Log.Failure ->
       Options.Self.debug ~level:1 "Failure\n%!";
-      let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
+      let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Error (Scanf.unescaped (escape_unicode ((String.escaped (Rich_text.to_string msg))))) event.evt_plugin in
       DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
     | Log.Warning ->
       Options.Self.debug ~level:1 "Warning\n%!";
-      let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Warning (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
+      let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Warning (Scanf.unescaped (escape_unicode ((String.escaped (Rich_text.to_string msg))))) event.evt_plugin in
       DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
     | Log.Result -> 
       Options.Self.debug ~level:1 "Result\n%!";
     | Log.Debug -> 
       Options.Self.debug ~level:1 "Debug\n%!";
-      let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Information (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
+      let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Information (Scanf.unescaped (escape_unicode ((String.escaped (Rich_text.to_string msg))))) event.evt_plugin in
       DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
     | Log.Feedback ->
-      if (String.starts_with ~prefix:"Goal" msg) && ((String.ends_with ~suffix:"not tried" msg) || (String.ends_with ~suffix:"trivial" msg)) then ()
+      if (String.starts_with ~prefix:"Goal" (Rich_text.to_string msg)) && ((String.ends_with ~suffix:"not tried" (Rich_text.to_string msg)) || (String.ends_with ~suffix:"trivial" (Rich_text.to_string msg))) then ()
       else (
         Options.Self.debug ~level:1 "Feedback\n%!";
-        let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Information (Scanf.unescaped (escape_unicode (String.escaped msg))) event.evt_plugin in
+        let diag = diagnostic loc Lsp_types.DiagnosticSeverity.Information (Scanf.unescaped (escape_unicode (String.escaped (Rich_text.to_string msg)))) event.evt_plugin in
         DidSave.diag_map := DidSave.StringMap.add !publish_to (diag :: diag_list) !DidSave.diag_map
       )
   
@@ -263,14 +269,15 @@ let run () =
       let feature = get_active_option () in
       match feature with
       | Some Lsp_handler.DidSave_feature -> let data = List.map Json.save_string (DidSave.handle ()) in Options.Self.feedback ~level:1 "Updated Diagnostics !\n%!"; send_result data
-      | Some Lsp_handler.FindDefinition_feature(id, file, line, ch) -> let data = [(Definition.find id file line ch)] in Options.Self.feedback ~level:1 "Find definition attempt done !\n%!"; send_result data
-      | Some Lsp_handler.FindDeclaration_feature(id, file, line, ch) -> let data = [(Declaration.find id file line ch)] in Options.Self.feedback ~level:1 "Find declaration attempt done !\n%!"; send_result data
       | Some Lsp_handler.ComputeCIL_feature -> send_result []
       | Some Lsp_handler.ComputeCallGraph_feature _ -> send_result []
       | Some Lsp_handler.ComputeMetrics_feature -> send_result []
       | Some Lsp_handler.ComputeProofObligation_feature(root_path, id, file, line, ch) -> let data = [(ShowPOVC.get_property root_path id file line ch)] in Options.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; send_result data
       | Some Lsp_handler.ComputeProofObligationID_feature(id, goal_id) -> let data = [(ShowPOVC.get_property_from_id id goal_id)] in Options.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; send_result data
       | Some Lsp_handler.Prove_feature(id, file, fct, prop) -> let data = [(ProvePO.get_property_status id file fct prop)] in Options.Self.feedback ~level:1 "Proof attempt done !\n%!"; send_result data
+      | Some Lsp_handler.GetContext_feature(_id, file, line, _ch) ->  let (func_name, prop_name) = Context_finder.get_context file line in let json_response = `List [`String func_name; `String prop_name] in let data = [Json.save_string json_response] in send_result data
+      | Some Lsp_handler.ComputeAST_feature(id, file) -> let data = [(Extract_ast.compute_and_serialize id file)] in Options.Self.feedback ~level:1 "AST Extraction done !\n%!"; send_result data
+      | Some Lsp_handler.GetDetails_feature(id, _file, fct) ->  let data = [(Extract_ast.get_function_details id fct)] in Options.Self.feedback ~level:1 "Function details extraction done for %s!\n%!" fct; send_result data
       | None ->  Self.debug ~level:1 "LSP started !!!"
   )
 
@@ -279,3 +286,5 @@ let () =
 Frama_c_kernel.Cmdline.run_after_extended_stage set_listerners;
 Frama_c_kernel.Cmdline.at_error_exit send_dignostics;
 Boot.Main.extend run
+
+
