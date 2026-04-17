@@ -33,43 +33,166 @@ const unknownDecoration = vscode.window.createTextEditorDecorationType({
 });
 
 let lastWpData: string[] = [];
-function updateDecorations() {
 
+
+async function initializeDefaultSettings() {
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (!workspaceFolders) {
+        return; 
+    }
+
+    const workspacePath = workspaceFolders[0].uri.fsPath;
+    const vscodeFolder = path.join(workspacePath, '.vscode');
+    const settingsPath = path.join(vscodeFolder, 'settings.json');
+
+    if (fs.existsSync(settingsPath)) {
+        return;
+    }
+
+    if (!fs.existsSync(vscodeFolder)) {
+        fs.mkdirSync(vscodeFolder, { recursive: true });
+    }
+
+    const defaultSettings = {
+        "kernel.includePaths": [],
+        "kernel.sourceFiles": [],
+        
+        "kernel.macros": [
+            "__FRAMAC_SPM", 
+            "__FRAMAC_STRATEGIES_", 
+            "FRAMA_C_INCOMPLETE_STRATEGIES", 
+            "__FRAMAC_CCDOC", 
+            "__FRAMAC_METACSL",
+            "__FRAMAC_VERSION=30",
+            "FRAMA_C_TSFI_FSP"
+        ],
+
+        "vscodeacsl.maxNumberOfProblems": 100000,
+        "kernel.lspDebug": 0,
+        "kernel.macroStrategiesFunctionPrefix": "__FRAMAC_STRATEGIES_",
+        "kernel.sourceFileStrategies": [],
+        "kernel.sourceFileMetacsl": [],
+        "kernel.aggressiveMerging": false,
+        "kernel.removeUnusedSpecifiedFunctions": false,
+        "kernel.machdep": "x86_32",
+        "kernel.inlineCalls": ["@inline"],
+        "kernel.removeInlined": ["@inline"],
+        "kernel.noAnnot": false,
+        "kernel.generatedSpecCustom": [],
+
+        "wp.checkMemoryModel": true,
+        "wp.noVolatile": false,
+        "wp.rte": true,
+        "wp.prover": "script,alt-ergo",
+        "wp.timeout": 2,
+        "wp.model": "Typed+var+int+float",
+        "wp.par": 8,
+        "wp.cache": "update",
+        "wp.script": "batch",
+        "wp.session": "frama_c/sessions",
+        "wp.autoDepth": 20,
+        "wp.autoWidth": 1,
+
+        "metrics.byFunction": true,
+        "callgraph.roots": [],
+        "callgraph.services": false,
+        "uncast.active": true,
+        "uncast.lshiftAsMul": true,
+        "uncast.rshiftAsDiv": true,
+        "uncast.endianness": "little",
+        "metacsl.active": false,
+        "metacsl.checks": true,
+        "metacsl.noCheckExt": true,
+        "metacsl.noSimpl": true,
+        "metacsl.numberAssertions": true,
+        "ccdoc.active": true,
+        "ccdoc.coverageVerif": true,
+        "ccdoc.latex": true
+    };
+
+    try {
+        fs.writeFileSync(settingsPath, JSON.stringify(defaultSettings, null, 4), 'utf-8');
+        vscode.window.showInformationMessage("Configuration JCAT initialisée avec succès.");
+    } catch (error) {
+        console.error("Erreur d'initialisation :", error);
+    }
+}
+function updateDecorations() {
     const editors = vscode.window.visibleTextEditors;
 
     editors.forEach(editor => {
-        const passedRanges: vscode.Range[] = [];
-        const failedRanges: vscode.Range[] = [];
-        const unknownRanges: vscode.Range[] = [];
-
         const currentFileName = path.basename(editor.document.fileName);
+
+        interface LineInfo {
+            worstStatus: string;
+            goals: { status: string; goalId: string; proverInfo: string }[];
+        }
+        const lineStatusMap = new Map<number, LineInfo>();
 
         lastWpData.forEach(item => {
             const p = item.trim().split(":");
-            if (p.length < 4) return;
+            if (p.length < 5) return; 
 
             const status = p[0].trim().toLowerCase();
+            const goalId = p[1].trim(); 
             const itemFileName = path.basename(p[2].trim());
             const line = parseInt(p[3].trim(), 10) - 1;
+            const proverInfo = p[4] ? p[4].trim() : ""; 
 
             if (itemFileName === currentFileName && !isNaN(line)) {
-                const range = new vscode.Range(line, 0, line, 0);
-                if (status === "passed") passedRanges.push(range);
-                else if (status === "failed") failedRanges.push(range);
-                else unknownRanges.push(range);
+                if (!lineStatusMap.has(line)) {
+                    lineStatusMap.set(line, { worstStatus: status, goals: [] });
+                }
+                
+                const lineInfo = lineStatusMap.get(line)!;
+                
+                lineInfo.goals.push({ status, goalId, proverInfo });
+
+                if (status === "failed") {
+                    lineInfo.worstStatus = "failed"; 
+                } else if (status === "unknown" && lineInfo.worstStatus !== "failed") {
+                    lineInfo.worstStatus = "unknown"; 
+                } else if (status === "passed" && !lineInfo.worstStatus) {
+                    lineInfo.worstStatus = "passed"; 
+                }
             }
         });
 
-       
+        const passedOpts: vscode.DecorationOptions[] = [];
+        const failedOpts: vscode.DecorationOptions[] = [];
+        const unknownOpts: vscode.DecorationOptions[] = [];
 
-        editor.setDecorations(passedDecoration, passedRanges);
-        editor.setDecorations(failedDecoration, failedRanges);
-        editor.setDecorations(unknownDecoration, unknownRanges);
+        lineStatusMap.forEach((info, line) => {
+            const range = editor.document.lineAt(line).range;
+            
+            const hoverMessage = new vscode.MarkdownString();
+            hoverMessage.isTrusted = true;
+            hoverMessage.appendMarkdown(`**WP Proof Goals**\n\n`);
+            
+            info.goals.forEach(g => {
+                let icon = "✅";
+                if (g.status === "failed") icon = "❌";
+                if (g.status === "unknown") icon = "⚠️";
+                
+                hoverMessage.appendMarkdown(`- ${icon} **${g.goalId}** _${g.proverInfo}_\n`);
+            });
+
+            const decoration = { range, hoverMessage };
+
+            if (info.worstStatus === "passed") passedOpts.push(decoration);
+            else if (info.worstStatus === "failed") failedOpts.push(decoration);
+            else if (info.worstStatus === "unknown") unknownOpts.push(decoration);
+        });
+
+        editor.setDecorations(passedDecoration, passedOpts);
+        editor.setDecorations(failedDecoration, failedOpts);
+        editor.setDecorations(unknownDecoration, unknownOpts);
     });
 }
 
-export function activate(context: ExtensionContext) {
+export async function activate(context: ExtensionContext) {
 	// The server is implemented in OCaml
+    await initializeDefaultSettings();
     const config = vscode.workspace.getConfiguration();
     const serverPort = config.get<number>('kernel.serverPort') || 8005;
     const wrapperPort = config.get<number>('kernel.wrapperPort') || (serverPort + 1);
@@ -144,14 +267,10 @@ export function activate(context: ExtensionContext) {
         }
     }, null, context.subscriptions);
 
-    if (vscode.window.activeTextEditor) {
-        vscode.commands.executeCommand('acsl-lsp.debugAST');
-    }
-
     // 6. Register all Frama-C Commands
     registerAllExtensionCommands(context);
 
-    client.start();
+     client.start();
 }
 
 /**
@@ -541,7 +660,7 @@ export class FramaCProvider implements vscode.TreeDataProvider<FramaCItem> {
     private hideFunctions = false;
     private hideTypes = false; 
     private hideAnnotations = false;
-
+    private currentAstUri: string | undefined;
     refresh(): void {
         this._onDidChangeTreeData.fire();
     }
@@ -556,6 +675,7 @@ export class FramaCProvider implements vscode.TreeDataProvider<FramaCItem> {
     // --- Data update methods ---
     updateAST(uri: string, data: any) {
         this.astData.set(uri, data);
+        this.currentAstUri = uri;
         this.refresh();
     }
 
@@ -569,12 +689,6 @@ export class FramaCProvider implements vscode.TreeDataProvider<FramaCItem> {
     }
 
 async getChildren(element?: FramaCItem): Promise<FramaCItem[]> {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor) return [];
-    
-    const uriString = editor.document.uri.toString();
-    const data = this.astData.get(uriString);
-
     if (!element) {
         return [
             new FramaCItem("Functions", vscode.TreeItemCollapsibleState.Expanded, "cat_func"),
@@ -584,14 +698,17 @@ async getChildren(element?: FramaCItem): Promise<FramaCItem[]> {
         ];
     }
 
+    if (!this.currentAstUri) return [];
+    
+    const data = this.astData.get(this.currentAstUri);
     if (!data) return [];
+
     let children: FramaCItem[] = [];
 
     const resolveUri = (filePath: string) => {
-        if (!filePath) return editor.document.uri;
-
+        if (!filePath) return vscode.Uri.parse(this.currentAstUri!); // Fallback sécurisé
+        
         const workspacePath = workspace.workspaceFolders ? workspace.workspaceFolders[0].uri.fsPath : process.cwd();
-
         let cleanPath = filePath;
         if (cleanPath.startsWith('./')) {
             cleanPath = cleanPath.substring(2);
@@ -701,7 +818,6 @@ async function generateRecursiveIncludeGraph() {
         return;
     }
 
-    const workspacePath = get_workspace();
     const startFilePath = editor.document.fileName;
     const startFileName = path.basename(startFilePath);
 
@@ -713,87 +829,165 @@ async function generateRecursiveIncludeGraph() {
         }
 
         const visited = new Set<string>(); 
-        const edges = new Set<string>();   
-        const systemNodes = new Set<string>();
-        const nodesToProcess: string[] = [startFilePath]; 
-        const includeRegex = /^\s*#\s*include\s*(["<])([^">]+)([">])/gm;
+        const allNodesSet = new Set<string>(); 
+        const dependencies = new Map<string, Set<string>>(); 
+        
+        let nodesToProcess: string[] = [startFilePath]; 
 
-       
         while (nodesToProcess.length > 0) {
-            const currentPath = nodesToProcess.shift()!;
-            const currentName = path.basename(currentPath);
+            const currentPass = nodesToProcess.filter(p => !visited.has(path.basename(p)));
+            nodesToProcess = []; 
 
-            if (visited.has(currentName)) continue;
-            visited.add(currentName);
+            if (currentPass.length === 0) break;
 
-            try {
-                const content = await fs.promises.readFile(currentPath, 'utf-8');
-                let match;
+            currentPass.forEach(p => {
+                const name = path.basename(p);
+                visited.add(name);
+                allNodesSet.add(name);
+                if (!dependencies.has(name)) dependencies.set(name, new Set());
+            });
 
-                while ((match = includeRegex.exec(content)) !== null) {
-                    const includedName = path.basename(match[2]);
+            const readPromises = currentPass.map(async (filePath) => {
+                try {
+                    const content = await fs.promises.readFile(filePath, 'utf-8');
+                    const currentName = path.basename(filePath);
+                    let match;
                     
-                    edges.add(`    "${currentName}" -> "${includedName}";`);
+                    const localIncludeRegex = /^\s*#\s*include\s*(["<])([^">]+)([">])/gm;
 
-                    if (fileMap.has(includedName)) {
-                        if (!visited.has(includedName)) {
-                            nodesToProcess.push(fileMap.get(includedName)!);
+                    while ((match = localIncludeRegex.exec(content)) !== null) {
+                        const includedName = path.basename(match[2]);
+                        
+                        if (fileMap.has(includedName)) {
+                            dependencies.get(currentName)!.add(includedName);
+                            allNodesSet.add(includedName);
+
+                            if (!visited.has(includedName)) {
+                                nodesToProcess.push(fileMap.get(includedName)!);
+                            }
                         }
-                    } else {
-                        systemNodes.add(includedName);
                     }
+                } catch (err) {  }
+            });
+
+            await Promise.all(readPromises);
+        }
+
+        const allNodes = Array.from(allNodesSet).sort();
+
+        const panel = vscode.window.createWebviewPanel(
+            'includeMatrix',
+            `Matrice: ${startFileName}`,
+            vscode.ViewColumn.Active,
+            { enableScripts: true }
+        );
+
+        const htmlChunks: string[] = [];
+        
+        htmlChunks.push(`
+        <!DOCTYPE html>
+        <html lang="fr">
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body { font-family: var(--vscode-font-family); padding: 20px; color: var(--vscode-editor-foreground); background: var(--vscode-editor-background); }
+                .table-container { overflow: auto; max-height: 85vh; border: 1px solid var(--vscode-panel-border); }
+                /* 1. ON ENLÈVE BORDER-COLLAPSE (Boost de perf massif) */
+                table { 
+                    border-spacing: 0; 
+                    width: max-content; 
+                    border-top: 1px solid var(--vscode-panel-border);
+                    border-left: 1px solid var(--vscode-panel-border);
                 }
-            } catch (err) {  }
+                th, td { 
+                    border-bottom: 1px solid var(--vscode-panel-border); 
+                    border-right: 1px solid var(--vscode-panel-border); 
+                    padding: 8px; 
+                    text-align: center; 
+                }
+                /* En-têtes fixes (Haut et Gauche) */
+                th { 
+                    background-color: var(--vscode-editor-inactiveSelectionBackground); 
+                    position: sticky; 
+                    top: 0; 
+                    z-index: 10; 
+                    /* 2. ACCÉLÉRATION GPU : Le navigateur ne recalcule plus à chaque pixel */
+                    will-change: transform; 
+                    transform: translateZ(0);
+                }
+                th:first-child { 
+                    left: 0; 
+                    z-index: 20; 
+                    text-align: right; 
+                    background-color: var(--vscode-editor-selectionBackground);
+                    /* Accélération GPU pour la colonne de gauche */
+                    will-change: transform;
+                    transform: translateZ(0);
+                }
+                .col-header { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; padding-bottom: 10px; }
+                .yes { background-color: rgba(39, 174, 96, 0.5); color: white; font-weight: bold; }
+                .no { color: transparent; }
+                tr:hover td { background-color: var(--vscode-list-hoverBackground); }
+                .root-file { background-color: var(--vscode-editor-selectionBackground) !important; color: var(--vscode-editor-selectionForeground) !important; font-weight: bold !important; border: 2px solid var(--vscode-focusBorder) !important; }
+                .print-btn { background-color: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; padding: 8px 16px; font-size: 14px; cursor: pointer; margin-bottom: 15px; border-radius: 2px; }
+                .print-btn:hover { background-color: var(--vscode-button-hoverBackground); }
+                @media print {
+                    .print-btn, p { display: none; }
+                    .table-container { overflow: visible; max-height: none; border: none; }
+                    body { background: white; color: black; }
+                    th { background-color: #f0f0f0 !important; color: black !important; border: 1px solid #ccc !important; }
+                    td { border: 1px solid #ccc !important; }
+                    .root-file { border: 2px solid black !important; }
+                    .yes { background-color: #e0e0e0 !important; color: black !important; }
+                }
+            </style>
+        </head>
+        <body>
+            <h2>Matrice des inclusions pour <code>${startFileName}</code></h2>
+            <p>Lecture : Le fichier en ligne (gauche) inclut le fichier en colonne (haut).</p>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fichier source \\ Fichier inclus</th>
+        `);
+
+        for (const node of allNodes) {
+            const rootClass = (node === startFileName) ? "root-file" : "";
+            htmlChunks.push('<th class="' + rootClass + '"><div class="col-header">' + node + '</div></th>');
         }
 
-        let dotContent = "digraph RecursiveIncludeGraph {\n";
-        dotContent += "    rankdir=LR; overlap=false; splines=true;\n";
-        dotContent += "    node [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\", fontsize=10];\n";
-        dotContent += "    edge [color=\"#7f8c8d\", penwidth=1.0, arrowsize=0.7];\n\n";
+        htmlChunks.push('</tr></thead><tbody>');
 
-        dotContent += `    "${startFileName}" [fillcolor="#fcf3cf", color="#f1c40f", penwidth=2.0];\n`;
-
-        visited.forEach(node => {
-            if (node !== startFileName) {
-                dotContent += `    "${node}" [fillcolor="#d4efdf", color="#27ae60"];\n`;
-            }
-        });
-
-        systemNodes.forEach(node => {
-            dotContent += `    "${node}" [fillcolor="#ebedef", color="#a6acaf", style=\"rounded,dashed,filled\"];\n`;
-        });
-
-        edges.forEach(edge => dotContent += edge + "\n");
-        dotContent += "}\n";
-
-        const outDir = path.join(workspacePath, ".frama-c");
-        if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
-        
-        const fileNameBase = path.parse(startFileName).name;
-        const dotPath = path.join(outDir, `includes_cascade_${fileNameBase}.dot`);
-        const dotUri = vscode.Uri.file(dotPath);
-
-        fs.writeFileSync(dotPath, dotContent);
-
-        
-        const allCommands = await vscode.commands.getCommands();
-        
-       
-        const doc = await vscode.workspace.openTextDocument(dotUri);
-        
-     
-        if (allCommands.includes('graphviz-interactive-preview.preview.beside')) {
-            await vscode.window.showTextDocument(doc, vscode.ViewColumn.Active);
+        for (const rowFile of allNodes) {
+            const rootClass = (rowFile === startFileName) ? "root-file" : "";
+            htmlChunks.push('<tr><th class="' + rootClass + '">' + rowFile + '</th>');
             
-            await vscode.commands.executeCommand('graphviz-interactive-preview.preview.beside', dotUri);
-        } else {
-           
-            await vscode.window.showTextDocument(doc, vscode.ViewColumn.Beside);
-            vscode.window.showWarningMessage("Installe l'extension 'Graphviz Interactive Preview' pour voir le schéma visuel !");
+            const rowDeps = dependencies.get(rowFile); 
+            for (const colFile of allNodes) {
+                const isIncluded = rowDeps?.has(colFile);
+                if (isIncluded) {
+                    htmlChunks.push('<td class="yes" title="' + rowFile + ' inclut ' + colFile + '">✔</td>');
+                } else {
+                    htmlChunks.push('<td class="no"></td>');
+                }
+            }
+            htmlChunks.push('</tr>');
         }
+
+        htmlChunks.push(`
+                    </tbody>
+                </table>
+            </div>
+        </body>
+        </html>
+        `);
+
+      
+        panel.webview.html = htmlChunks.join('');
 
     } catch (error) { 
-        vscode.window.showErrorMessage("Erreur : " + error); 
+        vscode.window.showErrorMessage("Error: " + error); 
     }
 }
 export function deactivate() { if (client) return client.stop(); }

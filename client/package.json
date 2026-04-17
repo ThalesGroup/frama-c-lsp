@@ -136,10 +136,10 @@
             ],
             "view/title": [
                 {
-                    "command": "framaCExplorer.search",
+                    "command": "framaC.refreshAST",
                     "when": "view == framaCExplorer",
-                    "group": "navigation@1"
-                },
+                    "group": "navigation@1" 
+                    },
                 {
                     "command": "framaC.toggleFunctions",
                     "when": "view == framaCExplorer",
@@ -177,32 +177,32 @@
             "view/item/context": [
                 {
                     "command": "showScript",
-                    "when": "view == WPPan && viewItem == itemContext",
+                    "when": "view == wpGoalsView && viewItem == itemContext",
                     "group": "navigation"
                 },
                 {
                     "command": "showPO",
-                    "when": "view == WPPan && viewItem == itemContext",
+                    "when": "view == wpGoalsView && viewItem == itemContext",
                     "group": "navigation"
                 },
                 {
                     "command": "runAgain",
-                    "when": "view == WPPan && viewItem == itemContext",
+                    "when": "view == wpGoalsView && viewItem == itemContext",
                     "group": "navigation"
                 },
                 {
                     "command": "runAgainGui",
-                    "when": "view == WPPan && viewItem == itemContext",
+                    "when": "view == wpGoalsView && viewItem == itemContext",
                     "group": "navigation"
                 },
                 {
                     "command": "runAgainStrategies",
-                    "when": "view == WPPan && viewItem == itemContext",
+                    "when": "view == wpGoalsView && viewItem == itemContext",
                     "group": "navigation"
                 },
                 {
                     "command": "runAgainStrategiesGui",
-                    "when": "view == WPPan && viewItem == itemContext",
+                    "when": "view == wpGoalsView && viewItem == itemContext",
                     "group": "navigation"
                 }
             ]
@@ -227,17 +227,17 @@
         "commands": [
             {
             "command": "acsl.importProjectConfig",
-            "title": "ACSL: Importer Projet IDE",
+            "title": "ACSL: Import Project IDE",
             "icon": "$(project)" 
         },
         {
+    "command": "framaC.refreshAST",
+    "title": "Refresh AST",
+    "icon": "$(refresh)"
+  },
+        {
                 "command": "computeIncludeGraph",
                 "title": "Compute Include Graph"
-            },
-            {
-                "command": "framaCExplorer.search",
-                "title": "Filter Explorer",
-                "icon": "$(search)"
             },
             {
                 "command": "framaC.toggleFunctions",
