@@ -118,8 +118,9 @@ module WpOpt = struct
     wp_auto_width: int;
     wp_auto_backtrack: int;
     wp_filename_truncation: int;
+    wp_report_json : string option;
   }
-  let create ?wp_fct ?wp_prop ?wp_timeout ?wp_prover ?wp_smoke_tests ?wp_gen ?wp_script () = {
+  let create ?wp_fct ?wp_prop ?wp_timeout ?wp_prover ?wp_smoke_tests ?wp_gen ?wp_script ?wp_report_json () = {
     wp = true;
     wp_rte = !Configuration.global_params.wpRte;
     wp_prop = (match wp_prop with | None -> [] | Some p -> p);
@@ -140,6 +141,7 @@ module WpOpt = struct
     wp_auto_width = !Configuration.global_params.wpAutoWidth;
     wp_auto_backtrack = !Configuration.global_params.wpAutoBacktrack;
     wp_filename_truncation = !Configuration.global_params.wpFilenameTruncation;
+    wp_report_json;
   }
   let string_of_t (options : t) : string =
     let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in
@@ -164,7 +166,16 @@ module WpOpt = struct
     let wp_auto_width = Printf.sprintf "-wp-auto-width=%d" options.wp_auto_width in
     let wp_auto_backtrack = Printf.sprintf "-wp-auto-backtrack=%d" options.wp_auto_backtrack in
     let wp_filename_truncation = Printf.sprintf "-wp-filename-truncation=%d" options.wp_filename_truncation in
-    Printf.sprintf "%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s" wp_opt wp_prop_opt wp_fct_opt wp_gen_opt wp_rte_opt wp_pruning_opt wp_check_memory_model_opt wp_no_volatile_opt wp_prover_opt wp_timeout_opt wp_par_opt wp_session_opt wp_smoke_tests_opt wp_smoke_timeout_opt wp_script wp_cache wp_auto_depth wp_auto_width wp_auto_backtrack wp_filename_truncation
+    let wp_report_json_opt = match options.wp_report_json with
+      | None -> ""
+      | Some path -> Printf.sprintf "-wp-report-json %s" path
+    in
+
+    Printf.sprintf "%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s" 
+      wp_opt wp_prop_opt wp_fct_opt wp_gen_opt wp_rte_opt wp_pruning_opt wp_check_memory_model_opt 
+      wp_no_volatile_opt wp_prover_opt wp_timeout_opt wp_par_opt wp_session_opt wp_smoke_tests_opt 
+      wp_smoke_timeout_opt wp_script wp_cache wp_auto_depth wp_auto_width wp_auto_backtrack 
+      wp_filename_truncation wp_report_json_opt
 end
 
 module MetacslOpt = struct
@@ -846,7 +857,17 @@ let rq_handler json_string wrapper_port =
               let fct = check_fct func_name in
 
              let uncast_opt = UncastOpt.create () in
-             let wp_opt = WpOpt.create ~wp_fct:fct ~wp_prop:prop ~wp_gen:false ~wp_timeout:timeout () in
+             let root_dir = Printf.sprintf "%s/.frama-c" !rootPath in
+      if not (Sys.file_exists root_dir) then Unix.mkdir root_dir 0o755;
+      let report_json_path = Printf.sprintf "%s/latest_results.json" root_dir in
+      let wp_opt = WpOpt.create 
+          ~wp_fct:fct 
+          ~wp_prop:prop 
+          ~wp_gen:false 
+          ~wp_timeout:timeout 
+          ~wp_report_json:report_json_path 
+          () 
+      in
              let metacsl_opt = MetacslOpt.create () in
              
              let feature = Prove_feature ((Utils.id_to_int request.id), file, (String.concat "," fct), (String.concat "," prop)) in
@@ -919,9 +940,21 @@ let rq_handler json_string wrapper_port =
       in
       let prop = check_prop fct prop in
       let fct = check_fct fct in
+
+     
+      let root_dir = Printf.sprintf "%s/.frama-c" !rootPath in
+      if not (Sys.file_exists root_dir) then Unix.mkdir root_dir 0o755;
+      let report_json_path = Printf.sprintf "%s/latest_results.json" root_dir in
+      let wp_opt = WpOpt.create 
+          ~wp_fct:fct 
+          ~wp_prop:prop 
+          ~wp_gen:false 
+          ~wp_timeout:timeout 
+          ~wp_report_json:report_json_path (* <-- NEW ARGUMENT *)
+          () 
+      in
       let kernel_opt = KernelOpt.create ~strategies:false () in
       let uncast_opt = UncastOpt.create () in
-      let wp_opt = WpOpt.create ~wp_fct:fct ~wp_prop:prop ~wp_gen:false ~wp_timeout:timeout () in
       let metacsl_opt = MetacslOpt.create () in
       let feature = Prove_feature (id, file, (String.concat "," fct), (String.concat ","prop)) in
       let lsp_opt = LspOpt.create (feature) in

@@ -11,6 +11,224 @@ let framaCProvider: FramaCProvider;
 let wpDataProvider: MyTreeDataProvider; 
 let wpResultsView: vscode.TreeView<TreeItem>;
 
+
+
+let allGoalsRaw: any[] = []; 
+let activeFilters = { status: "all", smokeOnly: false, prover: "all", search: "" };
+
+// Store last used path for import/export
+let lastImportPath: string = "";
+let lastExportPath: string = "";
+
+
+async function uploadWpJson() {
+    const fileUri = await vscode.window.showOpenDialog({
+        canSelectMany: false,
+        openLabel: 'Import Frama-C results (JSON)',
+        defaultUri: lastImportPath ? vscode.Uri.file(lastImportPath) : undefined,
+        filters: { 'JSON': ['json'] }
+    });
+
+    if (!fileUri || !fileUri[0]) return;
+
+    lastImportPath = fileUri[0].fsPath;
+
+    try {
+        const content = fs.readFileSync(fileUri[0].fsPath, 'utf8');
+        const rawData = JSON.parse(content);
+
+        if (!rawData || rawData.length === 0) {
+            vscode.window.showWarningMessage("The JSON file is empty.");
+            return;
+        }
+
+        const replaceChoice = await window.showQuickPick(
+            [
+                { label: "Replace path prefix", description: "Replace a path prefix with local workspace" },
+                { label: "Keep original paths", description: "Keep file paths as they are in the JSON" }
+            ],
+            { placeHolder: "How should file paths be handled?" }
+        );
+
+        if (!replaceChoice) return;
+
+        const keepOriginalPaths = replaceChoice.label === "Keep original paths";
+        let normalizedPath = "";
+        const localWorkspace = get_workspace().replace(/\\/g, '/').replace(/\/$/, '');
+
+        if (!keepOriginalPaths) {
+            const pathToReplace = await vscode.window.showInputBox({
+                prompt: "Confirm the path prefix to be replaced by your current workspace:",
+                value: "",
+                ignoreFocusOut: true
+            });
+
+            if (pathToReplace === undefined || pathToReplace === "") return;
+            normalizedPath = pathToReplace.replace(/\\/g, '/').replace(/\/$/, '');
+        }
+
+        let missingFilesCount = 0;
+        allGoalsRaw = []; 
+
+        await vscode.window.withProgress({
+            location: vscode.ProgressLocation.Notification,
+            title: "Processing goals...",
+            cancellable: false
+        }, async (progress) => {
+            for (let i = 0; i < rawData.length; i++) {
+                const item = rawData[i];
+                let originalPath = (item.file || "").replace(/\\/g, '/');
+                
+                if (keepOriginalPaths) {
+                    item._localPath = originalPath;
+                } else if (normalizedPath && originalPath.startsWith(normalizedPath)) {
+                    const absoluteLocalPath = originalPath.replace(normalizedPath, localWorkspace);
+                    
+                    if (i % 100 === 0 && !fs.existsSync(absoluteLocalPath)) {
+                        missingFilesCount++;
+                    }
+
+                    const relativePart = absoluteLocalPath.replace(localWorkspace + '/', '');
+                    item._localPath = "./" + relativePart;
+                } else {
+                    item._localPath = originalPath;
+                }
+
+                allGoalsRaw.push(item);
+
+
+                if (i % 5000 === 0) {
+                    progress.report({ increment: (5000 / rawData.length) * 100 });
+                    await new Promise(resolve => setTimeout(resolve, 1));
+                }
+            }
+        });
+
+
+        activeFilters = { status: "all", smokeOnly: false, prover: "all", search: "" };
+        applyFiltersAndRefreshUI();
+        
+        vscode.commands.executeCommand('wpGoalsView.focus');
+        vscode.window.showInformationMessage(`Imported ${allGoalsRaw.length} goals successfully.`);
+
+    } catch (err) {
+        vscode.window.showErrorMessage("Error during import: " + err);
+    }
+}
+
+
+function applyFiltersAndRefreshUI() {
+    if (allGoalsRaw.length === 0) return;
+
+    const fullyFilteredDataset = allGoalsRaw.filter(item => {
+        const status = item.passed ? "passed" : (item.verdict === "timeout" ? "unknown" : "failed");
+        if (activeFilters.status !== "all" && status !== activeFilters.status) return false;
+        if (activeFilters.smokeOnly && item.smoke !== true) return false;
+        
+        const provers = (item.provers && item.provers.length > 0) ? item.provers : [{ prover: "qed", time: 0 }];
+        const hasMatchingProver = provers.some((p: any) => 
+            (p.prover || "qed").toLowerCase().includes(activeFilters.prover.toLowerCase())
+        );
+        if (activeFilters.prover !== "all" && !hasMatchingProver) return false;
+
+        if (activeFilters.search) {
+            const term = activeFilters.search.toLowerCase();
+            const funcMatch = (item.function || "").toLowerCase().includes(term);
+            const fileMatch = (item._localPath || item.file || "").toLowerCase().includes(term);
+            if (!funcMatch && !fileMatch) return false;
+        }
+
+        return true; 
+    });
+
+    
+    const MAX_DISPLAY = 10000;
+    const toDisplay = fullyFilteredDataset.slice(0, MAX_DISPLAY);
+
+    
+    const formatted = toDisplay.map(item => {
+        const status = item.passed ? "passed" : (item.verdict === "timeout" ? "unknown" : "failed");
+        
+        let proverInfo = "(qed 0)";
+        if (item.provers && item.provers.length > 0 && item.provers[0]) {
+            const proverParts: string[] = [];
+            for (const p of item.provers) {
+                if (p && p.prover) {
+                    const proverName = p.prover;
+                    const proverTime = (p.time !== undefined && p.time !== null) ? p.time : "?";
+                    proverParts.push(`(${proverName} ${proverTime})`);
+                }
+            }
+            if (proverParts.length > 0) {
+                proverInfo = proverParts.join(" ");
+            }
+        }
+        
+   
+        return {
+            status: status,
+            goal: item.goal || "goal",
+            file: item._localPath || "",
+            line: item.line || 1,
+            proverInfo: proverInfo,
+            script: item.script || "",
+            function: item.function || ""
+        };
+    });
+
+    if (fullyFilteredDataset.length > MAX_DISPLAY) {
+        formatted.unshift({
+            status: "⚠️ SYSTEM",
+            goal: `SHOWING ${MAX_DISPLAY} OUT OF ${fullyFilteredDataset.length} GOALS`,
+            file: "./",
+            line: 0,
+            proverInfo: "Please refine your search.",
+            script: "",
+            function: ""
+        });
+    }
+
+    lastWpData = formatted as any;
+    wpDataProvider.update(["Filtered", "All", "All", formatted]);
+    wpDataProvider.refresh();
+    setTimeout(() => updateDecorations(), 200);}
+
+async function downloadWpJson() {
+    const workspacePath = get_workspace();
+   
+    const hiddenArtifactPath = path.join(workspacePath, '.frama-c', 'latest_results.json');
+
+    if (!fs.existsSync(hiddenArtifactPath)) {
+        vscode.window.showWarningMessage("No proof results available. Please run a proof first.");
+        return;
+    }
+
+    const now = new Date();
+    const timestamp = now.toISOString().replace(/[:.]/g, '-').substring(0, 19);
+    const defaultFileName = `proof_results_${timestamp}.json`;
+
+    const defaultUri = lastExportPath 
+        ? vscode.Uri.file(lastExportPath) 
+        : vscode.Uri.file(path.join(workspacePath, defaultFileName));
+
+    const saveUri = await vscode.window.showSaveDialog({
+        defaultUri: defaultUri,
+        filters: { 'JSON': ['json'] },
+        saveLabel: 'Export Frama-C Results'
+    });
+
+    if (!saveUri) return;
+
+    lastExportPath = path.dirname(saveUri.fsPath);
+
+    try {
+        fs.copyFileSync(hiddenArtifactPath, saveUri.fsPath);
+        vscode.window.showInformationMessage("Results successfully exported!");
+    } catch (err) {
+        vscode.window.showErrorMessage("Failed to export JSON: " + err);
+    }
+}
+
 const createGutterIcon = (color: string) => {
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="${color}"/></svg>`;
     const encoded = Buffer.from(svg).toString('base64');
@@ -129,15 +347,25 @@ function updateDecorations() {
         }
         const lineStatusMap = new Map<number, LineInfo>();
 
-        lastWpData.forEach(item => {
-            const p = item.trim().split(":");
-            if (p.length < 5) return; 
+        lastWpData.forEach((item: any) => {
+            let status: string, goalId: string, itemFileName: string, line: number, proverInfo: string;
 
-            const status = p[0].trim().toLowerCase();
-            const goalId = p[1].trim(); 
-            const itemFileName = path.basename(p[2].trim());
-            const line = parseInt(p[3].trim(), 10) - 1;
-            const proverInfo = p[4] ? p[4].trim() : ""; 
+            if (typeof item === 'string') {
+                const p = item.trim().split(":");
+                if (p.length < 5) return; 
+                status = p[0].trim().toLowerCase();
+                goalId = p[1].trim(); 
+                itemFileName = path.basename(p[2].trim());
+                line = parseInt(p[3].trim(), 10) - 1;
+                proverInfo = p[4] ? p[4].trim() : ""; 
+            } else {
+                if (!item || !item.status) return; 
+                status = item.status.toLowerCase();
+                goalId = item.goal;
+                itemFileName = path.basename(item.file);
+                line = item.line - 1;
+                proverInfo = item.proverInfo;
+            }
 
             if (itemFileName === currentFileName && !isNaN(line)) {
                 if (!lineStatusMap.has(line)) {
@@ -440,8 +668,8 @@ commands.registerCommand('framaC.refreshAST', () => {
         }),
 
         commands.registerCommand('computeIncludeGraph', async () => {
-            await generateRecursiveIncludeGraph();
-			
+            await showCallgraphMatrix();
+
         }),
         // --- Proof Commands ---
         commands.registerCommand('showPOVC', async () => {
@@ -597,7 +825,54 @@ commands.registerCommand('framaC.refreshAST', () => {
         commands.registerCommand('stop', async () => {
             try { await client.sendRequest('stop'); window.showInformationMessage('Stopped processes'); }
             catch (err) { window.showErrorMessage('Failed to stop: ' + err); }
-        })
+        }),
+       
+        commands.registerCommand('wpFilters.search', async () => {
+            const query = await window.showInputBox({ 
+                prompt: "Search by function or file name...",
+                value: activeFilters.search
+            });
+            if (query !== undefined) {
+                activeFilters.search = query.trim();
+                applyFiltersAndRefreshUI();
+            }
+        }),
+
+    
+        commands.registerCommand('wpFilters.filterStatus', async () => {
+            const options = ["all", "passed", "failed", "unknown"];
+            const choice = await window.showQuickPick(options, { placeHolder: "Select Goal Status" });
+            if (choice) {
+                activeFilters.status = choice;
+                applyFiltersAndRefreshUI();
+            }
+        }),
+
+        
+        commands.registerCommand('wpFilters.toggleSmoke', () => {
+            activeFilters.smokeOnly = !activeFilters.smokeOnly;
+            window.showInformationMessage(`Smoke tests only: ${activeFilters.smokeOnly ? "ON" : "OFF"}`);
+            applyFiltersAndRefreshUI();
+        }),
+
+
+        commands.registerCommand('wpFilters.filterProver', async () => {
+            const options = ["all", "qed", "Alt-Ergo", "Z3"];
+            const choice = await window.showQuickPick(options, { placeHolder: "Select Prover" });
+            if (choice) {
+                activeFilters.prover = choice;
+                applyFiltersAndRefreshUI();
+            }
+        }),
+
+    
+        commands.registerCommand('wpFilters.clearAll', () => {
+            activeFilters = { status: "all", smokeOnly: false, prover: "all", search: "" };
+            applyFiltersAndRefreshUI();
+            window.showInformationMessage("All filters cleared.");
+        }),
+        commands.registerCommand('wpGoalsView.downloadJson', () => downloadWpJson()),
+        commands.registerCommand('wpGoalsView.uploadJson', () => uploadWpJson()),
     );
 }
 
@@ -610,23 +885,70 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
     update(data: any) {
         if (Array.isArray(data)) {
             let [filename_id, fct_id, prop_id, jsonData] = data;
-			if (jsonData && Array.isArray(jsonData)) {
+            if (jsonData && Array.isArray(jsonData)) {
                 lastWpData = jsonData;
+                if (filename_id !== "Filtered" && filename_id !== "Imported") {
+                    allGoalsRaw = jsonData.map((item: string) => {
+                        const p = item.trim().split(":");
+                        return {
+                            passed: p[0] === "passed",
+                            verdict: p[0] === "unknown" ? "timeout" : (p[0] === "passed" ? "valid" : "failed"),
+                            goal: p[1] || "goal",
+                            file: p[2] || "",
+                            _localPath: p[2] || "",
+                            line: parseInt(p[3] || "1", 10),
+                            provers: [{ prover: p[4] || "qed" }],
+                            script: p[5] || "",
+                            function: p[6] || "",
+                            smoke: false // (By default)
+                        };
+                    });
+                    activeFilters = { status: "all", smokeOnly: false, prover: "all", search: "" };
+                }
+
             } else {
                 lastWpData = [];
+                if (filename_id !== "Filtered" && filename_id !== "Imported") {
+                    allGoalsRaw = [];
+                }
             }
+            
             updateDecorations();
+            
             if (!jsonData || jsonData.length === 0) {
                 this.data = [new TreeItem("No goals !")];
             } else {
-                this.data = jsonData.map((item: string) => {
-                    const p = item.trim().split(":");
-                    const t_item = new TreeItem(p[0].trim(), `${p[1]} ${p[4]}`, p[2], p[6], p[1], p[5], filename_id, fct_id, prop_id, 'itemContext');
+                this.data = jsonData.map((item: any) => {
+                    let status: string, goal: string, file: string, line: string, proverInfo: string, script: string, func: string;
+
+                    if (typeof item === 'string') {
+                        const p = item.trim().split(":");
+                        status = p[0].trim();
+                        goal = p[1] || "";
+                        file = p[2] || "";
+                        line = p[3] || "1";
+                        proverInfo = p[4] || "";
+                        script = p[5] || "";
+                        func = p[6] || "";
+                    } else {
+                        status = item.status;
+                        goal = item.goal;
+                        file = item.file;
+                        line = String(item.line);
+                        proverInfo = item.proverInfo;
+                        script = item.script;
+                        func = item.function;
+                    }
+
+                    const t_item = new TreeItem(status, `${goal} ${proverInfo}`, file, func, goal, script, filename_id, fct_id, prop_id, 'itemContext');
                     const workspacePath = get_workspace();
+                    
+                    const absolutePath = path.resolve(workspacePath, file);
+                    
                     t_item.command = {
                         command: 'vscode.open',
                         title: 'Open File',
-                        arguments: [vscode.Uri.file(path.join(workspacePath, p[2])).with({ fragment: `L${p[3]}` })]
+                        arguments: [vscode.Uri.file(absolutePath).with({ fragment: `L${line}` })]
                     };
                     return t_item;
                 });
@@ -812,78 +1134,110 @@ async function get_proof_args(gui: boolean) {
     if (!editor || !f || !p) return null;
     return [editor.document.fileName, f, p, parseInt(t || "10"), gui];
 }
-async function generateRecursiveIncludeGraph() {
+async function showCallgraphMatrix() {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
         return;
     }
 
-    const startFilePath = editor.document.fileName;
-    const startFileName = path.basename(startFilePath);
+    const workspacePath = get_workspace();
+    const filePath = editor.document.fileName;
+    const fileNameBase = path.basename(filePath, path.extname(filePath));
+    const dotFilePath = path.join(workspacePath, ".frama-c", `fc_${fileNameBase}.dot`);
+
+    if (!fs.existsSync(dotFilePath)) {
+        vscode.window.showWarningMessage(`Le fichier ${dotFilePath} n'existe pas.`);
+        return;
+    }
 
     try {
-        const allLocalFiles = await vscode.workspace.findFiles('**/*.{c,h}', '**/{node_modules,.git,build,obj}/**');
-        const fileMap = new Map<string, string>();
-        for (const file of allLocalFiles) {
-            fileMap.set(path.basename(file.fsPath), file.fsPath);
-        }
+       
+        const dotContent = fs.readFileSync(dotFilePath, 'utf-8');
 
-        const visited = new Set<string>(); 
-        const allNodesSet = new Set<string>(); 
-        const dependencies = new Map<string, Set<string>>(); 
+        const funcCalls = new Map<string, Set<string>>(); 
+        const dotRegex = /(?:"?([a-zA-Z0-9_]+)"?)\s*->\s*(?:"?([a-zA-Z0-9_]+)"?)/g;
+        let match;
+        let dotLinkCount = 0;
+        while ((match = dotRegex.exec(dotContent)) !== null) {
+            const caller = match[1];
+            const callee = match[2];
+            if (!funcCalls.has(caller)) funcCalls.set(caller, new Set());
+            funcCalls.get(caller)!.add(callee);
+            dotLinkCount++;
+        }
         
-        let nodesToProcess: string[] = [startFilePath]; 
+       
 
-        while (nodesToProcess.length > 0) {
-            const currentPass = nodesToProcess.filter(p => !visited.has(path.basename(p)));
-            nodesToProcess = []; 
+        
+        const allFiles = await vscode.workspace.findFiles('**/*.{c,h}', '**/{node_modules,.git,build,obj}/**');
+        const funcToFile = new Map<string, string>(); 
+        
+        const cFuncRegex = /(?:^|\n)(?:\w+\s+)+\**([a-zA-Z_][a-zA-Z0-9_]*)\s*\([^;]*\)\s*(?:\{|;)/g;
 
-            if (currentPass.length === 0) break;
-
-            currentPass.forEach(p => {
-                const name = path.basename(p);
-                visited.add(name);
-                allNodesSet.add(name);
-                if (!dependencies.has(name)) dependencies.set(name, new Set());
-            });
-
-            const readPromises = currentPass.map(async (filePath) => {
-                try {
-                    const content = await fs.promises.readFile(filePath, 'utf-8');
-                    const currentName = path.basename(filePath);
-                    let match;
-                    
-                    const localIncludeRegex = /^\s*#\s*include\s*(["<])([^">]+)([">])/gm;
-
-                    while ((match = localIncludeRegex.exec(content)) !== null) {
-                        const includedName = path.basename(match[2]);
-                        
-                        if (fileMap.has(includedName)) {
-                            dependencies.get(currentName)!.add(includedName);
-                            allNodesSet.add(includedName);
-
-                            if (!visited.has(includedName)) {
-                                nodesToProcess.push(fileMap.get(includedName)!);
-                            }
-                        }
+        for (const file of allFiles) {
+            const fileName = path.basename(file.fsPath);
+            const content = fs.readFileSync(file.fsPath, 'utf-8');
+            let funcMatch;
+            while ((funcMatch = cFuncRegex.exec(content)) !== null) {
+                const funcName = funcMatch[1];
+                if (!['if', 'while', 'for', 'switch', 'return'].includes(funcName)) {
+                    if (!funcToFile.has(funcName) || fileName.endsWith('.c')) {
+                        funcToFile.set(funcName, fileName);
                     }
-                } catch (err) {  }
-            });
+                }
+            }
+        }
+        const fileDependencies = new Map<string, Set<string>>(); 
+        const allCallerFiles = new Set<string>(); 
+        const allCalleeFiles = new Set<string>(); 
 
-            await Promise.all(readPromises);
+        let matchCount = 0;
+        let missingFuncs = new Set<string>();
+
+        funcCalls.forEach((callees, callerFunc) => {
+            const callerFile = funcToFile.get(callerFunc);
+            
+            if (!callerFile) {
+                missingFuncs.add(callerFunc);
+                return;
+            }
+            if (!callerFile.endsWith('.c')) return; 
+
+            allCallerFiles.add(callerFile);
+            if (!fileDependencies.has(callerFile)) fileDependencies.set(callerFile, new Set());
+
+            callees.forEach(calleeFunc => {
+                const calleeFile = funcToFile.get(calleeFunc);
+                if (calleeFile) {
+                    allCalleeFiles.add(calleeFile);
+                    fileDependencies.get(callerFile)!.add(calleeFile);
+                    matchCount++;
+                } else {
+                    missingFuncs.add(calleeFunc);
+                }
+            });
+        });
+
+       
+        const columns = Array.from(allCallerFiles).sort();
+        const rows = Array.from(allCalleeFiles).sort();
+
+       
+
+        if (columns.length === 0 || rows.length === 0) {
+            vscode.window.showErrorMessage("Matrice vide");
+            return;
         }
 
-        const allNodes = Array.from(allNodesSet).sort();
-
+        
         const panel = vscode.window.createWebviewPanel(
-            'includeMatrix',
-            `Matrice: ${startFileName}`,
+            'callgraphMatrix',
+            `Matrix: ${fileNameBase}`,
             vscode.ViewColumn.Active,
             { enableScripts: true }
         );
 
         const htmlChunks: string[] = [];
-        
         htmlChunks.push(`
         <!DOCTYPE html>
         <html lang="fr">
@@ -892,102 +1246,43 @@ async function generateRecursiveIncludeGraph() {
             <style>
                 body { font-family: var(--vscode-font-family); padding: 20px; color: var(--vscode-editor-foreground); background: var(--vscode-editor-background); }
                 .table-container { overflow: auto; max-height: 85vh; border: 1px solid var(--vscode-panel-border); }
-                /* 1. ON ENLÈVE BORDER-COLLAPSE (Boost de perf massif) */
-                table { 
-                    border-spacing: 0; 
-                    width: max-content; 
-                    border-top: 1px solid var(--vscode-panel-border);
-                    border-left: 1px solid var(--vscode-panel-border);
-                }
-                th, td { 
-                    border-bottom: 1px solid var(--vscode-panel-border); 
-                    border-right: 1px solid var(--vscode-panel-border); 
-                    padding: 8px; 
-                    text-align: center; 
-                }
-                /* En-têtes fixes (Haut et Gauche) */
-                th { 
-                    background-color: var(--vscode-editor-inactiveSelectionBackground); 
-                    position: sticky; 
-                    top: 0; 
-                    z-index: 10; 
-                    /* 2. ACCÉLÉRATION GPU : Le navigateur ne recalcule plus à chaque pixel */
-                    will-change: transform; 
-                    transform: translateZ(0);
-                }
-                th:first-child { 
-                    left: 0; 
-                    z-index: 20; 
-                    text-align: right; 
-                    background-color: var(--vscode-editor-selectionBackground);
-                    /* Accélération GPU pour la colonne de gauche */
-                    will-change: transform;
-                    transform: translateZ(0);
-                }
+                table { border-spacing: 0; width: max-content; }
+                th, td { border-bottom: 1px solid var(--vscode-panel-border); border-right: 1px solid var(--vscode-panel-border); padding: 8px; text-align: center; }
+                th { background-color: var(--vscode-editor-inactiveSelectionBackground); position: sticky; top: 0; z-index: 10; }
+                th:first-child { left: 0; z-index: 20; text-align: right; background-color: var(--vscode-editor-selectionBackground); }
                 .col-header { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; padding-bottom: 10px; }
-                .yes { background-color: rgba(39, 174, 96, 0.5); color: white; font-weight: bold; }
+                .yes { background-color: rgba(60, 179, 113, 0.5); color: white; font-weight: bold; }
                 .no { color: transparent; }
                 tr:hover td { background-color: var(--vscode-list-hoverBackground); }
-                .root-file { background-color: var(--vscode-editor-selectionBackground) !important; color: var(--vscode-editor-selectionForeground) !important; font-weight: bold !important; border: 2px solid var(--vscode-focusBorder) !important; }
-                .print-btn { background-color: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; padding: 8px 16px; font-size: 14px; cursor: pointer; margin-bottom: 15px; border-radius: 2px; }
-                .print-btn:hover { background-color: var(--vscode-button-hoverBackground); }
-                @media print {
-                    .print-btn, p { display: none; }
-                    .table-container { overflow: visible; max-height: none; border: none; }
-                    body { background: white; color: black; }
-                    th { background-color: #f0f0f0 !important; color: black !important; border: 1px solid #ccc !important; }
-                    td { border: 1px solid #ccc !important; }
-                    .root-file { border: 2px solid black !important; }
-                    .yes { background-color: #e0e0e0 !important; color: black !important; }
-                }
             </style>
         </head>
         <body>
-            <h2>Matrice des inclusions pour <code>${startFileName}</code></h2>
-            <p>Lecture : Le fichier en ligne (gauche) inclut le fichier en colonne (haut).</p>
+            <h2>Matrice de Dépendance d'Appels (Callgraph)</h2>
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
-                            <th>Fichier source \\ Fichier inclus</th>
+                            <th>Fichier appelé \\ Fichiers appelants ➜</th>
         `);
 
-        for (const node of allNodes) {
-            const rootClass = (node === startFileName) ? "root-file" : "";
-            htmlChunks.push('<th class="' + rootClass + '"><div class="col-header">' + node + '</div></th>');
-        }
-
+        for (const col of columns) htmlChunks.push(`<th><div class="col-header">${col}</div></th>`);
         htmlChunks.push('</tr></thead><tbody>');
 
-        for (const rowFile of allNodes) {
-            const rootClass = (rowFile === startFileName) ? "root-file" : "";
-            htmlChunks.push('<tr><th class="' + rootClass + '">' + rowFile + '</th>');
-            
-            const rowDeps = dependencies.get(rowFile); 
-            for (const colFile of allNodes) {
-                const isIncluded = rowDeps?.has(colFile);
-                if (isIncluded) {
-                    htmlChunks.push('<td class="yes" title="' + rowFile + ' inclut ' + colFile + '">✔</td>');
-                } else {
-                    htmlChunks.push('<td class="no"></td>');
-                }
+        for (const row of rows) {
+            htmlChunks.push(`<tr><th>${row}</th>`);
+            for (const col of columns) {
+                const isCalling = fileDependencies.get(col)?.has(row);
+                if (isCalling) htmlChunks.push(`<td class="yes">✔</td>`);
+                else htmlChunks.push(`<td class="no"></td>`);
             }
             htmlChunks.push('</tr>');
         }
 
-        htmlChunks.push(`
-                    </tbody>
-                </table>
-            </div>
-        </body>
-        </html>
-        `);
-
-      
+        htmlChunks.push(`</tbody></table></div></body></html>`);
         panel.webview.html = htmlChunks.join('');
 
-    } catch (error) { 
-        vscode.window.showErrorMessage("Error: " + error); 
+    } catch (error) {
+        vscode.window.showErrorMessage("Error: " + error);
     }
 }
 export function deactivate() { if (client) return client.stop(); }

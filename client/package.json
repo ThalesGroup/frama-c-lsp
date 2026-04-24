@@ -136,6 +136,44 @@
             ],
             "view/title": [
                 {
+  "command": "wpGoalsView.downloadJson",
+  "when": "view == wpGoalsView",
+  "group": "navigation@0" 
+},
+            
+        {
+          "command": "wpGoalsView.uploadJson",
+          "when": "view == wpGoalsView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "wpFilters.search",
+          "when": "view == wpGoalsView",
+          "group": "navigation@2"
+        },
+        {
+          "command": "wpFilters.filterStatus",
+          "when": "view == wpGoalsView",
+          "group": "navigation@3"
+        },
+        {
+          "command": "wpFilters.filterProver",
+          "when": "view == wpGoalsView",
+          "group": "navigation@4"
+        },
+        {
+          "command": "wpFilters.toggleSmoke",
+          "when": "view == wpGoalsView",
+          "group": "navigation@5"
+        },
+        {
+          "command": "wpFilters.clearAll",
+          "when": "view == wpGoalsView",
+          "group": "navigation@6"
+        },
+   
+   
+                {
                     "command": "framaC.refreshAST",
                     "when": "view == framaCExplorer",
                     "group": "navigation@1" 
@@ -225,6 +263,41 @@
             }
         ],
         "commands": [
+            {
+  "command": "wpGoalsView.downloadJson",
+  "title": "WP: Export Results to JSON",
+  "icon": "$(cloud-download)"
+},
+      {
+        "command": "wpFilters.search",
+        "title": "WP: Search Goals",
+        "icon": "$(search)"
+      },
+      {
+        "command": "wpFilters.filterStatus",
+        "title": "WP: Filter by Status",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "wpFilters.filterProver",
+        "title": "WP: Filter by Prover",
+        "icon": "$(circuit-board)"
+      },
+      {
+        "command": "wpFilters.toggleSmoke",
+        "title": "WP: Toggle Smoke Tests",
+        "icon": "$(flame)"
+      },
+      {
+        "command": "wpFilters.clearAll",
+        "title": "WP: Clear All Filters",
+        "icon": "$(clear-all)"
+      },
+            {
+    "command": "wpGoalsView.uploadJson",
+    "title": "Upload WP Results (JSON)",
+    "icon": "$(cloud-upload)"
+},
             {
             "command": "acsl.importProjectConfig",
             "title": "ACSL: Import Project IDE",
