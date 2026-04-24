@@ -265,7 +265,7 @@
         "commands": [
             {
   "command": "wpGoalsView.downloadJson",
-  "title": "WP: Export Results to JSON",
+  "title": "Export WP Results (JSON)",
   "icon": "$(cloud-download)"
 },
       {
