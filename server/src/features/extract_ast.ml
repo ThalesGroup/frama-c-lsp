@@ -61,7 +61,7 @@ let compute_and_serialize id current_file_uri =
     | GEnumTag (ei, _) ->
         types := (`Assoc [ ("name", `String ei.ename); ("type", `String "type"); ("line", `Int line); ("file", `String file) ]) :: !types
 
-    | GAnnot (ga, _) when is_current_file ->
+    | GAnnot (ga, _) ->
         let name = ga_name ga in
         if name <> "" then
           annotations := (`Assoc [

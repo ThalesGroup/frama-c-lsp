@@ -14,7 +14,16 @@ let wpResultsView: vscode.TreeView<TreeItem>;
 
 
 let allGoalsRaw: any[] = []; 
-let activeFilters = { status: "all", smokeOnly: false, prover: "all", search: "" };
+let activeFilters = { 
+    status: "all", 
+    smokeOnly: false, 
+    prover: "all", 
+    search: "", 
+    function: "", 
+    file: "",      
+    type: "",      
+    sortByTime: false 
+};
 
 // Store last used path for import/export
 let lastImportPath: string = "";
@@ -44,7 +53,7 @@ async function uploadWpJson() {
 
         const replaceChoice = await window.showQuickPick(
             [
-                { label: "Replace path prefix", description: "Replace a path prefix with local workspace" },
+                { label: "Replace path prefix", description: "Replace workspace path" },
                 { label: "Keep original paths", description: "Keep file paths as they are in the JSON" }
             ],
             { placeHolder: "How should file paths be handled?" }
@@ -57,9 +66,15 @@ async function uploadWpJson() {
         const localWorkspace = get_workspace().replace(/\\/g, '/').replace(/\/$/, '');
 
         if (!keepOriginalPaths) {
+            let guessedPath = "";
+            if (rawData[0] && rawData[0].file) {
+                const firstFilePath = rawData[0].file.replace(/\\/g, '/');
+                guessedPath = firstFilePath.substring(0, firstFilePath.lastIndexOf('/'));
+            }
+
             const pathToReplace = await vscode.window.showInputBox({
-                prompt: "Confirm the path prefix to be replaced by your current workspace:",
-                value: "",
+                prompt: "Choose or edit the path prefix to be replaced by your current workspace:",
+                value: guessedPath, // Pre-fill with the guessed path
                 ignoreFocusOut: true
             });
 
@@ -96,7 +111,6 @@ async function uploadWpJson() {
 
                 allGoalsRaw.push(item);
 
-
                 if (i % 5000 === 0) {
                     progress.report({ increment: (5000 / rawData.length) * 100 });
                     await new Promise(resolve => setTimeout(resolve, 1));
@@ -104,8 +118,7 @@ async function uploadWpJson() {
             }
         });
 
-
-        activeFilters = { status: "all", smokeOnly: false, prover: "all", search: "" };
+        activeFilters = { status: "all", smokeOnly: false, prover: "all", search: "", function: "", file: "", type: "", sortByTime: false };
         applyFiltersAndRefreshUI();
         
         vscode.commands.executeCommand('wpGoalsView.focus');
@@ -120,28 +133,44 @@ async function uploadWpJson() {
 function applyFiltersAndRefreshUI() {
     if (allGoalsRaw.length === 0) return;
 
-    const fullyFilteredDataset = allGoalsRaw.filter(item => {
+    let fullyFilteredDataset = allGoalsRaw.filter(item => {
         const status = item.passed ? "passed" : (item.verdict === "timeout" ? "unknown" : "failed");
+        
         if (activeFilters.status !== "all" && status !== activeFilters.status) return false;
         if (activeFilters.smokeOnly && item.smoke !== true) return false;
         
+        // 2. Provers
         const provers = (item.provers && item.provers.length > 0) ? item.provers : [{ prover: "qed", time: 0 }];
         const hasMatchingProver = provers.some((p: any) => 
             (p.prover || "qed").toLowerCase().includes(activeFilters.prover.toLowerCase())
         );
         if (activeFilters.prover !== "all" && !hasMatchingProver) return false;
 
+        // 3. Specific Filters (Function, File, Type/Property)
+        if (activeFilters.function && !(item.function || "").toLowerCase().includes(activeFilters.function.toLowerCase())) return false;
+        if (activeFilters.file && !(item._localPath || item.file || "").toLowerCase().includes(activeFilters.file.toLowerCase())) return false;
+        if (activeFilters.type && !(item.property || item.goal || "").toLowerCase().includes(activeFilters.type.toLowerCase())) return false;
+
+        // 4. Global Search (Fallback)
         if (activeFilters.search) {
             const term = activeFilters.search.toLowerCase();
             const funcMatch = (item.function || "").toLowerCase().includes(term);
             const fileMatch = (item._localPath || item.file || "").toLowerCase().includes(term);
-            if (!funcMatch && !fileMatch) return false;
+            const propMatch = (item.property || item.goal || "").toLowerCase().includes(term);
+            if (!funcMatch && !fileMatch && !propMatch) return false;
         }
 
         return true; 
     });
 
-    
+    // Apply Time Sorting
+    if (activeFilters.sortByTime) {
+        fullyFilteredDataset.sort((a, b) => {
+            const getMaxTime = (provers: any[]) => Math.max(...(provers || []).map(p => parseFloat(p.time) || 0), 0);
+            return getMaxTime(b.provers) - getMaxTime(a.provers);
+        });
+    }
+
     const MAX_DISPLAY = 10000;
     const toDisplay = fullyFilteredDataset.slice(0, MAX_DISPLAY);
 
@@ -163,8 +192,8 @@ function applyFiltersAndRefreshUI() {
                 proverInfo = proverParts.join(" ");
             }
         }
+
         
-   
         return {
             status: status,
             goal: item.goal || "goal",
@@ -330,9 +359,9 @@ async function initializeDefaultSettings() {
 
     try {
         fs.writeFileSync(settingsPath, JSON.stringify(defaultSettings, null, 4), 'utf-8');
-        vscode.window.showInformationMessage("Configuration JCAT initialisée avec succès.");
+        vscode.window.showInformationMessage("JCAT configuration initialized successfully.");
     } catch (error) {
-        console.error("Erreur d'initialisation :", error);
+        console.error("Initialization error:", error);
     }
 }
 function updateDecorations() {
@@ -440,8 +469,7 @@ export async function activate(context: ExtensionContext) {
     importStatusBarItem.tooltip = 'Click to Import Config File';
     importStatusBarItem.show();
     context.subscriptions.push(importStatusBarItem);
-	// If the extension is launched in debug mode then the debug server options are used
-	// Otherwise the run options are used
+
 	const serverOptions: ServerOptions = {
 		run: {command: serverModuleRun,	transport: { kind: TransportKind.socket, port: serverPort }, options: { shell: true }},
 		debug: {command: serverModuleDebug,	transport: { kind: TransportKind.socket, port: serverPort }, options: { shell: true }}
@@ -449,8 +477,10 @@ export async function activate(context: ExtensionContext) {
 
 	// Options to control the language client
 	const clientOptions: LanguageClientOptions = {
-		// Register the server for c files containing acsl annotations
-		documentSelector: [{ scheme: 'file', language: 'c' },
+		// Register the server for c and h files containing acsl annotations
+		documentSelector: [
+			{ scheme: 'file', language: 'c' },
+			{ scheme: 'file', language: 'h' },
 			{ scheme: 'file', language: 'acsl' }
 		],
 		// Notify the server about file changes to '.clientrc files contained in the workspace
@@ -490,7 +520,7 @@ export async function activate(context: ExtensionContext) {
 
 
     vscode.workspace.onDidSaveTextDocument(async (document) => {
-        if (document.languageId === 'c') {
+        if (document.languageId === 'c' || document.languageId === 'h') {
             await vscode.commands.executeCommand('acsl-lsp.debugAST');
         }
     }, null, context.subscriptions);
@@ -508,7 +538,7 @@ function registerAllExtensionCommands(context: ExtensionContext) {
     context.subscriptions.push(
         // --- Sidebar Exploration & Toggles ---
         commands.registerCommand('framaCExplorer.search', async () => {
-            const val = await window.showInputBox({ prompt: "Filtrer l'arborescence..." });
+            const val = await window.showInputBox({ prompt: "Filter the AST..." });
             framaCProvider.setFilter(val || "");
         }),
         commands.registerCommand('framaC.toggleFunctions', () => framaCProvider.toggleFunctions()),
@@ -525,7 +555,7 @@ function registerAllExtensionCommands(context: ExtensionContext) {
                 const response = await client.sendRequest("custom/getAST", { uri: uri });
                 if (response) {
                     framaCProvider.updateAST(uri, response);
-                    window.showInformationMessage("AST Charged!");
+                    window.showInformationMessage("AST Loaded!");
                     return response;
                 } else {
                     window.showWarningMessage("No AST Found");
@@ -668,8 +698,7 @@ commands.registerCommand('framaC.refreshAST', () => {
         }),
 
         commands.registerCommand('computeIncludeGraph', async () => {
-            await showCallgraphMatrix();
-
+            await showRealIncludeMatrix();
         }),
         // --- Proof Commands ---
         commands.registerCommand('showPOVC', async () => {
@@ -827,9 +856,11 @@ commands.registerCommand('framaC.refreshAST', () => {
             catch (err) { window.showErrorMessage('Failed to stop: ' + err); }
         }),
        
+        // --- WP Goals Filtering Commands ---
+
         commands.registerCommand('wpFilters.search', async () => {
             const query = await window.showInputBox({ 
-                prompt: "Search by function or file name...",
+                prompt: "Search globally (Function, File, or Type)...",
                 value: activeFilters.search
             });
             if (query !== undefined) {
@@ -838,7 +869,71 @@ commands.registerCommand('framaC.refreshAST', () => {
             }
         }),
 
-    
+        commands.registerCommand('wpFilters.filterFunction', async () => {
+            const uniqueFuncs = new Set<string>();
+            allGoalsRaw.forEach(item => {
+                if (item.function) uniqueFuncs.add(item.function);
+            });
+            
+            const options = ["all", ...Array.from(uniqueFuncs).sort()];
+            
+            const choice = await window.showQuickPick(options, { 
+                placeHolder: "Select a Function to filter by (Type to search...)" 
+            });
+            
+            if (choice) {
+                activeFilters.function = choice === "all" ? "" : choice;
+                applyFiltersAndRefreshUI();
+            }
+        }),
+
+        commands.registerCommand('wpFilters.filterFile', async () => {
+            const uniqueFiles = new Set<string>();
+            allGoalsRaw.forEach(item => {
+                const filePath = item._localPath || item.file;
+                if (filePath) uniqueFiles.add(filePath);
+            });
+            
+            const options = ["all", ...Array.from(uniqueFiles).sort()];
+            
+            const choice = await window.showQuickPick(options, { 
+                placeHolder: "Select a File to filter by (Type to search...)" 
+            });
+            
+            if (choice) {
+                activeFilters.file = choice === "all" ? "" : choice;
+                applyFiltersAndRefreshUI();
+            }
+        }),
+
+
+        commands.registerCommand('wpFilters.filterType', async () => {
+            const options = [
+                { label: "all", description: "Show all property types" },
+                { label: "requires", description: "Preconditions" },
+                { label: "ensures", description: "Postconditions" },
+                { label: "assigns", description: "Memory assignments" },
+                { label: "assert", description: "Assertions" },
+                { label: "invariant", description: "Loop invariants" },
+                { label: "lemma", description: "Lemmas / Axiomatics" }
+            ];
+            
+            const choice = await window.showQuickPick(options, { 
+                placeHolder: "Select an ACSL Property Type" 
+            });
+            
+            if (choice) {
+                activeFilters.type = choice.label === "all" ? "" : choice.label;
+                applyFiltersAndRefreshUI();
+            }
+        }),
+
+        commands.registerCommand('wpFilters.sortByTime', () => {
+            activeFilters.sortByTime = !activeFilters.sortByTime;
+            window.showInformationMessage(`Sort by most expensive time: ${activeFilters.sortByTime ? "ON" : "OFF"}`);
+            applyFiltersAndRefreshUI();
+        }),
+
         commands.registerCommand('wpFilters.filterStatus', async () => {
             const options = ["all", "passed", "failed", "unknown"];
             const choice = await window.showQuickPick(options, { placeHolder: "Select Goal Status" });
@@ -848,7 +943,7 @@ commands.registerCommand('framaC.refreshAST', () => {
             }
         }),
 
-        
+
         commands.registerCommand('wpFilters.toggleSmoke', () => {
             activeFilters.smokeOnly = !activeFilters.smokeOnly;
             window.showInformationMessage(`Smoke tests only: ${activeFilters.smokeOnly ? "ON" : "OFF"}`);
@@ -857,19 +952,27 @@ commands.registerCommand('framaC.refreshAST', () => {
 
 
         commands.registerCommand('wpFilters.filterProver', async () => {
-            const options = ["all", "qed", "Alt-Ergo", "Z3"];
-            const choice = await window.showQuickPick(options, { placeHolder: "Select Prover" });
+            const uniqueProvers = new Set<string>();
+            allGoalsRaw.forEach(item => {
+                if (item.provers) {
+                    item.provers.forEach((p: any) => {
+                        if (p.prover) uniqueProvers.add(p.prover);
+                    });
+                }
+            });
+            
+            const options = ["all", ...Array.from(uniqueProvers)];
+            const choice = await window.showQuickPick(options, { placeHolder: "Select Prover (Dynamic)" });
             if (choice) {
                 activeFilters.prover = choice;
                 applyFiltersAndRefreshUI();
             }
         }),
 
-    
         commands.registerCommand('wpFilters.clearAll', () => {
-            activeFilters = { status: "all", smokeOnly: false, prover: "all", search: "" };
+            activeFilters = { status: "all", smokeOnly: false, prover: "all", search: "", function: "", file: "", type: "", sortByTime: false };
             applyFiltersAndRefreshUI();
-            window.showInformationMessage("All filters cleared.");
+            window.showInformationMessage("All filters and sorting cleared.");
         }),
         commands.registerCommand('wpGoalsView.downloadJson', () => downloadWpJson()),
         commands.registerCommand('wpGoalsView.uploadJson', () => uploadWpJson()),
@@ -903,7 +1006,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
                             smoke: false // (By default)
                         };
                     });
-                    activeFilters = { status: "all", smokeOnly: false, prover: "all", search: "" };
+                     activeFilters = { status: "all", smokeOnly: false, prover: "all", search: "", function: "", file: "", type: "", sortByTime: false };
                 }
 
             } else {
@@ -1134,155 +1237,51 @@ async function get_proof_args(gui: boolean) {
     if (!editor || !f || !p) return null;
     return [editor.document.fileName, f, p, parseInt(t || "10"), gui];
 }
-async function showCallgraphMatrix() {
+async function showRealIncludeMatrix() {
     const editor = vscode.window.activeTextEditor;
-    if (!editor) {
+    if (!editor)
         return;
-    }
 
-    const workspacePath = get_workspace();
-    const filePath = editor.document.fileName;
-    const fileNameBase = path.basename(filePath, path.extname(filePath));
-    const dotFilePath = path.join(workspacePath, ".frama-c", `fc_${fileNameBase}.dot`);
-
-    if (!fs.existsSync(dotFilePath)) {
-        vscode.window.showWarningMessage(`Le fichier ${dotFilePath} n'existe pas.`);
-        return;
-    }
+    const currentFileName = path.basename(editor.document.fileName);
+    const uri = editor.document.uri.toString();
 
     try {
-       
-        const dotContent = fs.readFileSync(dotFilePath, 'utf-8');
-
-        const funcCalls = new Map<string, Set<string>>(); 
-        const dotRegex = /(?:"?([a-zA-Z0-9_]+)"?)\s*->\s*(?:"?([a-zA-Z0-9_]+)"?)/g;
-        let match;
-        let dotLinkCount = 0;
-        while ((match = dotRegex.exec(dotContent)) !== null) {
-            const caller = match[1];
-            const callee = match[2];
-            if (!funcCalls.has(caller)) funcCalls.set(caller, new Set());
-            funcCalls.get(caller)!.add(callee);
-            dotLinkCount++;
-        }
+        const realDependencies: any = await client.sendRequest("computeRealDependencies", { uri: uri });
         
-       
-
-        
-        const allFiles = await vscode.workspace.findFiles('**/*.{c,h}', '**/{node_modules,.git,build,obj}/**');
-        const funcToFile = new Map<string, string>(); 
-        
-        const cFuncRegex = /(?:^|\n)(?:\w+\s+)+\**([a-zA-Z_][a-zA-Z0-9_]*)\s*\([^;]*\)\s*(?:\{|;)/g;
-
-        for (const file of allFiles) {
-            const fileName = path.basename(file.fsPath);
-            const content = fs.readFileSync(file.fsPath, 'utf-8');
-            let funcMatch;
-            while ((funcMatch = cFuncRegex.exec(content)) !== null) {
-                const funcName = funcMatch[1];
-                if (!['if', 'while', 'for', 'switch', 'return'].includes(funcName)) {
-                    if (!funcToFile.has(funcName) || fileName.endsWith('.c')) {
-                        funcToFile.set(funcName, fileName);
-                    }
-                }
-            }
-        }
-        const fileDependencies = new Map<string, Set<string>>(); 
-        const allCallerFiles = new Set<string>(); 
-        const allCalleeFiles = new Set<string>(); 
-
-        let matchCount = 0;
-        let missingFuncs = new Set<string>();
-
-        funcCalls.forEach((callees, callerFunc) => {
-            const callerFile = funcToFile.get(callerFunc);
-            
-            if (!callerFile) {
-                missingFuncs.add(callerFunc);
-                return;
-            }
-            if (!callerFile.endsWith('.c')) return; 
-
-            allCallerFiles.add(callerFile);
-            if (!fileDependencies.has(callerFile)) fileDependencies.set(callerFile, new Set());
-
-            callees.forEach(calleeFunc => {
-                const calleeFile = funcToFile.get(calleeFunc);
-                if (calleeFile) {
-                    allCalleeFiles.add(calleeFile);
-                    fileDependencies.get(callerFile)!.add(calleeFile);
-                    matchCount++;
-                } else {
-                    missingFuncs.add(calleeFunc);
-                }
-            });
-        });
-
-       
-        const columns = Array.from(allCallerFiles).sort();
-        const rows = Array.from(allCalleeFiles).sort();
-
-       
-
-        if (columns.length === 0 || rows.length === 0) {
-            vscode.window.showErrorMessage("Matrice vide");
+        if (!realDependencies || Object.keys(realDependencies).length === 0) {
+            vscode.window.showWarningMessage("No dependencies found in the project.");
             return;
         }
 
+        const allFiles = new Set<string>();
+        for (const [caller, callees] of Object.entries(realDependencies)) {
+            allFiles.add(caller);
+            (callees as string[]).forEach((callee: string) => allFiles.add(callee));
+        }
+
+        const columns = Array.from(allFiles).sort();
+        const rows = Array.from(allFiles).sort();
+
+        const panel = vscode.window.createWebviewPanel('realIncludeMatrix', `Global Dependency Matrix (AST)`, vscode.ViewColumn.Active, { enableScripts: true });
         
-        const panel = vscode.window.createWebviewPanel(
-            'callgraphMatrix',
-            `Matrix: ${fileNameBase}`,
-            vscode.ViewColumn.Active,
-            { enableScripts: true }
-        );
-
-        const htmlChunks: string[] = [];
-        htmlChunks.push(`
-        <!DOCTYPE html>
-        <html lang="fr">
-        <head>
-            <meta charset="UTF-8">
-            <style>
-                body { font-family: var(--vscode-font-family); padding: 20px; color: var(--vscode-editor-foreground); background: var(--vscode-editor-background); }
-                .table-container { overflow: auto; max-height: 85vh; border: 1px solid var(--vscode-panel-border); }
-                table { border-spacing: 0; width: max-content; }
-                th, td { border-bottom: 1px solid var(--vscode-panel-border); border-right: 1px solid var(--vscode-panel-border); padding: 8px; text-align: center; }
-                th { background-color: var(--vscode-editor-inactiveSelectionBackground); position: sticky; top: 0; z-index: 10; }
-                th:first-child { left: 0; z-index: 20; text-align: right; background-color: var(--vscode-editor-selectionBackground); }
-                .col-header { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; padding-bottom: 10px; }
-                .yes { background-color: rgba(60, 179, 113, 0.5); color: white; font-weight: bold; }
-                .no { color: transparent; }
-                tr:hover td { background-color: var(--vscode-list-hoverBackground); }
-            </style>
-        </head>
-        <body>
-            <h2>Matrice de Dépendance d'Appels (Callgraph)</h2>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Fichier appelé \\ Fichiers appelants ➜</th>
-        `);
-
-        for (const col of columns) htmlChunks.push(`<th><div class="col-header">${col}</div></th>`);
+        const htmlChunks: string[] = [`<!DOCTYPE html><html lang="en"><head><style>body { font-family: var(--vscode-font-family); padding: 20px; } table { border-collapse: collapse; } th, td { border: 1px solid gray; padding: 5px; text-align: center; } .yes { background-color: mediumseagreen; color: white; }</style></head><body><h2>Global Dependency Matrix (via AST)</h2><table><thead><tr><th>Called \\ Caller</th>`];
+        for (const col of columns) htmlChunks.push(`<th><div style="writing-mode: vertical-rl; transform: rotate(180deg); padding-bottom: 5px;">${col}</div></th>`);
         htmlChunks.push('</tr></thead><tbody>');
 
         for (const row of rows) {
             htmlChunks.push(`<tr><th>${row}</th>`);
             for (const col of columns) {
-                const isCalling = fileDependencies.get(col)?.has(row);
-                if (isCalling) htmlChunks.push(`<td class="yes">✔</td>`);
-                else htmlChunks.push(`<td class="no"></td>`);
+                const isCalling = realDependencies[col] && (realDependencies[col] as string[]).includes(row);
+                htmlChunks.push(isCalling ? `<td class="yes">✔</td>` : `<td></td>`);
             }
             htmlChunks.push('</tr>');
         }
-
-        htmlChunks.push(`</tbody></table></div></body></html>`);
+        htmlChunks.push(`</tbody></table></body></html>`);
         panel.webview.html = htmlChunks.join('');
 
     } catch (error) {
-        vscode.window.showErrorMessage("Error: " + error);
+        const msg = error instanceof Error ? error.message : String(error);
+        vscode.window.showErrorMessage("Error: " + msg);
     }
 }
 export function deactivate() { if (client) return client.stop(); }

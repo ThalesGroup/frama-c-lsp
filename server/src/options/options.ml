@@ -120,3 +120,11 @@ module Get_details = Self.String
   let arg_name = "file:func_name"
   let default = ""
 end)
+
+module Real_deps = Self.String 
+(struct
+  let option_name = "-lsp-real-deps"
+  let help = "get real dependencies of a file"
+  let arg_name = "file"
+  let default = ""
+end)

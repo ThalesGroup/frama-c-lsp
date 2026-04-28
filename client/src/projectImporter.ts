@@ -29,13 +29,13 @@ export class ProjectImporter {
         }));
 
         items.unshift({
-            label: "$(folder-opened) Choisir un fichier externe...",
-            description: "Sélectionner un projet IDE en dehors du workspace",
+            label: "$(folder-opened) Choose an external file...",
+            description: "Select an IDE project outside the workspace",
             action: "browse"
         });
 
         const selected = await vscode.window.showQuickPick(items, { 
-            placeHolder: "Sélectionnez un projet IDE ou parcourez votre disque" 
+            placeHolder: "Select an IDE project or browse your disk" 
         });
 
         if (!selected) return;
@@ -43,9 +43,9 @@ export class ProjectImporter {
         if (selected.action === "browse") {
             const fileUri = await vscode.window.showOpenDialog({
                 canSelectMany: false,
-                openLabel: 'Importer ce projet',
+                openLabel: 'Import this project',
                 filters: {
-                    'Projets IDE': ['vcxproj', 'uvprojx', 'uvproj', 'cproject']
+                    'IDE Projects': ['vcxproj', 'uvprojx', 'uvproj', 'cproject']
                 }
             });
 
@@ -235,7 +235,7 @@ export class ProjectImporter {
         await config.update("kernel.machdep", "x86_32", vscode.ConfigurationTarget.Workspace);
 
         await this.updateIntelliSense(root, finalIncludes, finalMacros);
-        vscode.window.showInformationMessage(` Import réussi : ${finalSources.length} sources.`);
+        vscode.window.showInformationMessage(`Import successful: ${finalSources.length} sources.`);
     }
 
     private async updateIntelliSense(root: string, includes: string[], defines: string[]) {

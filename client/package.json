@@ -2,15 +2,29 @@
     "name": "acsl-lsp",
     "version": "0.4.0",
     "publisher": "innov-org",
-    "engines": {"vscode": "^1.85.0"},
+    "engines": {
+        "vscode": "^1.85.0"
+    },
     "description": "Visual Studio Code Client for ACSL Language Server",
     "license": "SEE LICENSE IN LICENSE.md",
     "displayName": "acsl-lsp",
-    "repository": {"type": "git", "url": "https://github.com/ThalesGroup/frama-c-lsp.git"},
-    "categories": ["Programming Languages"],
-    "keywords": ["acsl", "c", "frama-c"],
-        
-    "activationEvents": ["onLanguage:acsl","onLanguage:c","workspaceContains:**/*.{c,h}"],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ThalesGroup/frama-c-lsp.git"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "keywords": [
+        "acsl",
+        "c",
+        "frama-c"
+    ],
+    "activationEvents": [
+        "onLanguage:acsl",
+        "onLanguage:c",
+        "workspaceContains:**/*.{c,h}"
+    ],
     "icon": "images/logo-frama-c.png",
     "main": "./out/extension",
     "capabilities": {
@@ -42,31 +56,17 @@
                 }
             ],
             "wp-goals-panel": [
-            {
-                "id": "wpGoalsView",
-                "name": "Last Results"
-            }
-        ]    
+                {
+                    "id": "wpGoalsView",
+                    "name": "Last Results"
+                }
+            ]
         },
         "menus": {
             "editor/context": [
                 {
-                    "command": "acsl-lsp.debugAST",
-                    "when": "resourceLangId == c || resourceLangId == acsl",
-                    "group": "Frama-C"
-                },
-                {
-                    "command": "computeIncludeGraph",
-                    "when": "resourceLangId == c || resourceLangId == acsl"
-                },
-                {
                     "command": "stop",
-                    "when": "resourceLangId == c || resourceLangId == acsl"
-                },
-                {
-                    "command": "provePOCursor",
-                    "when": "resourceLangId == c || resourceLangId == acsl",
-                    "group": "Frama-C/WP"
+"when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
                 },
                 {
                     "submenu": "Frama-C"
@@ -81,103 +81,132 @@
             "Frama-C": [
                 {
                     "command": "displayCIL",
-                    "when": "resourceLangId == c || resourceLangId == acsl"
+"when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
                 },
                 {
                     "command": "displayCIL_noannot",
-                    "when": "resourceLangId == c || resourceLangId == acsl"
+                    "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
                 },
                 {
                     "command": "displayCILProject",
-                    "when": "resourceLangId == c || resourceLangId == acsl"
+                    "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
                 },
                 {
                     "command": "displayCILProject_noannot",
-                    "when": "resourceLangId == c || resourceLangId == acsl"
+                    "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
                 },
                 {
                     "command": "computeCG",
-                    "when": "resourceLangId == c || resourceLangId == acsl"
+                    "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
+                },
+                {
+                    "command": "computeIncludeGraph",
+                    "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
                 },
                 {
                     "command": "showGlobalMetrics",
-                    "when": "resourceLangId == c || resourceLangId == acsl"
+                    "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
                 },
                 {
                     "command": "showLocalMetrics",
-                    "when": "resourceLangId == c || resourceLangId == acsl"
+                    "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
+                },
+                {
+                    "command": "acsl-lsp.debugAST",
+                    "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
                 }
             ],
             "Frama-C/WP": [
                 {
                     "command": "provePO",
-                    "when": "resourceLangId == c || resourceLangId == acsl"
+                    "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
                 },
                 {
                     "command": "provePOStrategies",
-                    "when": "resourceLangId == c || resourceLangId == acsl"
+                    "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
                 },
                 {
                     "command": "provePOGUI",
-                    "when": "resourceLangId == c || resourceLangId == acsl"
+                    "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
                 },
                 {
                     "command": "provePOStrategiesGUI",
-                    "when": "resourceLangId == c || resourceLangId == acsl"
+                    "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
+                },
+                {
+                    "command": "provePOCursor",
+                    "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
                 },
                 {
                     "command": "smokeTests",
-                    "when": "resourceLangId == c || resourceLangId == acsl"
+                    "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
                 },
                 {
                     "command": "showPOVC",
-                    "when": "resourceLangId == c || resourceLangId == acsl"
+                    "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
                 }
             ],
             "view/title": [
                 {
-  "command": "wpGoalsView.downloadJson",
-  "when": "view == wpGoalsView",
-  "group": "navigation@0" 
-},
-            
-        {
-          "command": "wpGoalsView.uploadJson",
-          "when": "view == wpGoalsView",
-          "group": "navigation@1"
-        },
-        {
-          "command": "wpFilters.search",
-          "when": "view == wpGoalsView",
-          "group": "navigation@2"
-        },
-        {
-          "command": "wpFilters.filterStatus",
-          "when": "view == wpGoalsView",
-          "group": "navigation@3"
-        },
-        {
-          "command": "wpFilters.filterProver",
-          "when": "view == wpGoalsView",
-          "group": "navigation@4"
-        },
-        {
-          "command": "wpFilters.toggleSmoke",
-          "when": "view == wpGoalsView",
-          "group": "navigation@5"
-        },
-        {
-          "command": "wpFilters.clearAll",
-          "when": "view == wpGoalsView",
-          "group": "navigation@6"
-        },
-   
-   
+                    "command": "wpGoalsView.downloadJson",
+                    "when": "view == wpGoalsView",
+                    "group": "navigation@0"
+                },
+                {
+                    "command": "wpFilters.search",
+                    "when": "view == wpGoalsView",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "wpFilters.filterFunction",
+                    "when": "view == wpGoalsView",
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "wpFilters.filterFile",
+                    "when": "view == wpGoalsView",
+                    "group": "navigation@3"
+                },
+                {
+                    "command": "wpFilters.filterType",
+                    "when": "view == wpGoalsView",
+                    "group": "navigation@4"
+                },
+                {
+                    "command": "wpFilters.sortByTime",
+                    "when": "view == wpGoalsView",
+                    "group": "navigation@5"
+                },
+                {
+                    "command": "wpFilters.clearAll",
+                    "when": "view == wpGoalsView",
+                    "group": "navigation@6"
+                },
+                {
+                    "command": "wpFilters.filterProver",
+                    "when": "view == wpGoalsView",
+                    "group": "1_secondary@1"
+                },
+                {
+                    "command": "wpFilters.filterStatus",
+                    "when": "view == wpGoalsView",
+                    "group": "1_secondary@2"
+                },
+                {
+                    "command": "wpFilters.toggleSmoke",
+                    "when": "view == wpGoalsView",
+                    "group": "1_secondary@3"
+                },
+                {
+                    "command": "wpGoalsView.uploadJson",
+                    "when": "view == wpGoalsView",
+                    "group": "navigation@1"
+                },
                 {
                     "command": "framaC.refreshAST",
                     "when": "view == framaCExplorer",
-                    "group": "navigation@1" 
-                    },
+                    "group": "navigation@1"
+                },
                 {
                     "command": "framaC.toggleFunctions",
                     "when": "view == framaCExplorer",
@@ -202,16 +231,16 @@
             "Frama-C/CCDOC": [
                 {
                     "command": "ccdoc",
-                    "when": "resourceLangId == c || resourceLangId == acsl"
+                    "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
                 }
             ],
             "editor/title": [
-            {
-                "command": "acsl.importProjectConfig",
-                "group": "navigation",
-                "when": "resourceExtname == .c || resourceExtname == .h"
-            }
-        ],
+                {
+                    "command": "acsl.importProjectConfig",
+                    "group": "navigation",
+                    "when": "resourceExtname == .c || resourceExtname == .h"
+                }
+            ],
             "view/item/context": [
                 {
                     "command": "showScript",
@@ -264,53 +293,73 @@
         ],
         "commands": [
             {
-  "command": "wpGoalsView.downloadJson",
-  "title": "Export WP Results (JSON)",
-  "icon": "$(cloud-download)"
-},
-      {
-        "command": "wpFilters.search",
-        "title": "WP: Search Goals",
-        "icon": "$(search)"
-      },
-      {
-        "command": "wpFilters.filterStatus",
-        "title": "WP: Filter by Status",
-        "icon": "$(filter)"
-      },
-      {
-        "command": "wpFilters.filterProver",
-        "title": "WP: Filter by Prover",
-        "icon": "$(circuit-board)"
-      },
-      {
-        "command": "wpFilters.toggleSmoke",
-        "title": "WP: Toggle Smoke Tests",
-        "icon": "$(flame)"
-      },
-      {
-        "command": "wpFilters.clearAll",
-        "title": "WP: Clear All Filters",
-        "icon": "$(clear-all)"
-      },
+                "command": "wpGoalsView.downloadJson",
+                "title": "Export WP Results (JSON)",
+                "icon": "$(cloud-download)"
+            },
             {
-    "command": "wpGoalsView.uploadJson",
-    "title": "Upload WP Results (JSON)",
-    "icon": "$(cloud-upload)"
-},
+                "command": "wpFilters.sortByTime",
+                "title": "Sort by Time (Expensive first)",
+                "icon": "$(history)"
+            },
             {
-            "command": "acsl.importProjectConfig",
-            "title": "ACSL: Import Project IDE",
-            "icon": "$(project)" 
+                "command": "wpFilters.search",
+                "title": "WP: Search Goals",
+                "icon": "$(search)"
+            },
+            {
+                "command": "wpFilters.filterStatus",
+                "title": "WP: Filter by Status",
+                "icon": "$(filter)"
+            },
+            {
+                "command": "wpFilters.filterProver",
+                "title": "WP: Filter by Prover",
+                "icon": "$(circuit-board)"
+            },
+            {
+            "command": "wpFilters.filterFunction",
+            "title": "Filter by Function",
+            "icon": "$(symbol-method)"
         },
         {
-    "command": "framaC.refreshAST",
-    "title": "Refresh AST",
-    "icon": "$(refresh)"
-  },
+            "command": "wpFilters.filterFile",
+            "title": "Filter by File",
+            "icon": "$(file)"
+        },
         {
+            "command": "wpFilters.filterType",
+            "title": "Filter by ACSL Type",
+            "icon": "$(symbol-property)"
+        },
+            {
+                "command": "wpFilters.toggleSmoke",
+                "title": "WP: Toggle Smoke Tests",
+                "icon": "$(flame)"
+            },
+            {
+                "command": "wpFilters.clearAll",
+                "title": "WP: Clear All Filters",
+                "icon": "$(clear-all)"
+            },
+            {
+                "command": "wpGoalsView.uploadJson",
+                "title": "Upload WP Results (JSON)",
+                "icon": "$(cloud-upload)"
+            },
+            {
+                "command": "acsl.importProjectConfig",
+                "title": "ACSL: Import Project IDE",
+                "icon": "$(project)"
+            },
+            {
+                "command": "framaC.refreshAST",
+                "title": "Refresh AST",
+                "icon": "$(refresh)"
+            },
+            {
                 "command": "computeIncludeGraph",
-                "title": "Compute Include Graph"
+                "title": "Compute Dependency Matrix"
             },
             {
                 "command": "framaC.toggleFunctions",
@@ -428,8 +477,8 @@
             }
         ],
         "activationEvents": [
-           
-            "onLanguage:c"
+            "onLanguage:c",
+            "onLanguage:h"
         ],
         "grammars": [
             {
