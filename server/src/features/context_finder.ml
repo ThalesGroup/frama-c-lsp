@@ -25,19 +25,37 @@ let get_context (target_file : string) (line : int) : (string * string) =
           if is_line_inside line kf_loc then hit_func := Some kf_name;
 
           let check_p p =
-             let (p_start, _) = Property.location p in
-             let p_file = Filepath.to_string p_start.pos_path in
-             
-             (* Est-ce le bon fichier et la bonne ligne ? *)
-             if (Filename.basename p_file) = (Filename.basename target_file) then
-                if is_line_inside line (Property.location p) then begin
-                   let p_name = String.concat "," (Property.get_names p) in
-                   if p_name <> "default!" then begin
-                      hit_prop := Some p;
-                      raise (FoundProp p)
-                   end
-                end
-          in
+  let (p_start, _) = Property.location p in
+  let p_file = Filepath.to_string p_start.pos_path in
+  if (Filename.basename p_file) = (Filename.basename target_file) then begin
+    let exact_match = p_start.pos_lnum = line in
+    let range_match = is_line_inside line (Property.location p) in
+    if exact_match || range_match then begin
+      let is_code_annot = match p with
+        | Property.IPPredicate { Property.ip_kind = Property.PKAssumes _; _ } -> false
+        | Property.IPPredicate _ -> true
+        | Property.IPAssigns _ -> true
+        | Property.IPDecrease _ -> true
+        | _ -> false
+      in
+      let p_name = String.concat "," (Property.get_names p) in
+      if p_name <> "default!" || is_code_annot then begin
+        match !hit_prop with
+        | None -> 
+            hit_prop := Some p;
+            if exact_match then raise (FoundProp p)
+        | Some prev ->
+            let (prev_start, _) = Property.location prev in
+            let prev_dist = abs (prev_start.pos_lnum - line) in
+            let curr_dist = abs (p_start.pos_lnum - line) in
+            if curr_dist < prev_dist then begin
+              hit_prop := Some p;
+              if exact_match then raise (FoundProp p)
+            end
+      end
+    end
+  end
+in
 
           (* On scanne les spécifications de fonction *)
           let spec = Annotations.funspec kf in
@@ -63,17 +81,29 @@ let get_context (target_file : string) (line : int) : (string * string) =
   (* On formate le résultat pour le renvoyer *)
   match !hit_prop with
   | Some p -> 
-      let f = match Property.get_kf p with Some kf -> Kernel_function.get_name kf | None -> "@axiomatic" in
-      let explicit_names = Property.get_names p in
-      let final_name = match p with
-        | Property.IPAssigns _ -> "@assigns"
-        | Property.IPDecrease _ -> "@variant"
-        | Property.IPPredicate { Property.ip_kind = kind; _ } -> 
-             (match explicit_names with n::_ -> n | [] -> 
-                match kind with Property.PKEnsures _ -> "@ensures" | Property.PKRequires _ -> "@requires" | _ -> "@all")
-        | _ -> (match explicit_names with n::_ -> n | [] -> "@all")
-      in
-      (f, final_name)
+    let f = match Property.get_kf p with
+      | Some kf -> Kernel_function.get_name kf
+      | None -> "@axiomatic"
+    in
+    let explicit_names = Property.get_names p in
+    let final_name = match p with
+      | Property.IPAssigns _ -> "@assigns"
+      | Property.IPDecrease _ -> "@variant"
+      | Property.IPPredicate { Property.ip_kind = kind; _ } -> 
+          (match explicit_names with
+           | n :: _ when n <> "default!" -> n
+           | _ ->
+               match kind with
+               | Property.PKEnsures _ -> "@ensures"
+               | Property.PKRequires _ -> "@requires"
+               | Property.PKTerminates -> "@terminates"
+               | _ -> "@assert")  (* assert sans label → @assert *)
+      | _ ->
+          (match explicit_names with
+           | n :: _ when n <> "default!" -> n
+           | _ -> "@all")
+    in
+    (f, final_name)
   | None -> 
       match !hit_func with
       | Some f_name -> (f_name, "@all")

@@ -176,7 +176,11 @@
                     "command": "wpFilters.sortByTime",
                     "when": "view == wpGoalsView",
                     "group": "navigation@5"
-                },
+                },{
+    "command": "framaC.filterAnnotations",
+    "when": "view == framaCExplorer",
+    "group": "navigation@5"
+},
                 {
                     "command": "wpFilters.clearAll",
                     "when": "view == wpGoalsView",
@@ -226,7 +230,17 @@
                     "command": "framaC.toggleAnnotations",
                     "when": "view == framaCExplorer",
                     "group": "navigation@4"
-                }
+                },
+                {
+          "command": "wpFilters.filterVerdict",
+          "group": "navigation@3",
+          "when": "view == wpGoalsView"
+        },
+        {
+          "command": "wpFilters.toggleHasScript",
+          "group": "navigation@4",
+          "when": "view == wpGoalsView"
+        }
             ],
             "Frama-C/CCDOC": [
                 {
@@ -295,8 +309,12 @@
             {
                 "command": "wpGoalsView.downloadJson",
                 "title": "Export WP Results (JSON)",
-                "icon": "$(cloud-download)"
-            },
+                "icon": "$(cloud-upload)"
+            },{
+    "command": "framaC.filterAnnotations",
+    "title": "Filter Annotations by Type",
+    "icon": "$(tag)"
+},
             {
                 "command": "wpFilters.sortByTime",
                 "title": "Sort by Time (Expensive first)",
@@ -338,14 +356,24 @@
                 "icon": "$(flame)"
             },
             {
+        "command": "wpFilters.filterVerdict",
+        "title": "Filter by Verdict (Passed/Failed/Timeout)",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "wpFilters.toggleHasScript",
+        "title": "Toggle: Only with Scripts",
+        "icon": "$(file-code)"
+      },
+            {
                 "command": "wpFilters.clearAll",
                 "title": "WP: Clear All Filters",
                 "icon": "$(clear-all)"
             },
             {
                 "command": "wpGoalsView.uploadJson",
-                "title": "Upload WP Results (JSON)",
-                "icon": "$(cloud-upload)"
+                "title": "Import WP Results (JSON)",
+                "icon": "$(cloud-download)"
             },
             {
                 "command": "acsl.importProjectConfig",
@@ -353,10 +381,10 @@
                 "icon": "$(project)"
             },
             {
-                "command": "framaC.refreshAST",
-                "title": "Refresh AST",
-                "icon": "$(refresh)"
-            },
+    "command": "framaC.refreshAST",
+    "title": "Refresh AST for current file",
+    "icon": "$(refresh)"
+},
             {
                 "command": "computeIncludeGraph",
                 "title": "Compute Dependency Matrix"

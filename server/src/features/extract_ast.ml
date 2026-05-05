@@ -62,14 +62,25 @@ let compute_and_serialize id current_file_uri =
         types := (`Assoc [ ("name", `String ei.ename); ("type", `String "type"); ("line", `Int line); ("file", `String file) ]) :: !types
 
     | GAnnot (ga, _) ->
-        let name = ga_name ga in
-        if name <> "" then
-          annotations := (`Assoc [
-            ("name", `String name);
-            ("type", `String "predicate");
-            ("line", `Int line);
-            ("file", `String file)
-          ]) :: !annotations
+    let name = ga_name ga in
+    let kind = match ga with
+      | Dfun_or_pred (li, _) ->
+          (match li.l_type with None -> "predicate" | Some _ -> "logic_function")
+      | Daxiomatic _ -> "axiomatic"
+      | Dtype _ -> "logic_type"
+      | Dlemma _ -> "lemma"
+      | Dinvariant _ -> "invariant"
+      | Dtype_annot _ -> "type_invariant"
+      | Dmodel_annot _ -> "model"
+      | _ -> "other"
+    in
+    if name <> "" then
+      annotations := (`Assoc [
+        ("name", `String name);
+        ("type", `String kind);
+        ("line", `Int line);
+        ("file", `String file)
+      ]) :: !annotations
     
     | _ -> ()
   ) ast.globals;

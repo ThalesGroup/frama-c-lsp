@@ -22,6 +22,7 @@ let activeFilters = {
     function: "", 
     file: "",      
     type: "",      
+    hasScript: false,
     sortByTime: false 
 };
 
@@ -34,29 +35,35 @@ async function uploadWpJson() {
     const fileUri = await vscode.window.showOpenDialog({
         canSelectMany: false,
         openLabel: 'Import Frama-C results (JSON)',
-        defaultUri: lastImportPath ? vscode.Uri.file(lastImportPath) : undefined,
         filters: { 'JSON': ['json'] }
     });
 
     if (!fileUri || !fileUri[0]) return;
 
-    lastImportPath = fileUri[0].fsPath;
-
     try {
         const content = fs.readFileSync(fileUri[0].fsPath, 'utf8');
         const rawData = JSON.parse(content);
 
-        if (!rawData || rawData.length === 0) {
-            vscode.window.showWarningMessage("The JSON file is empty.");
-            return;
+        if (!rawData || rawData.length === 0) return;
+
+        let guessedPath = "Unknown";
+        if (rawData[0] && (rawData[0].file || rawData[0]._localPath)) {
+            const sample = (rawData[0].file || rawData[0]._localPath).replace(/\\/g, '/');
+            guessedPath = sample; 
         }
 
         const replaceChoice = await window.showQuickPick(
             [
-                { label: "Replace path prefix", description: "Replace workspace path" },
-                { label: "Keep original paths", description: "Keep file paths as they are in the JSON" }
+                { 
+                    label: "Replace path prefix", 
+                    description: `Change origin path to local workspace` 
+                },
+                { 
+                    label: "Keep original paths", 
+                    description: `Keep: ${guessedPath}` 
+                }
             ],
-            { placeHolder: "How should file paths be handled?" }
+            { placeHolder: `${guessedPath}` }
         );
 
         if (!replaceChoice) return;
@@ -118,7 +125,7 @@ async function uploadWpJson() {
             }
         });
 
-        activeFilters = { status: "all", smokeOnly: false, prover: "all", search: "", function: "", file: "", type: "", sortByTime: false };
+        activeFilters = { status: "all", smokeOnly: false, prover: "all", search: "", function: "", file: "", type: "", sortByTime: false,hasScript: false };
         applyFiltersAndRefreshUI();
         
         vscode.commands.executeCommand('wpGoalsView.focus');
@@ -134,24 +141,27 @@ function applyFiltersAndRefreshUI() {
     if (allGoalsRaw.length === 0) return;
 
     let fullyFilteredDataset = allGoalsRaw.filter(item => {
-        const status = item.passed ? "passed" : (item.verdict === "timeout" ? "unknown" : "failed");
+        if (activeFilters.status !== "all") {
+            const itemVerdict = (item.verdict || "").toLowerCase();
+            if (itemVerdict !== activeFilters.status.toLowerCase()) {
+                return false;
+            }
+        }
         
-        if (activeFilters.status !== "all" && status !== activeFilters.status) return false;
+        if (activeFilters.hasScript && (!item.script || item.script.trim() === "")) return false;
+
         if (activeFilters.smokeOnly && item.smoke !== true) return false;
         
-        // 2. Provers
         const provers = (item.provers && item.provers.length > 0) ? item.provers : [{ prover: "qed", time: 0 }];
         const hasMatchingProver = provers.some((p: any) => 
             (p.prover || "qed").toLowerCase().includes(activeFilters.prover.toLowerCase())
         );
         if (activeFilters.prover !== "all" && !hasMatchingProver) return false;
 
-        // 3. Specific Filters (Function, File, Type/Property)
         if (activeFilters.function && !(item.function || "").toLowerCase().includes(activeFilters.function.toLowerCase())) return false;
         if (activeFilters.file && !(item._localPath || item.file || "").toLowerCase().includes(activeFilters.file.toLowerCase())) return false;
         if (activeFilters.type && !(item.property || item.goal || "").toLowerCase().includes(activeFilters.type.toLowerCase())) return false;
-
-        // 4. Global Search (Fallback)
+        
         if (activeFilters.search) {
             const term = activeFilters.search.toLowerCase();
             const funcMatch = (item.function || "").toLowerCase().includes(term);
@@ -163,7 +173,6 @@ function applyFiltersAndRefreshUI() {
         return true; 
     });
 
-    // Apply Time Sorting
     if (activeFilters.sortByTime) {
         fullyFilteredDataset.sort((a, b) => {
             const getMaxTime = (provers: any[]) => Math.max(...(provers || []).map(p => parseFloat(p.time) || 0), 0);
@@ -174,48 +183,17 @@ function applyFiltersAndRefreshUI() {
     const MAX_DISPLAY = 10000;
     const toDisplay = fullyFilteredDataset.slice(0, MAX_DISPLAY);
 
-    
     const formatted = toDisplay.map(item => {
-        const status = item.passed ? "passed" : (item.verdict === "timeout" ? "unknown" : "failed");
-        
-        let proverInfo = "(qed 0)";
-        if (item.provers && item.provers.length > 0 && item.provers[0]) {
-            const proverParts: string[] = [];
-            for (const p of item.provers) {
-                if (p && p.prover) {
-                    const proverName = p.prover;
-                    const proverTime = (p.time !== undefined && p.time !== null) ? p.time : "?";
-                    proverParts.push(`(${proverName} ${proverTime})`);
-                }
-            }
-            if (proverParts.length > 0) {
-                proverInfo = proverParts.join(" ");
-            }
-        }
-
-        
         return {
-            status: status,
+            status: item.verdict || "unknown", 
             goal: item.goal || "goal",
             file: item._localPath || "",
             line: item.line || 1,
-            proverInfo: proverInfo,
+            proverInfo: (item.provers || []).map((p:any) => `(${p.prover} ${p.time})`).join(" ") || "(qed 0)",
             script: item.script || "",
             function: item.function || ""
         };
     });
-
-    if (fullyFilteredDataset.length > MAX_DISPLAY) {
-        formatted.unshift({
-            status: "⚠️ SYSTEM",
-            goal: `SHOWING ${MAX_DISPLAY} OUT OF ${fullyFilteredDataset.length} GOALS`,
-            file: "./",
-            line: 0,
-            proverInfo: "Please refine your search.",
-            script: "",
-            function: ""
-        });
-    }
 
     lastWpData = formatted as any;
     wpDataProvider.update(["Filtered", "All", "All", formatted]);
@@ -521,6 +499,7 @@ export async function activate(context: ExtensionContext) {
 
     vscode.workspace.onDidSaveTextDocument(async (document) => {
         if (document.languageId === 'c' || document.languageId === 'h') {
+            await new Promise(resolve => setTimeout(resolve, 1500));
             await vscode.commands.executeCommand('acsl-lsp.debugAST');
         }
     }, null, context.subscriptions);
@@ -583,6 +562,21 @@ commands.registerCommand('framaC.openAndDetail', async (item: FramaCItem) => {
             editor.revealRange(new Range(finalPos, finalPos), vscode.TextEditorRevealType.InCenter);
 
     } 
+}),commands.registerCommand('framaC.filterAnnotations', async () => {
+    const options = [
+        { label: "all", description: "All annotations" },
+        { label: "predicate", description: "Predicates" },
+        { label: "logic_function", description: "Logic functions" },
+        { label: "lemma", description: "Lemmas" },
+        { label: "axiomatic", description: "Axiomatics" },
+        { label: "invariant", description: "Global invariants" },
+        { label: "type_invariant", description: "Type invariants" },
+        { label: "model", description: "Model fields" },
+    ];
+    const choice = await window.showQuickPick(options, { 
+        placeHolder: "Filter annotations by type" 
+    });
+    if (choice) framaCProvider.setAnnotationFilter(choice.label);
 }),
 commands.registerCommand('framaC.refreshAST', () => {
     vscode.commands.executeCommand('acsl-lsp.debugAST');
@@ -970,9 +964,34 @@ commands.registerCommand('framaC.refreshAST', () => {
         }),
 
         commands.registerCommand('wpFilters.clearAll', () => {
-            activeFilters = { status: "all", smokeOnly: false, prover: "all", search: "", function: "", file: "", type: "", sortByTime: false };
+            activeFilters = { status: "all", smokeOnly: false, prover: "all", search: "", function: "", file: "", type: "", sortByTime: false,hasScript: false };
             applyFiltersAndRefreshUI();
             window.showInformationMessage("All filters and sorting cleared.");
+        }),
+        commands.registerCommand('wpFilters.filterVerdict', async () => {
+    const uniqueVerdicts = new Set<string>();
+    allGoalsRaw.forEach(item => {
+        if (item.verdict) {
+            uniqueVerdicts.add(item.verdict.toLowerCase());
+        }
+    });
+
+    const options = ["all", ...Array.from(uniqueVerdicts).sort()];
+    
+    const choice = await window.showQuickPick(options, { 
+        placeHolder: "Select a verdict available in your results" 
+    });
+
+    if (choice) {
+        activeFilters.status = choice;
+        applyFiltersAndRefreshUI();
+    }
+}),
+
+        commands.registerCommand('wpFilters.toggleHasScript', () => {
+            activeFilters.hasScript = !activeFilters.hasScript;
+            window.showInformationMessage(`Filter Scripts: ${activeFilters.hasScript ? "ON" : "OFF"}`);
+            applyFiltersAndRefreshUI();
         }),
         commands.registerCommand('wpGoalsView.downloadJson', () => downloadWpJson()),
         commands.registerCommand('wpGoalsView.uploadJson', () => uploadWpJson()),
@@ -1006,7 +1025,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
                             smoke: false // (By default)
                         };
                     });
-                     activeFilters = { status: "all", smokeOnly: false, prover: "all", search: "", function: "", file: "", type: "", sortByTime: false };
+                     activeFilters = { status: "all", smokeOnly: false, prover: "all", search: "", function: "", file: "", type: "", sortByTime: false,hasScript: false };
                 }
 
             } else {
@@ -1086,6 +1105,12 @@ export class FramaCProvider implements vscode.TreeDataProvider<FramaCItem> {
     private hideTypes = false; 
     private hideAnnotations = false;
     private currentAstUri: string | undefined;
+    private annotationFilter: string = "all";
+
+setAnnotationFilter(kind: string) {
+    this.annotationFilter = kind;
+    this.refresh();
+}
     refresh(): void {
         this._onDidChangeTreeData.fire();
     }
@@ -1165,12 +1190,29 @@ async getChildren(element?: FramaCItem): Promise<FramaCItem[]> {
             }
             break;
         case "cat_annot":
-            if (!this.hideAnnotations && data.annotations) {
-                data.annotations.forEach((a: any) => {
-                    children.push(new FramaCItem(a.name, vscode.TreeItemCollapsibleState.None, "predicate", resolveUri(a.file), a.line));
-                });
-            }
-            break;
+    if (!this.hideAnnotations && data.annotations) {
+        data.annotations
+            .filter((a: any) => 
+                this.annotationFilter === "all" || 
+                a.type === this.annotationFilter
+            )
+            .filter((a: any) => 
+                !this.searchQuery || 
+                a.name.toLowerCase().includes(this.searchQuery)
+            )
+            .forEach((a: any) => {
+                const item = new FramaCItem(
+                    `${a.name}`,
+                    vscode.TreeItemCollapsibleState.None,
+                    a.type,
+                    resolveUri(a.file),
+                    a.line
+                );
+                item.description = a.type;
+                children.push(item);
+            });
+    }
+    break;
     }
     return children;
 }
@@ -1205,6 +1247,16 @@ if (contextValue.startsWith("cat_")) {
     this.iconPath = new vscode.ThemeIcon("symbol-variable");
 } else if (contextValue === "type") {
     this.iconPath = new vscode.ThemeIcon("symbol-parameter");
+} else if (contextValue === "predicate" || contextValue === "logic_function") {
+    this.iconPath = new vscode.ThemeIcon("symbol-function");
+} else if (contextValue === "lemma") {
+    this.iconPath = new vscode.ThemeIcon("symbol-boolean");
+} else if (contextValue === "axiomatic") {
+    this.iconPath = new vscode.ThemeIcon("symbol-namespace");
+} else if (contextValue === "invariant" || contextValue === "type_invariant") {
+    this.iconPath = new vscode.ThemeIcon("symbol-constant");
+} else if (contextValue === "model" || contextValue === "logic_type") {
+    this.iconPath = new vscode.ThemeIcon("symbol-interface");
 }
     }
 }
@@ -1239,49 +1291,100 @@ async function get_proof_args(gui: boolean) {
 }
 async function showRealIncludeMatrix() {
     const editor = vscode.window.activeTextEditor;
-    if (!editor)
-        return;
+    if (!editor) return;
 
-    const currentFileName = path.basename(editor.document.fileName);
     const uri = editor.document.uri.toString();
 
     try {
         const realDependencies: any = await client.sendRequest("computeRealDependencies", { uri: uri });
         
         if (!realDependencies || Object.keys(realDependencies).length === 0) {
-            vscode.window.showWarningMessage("No dependencies found in the project.");
+            vscode.window.showWarningMessage("No dependencies found.");
             return;
         }
 
         const allFiles = new Set<string>();
-        for (const [caller, callees] of Object.entries(realDependencies)) {
-            allFiles.add(caller);
-            (callees as string[]).forEach((callee: string) => allFiles.add(callee));
+        
+        Object.entries(realDependencies).forEach(([caller, calleesMap]) => {
+    const cleanCaller = caller.trim();
+    if (cleanCaller && !cleanCaller.startsWith("<")) {
+        allFiles.add(cleanCaller);
+        
+        if (calleesMap && typeof calleesMap === 'object') {
+            Object.keys(calleesMap).forEach(callee => {
+                const cleanCallee = callee.trim();
+                if (cleanCallee && !cleanCallee.startsWith("<")) {
+                    allFiles.add(cleanCallee);
+                }
+            });
+        }
+    }
+});
+
+        const sortedFiles = Array.from(allFiles).sort();
+
+        if (sortedFiles.length === 0) {
+            vscode.window.showWarningMessage("Matrix is empty after filtering.");
+            return;
         }
 
-        const columns = Array.from(allFiles).sort();
-        const rows = Array.from(allFiles).sort();
-
-        const panel = vscode.window.createWebviewPanel('realIncludeMatrix', `Global Dependency Matrix (AST)`, vscode.ViewColumn.Active, { enableScripts: true });
+        const panel = vscode.window.createWebviewPanel('realMatrix', 'Dependency Matrix (AST)', vscode.ViewColumn.Active, { enableScripts: true });
         
-        const htmlChunks: string[] = [`<!DOCTYPE html><html lang="en"><head><style>body { font-family: var(--vscode-font-family); padding: 20px; } table { border-collapse: collapse; } th, td { border: 1px solid gray; padding: 5px; text-align: center; } .yes { background-color: mediumseagreen; color: white; }</style></head><body><h2>Global Dependency Matrix (via AST)</h2><table><thead><tr><th>Called \\ Caller</th>`];
-        for (const col of columns) htmlChunks.push(`<th><div style="writing-mode: vertical-rl; transform: rotate(180deg); padding-bottom: 5px;">${col}</div></th>`);
+        const htmlChunks: string[] = [`
+            <!DOCTYPE html><html><head><style>
+                body { font-family: sans-serif; padding: 20px; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
+                table { border-collapse: collapse; margin-top: 10px; }
+                th, td { border: 1px solid var(--vscode-panel-border); padding: 8px; text-align: center; min-width: 40px; }
+                th { background-color: var(--vscode-sideBar-background); font-size: 12px; }
+                
+                .yes { background-color: #2e7d32; color: white; cursor: help; position: relative; }
+                .self { background-color: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); opacity: 0.5; font-size: 10px; }
+                
+                .yes:hover::after {
+                    content: attr(data-symbols);
+                    position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%);
+                    background: #1e1e1e; color: #fff; padding: 8px; border-radius: 4px;
+                    font-size: 11px; white-space: pre; z-index: 1000; text-align: left;
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.5); border: 1px solid #555;
+                }
+                .col-header { writing-mode: vertical-rl; transform: rotate(180deg); padding: 10px 5px; white-space: nowrap; }
+                .row-header { text-align: right; white-space: nowrap; font-weight: bold; background-color: var(--vscode-sideBar-background); }
+            </style></head><body>
+            <h2>Dependency Matrix (AST Analysis)</h2>
+            <p style="font-size: 0.8em; opacity: 0.7;">Rows: <b>Callers</b> (Who uses) | Columns: <b>Called</b> (Who is used)</p>
+            <table><thead><tr><th>Caller \\ Called</th>`];
+
+        sortedFiles.forEach(file => htmlChunks.push(`<th><div class="col-header">${file}</div></th>`));
         htmlChunks.push('</tr></thead><tbody>');
 
-        for (const row of rows) {
-            htmlChunks.push(`<tr><th>${row}</th>`);
-            for (const col of columns) {
-                const isCalling = realDependencies[col] && (realDependencies[col] as string[]).includes(row);
-                htmlChunks.push(isCalling ? `<td class="yes">✔</td>` : `<td></td>`);
-            }
+        sortedFiles.forEach(caller => {
+            htmlChunks.push(`<tr><td class="row-header">${caller}</td>`);
+            
+            sortedFiles.forEach(called => {
+                if (caller === called) {
+                    htmlChunks.push(`<td class="self" title="Self-reference">self</td>`);
+                } 
+                else {
+                    const symbols = (realDependencies[caller] && realDependencies[caller][called]) ? realDependencies[caller][called] : null;
+                    
+                    if (symbols && Array.isArray(symbols) && symbols.length > 0) {
+                        const firstSymbol = symbols[0];
+                        const othersCount = symbols.length - 1;
+                        const tooltip = othersCount > 0 
+                            ? `Used: ${firstSymbol}\\n(+ ${othersCount} others)` 
+                            : `Used: ${firstSymbol}`;
+
+                        htmlChunks.push(`<td class="yes" data-symbols="${tooltip}">✔</td>`);
+                    } else {
+                        htmlChunks.push(`<td></td>`);
+                    }
+                }
+            });
             htmlChunks.push('</tr>');
-        }
+        });
+
         htmlChunks.push(`</tbody></table></body></html>`);
         panel.webview.html = htmlChunks.join('');
-
-    } catch (error) {
-        const msg = error instanceof Error ? error.message : String(error);
-        vscode.window.showErrorMessage("Error: " + msg);
-    }
+    } catch (e) { vscode.window.showErrorMessage("Matrix Error: " + e); }
 }
 export function deactivate() { if (client) return client.stop(); }
