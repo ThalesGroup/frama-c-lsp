@@ -17,6 +17,7 @@ let allGoalsRaw: any[] = [];
 let activeFilters = { 
     status: "all", 
     smokeOnly: false, 
+    verdict: "all",
     prover: "all", 
     search: "", 
     function: "", 
@@ -125,7 +126,7 @@ async function uploadWpJson() {
             }
         });
 
-        activeFilters = { status: "all", smokeOnly: false, prover: "all", search: "", function: "", file: "", type: "", sortByTime: false,hasScript: false };
+        activeFilters = { status: "all", smokeOnly: false, prover: "all",verdict:"all", search: "", function: "", file: "", type: "", sortByTime: false,hasScript: false };
         applyFiltersAndRefreshUI();
         
         vscode.commands.executeCommand('wpGoalsView.focus');
@@ -141,19 +142,21 @@ function applyFiltersAndRefreshUI() {
     if (allGoalsRaw.length === 0) return;
 
     let fullyFilteredDataset = allGoalsRaw.filter(item => {
-        if (activeFilters.status !== "all") {
-            const itemVerdict = (item.verdict || "").toLowerCase();
-            if (itemVerdict !== activeFilters.status.toLowerCase()) {
-                return false;
-            }
-        }
-        
-        if (activeFilters.hasScript && (!item.script || item.script.trim() === "")) return false;
 
+        if (activeFilters.status !== "all") {
+            const itemStatus = item.passed === true ? "passed" : "failed";
+            if (itemStatus !== activeFilters.status) return false;
+        }
+
+        if (activeFilters.verdict && activeFilters.verdict !== "all") {
+            if ((item.verdict || "") !== activeFilters.verdict) return false;
+        }
+
+        if (activeFilters.hasScript && (!item.script || item.script.trim() === "")) return false;
         if (activeFilters.smokeOnly && item.smoke !== true) return false;
-        
+
         const provers = (item.provers && item.provers.length > 0) ? item.provers : [{ prover: "qed", time: 0 }];
-        const hasMatchingProver = provers.some((p: any) => 
+        const hasMatchingProver = provers.some((p: any) =>
             (p.prover || "qed").toLowerCase().includes(activeFilters.prover.toLowerCase())
         );
         if (activeFilters.prover !== "all" && !hasMatchingProver) return false;
@@ -161,7 +164,7 @@ function applyFiltersAndRefreshUI() {
         if (activeFilters.function && !(item.function || "").toLowerCase().includes(activeFilters.function.toLowerCase())) return false;
         if (activeFilters.file && !(item._localPath || item.file || "").toLowerCase().includes(activeFilters.file.toLowerCase())) return false;
         if (activeFilters.type && !(item.property || item.goal || "").toLowerCase().includes(activeFilters.type.toLowerCase())) return false;
-        
+
         if (activeFilters.search) {
             const term = activeFilters.search.toLowerCase();
             const funcMatch = (item.function || "").toLowerCase().includes(term);
@@ -170,7 +173,7 @@ function applyFiltersAndRefreshUI() {
             if (!funcMatch && !fileMatch && !propMatch) return false;
         }
 
-        return true; 
+        return true;
     });
 
     if (activeFilters.sortByTime) {
@@ -181,24 +184,30 @@ function applyFiltersAndRefreshUI() {
     }
 
     const MAX_DISPLAY = 10000;
+
+    if (fullyFilteredDataset.length > MAX_DISPLAY) {
+        vscode.window.showWarningMessage(
+            `Showing ${MAX_DISPLAY} of ${fullyFilteredDataset.length} goals. Refine your filters to see more.`
+        );
+    }
+
     const toDisplay = fullyFilteredDataset.slice(0, MAX_DISPLAY);
 
-    const formatted = toDisplay.map(item => {
-        return {
-            status: item.verdict || "unknown", 
-            goal: item.goal || "goal",
-            file: item._localPath || "",
-            line: item.line || 1,
-            proverInfo: (item.provers || []).map((p:any) => `(${p.prover} ${p.time})`).join(" ") || "(qed 0)",
-            script: item.script || "",
-            function: item.function || ""
-        };
-    });
+    const formatted = toDisplay.map(item => ({
+        status: item.passed === true ? "passed" : "failed",
+        goal: item.goal || "goal",
+        file: item._localPath || "",
+        line: item.line || 1,
+        proverInfo: (item.provers || []).map((p: any) => `(${p.prover} ${p.time})`).join(" ") || "(qed 0)",
+        script: item.script || "",
+        function: item.function || ""
+    }));
 
     lastWpData = formatted as any;
     wpDataProvider.update(["Filtered", "All", "All", formatted]);
     wpDataProvider.refresh();
-    setTimeout(() => updateDecorations(), 200);}
+    setTimeout(() => updateDecorations(), 200);
+}
 
 async function downloadWpJson() {
     const workspacePath = get_workspace();
@@ -495,15 +504,6 @@ export async function activate(context: ExtensionContext) {
     }, null, context.subscriptions);
     
 
-
-
-    vscode.workspace.onDidSaveTextDocument(async (document) => {
-        if (document.languageId === 'c' || document.languageId === 'h') {
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            await vscode.commands.executeCommand('acsl-lsp.debugAST');
-        }
-    }, null, context.subscriptions);
-
     // 6. Register all Frama-C Commands
     registerAllExtensionCommands(context);
 
@@ -526,12 +526,12 @@ function registerAllExtensionCommands(context: ExtensionContext) {
         commands.registerCommand('framaC.toggleAnnotations', () => framaCProvider.toggleAnnotations()),
 
         // --- Analysis & AST Commands ---
-        commands.registerCommand('acsl-lsp.debugAST', async () => {
+        commands.registerCommand('DisplayAST', async () => {
             const editor = window.activeTextEditor;
             if (!editor) return;
             const uri = editor.document.uri.toString();
             try {
-                const response = await client.sendRequest("custom/getAST", { uri: uri });
+                const response = await client.sendRequest("getAST", { uri: uri });
                 if (response) {
                     framaCProvider.updateAST(uri, response);
                     window.showInformationMessage("AST Loaded!");
@@ -579,7 +579,7 @@ commands.registerCommand('framaC.openAndDetail', async (item: FramaCItem) => {
     if (choice) framaCProvider.setAnnotationFilter(choice.label);
 }),
 commands.registerCommand('framaC.refreshAST', () => {
-    vscode.commands.executeCommand('acsl-lsp.debugAST');
+    vscode.commands.executeCommand('acsl-lsp.DisplayAST');
 }),
 
         commands.registerCommand('smokeTests', async () => {
@@ -829,14 +829,14 @@ commands.registerCommand('framaC.refreshAST', () => {
         }),
 
         // --- Specialized Cursor Commands ---
-        commands.registerCommand('provePOCursor', async () => {
+        commands.registerCommand('provePO Cursor', async () => {
             try {
                 const editor = window.activeTextEditor;
                 if (!editor) return;
                 const timeout = await window.showInputBox({ prompt: `Launch Auto-Proof (Timeout in s)`, value: '10' });
                 if (!timeout) return;
                 const args = [editor.document.fileName, editor.selection.active.line, parseInt(timeout, 10)];
-                const res: any = await client.sendRequest('custom/proveAuto', args);
+                const res: any = await client.sendRequest('proveAuto', args);
                 if (res && Array.isArray(res)) {
                     window.showInformationMessage(`Targeting '${res[2]}' in '${res[1]}'.`);
                     wpDataProvider.update(res);
@@ -944,7 +944,18 @@ commands.registerCommand('framaC.refreshAST', () => {
             applyFiltersAndRefreshUI();
         }),
 
-
+        commands.registerCommand('wpFilters.filterVerdict', async () => {
+    const uniqueVerdicts = new Set<string>();
+    allGoalsRaw.forEach(item => {
+        if (item.verdict) uniqueVerdicts.add(item.verdict);
+    });
+    const options = ["all", ...Array.from(uniqueVerdicts).sort()];
+    const choice = await window.showQuickPick(options, { placeHolder: "Select a verdict" });
+    if (choice) {
+        activeFilters.verdict = choice;  // ← champ dédié, pas status
+        applyFiltersAndRefreshUI();
+    }
+}),
         commands.registerCommand('wpFilters.filterProver', async () => {
             const uniqueProvers = new Set<string>();
             allGoalsRaw.forEach(item => {
@@ -964,29 +975,11 @@ commands.registerCommand('framaC.refreshAST', () => {
         }),
 
         commands.registerCommand('wpFilters.clearAll', () => {
-            activeFilters = { status: "all", smokeOnly: false, prover: "all", search: "", function: "", file: "", type: "", sortByTime: false,hasScript: false };
+            activeFilters = { status: "all", smokeOnly: false, prover: "all",verdict:"all", search: "", function: "", file: "", type: "", sortByTime: false,hasScript: false };
             applyFiltersAndRefreshUI();
             window.showInformationMessage("All filters and sorting cleared.");
         }),
-        commands.registerCommand('wpFilters.filterVerdict', async () => {
-    const uniqueVerdicts = new Set<string>();
-    allGoalsRaw.forEach(item => {
-        if (item.verdict) {
-            uniqueVerdicts.add(item.verdict.toLowerCase());
-        }
-    });
-
-    const options = ["all", ...Array.from(uniqueVerdicts).sort()];
-    
-    const choice = await window.showQuickPick(options, { 
-        placeHolder: "Select a verdict available in your results" 
-    });
-
-    if (choice) {
-        activeFilters.status = choice;
-        applyFiltersAndRefreshUI();
-    }
-}),
+        
 
         commands.registerCommand('wpFilters.toggleHasScript', () => {
             activeFilters.hasScript = !activeFilters.hasScript;
@@ -1025,7 +1018,7 @@ class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
                             smoke: false // (By default)
                         };
                     });
-                     activeFilters = { status: "all", smokeOnly: false, prover: "all", search: "", function: "", file: "", type: "", sortByTime: false,hasScript: false };
+                     activeFilters = { status: "all", smokeOnly: false, prover: "all",verdict:"all", search: "", function: "", file: "", type: "", sortByTime: false,hasScript: false };
                 }
 
             } else {

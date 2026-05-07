@@ -472,99 +472,47 @@ let get_notification_list filename dlist accumulated_list =
   let data = Json.save_string (json_notification) in
   data :: accumulated_list
 
-type pending_diag = {
-  filename: string;
-  line: int;
-  severity: Lsp_types.DiagnosticSeverity.t;
-}
-let current_pending_diag : pending_diag option ref = ref None
-
 let update_diag_data msg severity =
   try
-    let regex = Str.regexp {|^\(\[\([^]]+\)\][ \t]*\)?\([^:]+\):\([0-9]+\):[ \t]*\(.*\)|} in
-    if Str.string_match regex msg 0 then begin
-      let raw_filename = String.trim (Str.matched_group 3 msg) in
-      let filename =
-        if String.length raw_filename > 0 && raw_filename.[0] = '/' then
-          raw_filename
-        else
-          Filename.concat !rootPath raw_filename
-      in
-      if String.length filename >= 5 && String.sub filename 0 5 = "/tmp/" then
-        ()
-      else begin
-        let pos_str = Str.matched_group 4 msg in
-        let pos_int = Stdlib.int_of_string pos_str in
-        let error_text = String.trim (Str.matched_group 5 msg) in
-        let lower_error = String.lowercase_ascii error_text in
-        if lower_error = "warning:" || lower_error = "error:" || lower_error = "fatal error:" then
-          current_pending_diag := Some { filename; line = pos_int; severity }
-        else begin
-          let pos = Utils.to_filepath_position filename pos_int 0 in
-          let loc = Utils.real_loc (pos, pos) in
-          let diag = Lsp_types.Diagnostic.create
-            ~range:(Utils.get_lsp_range loc)
-            ~severity:severity
-            ~message:error_text
-            ~source:"Frama-C"
-            ~code:(Lsp_types.Diagnostic.Str "framaC")
-            ()
-          in
-          let diag_list = match DidSave.StringMap.find_opt filename !DidSave.diag_map with
-            | None -> [] | Some l -> l
-          in
-          DidSave.diag_map := DidSave.StringMap.add filename (diag :: diag_list) !DidSave.diag_map
-        end
-      end
-    end
-  with _exn -> ()
+    let msg_list = Str.split (Str.regexp ":") msg in
+    let filename, pos =
+      match msg_list with
+        | filename :: pos :: _ -> filename, (Stdlib.int_of_string pos)
+        | _ -> "", 0
+    in
+    Options.Self.debug ~level:1 "\t%s ---- %d\n%!" (filename) pos;
+    let pos = Utils.to_filepath_position filename pos 0 in
+    let loc = Utils.real_loc (pos, pos) in
+    let source = "kernel" in
+    let diag = Lsp_types.Diagnostic.create ~range:(Utils.get_lsp_range loc) ~severity:severity ~message:msg ~source:source () in
+    let diag_list = DidSave.StringMap.find_opt filename !DidSave.diag_map in
+    let diag_list = match diag_list with
+      | None -> []
+      | Some l -> l
+    in
+    let dlist = (diag :: diag_list) in
+    DidSave.diag_map := DidSave.StringMap.add filename dlist !DidSave.diag_map;
+  with _ -> ()
 
 let rec had_errors_in_channel oc =
   try
     let msg = Stdlib.input_line oc in
-    Options.Self.feedback ~level:1 "\t%s\n%!" msg;
-    
-    begin match !current_pending_diag with
-    | Some pending ->
-        let pos = Utils.to_filepath_position pending.filename pending.line 0 in
-        let loc = Utils.real_loc (pos, pos) in
-        let diag = Lsp_types.Diagnostic.create 
-          ~range:(Utils.get_lsp_range loc) 
-          ~severity:pending.severity 
-          ~message:(String.trim msg) (* <-- On utilise la ligne actuelle comme message *)
-          ~source:"Frama-C" 
-          ~code:(Lsp_types.Diagnostic.Str "framaC") 
-          () 
-        in
-        let diag_list = match DidSave.StringMap.find_opt pending.filename !DidSave.diag_map with
-          | None -> [] | Some l -> l
-        in
-        DidSave.diag_map := DidSave.StringMap.add pending.filename (diag :: diag_list) !DidSave.diag_map;
-        current_pending_diag := None;
-    | None -> ()
-    end;
-    
-    let msg_lower = String.lowercase_ascii msg in
-    
-    if (Utils.contains msg_lower ~suffix:"frama-c exit code: 0") then false
-    else if (Utils.contains msg_lower ~suffix:": fatal error:") then (
+    Options.Self.feedback ~level:1 "\t%s\n%!" (msg);
+    if (Utils.contains msg ~suffix: "FRAMA-C EXIT CODE: 0") then false
+    else if (Utils.contains msg ~suffix: ": fatal error:") then (
       update_diag_data msg Lsp_types.DiagnosticSeverity.Error;
       had_errors_in_channel oc)
-else if (Utils.contains msg_lower ~suffix:": error:" || Utils.contains msg_lower ~suffix:"user error:") then (
-        update_diag_data msg Lsp_types.DiagnosticSeverity.Error;
+    else if (Utils.contains msg ~suffix: ": error:") then (
+      update_diag_data msg Lsp_types.DiagnosticSeverity.Error;
       had_errors_in_channel oc)
-    else if (Utils.contains msg_lower ~suffix:": warning:") then (
+    else if (Utils.contains msg ~suffix: ": warning:") then (
       update_diag_data msg Lsp_types.DiagnosticSeverity.Warning;
       had_errors_in_channel oc)
-    else if (Utils.contains msg_lower ~suffix:": note:") then (
+    else if (Utils.contains msg ~suffix: ": note:") then (
       update_diag_data msg Lsp_types.DiagnosticSeverity.Warning;
       had_errors_in_channel oc)
-    else 
-      had_errors_in_channel oc
-      
-  with End_of_file -> 
-    current_pending_diag := None; 
-    true
+    else had_errors_in_channel oc
+  with End_of_file -> Options.Self.debug ~level:1 "\n%!"; true
 
 
   let read_socket_in_chunks socket chunk_size =
@@ -592,9 +540,7 @@ let execute_extra_command prog args =
 let execute_command prog args feature wrapper_port =
   let signal_handler signal = if signal = Sys.sigint then () in
   Sys.set_signal Sys.sigint (Sys.Signal_handle signal_handler);
-  DidSave.diag_map := DidSave.StringMap.empty;
   let wrapper_sock = Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in
-
   Unix.setsockopt wrapper_sock Unix.SO_REUSEADDR true;
   Unix.bind wrapper_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port));
   Unix.listen wrapper_sock 100;
@@ -615,20 +561,8 @@ let execute_command prog args feature wrapper_port =
       | GetContext_feature (_, _, _, _)
       | Prove_feature (_, _, _, _) 
       | ComputeRealDependencies_feature (_, _) 
-      | ComputeAST_feature (_, _) ->
-        Options.Self.debug ~level:1 "Executed frama-c command (JSON Socket)\n%!";
-        let (plugin_sock, _) = Unix.accept wrapper_sock in
-        let _data_size = getnumber (readcontlen plugin_sock) in
-        let chunk_size = 65530 in
-        let request_str = read_socket_in_chunks plugin_sock chunk_size in
-        Unix.close plugin_sock;
-        Unix.close wrapper_sock;
-        let clean_json = extract_json request_str in
-        (match special_errors with
-        | [] -> clean_json
-        | l  -> (String.concat ":::" l) ^ ":::" ^ clean_json)
+      |ComputeAST_feature (_, _) 
       | DidSave_feature
-     
       | ComputeProofObligation_feature (_, _, _, _, _)
       | ComputeProofObligationID_feature (_, _) ->
       Options.Self.debug ~level:1 "Executed frama-c command (frama-c exited normally)\n%!";
@@ -743,41 +677,36 @@ let execute_command prog args feature wrapper_port =
         Unix.close wrapper_sock;
         data
       )
-let fork_tmp_file = ref ""
-let fork_execute_command prog args feature wrapper_port =
-  let tmp_file = Filename.temp_file "acsl_lsp_" ".json" in
-  let pid = Unix.fork () in
-  if not (pid = 0) then begin
-    fork_pid := pid;
-    fork_tmp_file := tmp_file;
-    let lsp_message = Lsp_types.ShowMessageParams.create
-      ~type_:Lsp_types.MessageType.Info
-      ~message:"Request sent to Frama-C !" () in
-    let lsp_notification = Lsp_types.NotificationMessage.create
-      ~jsonrpc:"2.0" ~method_:"window/showMessage"
-      ~params:(Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
-    Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification), pid
-  end
-  else begin
-    DidSave.diag_map := DidSave.StringMap.empty;
-    (try
-      let result_str = execute_command prog args feature wrapper_port in
-      let diag_notifications =
-        DidSave.StringMap.fold (fun uri diag_list acc ->
-          if String.length uri >= 5 && String.sub uri 0 5 = "/tmp/"
-          then acc
-          else get_notification_list uri diag_list acc
-        ) !DidSave.diag_map [] in
-      let all_messages = diag_notifications @
-        (if String.trim result_str <> "" then [result_str] else []) in
-      let oc = open_out tmp_file in
-      output_string oc (String.concat ":::" all_messages);
-      close_out oc
-    with exn ->
-      Options.Self.debug ~level:1 "Child error: %s\n" (Printexc.to_string exn));
-    Unix._exit 0
-  end
 
+let fork_execute_command prog args feature wrapper_port =
+  let pid = Unix.fork () in
+  if not (pid = 0) then (
+    fork_pid := pid;
+    Options.Self.debug ~level:1 "Request sent to Frama-C !\n%!";
+    let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Request sent to Frama-C !") () in
+    let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
+    let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
+    data, pid
+  )
+  else
+    try
+      (execute_command prog args feature wrapper_port), pid
+    with exn -> (match feature with
+      | GetContext_feature (id, _, _, _) 
+      | ComputeProofObligation_feature (_, id, _, _, _)
+      | ComputeProofObligationID_feature (id, _)
+      | Prove_feature (id, _, _, _) ->
+        Options.Self.debug ~level:1 "Server is busy !:! : %s, %s\n" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
+        let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:"Server is busy !:!" () in
+        let lsp_message = (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~error:lsp_error_message ()) in
+        let data = Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_message) in
+        data, pid
+      | _ ->
+        Options.Self.debug ~level:1 "Server is busy !::! : %s, %s\n" (Printexc.exn_slot_name exn) (Printexc.get_backtrace ());
+        let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Error ~message: "Server is busy !::!" () in
+        let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
+        let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
+        data, pid)
 
 
 let capabilities_str = {|{
@@ -885,7 +814,7 @@ let rq_handler json_string wrapper_port =
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature wrapper_port in
       Lsp_types.CONTENT (data), pid;
-      | "custom/proveAuto" -> 
+      | "proveAuto" -> 
       Options.Self.debug ~level:1 "Auto-Prove Request triggered\n%!";
       
       let (file, line, timeout) = match request.params with
@@ -902,24 +831,24 @@ let rq_handler json_string wrapper_port =
           let ctx_feature = GetContext_feature (0, file, line, 0) in
           let kernel_opt = KernelOpt.create ~strategies:false () in
           let ctx_command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file] ~lsp:(LspOpt.create ctx_feature) () in
-
           let (ctx_prog, ctx_args) = Command.args_of_t ctx_command in
-          let ctx_response_str = execute_command ctx_prog ctx_args ctx_feature wrapper_port in
-          Options.Self.debug ~level:1 "ctx_response_str: %s\n%!" ctx_response_str;
+         let ctx_response_str = execute_command ctx_prog ctx_args ctx_feature wrapper_port in
+          Options.Self.debug ~level:1 "ctx_response_str = [%s]\n%!" ctx_response_str;
 
-          let ctx_json_str = 
-  let parts = Str.split (Str.regexp ":::") ctx_response_str in
-  match List.rev parts with
-  | [] -> ""
-  | last :: _ -> String.trim last
-in
+          let ctx_json_str =
+            let parts = Str.split (Str.regexp ":::") ctx_response_str in
+            match List.rev parts with
+            | [] -> ""
+            | last :: _ -> String.trim last
+          in
+          Options.Self.debug ~level:1 "ctx_json_str = [%s]\n%!" ctx_json_str;
 
-let (func_name, prop_name) = 
-  try match Json.load_string ctx_json_str with
-     | `List [`String f; `String p] -> (f, p)
-     | _ -> ("@none", "")
-  with _ -> ("@none", "")
-in
+          let (func_name, prop_name) = 
+            try match Json.load_string ctx_json_str with
+              | `List [`String f; `String p] -> (f, p)
+              | _ -> ("@none", "")
+            with _ -> ("@none", "")
+          in
 
           if func_name = "@none" || func_name = "" then
              let resp = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:id ~result:(`List []) () in
@@ -951,7 +880,7 @@ in
              Lsp_types.CONTENT (data), pid
           end
       end
-      | "custom/getAST" -> 
+      | "getAST" -> 
       Options.Self.debug ~level:1 "AST Request triggered\n%!";
       
       let uri = match request.params with
@@ -1363,3 +1292,4 @@ let handle (json_string : string) server_sock wrapper_port : (Lsp_types.lsp_resu
     | _ -> Options.Self.debug ~level:1 "no result\n%!"; raise (UnknownRequest 1)
   with
   | Json.Error _ -> raise (UnknownRequest 1)
+    

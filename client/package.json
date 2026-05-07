@@ -110,11 +110,8 @@
                 {
                     "command": "showLocalMetrics",
                     "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
-                },
-                {
-                    "command": "acsl-lsp.debugAST",
-                    "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
                 }
+        
             ],
             "Frama-C/WP": [
                 {
@@ -134,7 +131,7 @@
                     "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
                 },
                 {
-                    "command": "provePOCursor",
+                    "command": "provePO Cursor",
                     "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
                 },
                 {
@@ -207,7 +204,7 @@
                     "group": "navigation@1"
                 },
                 {
-                    "command": "framaC.refreshAST",
+                    "command": "DisplayAST",
                     "when": "view == framaCExplorer",
                     "group": "navigation@1"
                 },
@@ -381,8 +378,8 @@
                 "icon": "$(project)"
             },
             {
-    "command": "framaC.refreshAST",
-    "title": "Refresh AST for current file",
+    "command": "DisplayAST",
+    "title": "Display Ast For Current File",
     "icon": "$(refresh)"
 },
             {
@@ -409,11 +406,7 @@
                 "title": "Hide Annotations",
                 "icon": "$(shield)"
             },
-            {
-                "command": "acsl-lsp.debugAST",
-                "title": "Display AST",
-                "category": "Frama-C"
-            },
+           
             {
                 "command": "displayCIL",
                 "title": "Display File CIL"
@@ -495,8 +488,8 @@
                 "title": "Stop"
             },
             {
-                "command": "provePOCursor",
-                "title": "ProvePOCursor",
+                "command": "provePO Cursor",
+                "title": "Prove PO Cursor",
                 "category": "Frama-C/WP"
             },
             {
