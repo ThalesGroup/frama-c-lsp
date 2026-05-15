@@ -33,17 +33,28 @@ let compute_and_serialize id current_file_uri =
     let is_current_file = (Filename.basename file = target_file_name) in
 
     match glob with
-    | GFun ({svar=vi; _}, _) | GFunDecl (_, vi, _) when is_current_file ->
-        if not (List.exists (fun (item : Json.t) -> 
-          match item with 
-          | `Assoc l -> List.assoc "name" l = `String vi.vname
-          | _ -> false) !functions) then
-        functions := (`Assoc [
-          ("name", `String vi.vname);
-          ("type", `String "function");
-          ("line", `Int line);
-          ("file", `String file)
-        ]) :: !functions
+    | GFun ({svar=vi; _}, _) when is_current_file ->
+    functions := (`Assoc [
+      ("name", `String vi.vname);
+      ("type", `String "function");
+      ("line", `Int line);
+      ("file", `String file)
+    ]) :: (List.filter (fun (item : Json.t) -> 
+      match item with 
+      | `Assoc l -> List.assoc "name" l <> `String vi.vname
+      | _ -> true) !functions)
+
+| GFunDecl (_, vi, _) when is_current_file ->
+    if not (List.exists (fun (item : Json.t) -> 
+      match item with 
+      | `Assoc l -> List.assoc "name" l = `String vi.vname
+      | _ -> false) !functions) then
+    functions := (`Assoc [
+      ("name", `String vi.vname);
+      ("type", `String "function");
+      ("line", `Int line);
+      ("file", `String file)
+    ]) :: !functions
 
     | GVar (vi, _, _) | GVarDecl (vi, _) ->
         if is_current_file || not (Cil.global_is_in_libc glob) then

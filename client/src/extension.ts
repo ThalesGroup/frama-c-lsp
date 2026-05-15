@@ -291,26 +291,18 @@ async function initializeDefaultSettings() {
         "kernel.includePaths": [],
         "kernel.sourceFiles": [],
         
-        "kernel.macros": [
-            "__FRAMAC_SPM", 
-            "__FRAMAC_STRATEGIES_", 
-            "FRAMA_C_INCOMPLETE_STRATEGIES", 
-            "__FRAMAC_CCDOC", 
-            "__FRAMAC_METACSL",
-            "__FRAMAC_VERSION=30",
-            "FRAMA_C_TSFI_FSP"
-        ],
+        "kernel.macros": [],
 
         "vscodeacsl.maxNumberOfProblems": 100000,
         "kernel.lspDebug": 0,
-        "kernel.macroStrategiesFunctionPrefix": "__FRAMAC_STRATEGIES_",
+        "kernel.macroStrategiesFunctionPrefix": "",
         "kernel.sourceFileStrategies": [],
         "kernel.sourceFileMetacsl": [],
         "kernel.aggressiveMerging": false,
         "kernel.removeUnusedSpecifiedFunctions": false,
         "kernel.machdep": "x86_32",
-        "kernel.inlineCalls": ["@inline"],
-        "kernel.removeInlined": ["@inline"],
+        "kernel.inlineCalls": [],
+        "kernel.removeInlined": [],
         "kernel.noAnnot": false,
         "kernel.generatedSpecCustom": [],
 
@@ -323,23 +315,23 @@ async function initializeDefaultSettings() {
         "wp.par": 8,
         "wp.cache": "update",
         "wp.script": "batch",
-        "wp.session": "frama_c/sessions",
+        "wp.session": ".framaC",
         "wp.autoDepth": 20,
         "wp.autoWidth": 1,
 
         "metrics.byFunction": true,
         "callgraph.roots": [],
         "callgraph.services": false,
-        "uncast.active": true,
+        "uncast.active": false,
         "uncast.lshiftAsMul": true,
         "uncast.rshiftAsDiv": true,
-        "uncast.endianness": "little",
+        "uncast.endianness": "",
         "metacsl.active": false,
         "metacsl.checks": true,
         "metacsl.noCheckExt": true,
         "metacsl.noSimpl": true,
         "metacsl.numberAssertions": true,
-        "ccdoc.active": true,
+        "ccdoc.active": false,
         "ccdoc.coverageVerif": true,
         "ccdoc.latex": true
     };
@@ -450,12 +442,7 @@ export async function activate(context: ExtensionContext) {
     });
     context.subscriptions.push(importDisposable);
 
-    const importStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-    importStatusBarItem.command = 'acsl.importProjectConfig'; 
-    importStatusBarItem.text = '$(project) JCAT: Import IDE';
-    importStatusBarItem.tooltip = 'Click to Import Config File';
-    importStatusBarItem.show();
-    context.subscriptions.push(importStatusBarItem);
+  
 
 	const serverOptions: ServerOptions = {
 		run: {command: serverModuleRun,	transport: { kind: TransportKind.socket, port: serverPort }, options: { shell: true }},
@@ -516,14 +503,8 @@ export async function activate(context: ExtensionContext) {
 function registerAllExtensionCommands(context: ExtensionContext) {
     context.subscriptions.push(
         // --- Sidebar Exploration & Toggles ---
-        commands.registerCommand('framaCExplorer.search', async () => {
-            const val = await window.showInputBox({ prompt: "Filter the AST..." });
-            framaCProvider.setFilter(val || "");
-        }),
-        commands.registerCommand('framaC.toggleFunctions', () => framaCProvider.toggleFunctions()),
-        commands.registerCommand('framaC.toggleVariables', () => framaCProvider.toggleVariables()),
-        commands.registerCommand('framaC.toggleTypes', () => framaCProvider.toggleTypes()),
-        commands.registerCommand('framaC.toggleAnnotations', () => framaCProvider.toggleAnnotations()),
+        
+    
 
         // --- Analysis & AST Commands ---
         commands.registerCommand('DisplayAST', async () => {
@@ -541,26 +522,29 @@ function registerAllExtensionCommands(context: ExtensionContext) {
                 }
             } catch (error) { console.error(error); }
             
-        }),
+        }),commands.registerCommand('framaCExplorer.search', async () => {
+    const val = await window.showInputBox({ 
+        prompt: "Search AST (functions, variables, types, annotations)...",
+        value: framaCProvider.getFilter(),  // pré-rempli avec la valeur courante
+        placeHolder: "Leave empty to clear"
+    });
+    if (val !== undefined) framaCProvider.setFilter(val);
+}),
 	
 // Command to handle clicking on any Sidebar element
 
-commands.registerCommand('framaC.openAndDetail', async (item: FramaCItem) => {
-    if (!item.resourceUri || item.line === undefined) return;
-
-   
-        const document = await workspace.openTextDocument(item.resourceUri);
-        const editor = await window.showTextDocument(document);
-
-        if (item.line > 0) {
-            const pos = new Position(item.line - 1, 0);
-            const lineText = document.lineAt(pos.line).text;
-            const charIndex = lineText.indexOf(item.label);
-            const finalPos = new Position(pos.line, charIndex !== -1 ? charIndex : 0);
-
-            editor.selection = new vscode.Selection(finalPos, finalPos);
-            editor.revealRange(new Range(finalPos, finalPos), vscode.TextEditorRevealType.InCenter);
-
+commands.registerCommand('framaC.openAndDetail', async (item: { fsPath?: string, line?: number, label: string }) => {
+    if (!item.fsPath || item.line === undefined) return;
+    const uri = vscode.Uri.file(item.fsPath);  // ← Uri.file() pas Uri.parse()
+    const document = await workspace.openTextDocument(uri);
+    const editor = await window.showTextDocument(document);
+    if (item.line > 0) {
+        const pos = new Position(item.line - 1, 0);
+        const lineText = document.lineAt(pos.line).text;
+        const charIndex = lineText.indexOf(item.label);
+        const finalPos = new Position(pos.line, charIndex !== -1 ? charIndex : 0);
+        editor.selection = new vscode.Selection(finalPos, finalPos);
+        editor.revealRange(new Range(finalPos, finalPos), vscode.TextEditorRevealType.InCenter);
     } 
 }),commands.registerCommand('framaC.filterAnnotations', async () => {
     const options = [
@@ -1093,10 +1077,7 @@ export class FramaCProvider implements vscode.TreeDataProvider<FramaCItem> {
     private astData: Map<string, any> = new Map();
     private functionDetails: Map<string, any[]> = new Map(); 
     private searchQuery = "";
-    private hideVariables = false; 
-    private hideFunctions = false;
-    private hideTypes = false; 
-    private hideAnnotations = false;
+ 
     private currentAstUri: string | undefined;
     private annotationFilter: string = "all";
 
@@ -1110,10 +1091,7 @@ setAnnotationFilter(kind: string) {
 
     // --- Configuration methods ---
     setFilter(q: string) { this.searchQuery = q.toLowerCase(); this.refresh(); }
-    toggleFunctions() { this.hideFunctions = !this.hideFunctions; this.refresh(); }
-    toggleVariables() { this.hideVariables = !this.hideVariables; this.refresh(); }
-    toggleTypes() { this.hideTypes = !this.hideTypes; this.refresh(); }
-    toggleAnnotations() { this.hideAnnotations = !this.hideAnnotations; this.refresh(); }
+    getFilter(): string { return this.searchQuery; }
 
     // --- Data update methods ---
     updateAST(uri: string, data: any) {
@@ -1162,28 +1140,34 @@ async getChildren(element?: FramaCItem): Promise<FramaCItem[]> {
 
     switch (element.contextValue) {
         case "cat_func":
-            if (!this.hideFunctions && data.functions) {
-                data.functions.forEach((f: any) => {
-                    children.push(new FramaCItem(f.name, vscode.TreeItemCollapsibleState.None, "function", resolveUri(f.file), f.line));
-                });
-            }
-            break;
-        case "cat_var":
-            if (!this.hideVariables && data.globals) {
-                data.globals.forEach((g: any) => {
-                    children.push(new FramaCItem(g.name, vscode.TreeItemCollapsibleState.None, "variable", resolveUri(g.file), g.line));
-                });
-            }
-            break;
-        case "cat_type":
-            if (!this.hideTypes && data.types) {
-                data.types.forEach((t: any) => {
-                    children.push(new FramaCItem(t.name, vscode.TreeItemCollapsibleState.None, "type", resolveUri(t.file), t.line));
-                });
-            }
-            break;
+    if (data.functions) {
+        data.functions
+            .filter((f: any) => !this.searchQuery || f.name.toLowerCase().includes(this.searchQuery))
+            .forEach((f: any) => {
+                children.push(new FramaCItem(f.name, vscode.TreeItemCollapsibleState.None, "function", resolveUri(f.file), f.line));
+            });
+    }
+    break;
+case "cat_var":
+    if (data.globals) {
+        data.globals
+            .filter((g: any) => !this.searchQuery || g.name.toLowerCase().includes(this.searchQuery))
+            .forEach((g: any) => {
+                children.push(new FramaCItem(g.name, vscode.TreeItemCollapsibleState.None, "variable", resolveUri(g.file), g.line));
+            });
+    }
+    break;
+case "cat_type":
+    if (data.types) {
+        data.types
+            .filter((t: any) => !this.searchQuery || t.name.toLowerCase().includes(this.searchQuery))
+            .forEach((t: any) => {
+                children.push(new FramaCItem(t.name, vscode.TreeItemCollapsibleState.None, "type", resolveUri(t.file), t.line));
+            });
+    }
+    break;
         case "cat_annot":
-    if (!this.hideAnnotations && data.annotations) {
+    if (data.annotations) {
         data.annotations
             .filter((a: any) => 
                 this.annotationFilter === "all" || 
@@ -1198,7 +1182,7 @@ async getChildren(element?: FramaCItem): Promise<FramaCItem[]> {
                     `${a.name}`,
                     vscode.TreeItemCollapsibleState.None,
                     a.type,
-                    resolveUri(a.file),
+                    resolveUri(a.file),  // ← correct
                     a.line
                 );
                 item.description = a.type;
@@ -1217,7 +1201,7 @@ export class FramaCItem extends vscode.TreeItem {
         public readonly collapsibleState: vscode.TreeItemCollapsibleState, 
         public readonly contextValue: string, 
 		
-        public resourceUri?: vscode.Uri,
+        public filePath?: vscode.Uri,
 		public readonly line?: number
     ) {
         super(label, collapsibleState);
@@ -1227,7 +1211,11 @@ export class FramaCItem extends vscode.TreeItem {
             this.command = { 
                 command: 'framaC.openAndDetail', 
                 title: 'Open Definition', 
-                arguments: [this] 
+                arguments: [{ 
+    fsPath: filePath?.fsPath,  // ← fsPath string, pas toString()
+    line: line,
+    label: label
+}]
             };
         }
 

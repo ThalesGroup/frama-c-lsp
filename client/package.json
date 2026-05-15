@@ -80,6 +80,10 @@
             ],
             "Frama-C": [
                 {
+        "command": "acsl.importProjectConfig",
+        "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
+    },
+                {
                     "command": "displayCIL",
 "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
                 },
@@ -145,6 +149,11 @@
             ],
             "view/title": [
                 {
+    "command": "framaCExplorer.search",
+    "when": "view == framaCExplorer",
+    "group": "navigation@0"
+},
+                {
                     "command": "wpGoalsView.downloadJson",
                     "when": "view == wpGoalsView",
                     "group": "navigation@0"
@@ -209,26 +218,6 @@
                     "group": "navigation@1"
                 },
                 {
-                    "command": "framaC.toggleFunctions",
-                    "when": "view == framaCExplorer",
-                    "group": "navigation@1"
-                },
-                {
-                    "command": "framaC.toggleVariables",
-                    "when": "view == framaCExplorer",
-                    "group": "navigation@2"
-                },
-                {
-                    "command": "framaC.toggleTypes",
-                    "when": "view == framaCExplorer",
-                    "group": "navigation@3"
-                },
-                {
-                    "command": "framaC.toggleAnnotations",
-                    "when": "view == framaCExplorer",
-                    "group": "navigation@4"
-                },
-                {
           "command": "wpFilters.filterVerdict",
           "group": "navigation@3",
           "when": "view == wpGoalsView"
@@ -245,13 +234,7 @@
                     "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
                 }
             ],
-            "editor/title": [
-                {
-                    "command": "acsl.importProjectConfig",
-                    "group": "navigation",
-                    "when": "resourceExtname == .c || resourceExtname == .h"
-                }
-            ],
+            
             "view/item/context": [
                 {
                     "command": "showScript",
@@ -303,6 +286,11 @@
             }
         ],
         "commands": [
+            {
+    "command": "framaCExplorer.search",
+    "title": "Search AST",
+    "icon": "$(search)"
+},
             {
                 "command": "wpGoalsView.downloadJson",
                 "title": "Export WP Results (JSON)",
@@ -386,27 +374,6 @@
                 "command": "computeIncludeGraph",
                 "title": "Compute Dependency Matrix"
             },
-            {
-                "command": "framaC.toggleFunctions",
-                "title": "Hide Functions",
-                "icon": "$(symbol-function)"
-            },
-            {
-                "command": "framaC.toggleVariables",
-                "title": "Hide Variables",
-                "icon": "$(symbol-variable)"
-            },
-            {
-                "command": "framaC.toggleTypes",
-                "title": "Hide Types",
-                "icon": "$(symbol-class)"
-            },
-            {
-                "command": "framaC.toggleAnnotations",
-                "title": "Hide Annotations",
-                "icon": "$(shield)"
-            },
-           
             {
                 "command": "displayCIL",
                 "title": "Display File CIL"
