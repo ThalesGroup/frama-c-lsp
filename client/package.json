@@ -765,7 +765,16 @@
                         "type": "integer",
                         "default": 220,
                         "description": "Frama-C option: -wp-filename-truncation"
-                    }
+                    },
+                    "wp.autoProveFunctions": {
+    "scope": "workspace",
+    "type": "array",
+    "items": {
+        "type": "string"
+    },
+    "default": [],
+    "description": "List of functions to automatically prove via WP upon saving a file. Use ['@all'] to target all functions."
+}
                 }
             },
             {

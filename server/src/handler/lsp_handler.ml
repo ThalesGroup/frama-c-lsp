@@ -31,7 +31,7 @@ let extract_json raw_data =
 let fork_pid = ref 0
 
 type lsp_feature =
-  | DidSave_feature
+  | DidSave_feature of string 
   | ComputeCIL_feature
   | ComputeCallGraph_feature of string
   | ComputeMetrics_feature
@@ -339,7 +339,7 @@ module LspOpt = struct
   let create (feature : t) = feature
   let string_of_t (feature : t) : string =
     match feature with
-    | DidSave_feature -> "-lsp-did-save"
+    | DidSave_feature _ -> "-lsp-did-save"
     (* | DidClose_feature (file) -> Printf.sprintf "-lsp-did-close=%s" file *)
     | ComputeAST_feature (id, file) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-ast=%s" id file
     | ComputeCIL_feature -> ""
@@ -562,7 +562,7 @@ let execute_command prog args feature wrapper_port =
       | Prove_feature (_, _, _, _) 
       | ComputeRealDependencies_feature (_, _) 
       |ComputeAST_feature (_, _) 
-      | DidSave_feature
+      | DidSave_feature _ 
       | ComputeProofObligation_feature (_, _, _, _, _)
       | ComputeProofObligationID_feature (_, _) ->
       Options.Self.debug ~level:1 "Executed frama-c command (frama-c exited normally)\n%!";
@@ -580,7 +580,7 @@ let execute_command prog args feature wrapper_port =
         | l, false -> (String.concat ":::" l) ^ ":::" ^ request_str
       in
       data
-    
+
       | ComputeCIL_feature
       | ComputeMetrics_feature ->
         Options.Self.debug ~level:1 "No Error after executing frama-c command\n%!";
@@ -602,10 +602,11 @@ let execute_command prog args feature wrapper_port =
         let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
         Unix.close wrapper_sock;
         data
-    )
+        )
+      
   | _, "frama-c-gui" -> (
     match feature with
-    | DidSave_feature
+    | DidSave_feature _
     | ComputeCIL_feature
     | ComputeCallGraph_feature _
     | ComputeMetrics_feature ->
@@ -638,7 +639,7 @@ let execute_command prog args feature wrapper_port =
   | Unix.WSTOPPED _, _ ->
     (
       match feature with
-      | DidSave_feature ->
+      | DidSave_feature _ ->
           Options.Self.debug ~level:1 "Executed frama-c command (frama-c may have exited with errors)\n%!";
           let (plugin_sock, _) = Unix.accept wrapper_sock in
           let _data_size = getnumber (readcontlen plugin_sock) in
@@ -1070,10 +1071,40 @@ let notif_handler json_string server_sock wrapper_port =
       begin
         let kernel_opt = KernelOpt.create ~strategies:false () in
         let uncast_opt = UncastOpt.create () in
-        let wp_opt = WpOpt.create ~wp_prop:["@assigns"; "rte"] ~wp_prover:["none"] ~wp_smoke_tests:false ~wp_gen:true () in
         let metacsl_opt = MetacslOpt.create () in
-        let feature = DidSave_feature in
-        let lsp_opt = LspOpt.create (feature) in
+        let feature = DidSave_feature file_name in
+        let lsp_opt = LspOpt.create feature in
+
+        let raw_funcs = !Configuration.global_params.wpAutoProveFunctions in
+        let wp_opt =
+          if raw_funcs = [] then
+            WpOpt.create
+              ~wp_prop:["@assigns"; "rte"]
+              ~wp_prover:["none"]
+              ~wp_smoke_tests:false
+              ~wp_gen:true
+              ()
+          else
+            let target_funcs =
+              if List.mem "@all" raw_funcs then []
+              else List.flatten (List.map check_fct raw_funcs)
+            in
+            let current_provers =
+              Str.split (Str.regexp ",") !Configuration.global_params.wpProver
+            in
+            let current_timeout = !Configuration.global_params.wpTimeout in
+            let root_dir = Printf.sprintf "%s/.frama-c" !rootPath in
+            if not (Sys.file_exists root_dir) then Unix.mkdir root_dir 0o755;
+            let report_json_path = Printf.sprintf "%s/latest_results.json" root_dir in
+            WpOpt.create
+              ~wp_fct:target_funcs
+              ~wp_prover:current_provers
+              ~wp_timeout:current_timeout
+              ~wp_gen:true
+              ~wp_report_json:report_json_path
+              ()
+        in
+
         let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file_name] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt () in
         let command_str = (Command.string_of_t command) in
         Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
@@ -1082,7 +1113,7 @@ let notif_handler json_string server_sock wrapper_port =
         Lsp_types.CONTENT (data), 1;
       end
     else Lsp_types.EMPTY (), 1
-
+    
   | "showGlobalMetrics" -> 
     Options.Self.debug ~level:1 "global metrics\n%!";
     let kernel_opt = KernelOpt.create ~strategies:false () in
@@ -1104,7 +1135,7 @@ let notif_handler json_string server_sock wrapper_port =
       let kernel_opt = KernelOpt.create ~strategies:false () in
       let uncast_opt = UncastOpt.create () in
       let wp_opt = WpOpt.create ~wp_prop:["smoke"] ~wp_smoke_tests:true ~wp_gen:false () in
-      let feature = DidSave_feature in
+      let feature = DidSave_feature file_name in
       let lsp_opt = LspOpt.create (feature) in
       let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file_name] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt () in
       let command_str = (Command.string_of_t command) in
@@ -1118,7 +1149,7 @@ let notif_handler json_string server_sock wrapper_port =
       let kernel_opt = KernelOpt.create ~strategies:false () in
       let uncast_opt = UncastOpt.create () in
       let ccdoc_opt = CcdocOpt.create () in
-      let feature = DidSave_feature in
+      let feature = DidSave_feature "" in
       let lsp_opt = LspOpt.create (feature) in
       let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~uncast:uncast_opt ~ccdoc:ccdoc_opt ~lsp:lsp_opt () in
       let command_str = (Command.string_of_t command) in

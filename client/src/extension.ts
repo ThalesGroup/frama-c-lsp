@@ -47,18 +47,13 @@ async function uploadWpJson() {
 
         if (!rawData || rawData.length === 0) return;
 
-        let guessedPath = "Unknown";
-        if (rawData[0] && (rawData[0].file || rawData[0]._localPath)) {
-            const sample = (rawData[0].file || rawData[0]._localPath).replace(/\\/g, '/');
-            guessedPath = sample; 
-        }
-
+        let guessedPath = (rawData[0].file || "").replace(/\\/g, '/');
         const replaceChoice = await window.showQuickPick(
             [
                 { 
-                    label: "Replace path prefix", 
-                    description: `Change origin path to local workspace` 
-                },
+                    label: "Replace path prefix",
+                     description: "Change origin path to local workspace" 
+                    },
                 { 
                     label: "Keep original paths", 
                     description: `Keep: ${guessedPath}` 
@@ -71,67 +66,16 @@ async function uploadWpJson() {
 
         const keepOriginalPaths = replaceChoice.label === "Keep original paths";
         let normalizedPath = "";
-        const localWorkspace = get_workspace().replace(/\\/g, '/').replace(/\/$/, '');
 
         if (!keepOriginalPaths) {
-            let guessedPath = "";
-            if (rawData[0] && rawData[0].file) {
-                const firstFilePath = rawData[0].file.replace(/\\/g, '/');
-                guessedPath = firstFilePath.substring(0, firstFilePath.lastIndexOf('/'));
-            }
-
-            const pathToReplace = await vscode.window.showInputBox({
-                prompt: "Choose or edit the path prefix to be replaced by your current workspace:",
-                value: guessedPath, // Pre-fill with the guessed path
-                ignoreFocusOut: true
-            });
-
-            if (pathToReplace === undefined || pathToReplace === "") return;
-            normalizedPath = pathToReplace.replace(/\\/g, '/').replace(/\/$/, '');
+            normalizedPath = await vscode.window.showInputBox({
+                prompt: "Path prefix to replace:",
+                value: guessedPath.substring(0, guessedPath.lastIndexOf('/'))
+            }) || "";
         }
 
-        let missingFilesCount = 0;
-        allGoalsRaw = []; 
-
-        await vscode.window.withProgress({
-            location: vscode.ProgressLocation.Notification,
-            title: "Processing goals...",
-            cancellable: false
-        }, async (progress) => {
-            for (let i = 0; i < rawData.length; i++) {
-                const item = rawData[i];
-                let originalPath = (item.file || "").replace(/\\/g, '/');
-                
-                if (keepOriginalPaths) {
-                    item._localPath = originalPath;
-                } else if (normalizedPath && originalPath.startsWith(normalizedPath)) {
-                    const absoluteLocalPath = originalPath.replace(normalizedPath, localWorkspace);
-                    
-                    if (i % 100 === 0 && !fs.existsSync(absoluteLocalPath)) {
-                        missingFilesCount++;
-                    }
-
-                    const relativePart = absoluteLocalPath.replace(localWorkspace + '/', '');
-                    item._localPath = "./" + relativePart;
-                } else {
-                    item._localPath = originalPath;
-                }
-
-                allGoalsRaw.push(item);
-
-                if (i % 5000 === 0) {
-                    progress.report({ increment: (5000 / rawData.length) * 100 });
-                    await new Promise(resolve => setTimeout(resolve, 1));
-                }
-            }
-        });
-
-        activeFilters = { status: "all", smokeOnly: false, prover: "all",verdict:"all", search: "", function: "", file: "", type: "", sortByTime: false,hasScript: false };
-        applyFiltersAndRefreshUI();
-        
+        await processWpData(rawData, `Imported ${rawData.length} goals successfully.`, keepOriginalPaths, normalizedPath);
         vscode.commands.executeCommand('wpGoalsView.focus');
-        vscode.window.showInformationMessage(`Imported ${allGoalsRaw.length} goals successfully.`);
-
     } catch (err) {
         vscode.window.showErrorMessage("Error during import: " + err);
     }
@@ -208,7 +152,27 @@ function applyFiltersAndRefreshUI() {
     wpDataProvider.refresh();
     setTimeout(() => updateDecorations(), 200);
 }
+function processWpData(rawData: any[], label: string) {
+    if (!rawData || !Array.isArray(rawData)) return;
 
+    const localWorkspace = get_workspace().replace(/\\/g, '/').replace(/\/$/, '');
+
+    allGoalsRaw = rawData.map(item => {
+        let originalPath = (item.file || "").replace(/\\/g, '/');
+        if (originalPath.startsWith(localWorkspace)) {
+            item._localPath = "./" + originalPath.replace(localWorkspace + '/', '');
+        } else {
+            item._localPath = originalPath;
+        }
+        return item;
+    });
+
+    applyFiltersAndRefreshUI();
+    if (label !== "Auto-update") {
+        vscode.commands.executeCommand('wpGoalsView.focus');
+        vscode.window.showInformationMessage(label);
+    }
+}
 async function downloadWpJson() {
     const workspacePath = get_workspace();
    
@@ -476,15 +440,21 @@ export async function activate(context: ExtensionContext) {
         treeDataProvider: framaCProvider
     });
 
+    const workspacePath = get_workspace();
+    const resultsJsonPattern = new vscode.RelativePattern(workspacePath, '.frama-c/latest_results.json');
+    const resultsWatcher = vscode.workspace.createFileSystemWatcher(resultsJsonPattern);
 
-
-    
-
-    // 5. Handle Server Notifications (Redirect WP Goals to the bottom panel)
-    client.onNotification("custom/getWPResponse", (data) => {
-        wpDataProvider.update(data);
-        wpDataProvider.refresh();
-        commands.executeCommand('wpGoalsView.focus');
+    resultsWatcher.onDidChange(async (uri) => {
+        await new Promise(resolve => setTimeout(resolve, 300)); // Latence pour I/O disque
+        if (fs.existsSync(uri.fsPath)) {
+            const content = fs.readFileSync(uri.fsPath, 'utf8');
+            try {
+                const rawData = JSON.parse(content);
+                await processWpData(rawData, "WP Results Updated");
+            } catch (e) {
+                console.error("Erreur parsing JSON:", e);
+            }
+        }
     });
 	vscode.window.onDidChangeActiveTextEditor(editor => {
         updateDecorations();

@@ -136,8 +136,7 @@ let get_RealDeps_args () =
 
 let get_active_option () =
   let active_options = ref [] in
-  if is_active_DidSave () then active_options := Lsp_handler.DidSave_feature :: !active_options;
-  
+if is_active_DidSave () then active_options := Lsp_handler.DidSave_feature "" :: !active_options;  
 
   (match get_AST_args () with
   | None -> ()
@@ -274,7 +273,7 @@ let run () =
       Filepath.add_symbolic_dir framac_share share;
       let feature = get_active_option () in
       match feature with
-      | Some Lsp_handler.DidSave_feature -> let data = List.map Json.save_string (DidSave.handle ()) in Options.Self.feedback ~level:1 "Updated Diagnostics !\n%!"; send_result data
+      | Some Lsp_handler.DidSave_feature _ -> let data = List.map Json.save_string (DidSave.handle ()) in Options.Self.feedback ~level:1 "Updated Diagnostics !\n%!"; send_result data
       | Some Lsp_handler.ComputeCIL_feature -> send_result []
       | Some Lsp_handler.ComputeCallGraph_feature _ -> send_result []
       | Some Lsp_handler.ComputeRealDependencies_feature(id, file) -> let data = [(Export_dependencies.compute_and_serialize id file)] in Options.Self.feedback ~level:1 "Deps Extraction done !\n%!"; send_result data 

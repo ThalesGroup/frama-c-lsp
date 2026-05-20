@@ -34,6 +34,7 @@ let sections = {| {"items": [
           {"section": "metrics.byFunction"},
           {"section": "callgraph.roots"},
           {"section": "callgraph.services"},
+          {"section": "wp.autoProveFunctions"},
           {"section": "wp.noPruning"},
           {"section": "wp.rte"},
           {"section": "wp.checkMemoryModel"},
@@ -84,6 +85,7 @@ let sections = {| {"items": [
     metricsByFunction : bool;
     cgRoots : string list;
     cgServices : bool;
+    wpAutoProveFunctions : string list;  
     wpPruning : bool;
     wpRte : bool;
     wpCheckMemoryModel : bool;
@@ -132,6 +134,7 @@ let sections = {| {"items": [
     ~metricsByFunction
     ~cgRoots
     ~cgServices 
+    ~wpAutoProveFunctions
     ~wpPruning 
     ~wpRte 
     ~wpCheckMemoryModel 
@@ -180,6 +183,7 @@ let sections = {| {"items": [
       metricsByFunction;
       cgRoots;
       cgServices;
+      wpAutoProveFunctions;
       wpPruning;
       wpRte;
       wpCheckMemoryModel;
@@ -229,6 +233,7 @@ let global_params = ref
   ~metricsByFunction:false
   ~cgRoots:[]
   ~cgServices:false
+  ~wpAutoProveFunctions:[]
   ~wpPruning:false
   ~wpRte:false
   ~wpCheckMemoryModel:false
@@ -286,6 +291,7 @@ let save_configs (result:  Json.json) =
         `Bool json_metricsByFunction;
         `List json_cgRoots;
         `Bool json_cgServices;
+        `List json_wpAutoProveFunctions;
         `Bool json_wpPruning;
         `Bool json_wpRte;
         `Bool json_wpCheckMemoryModel;
@@ -334,6 +340,7 @@ let save_configs (result:  Json.json) =
       ~metricsByFunction: json_metricsByFunction
       ~cgRoots: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_cgRoots)
       ~cgServices: json_cgServices
+       ~wpAutoProveFunctions: (List.map (fun x -> Utils.remove_newline (Utils.remove_quotes (Json.save_string x))) json_wpAutoProveFunctions)
       ~wpPruning: json_wpPruning
       ~wpRte: json_wpRte
       ~wpCheckMemoryModel: json_wpCheckMemoryModel
