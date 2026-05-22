@@ -494,26 +494,34 @@ let update_diag_data msg severity =
     DidSave.diag_map := DidSave.StringMap.add filename dlist !DidSave.diag_map;
   with _ -> ()
 
-let rec had_errors_in_channel oc =
+let rec had_errors_in_channel oc (feature : lsp_feature) =
   try
     let msg = Stdlib.input_line oc in
     Options.Self.feedback ~level:1 "\t%s\n%!" (msg);
+    let should_update = match feature with
+      | DidSave_feature _ -> true
+      | _ -> false 
+    in
+    if should_update then begin
+      if (Utils.contains msg ~suffix: ": fatal error:") then (
+        update_diag_data msg Lsp_types.DiagnosticSeverity.Error;
+      )
+      else if (Utils.contains msg ~suffix: ": error:") then (
+        update_diag_data msg Lsp_types.DiagnosticSeverity.Error;
+      )
+      else if (Utils.contains msg ~suffix: ": warning:") then (
+        update_diag_data msg Lsp_types.DiagnosticSeverity.Warning;
+      )
+      else if (Utils.contains msg ~suffix: ": note:") then (
+        update_diag_data msg Lsp_types.DiagnosticSeverity.Warning;
+      )
+    end;
     if (Utils.contains msg ~suffix: "FRAMA-C EXIT CODE: 0") then false
-    else if (Utils.contains msg ~suffix: ": fatal error:") then (
-      update_diag_data msg Lsp_types.DiagnosticSeverity.Error;
-      had_errors_in_channel oc)
-    else if (Utils.contains msg ~suffix: ": error:") then (
-      update_diag_data msg Lsp_types.DiagnosticSeverity.Error;
-      had_errors_in_channel oc)
-    else if (Utils.contains msg ~suffix: ": warning:") then (
-      update_diag_data msg Lsp_types.DiagnosticSeverity.Warning;
-      had_errors_in_channel oc)
-    else if (Utils.contains msg ~suffix: ": note:") then (
-      update_diag_data msg Lsp_types.DiagnosticSeverity.Warning;
-      had_errors_in_channel oc)
-    else had_errors_in_channel oc
-  with End_of_file -> Options.Self.debug ~level:1 "\n%!"; true
+    else had_errors_in_channel oc feature
 
+  with End_of_file -> 
+    Options.Self.debug ~level:1 "\n%!"; 
+    true
 
   let read_socket_in_chunks socket chunk_size =
     let buffer = Bytes.create chunk_size in
@@ -529,11 +537,11 @@ let rec had_errors_in_channel oc =
     in
     read_data ""
 
-let execute_extra_command prog args =
+let execute_extra_command prog args feature =
   let env = Unix.environment () in
   let ic, oc, ec = Unix.open_process_args_full prog args env in
-  let _ = had_errors_in_channel ic in
-  let _ = had_errors_in_channel ec in
+  let _ = had_errors_in_channel ic feature in
+  let _ = had_errors_in_channel ec feature in
   let status  = Unix.close_process_full (ic, oc, ec) in
   status
 
@@ -549,8 +557,8 @@ let execute_command prog args feature wrapper_port =
   let cpid = Unix.process_full_pid (ic, oc, ec) in
   let signal_handler signal = if signal = Sys.sigint then Unix.kill cpid Sys.sigkill in
   Sys.set_signal Sys.sigint (Sys.Signal_handle signal_handler);
-  let _ = had_errors_in_channel ic in
-  let _ = had_errors_in_channel ec in
+  let _ = had_errors_in_channel ic feature in
+  let _ = had_errors_in_channel ec feature in
   let status  = Unix.close_process_full (ic, oc, ec) in
   let special_errors = DidSave.StringMap.fold get_notification_list !DidSave.diag_map [] in
   Options.Self.debug ~level:1 "Read ic completed !!!\n%!";

@@ -362,12 +362,12 @@
             },
             {
                 "command": "acsl.importProjectConfig",
-                "title": "ACSL: Import Project IDE",
+                "title": " Import Project IDE Configuration",
                 "icon": "$(project)"
             },
             {
     "command": "DisplayAST",
-    "title": "Display Ast For Current File",
+    "title": "Update Ast For Current File",
     "icon": "$(refresh)"
 },
             {

@@ -74,7 +74,7 @@ async function uploadWpJson() {
             }) || "";
         }
 
-        await processWpData(rawData, `Imported ${rawData.length} goals successfully.`, keepOriginalPaths, normalizedPath);
+        await processWpData(rawData, `Imported ${rawData.length} goals successfully.`);
         vscode.commands.executeCommand('wpGoalsView.focus');
     } catch (err) {
         vscode.window.showErrorMessage("Error during import: " + err);
@@ -279,7 +279,7 @@ async function initializeDefaultSettings() {
         "wp.par": 8,
         "wp.cache": "update",
         "wp.script": "batch",
-        "wp.session": ".framaC",
+        "wp.session": ".frama-C",
         "wp.autoDepth": 20,
         "wp.autoWidth": 1,
 
@@ -302,7 +302,7 @@ async function initializeDefaultSettings() {
 
     try {
         fs.writeFileSync(settingsPath, JSON.stringify(defaultSettings, null, 4), 'utf-8');
-        vscode.window.showInformationMessage("JCAT configuration initialized successfully.");
+        vscode.window.showInformationMessage("configuration initialized successfully.");
     } catch (error) {
         console.error("Initialization error:", error);
     }
@@ -1322,7 +1322,7 @@ async function showRealIncludeMatrix() {
                         const firstSymbol = symbols[0];
                         const othersCount = symbols.length - 1;
                         const tooltip = othersCount > 0 
-                            ? `Used: ${firstSymbol}\\n(+ ${othersCount} others)` 
+                            ? `Used: ${firstSymbol} (+ ${othersCount} others)` 
                             : `Used: ${firstSymbol}`;
 
                         htmlChunks.push(`<td class="yes" data-symbols="${tooltip}">✔</td>`);
