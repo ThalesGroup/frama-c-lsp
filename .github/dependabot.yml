@@ -4,3 +4,15 @@ updates:
     directory: /client
     schedule:
       interval: daily
+    groups:
+      npm-dependencies:
+        applies-to: version-updates
+        patterns:
+        - "*"
+    commit-message:
+      prefix: "npm"
+    ignore:
+      # For all deps
+      - dependency-name: "*"
+        # ignore all major updates
+        update-types: ["version-update:semver-major"]
