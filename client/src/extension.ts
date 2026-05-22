@@ -273,6 +273,7 @@ async function initializeDefaultSettings() {
         "wp.checkMemoryModel": true,
         "wp.noVolatile": false,
         "wp.rte": true,
+        "wp.autoProveFunctions":[],
         "wp.prover": "script,alt-ergo",
         "wp.timeout": 2,
         "wp.model": "Typed+var+int+float",
