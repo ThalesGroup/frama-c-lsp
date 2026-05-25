@@ -31,3 +31,4 @@ This project is under the LGPLv3 License - see the LICENSE file for details.
 
 ## Acknowledgments
 This software has been initiated in 2024 by Djamila MOHAMED and Adel DJOUDI.
+Currently maintained by Damia BOUCHENNA.
