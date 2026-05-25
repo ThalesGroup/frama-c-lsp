@@ -18,6 +18,7 @@
  
 let sections = {| {"items": [
           {"section": "kernel.lspDebug"}, 
+          {"section": "kernel.serverPort"},
           {"section": "kernel.includePaths"},
           {"section": "kernel.sourceFiles"},
           {"section": "kernel.macros"},
@@ -25,8 +26,7 @@ let sections = {| {"items": [
           {"section": "kernel.sourceFileStrategies"},
           {"section": "kernel.sourceFileMetacsl"},
           {"section": "kernel.machdep"},
-          {"section": "kernel.removeUnusedSpecifiedFunctions"},
-          {"section": "kernel.aggressiveMerging"},
+          {"section": "kernel.keepUnusedFunctions"},
           {"section": "kernel.generatedSpecCustom"},
           {"section": "kernel.inlineCalls"},
           {"section": "kernel.removeInlined"},
@@ -34,6 +34,7 @@ let sections = {| {"items": [
           {"section": "metrics.byFunction"},
           {"section": "callgraph.roots"},
           {"section": "callgraph.services"},
+          {"section": "wp.autoProveFunctions"},
           {"section": "wp.noPruning"},
           {"section": "wp.rte"},
           {"section": "wp.checkMemoryModel"},
@@ -49,18 +50,26 @@ let sections = {| {"items": [
           {"section": "wp.autoBacktrack"},
           {"section": "wp.filenameTruncation"},
           {"section": "diagnostics.wp"},
+          {"section": "uncast.active"},
+          {"section": "uncast.lshiftAsMul"},
+          {"section": "uncast.rshiftAsDiv"},
+          {"section": "uncast.endianness"},
           {"section": "metacsl.active"},
           {"section": "metacsl.checks"},
           {"section": "metacsl.noSimpl"},
           {"section": "metacsl.noCheckExt"},
           {"section": "metacsl.numberAssertions"},
-          {"section": "metacsl.checkCalleeAssigns"}
+          {"section": "metacsl.checkCalleeAssigns"},
+          {"section": "ccdoc.active"},
+          {"section": "ccdoc.coverageVerif"},
+          {"section": "ccdoc.latex"}
         ]
       }
     |}
 
   type t = {
     acslLsp : int;
+    serverPort:int;
     includePaths : string list;
     sourceFiles : string list;
     macros : string list;
@@ -68,8 +77,7 @@ let sections = {| {"items": [
     sourceFileStrategies : string list;
     sourceFileMetacsl : string list;
     machdep : string;
-    removeUnusedSpecifiedFunctions : bool;
-    aggressiveMerging : bool;
+    keepUnusedFunctions : string;
     generatedSpecCustom : string list;
     inlineCalls: string list;
     removeInlined: string list;
@@ -77,6 +85,7 @@ let sections = {| {"items": [
     metricsByFunction : bool;
     cgRoots : string list;
     cgServices : bool;
+    wpAutoProveFunctions : string list;  
     wpPruning : bool;
     wpRte : bool;
     wpCheckMemoryModel : bool;
@@ -92,16 +101,24 @@ let sections = {| {"items": [
     wpAutoBacktrack : int;
     wpFilenameTruncation: int;
     diagnosticsWp : bool;
+    uncastActive : bool;
+    uncastLshiftAsMul : bool;
+    uncastRshiftAsDiv : bool;
+    uncastEndianness : string;
     metacslActive: bool;
     metacslChecks: bool;
     metacslNoSimpl: bool;
     metacslNoCheckExt: bool;
     metacslNumberAssertions: bool;
-    metacslCheckCalleeAssigns: string list
+    metacslCheckCalleeAssigns: string list;
+    ccdocActive : bool;
+    ccdocCoverageVerif : bool;
+    ccdocLatex : bool
   }
 
   let create
     ~acslLsp 
+    ~serverPort
     ~includePaths
     ~sourceFiles
     ~macros
@@ -109,8 +126,7 @@ let sections = {| {"items": [
     ~sourceFileStrategies
     ~sourceFileMetacsl
     ~machdep 
-    ~removeUnusedSpecifiedFunctions 
-    ~aggressiveMerging 
+    ~keepUnusedFunctions
     ~generatedSpecCustom
     ~inlineCalls
     ~removeInlined
@@ -118,6 +134,7 @@ let sections = {| {"items": [
     ~metricsByFunction
     ~cgRoots
     ~cgServices 
+    ~wpAutoProveFunctions
     ~wpPruning 
     ~wpRte 
     ~wpCheckMemoryModel 
@@ -133,16 +150,24 @@ let sections = {| {"items": [
     ~wpAutoBacktrack
     ~wpFilenameTruncation
     ~diagnosticsWp
+    ~uncastActive
+    ~uncastLshiftAsMul
+    ~uncastRshiftAsDiv
+    ~uncastEndianness
     ~metacslActive
     ~metacslChecks
     ~metacslNoSimpl
     ~metacslNoCheckExt
     ~metacslNumberAssertions
     ~metacslCheckCalleeAssigns
+    ~ccdocActive
+    ~ccdocCoverageVerif
+    ~ccdocLatex
     ()
     =
     {
       acslLsp;
+      serverPort;
       includePaths;
       sourceFiles;
       macros;
@@ -150,8 +175,7 @@ let sections = {| {"items": [
       sourceFileStrategies;
       sourceFileMetacsl;
       machdep;
-      removeUnusedSpecifiedFunctions;
-      aggressiveMerging;
+      keepUnusedFunctions;
       generatedSpecCustom;
       inlineCalls;
       removeInlined;
@@ -159,6 +183,7 @@ let sections = {| {"items": [
       metricsByFunction;
       cgRoots;
       cgServices;
+      wpAutoProveFunctions;
       wpPruning;
       wpRte;
       wpCheckMemoryModel;
@@ -174,17 +199,25 @@ let sections = {| {"items": [
       wpAutoBacktrack;
       wpFilenameTruncation;
       diagnosticsWp;
+      uncastActive;
+      uncastLshiftAsMul;
+      uncastRshiftAsDiv;
+      uncastEndianness;
       metacslActive;
       metacslChecks;
       metacslNoSimpl;
       metacslNoCheckExt;
       metacslNumberAssertions;
       metacslCheckCalleeAssigns;
+      ccdocActive;
+      ccdocCoverageVerif;
+      ccdocLatex
     }
 
 let global_params = ref
   (create 
   ~acslLsp:0
+  ~serverPort:0
   ~includePaths:[]
   ~sourceFiles:[]
   ~macros:[]
@@ -192,8 +225,7 @@ let global_params = ref
   ~sourceFileStrategies:[]
   ~sourceFileMetacsl: []
   ~machdep:""
-  ~removeUnusedSpecifiedFunctions:false
-  ~aggressiveMerging:false
+  ~keepUnusedFunctions:"none"
   ~generatedSpecCustom:[]
   ~inlineCalls:[]
   ~removeInlined:[]
@@ -201,6 +233,7 @@ let global_params = ref
   ~metricsByFunction:false
   ~cgRoots:[]
   ~cgServices:false
+  ~wpAutoProveFunctions:[]
   ~wpPruning:false
   ~wpRte:false
   ~wpCheckMemoryModel:false
@@ -216,12 +249,19 @@ let global_params = ref
   ~wpAutoBacktrack: 1
   ~wpFilenameTruncation: 220
   ~diagnosticsWp: false
+  ~uncastActive: false
+  ~uncastLshiftAsMul: true
+  ~uncastRshiftAsDiv: true
+  ~uncastEndianness: "little"
   ~metacslActive: false
   ~metacslChecks: true
   ~metacslNoSimpl: true
   ~metacslNoCheckExt: true
   ~metacslNumberAssertions: true
   ~metacslCheckCalleeAssigns: []
+  ~ccdocActive: false
+  ~ccdocCoverageVerif: false
+  ~ccdocLatex: false
   ())
 
 let request_configurations : Json.json = 
@@ -235,6 +275,7 @@ let save_configs (result:  Json.json) =
   match result with
   | `List [
         `Int json_acslLsp;
+        `Int json_serverPort;
         `List json_includePaths;
         `List json_sourceFiles;
         `List json_macros;
@@ -242,8 +283,7 @@ let save_configs (result:  Json.json) =
         `List json_sourceFileStrategies;
         `List json_sourceFileMetacsl;
         `String json_machdep;
-        `Bool json_removeUnusedSpecifiedFunctions;
-        `Bool json_aggressiveMerging;
+        `String json_keepUnusedFunctions;
         `List json_generatedSpecCustom;
         `List json_inlineCalls;
         `List json_removeInlined;
@@ -251,6 +291,7 @@ let save_configs (result:  Json.json) =
         `Bool json_metricsByFunction;
         `List json_cgRoots;
         `Bool json_cgServices;
+        `List json_wpAutoProveFunctions;
         `Bool json_wpPruning;
         `Bool json_wpRte;
         `Bool json_wpCheckMemoryModel;
@@ -266,16 +307,24 @@ let save_configs (result:  Json.json) =
         `Int json_wpAutoBacktrack;
         `Int json_wpFilenameTruncation;
         `Bool json_diagnosticsWp;
+        `Bool json_uncastActive;
+        `Bool json_uncastLshiftAsMul;
+        `Bool json_uncastRshiftAsDiv;
+        `String json_uncastEndianness;
         `Bool json_metacslActive;
         `Bool json_metacslChecks;
         `Bool json_metacslNoSimpl;
         `Bool json_metacslNoCheckExt;
         `Bool json_metacslNumberAssertions;
         `List json_metacslCheckCalleeAssigns;
+        `Bool json_ccdocActive;
+        `Bool json_ccdocCoverageVerif;
+        `Bool json_ccdocLatex;
       ] 
     -> 
       global_params := create 
       ~acslLsp: json_acslLsp
+      ~serverPort: json_serverPort
       ~includePaths: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_includePaths )
       ~sourceFiles: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_sourceFiles)
       ~macros: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_macros)
@@ -283,8 +332,7 @@ let save_configs (result:  Json.json) =
       ~sourceFileStrategies: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_sourceFileStrategies)
       ~sourceFileMetacsl: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_sourceFileMetacsl)
       ~machdep: (Utils.remove_newline (Utils.remove_quotes (json_machdep)))
-      ~removeUnusedSpecifiedFunctions: json_removeUnusedSpecifiedFunctions
-      ~aggressiveMerging: json_aggressiveMerging
+      ~keepUnusedFunctions: json_keepUnusedFunctions
       ~generatedSpecCustom: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_generatedSpecCustom)
       ~inlineCalls: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_inlineCalls)
       ~removeInlined: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_removeInlined)
@@ -292,6 +340,7 @@ let save_configs (result:  Json.json) =
       ~metricsByFunction: json_metricsByFunction
       ~cgRoots: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_cgRoots)
       ~cgServices: json_cgServices
+       ~wpAutoProveFunctions: (List.map (fun x -> Utils.remove_newline (Utils.remove_quotes (Json.save_string x))) json_wpAutoProveFunctions)
       ~wpPruning: json_wpPruning
       ~wpRte: json_wpRte
       ~wpCheckMemoryModel: json_wpCheckMemoryModel
@@ -307,12 +356,19 @@ let save_configs (result:  Json.json) =
       ~wpAutoBacktrack: json_wpAutoBacktrack
       ~wpFilenameTruncation: json_wpFilenameTruncation
       ~diagnosticsWp: json_diagnosticsWp
+      ~uncastActive: json_uncastActive
+      ~uncastLshiftAsMul: json_uncastLshiftAsMul
+      ~uncastRshiftAsDiv: json_uncastRshiftAsDiv
+      ~uncastEndianness: json_uncastEndianness
       ~metacslActive: json_metacslActive
       ~metacslChecks: json_metacslChecks
       ~metacslNoSimpl: json_metacslNoSimpl
       ~metacslNoCheckExt: json_metacslNoCheckExt
       ~metacslNumberAssertions: json_metacslNumberAssertions
       ~metacslCheckCalleeAssigns: (List.map (fun x -> (Utils.remove_newline (Utils.remove_quotes (Json.save_string x)))) json_metacslCheckCalleeAssigns)
+      ~ccdocActive: json_ccdocActive
+      ~ccdocCoverageVerif: json_ccdocCoverageVerif
+      ~ccdocLatex: json_ccdocLatex
       ();
       Options.Self.Debug.set json_acslLsp; (* !Configuration.global_params.acslLsp *)
       Options.Self.debug ~level:1 "save_configs : global_params length : %d\n%!" (List.length (Json.list result))

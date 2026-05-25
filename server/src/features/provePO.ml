@@ -111,4 +111,3 @@ let get_property_status id file fct prop: string =
   let lsp_message = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:result_msg () in
   let json_message = Lsp_types.ResponseMessage.json_of_t lsp_message in
   Json.save_string json_message
-

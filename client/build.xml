@@ -1,0 +1,44 @@
+<project xmlns:ivy="antlib:org.apache.ivy.ant" default="ivy-resolve">
+    
+    <target name="ivy-resolve" description="Download and extract dependencies">
+        <ivy:retrieve pattern="artifacts/[artifact].[ext]"/>
+        <echo message="Download done . Decompression ..."/>
+        <unzip src="artifacts/vscode-deps.zip" dest="."/>
+        <echo message=" succes !"/>
+    </target>    
+   
+    <target name="generate-timestamp">
+        <tstamp>
+            <format property="revision" pattern="yyyyMMddHHmmss"/>
+        </tstamp>
+        <echo>Generated revision: ${revision}</echo>
+    </target>
+
+    <target name="prepare-ivy" depends="generate-timestamp">
+        <delete file="ivybuild.xml"/>
+        <copy file="ivybuild_template.xml" tofile="ivybuild.xml">
+            <filterchain>
+                <replacetokens>
+                    <token key="REVISION" value="${revision}"/>
+                </replacetokens>
+            </filterchain>
+        </copy>
+        <echo>Generated ivybuild.xml</echo>
+    </target>
+
+    <target name="ivy-upload" depends="prepare-ivy">
+        <echo>Uploading vscode dependencies artifact with revision ${revision}</echo>
+        <ivy:publish
+            resolver="artifactory-upload"
+            organisation="com/thalesgroup"
+            module="platform.jlep.id.vscode_deps"
+            revision="${revision}"
+            overwrite="true"
+            srcivypattern="ivybuild.xml"
+            artifactspattern="artifacts/[artifact].[ext]"
+            publishivy="true"
+        />
+        <delete file="ivybuild.xml"/>
+    </target>
+
+</project>

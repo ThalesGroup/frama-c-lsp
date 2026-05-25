@@ -18,19 +18,29 @@
 
 let rootPath = ref ""
 let receivedShutdown = ref false
+(* --- FONCTION UTILITAIRE POUR NETTOYER LE JSON --- *)
+let extract_json raw_data =
+  try
+    let start_pos = String.index raw_data '{' in
+    let end_pos = String.rindex raw_data '}' in
+    if end_pos > start_pos then
+      String.sub raw_data start_pos (end_pos - start_pos + 1)
+    else raw_data
+  with Not_found -> raw_data
 
 let fork_pid = ref 0
 
 type lsp_feature =
-  | DidSave_feature
-  | FindDefinition_feature of (int * string * int * int)
-  | FindDeclaration_feature of (int * string * int * int)
+  | DidSave_feature of string 
   | ComputeCIL_feature
   | ComputeCallGraph_feature of string
   | ComputeMetrics_feature
   | ComputeProofObligation_feature of (string * int * string * int * int)
   | ComputeProofObligationID_feature of (int * string)
   | Prove_feature of (int * string * string * string)
+  | GetContext_feature of (int * string * int * int)
+  | ComputeAST_feature of int * string 
+  | ComputeRealDependencies_feature of int * string 
 
 module KernelOpt = struct
 type t = {
@@ -41,8 +51,7 @@ type t = {
   cpp_extra_args : string;
   machdep : string;
   generated_spec_custom : string list;
-  keep_unused_specified_functions : bool;
-  aggressive_merging : bool;
+  keep_unused_functions : string;
   kernel_warn_key : string;
   no_unicode : bool;
   inline_calls : string list;
@@ -59,8 +68,7 @@ let create ?fct ~strategies () =
     cpp_extra_args = "-CC";
     machdep = !Configuration.global_params.machdep;
     generated_spec_custom = !Configuration.global_params.generatedSpecCustom;
-    keep_unused_specified_functions = !Configuration.global_params.removeUnusedSpecifiedFunctions;
-    aggressive_merging = !Configuration.global_params.aggressiveMerging;
+    keep_unused_functions = !Configuration.global_params.keepUnusedFunctions;
     kernel_warn_key = "annot-error=active,too-large-array=active";
     no_unicode = true;
     inline_calls = !Configuration.global_params.inlineCalls;
@@ -78,15 +86,14 @@ let string_of_t (options : t) : string =
   let cpp_extra_args_opt = "-cpp-extra-args=\""^(options.cpp_extra_args)^""^(String.concat "" include_paths_opt)^""^(String.concat "" macros_opt)^""^(String.concat "" macroStrategiesFunctionPrefix_opt)^"\"" in
   let machdep_opt = (option_if_not_empty_string options.machdep "-machdep=") in
   let generated_spec_custom_opt = option_if_not_empty_string (String.concat "," options.generated_spec_custom) "-generated-spec-custom=" in
-  let remove_unused_specified_functions_opt = option_if_true options.keep_unused_specified_functions "-remove-unused-specified-functions" in
-  let aggressive_merging_opt = option_if_true options.aggressive_merging "-aggressive-merging" in
+  let keep_unused_functions_opt = option_if_not_empty_string options.keep_unused_functions "-keep-unused-functions=" in
   let kernel_warn_key_opt = option_if_not_empty_string options.kernel_warn_key "-kernel-warn-key=" in
   let no_unicode_opt = option_if_true options.no_unicode "-no-unicode" in
   let inline_calls_opt = option_if_not_empty_string (String.concat "," options.inline_calls) "-inline-calls=" in
   let remove_inlines_opt = option_if_not_empty_string (String.concat "," options.remove_inlined) "-remove-inlined=" in
   let no_annot_opt = option_if_true options.no_annot "-no-annot" in
-  Printf.sprintf "%s %s %s %s %s %s %s %s %s %s"
-  cpp_extra_args_opt machdep_opt generated_spec_custom_opt remove_unused_specified_functions_opt aggressive_merging_opt kernel_warn_key_opt no_unicode_opt inline_calls_opt remove_inlines_opt no_annot_opt
+  Printf.sprintf "%s %s %s %s %s %s %s %s %s"
+  cpp_extra_args_opt machdep_opt generated_spec_custom_opt keep_unused_functions_opt kernel_warn_key_opt no_unicode_opt inline_calls_opt remove_inlines_opt no_annot_opt
 end
 
 module WpOpt = struct
@@ -111,8 +118,9 @@ module WpOpt = struct
     wp_auto_width: int;
     wp_auto_backtrack: int;
     wp_filename_truncation: int;
+    wp_report_json : string option;
   }
-  let create ?wp_fct ?wp_prop ?wp_timeout ?wp_prover ?wp_smoke_tests ?wp_gen ?wp_script () = {
+  let create ?wp_fct ?wp_prop ?wp_timeout ?wp_prover ?wp_smoke_tests ?wp_gen ?wp_script ?wp_report_json () = {
     wp = true;
     wp_rte = !Configuration.global_params.wpRte;
     wp_prop = (match wp_prop with | None -> [] | Some p -> p);
@@ -133,6 +141,7 @@ module WpOpt = struct
     wp_auto_width = !Configuration.global_params.wpAutoWidth;
     wp_auto_backtrack = !Configuration.global_params.wpAutoBacktrack;
     wp_filename_truncation = !Configuration.global_params.wpFilenameTruncation;
+    wp_report_json;
   }
   let string_of_t (options : t) : string =
     let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in
@@ -157,7 +166,16 @@ module WpOpt = struct
     let wp_auto_width = Printf.sprintf "-wp-auto-width=%d" options.wp_auto_width in
     let wp_auto_backtrack = Printf.sprintf "-wp-auto-backtrack=%d" options.wp_auto_backtrack in
     let wp_filename_truncation = Printf.sprintf "-wp-filename-truncation=%d" options.wp_filename_truncation in
-    Printf.sprintf "%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s" wp_opt wp_prop_opt wp_fct_opt wp_gen_opt wp_rte_opt wp_pruning_opt wp_check_memory_model_opt wp_no_volatile_opt wp_prover_opt wp_timeout_opt wp_par_opt wp_session_opt wp_smoke_tests_opt wp_smoke_timeout_opt wp_script wp_cache wp_auto_depth wp_auto_width wp_auto_backtrack wp_filename_truncation
+    let wp_report_json_opt = match options.wp_report_json with
+      | None -> ""
+      | Some path -> Printf.sprintf "-wp-report-json %s" path
+    in
+
+    Printf.sprintf "%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s" 
+      wp_opt wp_prop_opt wp_fct_opt wp_gen_opt wp_rte_opt wp_pruning_opt wp_check_memory_model_opt 
+      wp_no_volatile_opt wp_prover_opt wp_timeout_opt wp_par_opt wp_session_opt wp_smoke_tests_opt 
+      wp_smoke_timeout_opt wp_script wp_cache wp_auto_depth wp_auto_width wp_auto_backtrack 
+      wp_filename_truncation wp_report_json_opt
 end
 
 module MetacslOpt = struct
@@ -192,6 +210,53 @@ module MetacslOpt = struct
     if options.meta then 
     Printf.sprintf "%s %s %s %s %s %s %s %s" meta_opt meta_warn_key_opt meta_warn_key_opt meta_checks_opt meta_no_simpl_opt meta_no_check_ext_opt meta_number_assertions_opt meta_check_callee_assigns_opt
     else ""
+end
+
+module UncastOpt = struct
+  type t = {
+    uncast: bool;
+    uncast_endianness: string;
+    uncast_lshift_as_mul: bool;
+    uncast_rshift_as_div: bool
+  }
+  let create () = {
+    uncast = !Configuration.global_params.uncastActive;
+    uncast_endianness = !Configuration.global_params.uncastEndianness;
+    uncast_lshift_as_mul = !Configuration.global_params.uncastLshiftAsMul;
+    uncast_rshift_as_div = !Configuration.global_params.uncastRshiftAsDiv
+  }
+  let string_of_t (options : t) : string =
+    let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in
+    let option_if_true b opt = if b then (opt) else "" in
+    let uncast_opt = option_if_true options.uncast "-uncast" in
+    let uncast_endianness_opt = option_if_not_empty_string options.uncast_endianness "-uncast-endianness=" in
+    let uncast_lshift_as_mul_opt = option_if_true options.uncast_lshift_as_mul "-uncast-lshift-as-mul" in
+    let uncast_rshift_as_div_opt = option_if_true options.uncast_rshift_as_div "-uncast-rshift-as-div" in
+    if options.uncast then Printf.sprintf "%s %s %s %s" uncast_opt uncast_endianness_opt uncast_lshift_as_mul_opt uncast_rshift_as_div_opt
+    else ""
+end
+
+module CcdocOpt = struct
+  type t = {
+    ccdoc : bool;
+    ccdoc_out: string;
+    ccdoc_coverage_verif: bool;
+    ccdoc_latex: bool
+  }
+  let create () = {
+    ccdoc = !Configuration.global_params.ccdocActive;
+    ccdoc_out = ".frama-c/fc_ccdoc.tex";
+    ccdoc_coverage_verif = !Configuration.global_params.ccdocCoverageVerif;
+    ccdoc_latex = !Configuration.global_params.ccdocLatex;
+  }
+  let string_of_t (options : t) : string =
+    let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in
+    let option_if_true b opt = if b then (opt) else "" in
+    let ccdoc_opt = option_if_true options.ccdoc "-ccdoc" in
+    let ccdoc_out_opt = option_if_not_empty_string options.ccdoc_out "-ccdoc-out=" in
+    let ccdoc_coverage_verif_opt = option_if_true options.ccdoc_coverage_verif "-ccdoc-coverage-verif" in
+    let ccdoc_latex_opt = option_if_true options.ccdoc_latex "-ccdoc-latex" in
+    Printf.sprintf "%s %s %s %s" ccdoc_opt ccdoc_out_opt ccdoc_coverage_verif_opt ccdoc_latex_opt
 end
 
 module MetricsOpt = struct
@@ -274,16 +339,17 @@ module LspOpt = struct
   let create (feature : t) = feature
   let string_of_t (feature : t) : string =
     match feature with
-    | DidSave_feature -> "-lsp-did-save"
+    | DidSave_feature _ -> "-lsp-did-save"
     (* | DidClose_feature (file) -> Printf.sprintf "-lsp-did-close=%s" file *)
-    | FindDefinition_feature (id, file, line, column) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-definition=%s:%d:%d" id file line column
-    | FindDeclaration_feature (id, file, line, column) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-declaration=%s:%d:%d" id file line column
+    | ComputeAST_feature (id, file) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-ast=%s" id file
     | ComputeCIL_feature -> ""
+    | ComputeRealDependencies_feature (id, file) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-real-deps=%s" id file  
     | ComputeCallGraph_feature _ -> ""
     | ComputeMetrics_feature -> ""
     | ComputeProofObligation_feature (root_path, id, file, line, column) -> Printf.sprintf "-lsp-root-path=\"%s\" -lsp-id=\"%d\" -lsp-show-povc=%s:%d:%d" root_path id file line column
     | ComputeProofObligationID_feature (id, goal_id) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-show-po=%s" id goal_id
     | Prove_feature (id, file, fct, prop) -> Printf.sprintf "-lsp-id=\"%d\" -lsp-prove=%s:%s:%s" id file fct prop
+    | GetContext_feature (id, file, line, col) ->Printf.sprintf "-lsp-id=\"%d\" -lsp-get-context=%s:%d:%d" id file line col
 end
 
 
@@ -296,12 +362,14 @@ module Command = struct
   kernel : KernelOpt.t option;
   wp : WpOpt.t option;
   metacsl : MetacslOpt.t option;
+  uncast : UncastOpt.t option;
   metrics : MetricsOpt.t option;
   pprint : PprintOpt.t option;
   cg : CgOpt.t option;
+  ccdoc: CcdocOpt.t option;
   lsp : LspOpt.t option;
   }
-  let create ~port ?gui ?kernel ~strategies ?files ?wp ?metacsl ?metrics ?pprint ?cg ?lsp () : t = {
+  let create ~port ?gui ?kernel ~strategies ?files ?wp ?metacsl ?uncast ?metrics ?pprint ?cg ?ccdoc ?lsp () : t = {
     wrapper_port = port;
     frama_c_exe = (match gui with None -> "frama-c" | Some g -> if g then "frama-c-gui" else "frama-c");
     verbose = !Configuration.global_params.acslLsp;
@@ -324,9 +392,11 @@ module Command = struct
     kernel = kernel;
     wp = wp;
     metacsl = metacsl;
+    uncast = uncast;
     metrics = metrics;
     pprint = pprint;
     cg = cg;
+    ccdoc = ccdoc;
     lsp = lsp
   }
   let string_of_t (options : t) : string =
@@ -335,13 +405,15 @@ module Command = struct
     let debug_level = Stdlib.string_of_int options.verbose in
     let common_opt = Printf.sprintf "%s -lsp -lsp-wrapper=%d -lsp-debug=%s %s" options.frama_c_exe options.wrapper_port debug_level file_names in
     let kernel_opt = match options.kernel with None -> "" | Some k -> KernelOpt.string_of_t k in
+    let uncast_opt = match options.uncast with None -> "" | Some u -> option_if_not_empty_string (UncastOpt.string_of_t u) "-then-last" in
     let wp_opt = match options.wp with None -> "" | Some w -> option_if_not_empty_string (WpOpt.string_of_t w) "" in
     let metrics_opt = match options.metrics with None -> "" | Some m -> option_if_not_empty_string (MetricsOpt.string_of_t m) "" in
     let pprint_opt = match options.pprint with None -> "" | Some p -> option_if_not_empty_string (PprintOpt.string_of_t p) "" in
     let metacsl_opt = match options.metacsl with None -> "" | Some m -> option_if_not_empty_string (MetacslOpt.string_of_t m) "-then-last" in
     let cg_opt = match options.cg with None -> "" | Some c -> option_if_not_empty_string (CgOpt.string_of_t c) "" in
+    let ccdoc_opt = match options.ccdoc with None -> "" | Some c -> option_if_not_empty_string (CcdocOpt.string_of_t c) "-then" in
     let lsp_opt = match options.lsp with None -> "" | Some l -> option_if_not_empty_string (LspOpt.string_of_t l) "" in
-    let frama_c_cmd = Printf.sprintf "%s %s %s %s %s %s %s %s" common_opt kernel_opt metacsl_opt wp_opt metrics_opt pprint_opt cg_opt lsp_opt in
+    let frama_c_cmd = Printf.sprintf "%s %s %s %s %s %s %s %s %s %s" common_opt kernel_opt uncast_opt metacsl_opt wp_opt metrics_opt pprint_opt cg_opt ccdoc_opt lsp_opt in
     frama_c_cmd
   
   let args_of_t (options : t) : string * string array =
@@ -469,6 +541,7 @@ let execute_command prog args feature wrapper_port =
   let signal_handler signal = if signal = Sys.sigint then () in
   Sys.set_signal Sys.sigint (Sys.Signal_handle signal_handler);
   let wrapper_sock = Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in
+  Unix.setsockopt wrapper_sock Unix.SO_REUSEADDR true;
   Unix.bind wrapper_sock (Unix.ADDR_INET(Unix.inet_addr_loopback, wrapper_port));
   Unix.listen wrapper_sock 100;
   let env = Unix.environment () in
@@ -482,15 +555,16 @@ let execute_command prog args feature wrapper_port =
   let special_errors = DidSave.StringMap.fold get_notification_list !DidSave.diag_map [] in
   Options.Self.debug ~level:1 "Read ic completed !!!\n%!";
   match status, prog with
-  | Unix.WEXITED 0, "frama-c" ->
+  | Unix.WEXITED 0 , "frama-c" ->
     (
     match feature with
-      | DidSave_feature
-      | FindDefinition_feature (_, _, _, _)
-      | FindDeclaration_feature (_, _, _, _)
+      | GetContext_feature (_, _, _, _)
+      | Prove_feature (_, _, _, _) 
+      | ComputeRealDependencies_feature (_, _) 
+      |ComputeAST_feature (_, _) 
+      | DidSave_feature _ 
       | ComputeProofObligation_feature (_, _, _, _, _)
-      | ComputeProofObligationID_feature (_, _)
-      | Prove_feature (_, _, _, _) ->
+      | ComputeProofObligationID_feature (_, _) ->
       Options.Self.debug ~level:1 "Executed frama-c command (frama-c exited normally)\n%!";
       let (plugin_sock, _) = Unix.accept wrapper_sock in
       let _data_size = getnumber (readcontlen plugin_sock) in
@@ -506,7 +580,7 @@ let execute_command prog args feature wrapper_port =
         | l, false -> (String.concat ":::" l) ^ ":::" ^ request_str
       in
       data
-    
+
       | ComputeCIL_feature
       | ComputeMetrics_feature ->
         Options.Self.debug ~level:1 "No Error after executing frama-c command\n%!";
@@ -528,10 +602,11 @@ let execute_command prog args feature wrapper_port =
         let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
         Unix.close wrapper_sock;
         data
-    )
+        )
+      
   | _, "frama-c-gui" -> (
     match feature with
-    | DidSave_feature
+    | DidSave_feature _
     | ComputeCIL_feature
     | ComputeCallGraph_feature _
     | ComputeMetrics_feature ->
@@ -541,8 +616,6 @@ let execute_command prog args feature wrapper_port =
       let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
       Unix.close wrapper_sock;
       data
-    | FindDefinition_feature (id, _, _, _)
-    | FindDeclaration_feature (id, _, _, _)
     | ComputeProofObligation_feature (_, id, _, _, _)
     | ComputeProofObligationID_feature (id, _) ->
       Options.Self.debug ~level:1 "Frama-C GUI ended ! \n%!";
@@ -550,7 +623,10 @@ let execute_command prog args feature wrapper_port =
       let data = Json.save_string lsp_response in
       Unix.close wrapper_sock;
       data
-    | Prove_feature (id, _, _, _) ->
+    | Prove_feature (id, _, _, _) 
+    | GetContext_feature (id, _, _, _) 
+    | ComputeRealDependencies_feature (id, _) 
+    | ComputeAST_feature (id, _)-> 
       Options.Self.debug ~level:1 "Frama-C GUI ended ! \n%!";
       let lsp_response = Lsp_types.ResponseMessage.json_of_t (Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result:(`List [`String ""; `String ""; `List []]) ()) in
       let data = Json.save_string lsp_response in
@@ -558,11 +634,12 @@ let execute_command prog args feature wrapper_port =
       data
     )
   | Unix.WEXITED _, _
+
   | Unix.WSIGNALED _, _
   | Unix.WSTOPPED _, _ ->
     (
       match feature with
-      | DidSave_feature ->
+      | DidSave_feature _ ->
           Options.Self.debug ~level:1 "Executed frama-c command (frama-c may have exited with errors)\n%!";
           let (plugin_sock, _) = Unix.accept wrapper_sock in
           let _data_size = getnumber (readcontlen plugin_sock) in
@@ -578,12 +655,12 @@ let execute_command prog args feature wrapper_port =
             | l, false -> (String.concat ":::" l) ^ ":::" ^ request_str
           in
           data
-  
-      | FindDefinition_feature (id, _, _, _)
-      | FindDeclaration_feature (id, _, _, _)
       | ComputeProofObligation_feature (_, id, _, _, _)
       | ComputeProofObligationID_feature (id, _)
-      | Prove_feature (id, _, _, _) ->
+      | Prove_feature (id, _, _, _) 
+      | GetContext_feature (id, _, _, _) 
+      | ComputeRealDependencies_feature (id, _) 
+      | ComputeAST_feature (id, _)-> 
         Options.Self.debug ~level:1 "\n%!";
         let msg = Printf.sprintf "Frama-c may have exited with errors" in
         let lsp_error_message = Lsp_types.ResponseError.create ~code:(-32603) ~message:msg () in
@@ -616,8 +693,7 @@ let fork_execute_command prog args feature wrapper_port =
     try
       (execute_command prog args feature wrapper_port), pid
     with exn -> (match feature with
-      | FindDefinition_feature (id, _, _, _)
-      | FindDeclaration_feature (id, _, _, _)
+      | GetContext_feature (id, _, _, _) 
       | ComputeProofObligation_feature (_, id, _, _, _)
       | ComputeProofObligationID_feature (id, _)
       | Prove_feature (id, _, _, _) ->
@@ -644,8 +720,6 @@ let capabilities_str = {|{
         "change": 0,
         "save": { "includeText": false }
       },
-      "definitionProvider": true,
-      "declarationProvider": true,
       "diagnosticProvider": {
         "interFileDependencies": false,
         "workspaceDiagnostics": true
@@ -689,45 +763,6 @@ let rq_handler json_string wrapper_port =
       let temp = Utils.remove_newline (Utils.remove_quotes (Json.save_string (Json.field "rootPath" (Json.field "params" req_json)))) in
       rootPath := temp;
       Lsp_types.CONTENT (capabilities_str), 1;
-    | "textDocument/definition" -> 
-      Options.Self.debug ~level:1 "definition\n%!";
-      let params = match request.params with 
-        | Some p -> Lsp_types.DefinitionParams.t_of_json p
-        | None -> Options.Self.debug ~level:1 "No definition params \n%!"; assert false
-      in
-      let uri = params.textDocument.uri in 
-      let src_file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
-      let line = params.position.line in 
-      let ch = params.position.character in
-      let kernel_opt = KernelOpt.create ~strategies:false () in
-      let feature = FindDefinition_feature ((Utils.id_to_int request.id), src_file, line, ch) in
-      let lsp_opt = LspOpt.create (feature) in
-      let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~lsp:lsp_opt () in
-      let command_str = (Command.string_of_t command) in
-      Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
-      let prog, args = (Command.args_of_t command) in
-      let data, pid = fork_execute_command prog args feature wrapper_port in
-      Lsp_types.CONTENT data, pid;
-      
-    | "textDocument/declaration" -> 
-      Options.Self.debug ~level:1 "declaration\n%!";
-      let params = match request.params with 
-        | Some p -> Lsp_types.DeclarationParams.t_of_json p
-        | None -> Options.Self.debug ~level:1 "No declaration params \n%!"; assert false
-      in
-      let uri = params.textDocument.uri in 
-      let src_file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
-      let line = params.position.line in 
-      let ch = params.position.character in
-      let kernel_opt = KernelOpt.create ~strategies:false () in
-      let feature = FindDeclaration_feature ((Utils.id_to_int request.id), src_file, line, ch) in
-      let lsp_opt = LspOpt.create (feature) in
-      let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~lsp:lsp_opt () in
-      let command_str = (Command.string_of_t command) in
-      Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
-      let prog, args = (Command.args_of_t command) in
-      let data, pid = fork_execute_command prog args feature wrapper_port in
-      Lsp_types.CONTENT (data), pid;
 
     | "showPOVC" -> (* show proof obligation of specific function *)
       let id = (Utils.id_to_int request.id) in
@@ -743,13 +778,14 @@ let rq_handler json_string wrapper_port =
           | _ -> Options.Self.debug ~level:1 "No params for showPOVC \n%!"; assert false
         in
       let kernel_opt = KernelOpt.create ~strategies:false () in
+      let uncast_opt = UncastOpt.create () in
       let wp_opt = WpOpt.create ~wp_prover:["none"] () in
       let feature = ComputeProofObligation_feature (!rootPath, id, file, line, ch) in
       let lsp_opt = LspOpt.create (feature) in
       let command = 
         match (String.ends_with ~suffix:".c" file) with
-        | true -> Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file] ~wp:wp_opt ~lsp:lsp_opt ()
-        | false -> Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~wp:wp_opt ~lsp:lsp_opt ()
+        | true -> Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
+        | false -> Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt ()
       in
       let command_str = (Command.string_of_t command) in
       Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
@@ -769,16 +805,144 @@ let rq_handler json_string wrapper_port =
       in
       let function_ids = check_fct function_id in
       let kernel_opt = KernelOpt.create ~strategies:false () in
+      let uncast_opt = UncastOpt.create () in
       let wp_opt = WpOpt.create ~wp_fct:function_ids ~wp_prover:["none"] () in
       let feature = ComputeProofObligationID_feature (id, goal_id) in
       let lsp_opt = LspOpt.create (feature) in
-      let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~wp:wp_opt ~lsp:lsp_opt () in
+      let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt () in
       let command_str = (Command.string_of_t command) in
       Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature wrapper_port in
       Lsp_types.CONTENT (data), pid;
+      | "proveAuto" -> 
+      Options.Self.debug ~level:1 "Auto-Prove Request triggered\n%!";
+      
+      let (file, line, timeout) = match request.params with
+        | Some `List [`List [`String f; `Int l; `Int t]] -> (f, l, t)
+        | Some `List [`String f; `Int l; `Int t] -> (f, l, t)
+        | _ -> ("", 0, 10)
+      in
 
+      if file = "" then 
+        let resp = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:id ~result:(`List []) () in
+        Lsp_types.CONTENT (Json.save_string (Lsp_types.ResponseMessage.json_of_t resp)), 1
+      else begin
+
+          let ctx_feature = GetContext_feature (0, file, line, 0) in
+          let kernel_opt = KernelOpt.create ~strategies:false () in
+          let ctx_command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file] ~lsp:(LspOpt.create ctx_feature) () in
+          let (ctx_prog, ctx_args) = Command.args_of_t ctx_command in
+         let ctx_response_str = execute_command ctx_prog ctx_args ctx_feature wrapper_port in
+          Options.Self.debug ~level:1 "ctx_response_str = [%s]\n%!" ctx_response_str;
+
+          let ctx_json_str =
+            let parts = Str.split (Str.regexp ":::") ctx_response_str in
+            match List.rev parts with
+            | [] -> ""
+            | last :: _ -> String.trim last
+          in
+          Options.Self.debug ~level:1 "ctx_json_str = [%s]\n%!" ctx_json_str;
+
+          let (func_name, prop_name) = 
+            try match Json.load_string ctx_json_str with
+              | `List [`String f; `String p] -> (f, p)
+              | _ -> ("@none", "")
+            with _ -> ("@none", "")
+          in
+
+          if func_name = "@none" || func_name = "" then
+             let resp = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:id ~result:(`List []) () in
+             Lsp_types.CONTENT (Json.save_string (Lsp_types.ResponseMessage.json_of_t resp)), 1
+          else begin
+             let prop = check_prop func_name prop_name in
+              let fct = check_fct func_name in
+
+             let uncast_opt = UncastOpt.create () in
+             let root_dir = Printf.sprintf "%s/.frama-c" !rootPath in
+      if not (Sys.file_exists root_dir) then Unix.mkdir root_dir 0o755;
+      let report_json_path = Printf.sprintf "%s/latest_results.json" root_dir in
+      let wp_opt = WpOpt.create 
+          ~wp_fct:fct 
+          ~wp_prop:prop 
+          ~wp_gen:false 
+          ~wp_timeout:timeout 
+          ~wp_report_json:report_json_path 
+          () 
+      in
+             let metacsl_opt = MetacslOpt.create () in
+             
+             let feature = Prove_feature ((Utils.id_to_int request.id), file, (String.concat "," fct), (String.concat "," prop)) in
+             let lsp_opt = LspOpt.create (feature) in
+             let prove_command = Command.create ~port:wrapper_port ~strategies:false ~gui:false ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt () in
+             let (prove_prog, prove_args) = Command.args_of_t prove_command in
+             
+             let data, pid = fork_execute_command prove_prog prove_args feature wrapper_port in
+             Lsp_types.CONTENT (data), pid
+          end
+      end
+      | "getAST" -> 
+      Options.Self.debug ~level:1 "AST Request triggered\n%!";
+      
+      let uri = match request.params with
+        | Some (`Assoc fields) -> 
+            (try 
+               match List.assoc "uri" fields with
+               | `String s -> s
+               | _ -> ""
+             with Not_found -> "")
+        | _ -> ""
+      in
+
+      if uri = "" then 
+        let resp = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:id ~result:(`List []) () in
+        Lsp_types.CONTENT (Json.save_string (Lsp_types.ResponseMessage.json_of_t resp)), 1
+      else begin
+        let src_file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
+        let id_int = Utils.id_to_int id in
+
+        let kernel_opt = KernelOpt.create ~strategies:false () in
+        
+        let feature = ComputeAST_feature (id_int, src_file) in
+        let lsp_opt = LspOpt.create (feature) in
+
+        let command = Command.create 
+          ~port:wrapper_port 
+          ~strategies:false 
+          ~kernel:kernel_opt 
+          ~files:[src_file] 
+          ~lsp:lsp_opt 
+          () 
+        in
+
+        let command_str = (Command.string_of_t command) in
+        Options.Self.feedback ~level:1 "AST Command = %s\n%!" command_str;
+
+        let prog, args = (Command.args_of_t command) in
+        let data, pid = fork_execute_command prog args feature wrapper_port in
+ 
+        Lsp_types.CONTENT (data), pid
+      end
+      | "computeRealDependencies" -> 
+      Options.Self.debug ~level:1 "Real Deps Request triggered\n%!";
+      let uri = match request.params with
+        | Some (`Assoc fields) -> (try match List.assoc "uri" fields with | `String s -> s | _ -> "" with Not_found -> "")
+        | _ -> ""
+      in
+      if uri = "" then 
+        let resp = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:id ~result:(`List []) () in
+        Lsp_types.CONTENT (Json.save_string (Lsp_types.ResponseMessage.json_of_t resp)), 1
+      else begin
+        let src_file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
+        let id_int = Utils.id_to_int id in
+        let kernel_opt = KernelOpt.create ~strategies:false () in
+        let feature = ComputeRealDependencies_feature (id_int, src_file) in
+        let lsp_opt = LspOpt.create (feature) in
+        let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[src_file] ~lsp:lsp_opt () in
+        let prog, args = (Command.args_of_t command) in
+        let data, pid = fork_execute_command prog args feature wrapper_port in
+        Lsp_types.CONTENT (data), pid
+      end
       | "provePO" -> (* prove with WP *)
       let id = (Utils.id_to_int request.id) in
       Options.Self.debug ~level:1 "provePO, %d\n%!" id;
@@ -792,19 +956,34 @@ let rq_handler json_string wrapper_port =
               `Bool gui
               ]] -> 
             (Utils.remove_newline (Utils.remove_quotes (f)), function_name, property_name, timeout, gui)
+          | Some `List [`String f; `String function_name; `String property_name; `Int timeout; `Bool gui] -> 
+              (Utils.remove_newline (Utils.remove_quotes (f)), function_name, property_name, timeout, gui)
           | _ -> Options.Self.debug ~level:1 "No params for showPOVC \n%!"; assert false
       in
       let prop = check_prop fct prop in
       let fct = check_fct fct in
+
+     
+      let root_dir = Printf.sprintf "%s/.frama-c" !rootPath in
+      if not (Sys.file_exists root_dir) then Unix.mkdir root_dir 0o755;
+      let report_json_path = Printf.sprintf "%s/latest_results.json" root_dir in
+      let wp_opt = WpOpt.create 
+          ~wp_fct:fct 
+          ~wp_prop:prop 
+          ~wp_gen:false 
+          ~wp_timeout:timeout 
+          ~wp_report_json:report_json_path (* <-- NEW ARGUMENT *)
+          () 
+      in
       let kernel_opt = KernelOpt.create ~strategies:false () in
-      let wp_opt = WpOpt.create ~wp_fct:fct ~wp_prop:prop ~wp_gen:false ~wp_timeout:timeout () in
+      let uncast_opt = UncastOpt.create () in
       let metacsl_opt = MetacslOpt.create () in
       let feature = Prove_feature (id, file, (String.concat "," fct), (String.concat ","prop)) in
       let lsp_opt = LspOpt.create (feature) in
       let command = 
         match (String.ends_with ~suffix:".c" file) with
-        | true -> Command.create ~port:wrapper_port ~strategies:false ~gui:gui ~kernel:kernel_opt ~files:[file] ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
-        | false -> Command.create ~port:wrapper_port ~strategies:false ~gui:gui ~kernel:kernel_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
+        | true -> Command.create ~port:wrapper_port ~strategies:false ~gui:gui ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
+        | false -> Command.create ~port:wrapper_port ~strategies:false ~gui:gui ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
       in
       let command_str = (Command.string_of_t command) in
       Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
@@ -830,21 +1009,21 @@ let rq_handler json_string wrapper_port =
       let prop = check_prop fct prop in
       let fct = check_fct fct in
       let kernel_opt = KernelOpt.create ~fct:fct ~strategies:true () in
+      let uncast_opt = UncastOpt.create () in
       let wp_opt = WpOpt.create ~wp_fct:fct ~wp_prop:prop ~wp_prover:["tip"] ~wp_script:"dry" ~wp_gen:false ~wp_timeout:timeout () in
       let metacsl_opt = MetacslOpt.create () in
       let feature = Prove_feature (id, file, (String.concat "," fct), (String.concat "," prop)) in
       let lsp_opt = LspOpt.create (feature) in
       let command = 
         match (String.ends_with ~suffix:".c" file) with
-        | true -> Command.create ~port:wrapper_port ~strategies:true ~gui:gui ~kernel:kernel_opt ~files:[file] ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
-        | false -> Command.create ~port:wrapper_port ~strategies:true ~gui:gui ~kernel:kernel_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
+        | true -> Command.create ~port:wrapper_port ~strategies:true ~gui:gui ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
+        | false -> Command.create ~port:wrapper_port ~strategies:true ~gui:gui ~kernel:kernel_opt ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt ()
       in
       let command_str = (Command.string_of_t command) in
       Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature wrapper_port in
       Lsp_types.CONTENT (data), pid;
-
     | "stop" -> (
         Options.Self.debug ~level:1 "Kill pid %d!%!" !fork_pid;
         if not (!fork_pid = 0) then Unix.kill !fork_pid Sys.sigint;
@@ -862,6 +1041,8 @@ let rq_handler json_string wrapper_port =
     Lsp_types.CONTENT (Json.save_string (Utils.make_error (Printexc.to_string (exn)) (Utils.id_to_int id))), 1
 
 
+
+
 let notif_handler json_string server_sock wrapper_port =
   let json = Json.load_string json_string in 
   let notif = Lsp_types.NotificationMessage.t_of_json json in 
@@ -877,7 +1058,7 @@ let notif_handler json_string server_sock wrapper_port =
     let json_request = Lsp_types.RequestMessage.json_of_t lsp_request in
     let data = Json.save_string (json_request) in
     Lsp_types.CONTENT (data), 1
-
+  
   | "textDocument/didSave" ->
     Options.Self.debug ~level:1 "didSave\n%!";
     let params = match notif.params with
@@ -889,11 +1070,42 @@ let notif_handler json_string server_sock wrapper_port =
     if String.ends_with ~suffix:".c" file_name then
       begin
         let kernel_opt = KernelOpt.create ~strategies:false () in
-        let wp_opt = WpOpt.create ~wp_prop:["@assigns"; "rte"] ~wp_prover:["none"] ~wp_smoke_tests:false ~wp_gen:true () in
+        let uncast_opt = UncastOpt.create () in
         let metacsl_opt = MetacslOpt.create () in
-        let feature = DidSave_feature in
-        let lsp_opt = LspOpt.create (feature) in
-        let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file_name] ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt () in
+        let feature = DidSave_feature file_name in
+        let lsp_opt = LspOpt.create feature in
+
+        let raw_funcs = !Configuration.global_params.wpAutoProveFunctions in
+        let wp_opt =
+          if raw_funcs = [] then
+            WpOpt.create
+              ~wp_prop:["@assigns"; "rte"]
+              ~wp_prover:["none"]
+              ~wp_smoke_tests:false
+              ~wp_gen:true
+              ()
+          else
+            let target_funcs =
+              if List.mem "@all" raw_funcs then []
+              else List.flatten (List.map check_fct raw_funcs)
+            in
+            let current_provers =
+              Str.split (Str.regexp ",") !Configuration.global_params.wpProver
+            in
+            let current_timeout = !Configuration.global_params.wpTimeout in
+            let root_dir = Printf.sprintf "%s/.frama-c" !rootPath in
+            if not (Sys.file_exists root_dir) then Unix.mkdir root_dir 0o755;
+            let report_json_path = Printf.sprintf "%s/latest_results.json" root_dir in
+            WpOpt.create
+              ~wp_fct:target_funcs
+              ~wp_prover:current_provers
+              ~wp_timeout:current_timeout
+              ~wp_gen:true
+              ~wp_report_json:report_json_path
+              ()
+        in
+
+        let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file_name] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt () in
         let command_str = (Command.string_of_t command) in
         Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
         let prog, args = (Command.args_of_t command) in
@@ -901,7 +1113,7 @@ let notif_handler json_string server_sock wrapper_port =
         Lsp_types.CONTENT (data), 1;
       end
     else Lsp_types.EMPTY (), 1
-
+    
   | "showGlobalMetrics" -> 
     Options.Self.debug ~level:1 "global metrics\n%!";
     let kernel_opt = KernelOpt.create ~strategies:false () in
@@ -921,10 +1133,25 @@ let notif_handler json_string server_sock wrapper_port =
         | _ -> Options.Self.debug ~level:1 "No params for smokeTests \n%!"; assert false
       in
       let kernel_opt = KernelOpt.create ~strategies:false () in
+      let uncast_opt = UncastOpt.create () in
       let wp_opt = WpOpt.create ~wp_prop:["smoke"] ~wp_smoke_tests:true ~wp_gen:false () in
-      let feature = DidSave_feature in
+      let feature = DidSave_feature file_name in
       let lsp_opt = LspOpt.create (feature) in
-      let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file_name] ~wp:wp_opt ~lsp:lsp_opt () in
+      let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file_name] ~uncast:uncast_opt ~wp:wp_opt ~lsp:lsp_opt () in
+      let command_str = (Command.string_of_t command) in
+      Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
+      let prog, args = (Command.args_of_t command) in
+      let data = execute_command prog args feature wrapper_port in
+      Lsp_types.CONTENT (data), 1;
+
+  | "ccdoc" -> 
+      Options.Self.debug ~level:1 "ccdoc\n%!";
+      let kernel_opt = KernelOpt.create ~strategies:false () in
+      let uncast_opt = UncastOpt.create () in
+      let ccdoc_opt = CcdocOpt.create () in
+      let feature = DidSave_feature "" in
+      let lsp_opt = LspOpt.create (feature) in
+      let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~uncast:uncast_opt ~ccdoc:ccdoc_opt ~lsp:lsp_opt () in
       let command_str = (Command.string_of_t command) in
       Options.Self.feedback ~level:1 "Command = %s\n%!" command_str;
       let prog, args = (Command.args_of_t command) in
@@ -1024,7 +1251,7 @@ let notif_handler json_string server_sock wrapper_port =
     let prog, args = (Command.args_of_t command) in
     let data, pid = fork_execute_command prog args feature wrapper_port in
     Lsp_types.CONTENT (data), pid
-
+    
   | "workspace/didChangeConfiguration" ->
     Options.Self.debug ~level:1 "didChangeConfiguration\n%!";
     let data = Json.save_string (Configuration.request_configurations) in

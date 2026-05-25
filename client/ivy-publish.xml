@@ -1,0 +1,6 @@
+<ivy-module version="2.0">
+    <info organisation="com/thalesgroup" module="vscode-offline-deps" revision="1.0.0" status="integration"/>
+    <publications>
+        <artifact name="vscode-offline-deps" type="zip" ext="zip"/>
+    </publications>
+</ivy-module>

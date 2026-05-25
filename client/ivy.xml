@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<ivy-module version="2.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
+
+    <info organisation="com/thalesgroup" module="frama-c-lsp-tests" />
+
+    <dependencies>
+       <dependency org="com/thalesgroup"
+            name="platform.jlep.id.vscode_deps"
+            
+            rev="latest.integration">
+            <artifact name="vscode-deps" type="zip" ext="zip" />
+        </dependency>
+    </dependencies>
+</ivy-module>

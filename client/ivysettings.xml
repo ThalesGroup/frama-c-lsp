@@ -1,0 +1,33 @@
+<!-- 
+ ! Copyright Thales, unpublished work, created 2024-2025. This computer program
+ ! includes Confidential, Proprietary Information and is a Trade Secret of
+ ! Thales. All use, disclosure, and/or reproduction is prohibited unless
+ ! authorised in writing by an officer of Thales. All Rights Reserved.
+ ! -->
+<!--  this file defines the ivy settings to be used for jcat modules  -->
+<ivysettings>
+<properties environment="env"/>
+<property name="ivy.default.cache.dir" value="${env.HOME}/.ivy2/cache" override="false"/>
+<settings defaultResolver="prod-chain"/>
+<caches artifactPattern="[module]-[revision]/[artifact](-[classifier]).[ext]" defaultCacheDir="${ivy.default.cache.dir}"/>
+<credentials host="artifactoryl2-emea.gemalto.com" realm="Artifactory Realm" username="${env.ARTIFACTORYL2_EMEA_USERNAME}" passwd="${env.ARTIFACTORYL2_EMEA_API_KEY}"/>
+<resolvers>
+<!--  artifactory level 2 repo storing id artifacts  -->
+<url name="artifactory-id-prod2" m2compatible="true" latest="latest-revision">
+<artifact pattern="https://artifactoryl2-emea.gemalto.com/embedded_l2_ID/[organisation]/[module]/[revision]/[artifact]-[revision](-[classifier])(.[ext])"/>
+<ivy pattern="https://artifactoryl2-emea.gemalto.com/embedded_l2_ID/[organisation]/[module]/[revision]/ivy-[revision].xml"/>
+</url>
+<url name="artifactory-upload">
+<artifact pattern="https://artifactoryl2-emea.gemalto.com/embedded_l2_ID/[organisation]/[module]/[revision]/[artifact]-[revision].[ext]"/>
+<ivy pattern="https://artifactoryl2-emea.gemalto.com/embedded_l2_ID/[organisation]/[module]/[revision]/ivy-[revision].xml"/>
+</url>
+<!--  Chain resolver for production  -->
+<chain name="prod-chain" returnFirst="true">
+<resolver ref="artifactory-id-prod2"/>
+<resolver ref="artifactory-upload"/>
+</chain>
+</resolvers>
+<modules>
+<module name="*" resolver="prod-chain"/>
+</modules>
+</ivysettings>

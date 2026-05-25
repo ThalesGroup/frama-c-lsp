@@ -28,8 +28,6 @@ let initialize : Json.json =
               "change": 0,
               "save": { "includeText": false }
             },
-            "definitionProvider": true,
-            "declarationProvider": true,
 
             "diagnosticProvider": {
               "interFileDependencies": false,

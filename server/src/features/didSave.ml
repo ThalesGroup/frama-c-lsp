@@ -53,21 +53,22 @@ let rec extract_hd_elems dlist nb res =
 
 let publishDiagnostics_notification filename dlist accumulated_list : Json.json list =
   let dlist = remove_duplicate_diagnostics dlist in
-  (* let dlist = extract_hd_elems dlist 20 [] in *)
-  let lsp_notification_params = Lsp_types.PublishDiagnosticsParams.create ~uri:filename ~diagnostics:dlist () in
+  let absolute_filename =
+    if filename = "" then filename
+    else Utils.to_lsp_uri  filename
+  in
+  let lsp_notification_params = Lsp_types.PublishDiagnosticsParams.create ~uri:absolute_filename ~diagnostics:dlist () in
   let json_notification_params = Lsp_types.PublishDiagnosticsParams.json_of_t lsp_notification_params in
   let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"textDocument/publishDiagnostics" ~params:json_notification_params () in
   let json_notification = Lsp_types.NotificationMessage.json_of_t lsp_notification in
   json_notification :: accumulated_list
-
 let clear_diagnostics_no_uri =
   let lsp_notification_params = (Lsp_types.PublishDiagnosticsParams.create ~uri:("") ~diagnostics:([]) ()) in
   let lsp_notification = (Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"textDocument/publishDiagnostics" ~params:(Lsp_types.PublishDiagnosticsParams.json_of_t lsp_notification_params) ()) in
   Lsp_types.NotificationMessage.json_of_t lsp_notification
 
 let clear_diagnostics filename = 
-  let lsp_notification_params = (Lsp_types.PublishDiagnosticsParams.create ~uri:(Utils.file_str (Filepath.Normalized.of_string (Filepath.normalize filename))) ~diagnostics:([]) ()) in
-  let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"textDocument/publishDiagnostics" ~params:(Lsp_types.PublishDiagnosticsParams.json_of_t lsp_notification_params) () in
+  let lsp_notification_params = (Lsp_types.PublishDiagnosticsParams.create ~uri:(Utils.file_str (Filepath.of_string filename)) ~diagnostics:([]) ()) in  let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"textDocument/publishDiagnostics" ~params:(Lsp_types.PublishDiagnosticsParams.json_of_t lsp_notification_params) () in
   Lsp_types.NotificationMessage.json_of_t lsp_notification
 
 let escape_double_quotes str = 

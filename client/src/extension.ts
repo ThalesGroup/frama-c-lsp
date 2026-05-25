@@ -1,21 +1,413 @@
 import * as path from 'path';
-import { workspace, ExtensionContext, commands, extensions, window, ViewColumn, TabInputWebview, TextEditor, Uri, languages, Position, Range, env } from 'vscode';
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import {LanguageClient,	LanguageClientOptions, ServerOptions, TransportKind} from 'vscode-languageclient/node';
+import { workspace, ExtensionContext, commands, window, ViewColumn, Uri, languages, Position, Range } from 'vscode';
+import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node';
+import { ProjectImporter } from './projectImporter';
 import { exec } from 'child_process';
 
 let client: LanguageClient;
+let framaCProvider: FramaCProvider; 
+let wpDataProvider: MyTreeDataProvider; 
+let wpResultsView: vscode.TreeView<TreeItem>;
 
-export function activate(context: ExtensionContext) {
+
+
+let allGoalsRaw: any[] = []; 
+let activeFilters = { 
+    status: "all", 
+    smokeOnly: false, 
+    verdict: "all",
+    prover: "all", 
+    search: "", 
+    function: "", 
+    file: "",      
+    type: "",      
+    hasScript: false,
+    sortByTime: false 
+};
+
+// Store last used path for import/export
+let lastImportPath: string = "";
+let lastExportPath: string = "";
+
+
+async function uploadWpJson() {
+    const fileUri = await vscode.window.showOpenDialog({
+        canSelectMany: false,
+        openLabel: 'Import Frama-C results (JSON)',
+        filters: { 'JSON': ['json'] }
+    });
+
+    if (!fileUri || !fileUri[0]) return;
+
+    try {
+        const content = fs.readFileSync(fileUri[0].fsPath, 'utf8');
+        const rawData = JSON.parse(content);
+
+        if (!rawData || rawData.length === 0) return;
+
+        let guessedPath = (rawData[0].file || "").replace(/\\/g, '/');
+        const replaceChoice = await window.showQuickPick(
+            [
+                { 
+                    label: "Replace path prefix",
+                     description: "Change origin path to local workspace" 
+                    },
+                { 
+                    label: "Keep original paths", 
+                    description: `Keep: ${guessedPath}` 
+                }
+            ],
+            { placeHolder: `${guessedPath}` }
+        );
+
+        if (!replaceChoice) return;
+
+        const keepOriginalPaths = replaceChoice.label === "Keep original paths";
+        let normalizedPath = "";
+
+        if (!keepOriginalPaths) {
+            normalizedPath = await vscode.window.showInputBox({
+                prompt: "Path prefix to replace:",
+                value: guessedPath.substring(0, guessedPath.lastIndexOf('/'))
+            }) || "";
+        }
+
+        await processWpData(rawData, `Imported ${rawData.length} goals successfully.`, keepOriginalPaths, normalizedPath);
+        vscode.commands.executeCommand('wpGoalsView.focus');
+    } catch (err) {
+        vscode.window.showErrorMessage("Error during import: " + err);
+    }
+}
+
+
+function applyFiltersAndRefreshUI() {
+    if (allGoalsRaw.length === 0) return;
+
+    let fullyFilteredDataset = allGoalsRaw.filter(item => {
+
+        if (activeFilters.status !== "all") {
+            const itemStatus = item.passed === true ? "passed" : "failed";
+            if (itemStatus !== activeFilters.status) return false;
+        }
+
+        if (activeFilters.verdict && activeFilters.verdict !== "all") {
+            if ((item.verdict || "") !== activeFilters.verdict) return false;
+        }
+
+        if (activeFilters.hasScript && (!item.script || item.script.trim() === "")) return false;
+        if (activeFilters.smokeOnly && item.smoke !== true) return false;
+
+        const provers = (item.provers && item.provers.length > 0) ? item.provers : [{ prover: "qed", time: 0 }];
+        const hasMatchingProver = provers.some((p: any) =>
+            (p.prover || "qed").toLowerCase().includes(activeFilters.prover.toLowerCase())
+        );
+        if (activeFilters.prover !== "all" && !hasMatchingProver) return false;
+
+        if (activeFilters.function && !(item.function || "").toLowerCase().includes(activeFilters.function.toLowerCase())) return false;
+        if (activeFilters.file && !(item._localPath || item.file || "").toLowerCase().includes(activeFilters.file.toLowerCase())) return false;
+        if (activeFilters.type && !(item.property || item.goal || "").toLowerCase().includes(activeFilters.type.toLowerCase())) return false;
+
+        if (activeFilters.search) {
+            const term = activeFilters.search.toLowerCase();
+            const funcMatch = (item.function || "").toLowerCase().includes(term);
+            const fileMatch = (item._localPath || item.file || "").toLowerCase().includes(term);
+            const propMatch = (item.property || item.goal || "").toLowerCase().includes(term);
+            if (!funcMatch && !fileMatch && !propMatch) return false;
+        }
+
+        return true;
+    });
+
+    if (activeFilters.sortByTime) {
+        fullyFilteredDataset.sort((a, b) => {
+            const getMaxTime = (provers: any[]) => Math.max(...(provers || []).map(p => parseFloat(p.time) || 0), 0);
+            return getMaxTime(b.provers) - getMaxTime(a.provers);
+        });
+    }
+
+    const MAX_DISPLAY = 10000;
+
+    if (fullyFilteredDataset.length > MAX_DISPLAY) {
+        vscode.window.showWarningMessage(
+            `Showing ${MAX_DISPLAY} of ${fullyFilteredDataset.length} goals. Refine your filters to see more.`
+        );
+    }
+
+    const toDisplay = fullyFilteredDataset.slice(0, MAX_DISPLAY);
+
+    const formatted = toDisplay.map(item => ({
+        status: item.passed === true ? "passed" : "failed",
+        goal: item.goal || "goal",
+        file: item._localPath || "",
+        line: item.line || 1,
+        proverInfo: (item.provers || []).map((p: any) => `(${p.prover} ${p.time})`).join(" ") || "(qed 0)",
+        script: item.script || "",
+        function: item.function || ""
+    }));
+
+    lastWpData = formatted as any;
+    wpDataProvider.update(["Filtered", "All", "All", formatted]);
+    wpDataProvider.refresh();
+    setTimeout(() => updateDecorations(), 200);
+}
+function processWpData(rawData: any[], label: string) {
+    if (!rawData || !Array.isArray(rawData)) return;
+
+    const localWorkspace = get_workspace().replace(/\\/g, '/').replace(/\/$/, '');
+
+    allGoalsRaw = rawData.map(item => {
+        let originalPath = (item.file || "").replace(/\\/g, '/');
+        if (originalPath.startsWith(localWorkspace)) {
+            item._localPath = "./" + originalPath.replace(localWorkspace + '/', '');
+        } else {
+            item._localPath = originalPath;
+        }
+        return item;
+    });
+
+    applyFiltersAndRefreshUI();
+    if (label !== "Auto-update") {
+        vscode.commands.executeCommand('wpGoalsView.focus');
+        vscode.window.showInformationMessage(label);
+    }
+}
+async function downloadWpJson() {
+    const workspacePath = get_workspace();
+   
+    const hiddenArtifactPath = path.join(workspacePath, '.frama-c', 'latest_results.json');
+
+    if (!fs.existsSync(hiddenArtifactPath)) {
+        vscode.window.showWarningMessage("No proof results available. Please run a proof first.");
+        return;
+    }
+
+    const now = new Date();
+    const timestamp = now.toISOString().replace(/[:.]/g, '-').substring(0, 19);
+    const defaultFileName = `proof_results_${timestamp}.json`;
+
+    const defaultUri = lastExportPath 
+        ? vscode.Uri.file(lastExportPath) 
+        : vscode.Uri.file(path.join(workspacePath, defaultFileName));
+
+    const saveUri = await vscode.window.showSaveDialog({
+        defaultUri: defaultUri,
+        filters: { 'JSON': ['json'] },
+        saveLabel: 'Export Frama-C Results'
+    });
+
+    if (!saveUri) return;
+
+    lastExportPath = path.dirname(saveUri.fsPath);
+
+    try {
+        fs.copyFileSync(hiddenArtifactPath, saveUri.fsPath);
+        vscode.window.showInformationMessage("Results successfully exported!");
+    } catch (err) {
+        vscode.window.showErrorMessage("Failed to export JSON: " + err);
+    }
+}
+
+const createGutterIcon = (color: string) => {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="${color}"/></svg>`;
+    const encoded = Buffer.from(svg).toString('base64');
+    return vscode.Uri.parse(`data:image/svg+xml;base64,${encoded}`);
+};
+
+const passedDecoration = vscode.window.createTextEditorDecorationType({
+    gutterIconPath: createGutterIcon('mediumseagreen'),
+    backgroundColor: 'rgba(60, 179, 113, 0.2)' // Fond vert 
+});
+
+const failedDecoration = vscode.window.createTextEditorDecorationType({
+    gutterIconPath: createGutterIcon('crimson'),
+    backgroundColor: 'rgba(220, 20, 60, 0.2)' // Fond rouge
+});
+
+const unknownDecoration = vscode.window.createTextEditorDecorationType({
+    gutterIconPath: createGutterIcon('darkorange'),
+    backgroundColor: 'rgba(255, 140, 0, 0.2)' // Fond orange
+});
+
+let lastWpData: string[] = [];
+
+
+async function initializeDefaultSettings() {
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (!workspaceFolders) {
+        return; 
+    }
+
+    const workspacePath = workspaceFolders[0].uri.fsPath;
+    const vscodeFolder = path.join(workspacePath, '.vscode');
+    const settingsPath = path.join(vscodeFolder, 'settings.json');
+
+    if (fs.existsSync(settingsPath)) {
+        return;
+    }
+
+    if (!fs.existsSync(vscodeFolder)) {
+        fs.mkdirSync(vscodeFolder, { recursive: true });
+    }
+
+    const defaultSettings = {
+        "kernel.includePaths": [],
+        "kernel.sourceFiles": [],
+        
+        "kernel.macros": [],
+
+        "vscodeacsl.maxNumberOfProblems": 100000,
+        "kernel.lspDebug": 0,
+        "kernel.macroStrategiesFunctionPrefix": "",
+        "kernel.sourceFileStrategies": [],
+        "kernel.sourceFileMetacsl": [],
+        "kernel.aggressiveMerging": false,
+        "kernel.removeUnusedSpecifiedFunctions": false,
+        "kernel.machdep": "x86_32",
+        "kernel.inlineCalls": [],
+        "kernel.removeInlined": [],
+        "kernel.noAnnot": false,
+        "kernel.generatedSpecCustom": [],
+
+        "wp.checkMemoryModel": true,
+        "wp.noVolatile": false,
+        "wp.rte": true,
+        "wp.prover": "script,alt-ergo",
+        "wp.timeout": 2,
+        "wp.model": "Typed+var+int+float",
+        "wp.par": 8,
+        "wp.cache": "update",
+        "wp.script": "batch",
+        "wp.session": ".framaC",
+        "wp.autoDepth": 20,
+        "wp.autoWidth": 1,
+
+        "metrics.byFunction": true,
+        "callgraph.roots": [],
+        "callgraph.services": false,
+        "uncast.active": false,
+        "uncast.lshiftAsMul": true,
+        "uncast.rshiftAsDiv": true,
+        "uncast.endianness": "",
+        "metacsl.active": false,
+        "metacsl.checks": true,
+        "metacsl.noCheckExt": true,
+        "metacsl.noSimpl": true,
+        "metacsl.numberAssertions": true,
+        "ccdoc.active": false,
+        "ccdoc.coverageVerif": true,
+        "ccdoc.latex": true
+    };
+
+    try {
+        fs.writeFileSync(settingsPath, JSON.stringify(defaultSettings, null, 4), 'utf-8');
+        vscode.window.showInformationMessage("JCAT configuration initialized successfully.");
+    } catch (error) {
+        console.error("Initialization error:", error);
+    }
+}
+function updateDecorations() {
+    const editors = vscode.window.visibleTextEditors;
+
+    editors.forEach(editor => {
+        const currentFileName = path.basename(editor.document.fileName);
+
+        interface LineInfo {
+            worstStatus: string;
+            goals: { status: string; goalId: string; proverInfo: string }[];
+        }
+        const lineStatusMap = new Map<number, LineInfo>();
+
+        lastWpData.forEach((item: any) => {
+            let status: string, goalId: string, itemFileName: string, line: number, proverInfo: string;
+
+            if (typeof item === 'string') {
+                const p = item.trim().split(":");
+                if (p.length < 5) return; 
+                status = p[0].trim().toLowerCase();
+                goalId = p[1].trim(); 
+                itemFileName = path.basename(p[2].trim());
+                line = parseInt(p[3].trim(), 10) - 1;
+                proverInfo = p[4] ? p[4].trim() : ""; 
+            } else {
+                if (!item || !item.status) return; 
+                status = item.status.toLowerCase();
+                goalId = item.goal;
+                itemFileName = path.basename(item.file);
+                line = item.line - 1;
+                proverInfo = item.proverInfo;
+            }
+
+            if (itemFileName === currentFileName && !isNaN(line)) {
+                if (!lineStatusMap.has(line)) {
+                    lineStatusMap.set(line, { worstStatus: status, goals: [] });
+                }
+                
+                const lineInfo = lineStatusMap.get(line)!;
+                
+                lineInfo.goals.push({ status, goalId, proverInfo });
+
+                if (status === "failed") {
+                    lineInfo.worstStatus = "failed"; 
+                } else if (status === "unknown" && lineInfo.worstStatus !== "failed") {
+                    lineInfo.worstStatus = "unknown"; 
+                } else if (status === "passed" && !lineInfo.worstStatus) {
+                    lineInfo.worstStatus = "passed"; 
+                }
+            }
+        });
+
+        const passedOpts: vscode.DecorationOptions[] = [];
+        const failedOpts: vscode.DecorationOptions[] = [];
+        const unknownOpts: vscode.DecorationOptions[] = [];
+
+        lineStatusMap.forEach((info, line) => {
+            const range = editor.document.lineAt(line).range;
+            
+            const hoverMessage = new vscode.MarkdownString();
+            hoverMessage.isTrusted = true;
+            hoverMessage.appendMarkdown(`**WP Proof Goals**\n\n`);
+            
+            info.goals.forEach(g => {
+                let icon = "✅";
+                if (g.status === "failed") icon = "❌";
+                if (g.status === "unknown") icon = "⚠️";
+                
+                hoverMessage.appendMarkdown(`- ${icon} **${g.goalId}** _${g.proverInfo}_\n`);
+            });
+
+            const decoration = { range, hoverMessage };
+
+            if (info.worstStatus === "passed") passedOpts.push(decoration);
+            else if (info.worstStatus === "failed") failedOpts.push(decoration);
+            else if (info.worstStatus === "unknown") unknownOpts.push(decoration);
+        });
+
+        editor.setDecorations(passedDecoration, passedOpts);
+        editor.setDecorations(failedDecoration, failedOpts);
+        editor.setDecorations(unknownDecoration, unknownOpts);
+    });
+}
+
+export async function activate(context: ExtensionContext) {
 	// The server is implemented in OCaml
-	const serverPort = vscode.workspace.getConfiguration('vscodeacsl').get<number>('serverPort') || 8005;
-	const wrapperPort = vscode.workspace.getConfiguration('vscodeacsl').get<number>('wrapperPort') || (serverPort + 1);
-	const serverModuleRun = context.asAbsolutePath(path.join('run.sh')) + " " + serverPort + " " + wrapperPort;
-	const serverModuleDebug = context.asAbsolutePath(path.join('run.sh')) + " " + serverPort + " " + wrapperPort;
+    await initializeDefaultSettings();
+    const config = vscode.workspace.getConfiguration();
+    const serverPort = config.get<number>('kernel.serverPort') || 8005;
+    const wrapperPort = config.get<number>('kernel.wrapperPort') || (serverPort + 1);
+    const serverModuleRun = context.asAbsolutePath(path.join('run.sh')) + " " + serverPort + " " + wrapperPort;
+    const serverModuleDebug = context.asAbsolutePath(path.join('run.sh')) + " " + serverPort + " " + wrapperPort;
+    const importer = new ProjectImporter();
 
-	// If the extension is launched in debug mode then the debug server options are used
-	// Otherwise the run options are used
+    // 2. Project Importer Command & Status Bar
+    let importDisposable = vscode.commands.registerCommand('acsl.importProjectConfig', async () => {
+        await importer.showProjectSelector();
+    });
+    context.subscriptions.push(importDisposable);
+
+  
+
 	const serverOptions: ServerOptions = {
 		run: {command: serverModuleRun,	transport: { kind: TransportKind.socket, port: serverPort }, options: { shell: true }},
 		debug: {command: serverModuleDebug,	transport: { kind: TransportKind.socket, port: serverPort }, options: { shell: true }}
@@ -23,571 +415,927 @@ export function activate(context: ExtensionContext) {
 
 	// Options to control the language client
 	const clientOptions: LanguageClientOptions = {
-		// Register the server for c files containing acsl annotations
-		documentSelector: [{ scheme: 'file', language: 'acsl' }],
+		// Register the server for c and h files containing acsl annotations
+		documentSelector: [
+			{ scheme: 'file', language: 'c' },
+			{ scheme: 'file', language: 'h' },
+			{ scheme: 'file', language: 'acsl' }
+		],
 		// Notify the server about file changes to '.clientrc files contained in the workspace
 		synchronize: {fileEvents: workspace.createFileSystemWatcher('**/.clientrc')}
 	};
 
 	// Create the language client and start the client.
 	client = new LanguageClient('vscodeacsl', 'ACSL Language Server', serverOptions, clientOptions);
-
-	const smokeTests = commands.registerCommand('smokeTests', async () => {
-		try {
-			const editor = window.activeTextEditor;
-       		if (!editor) {
-           		window.showErrorMessage('No active editor found.');
-           		return;
-       		}
-			await client.sendNotification('smokeTests', editor.document.fileName);
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to run smoke tests: ' + errorMessage);
-			console.error('Error computing smoke tests:', err);
-		}
-	});
-
-	const displayCIL = commands.registerCommand('displayCIL', async () => {
-		try {
-			const editor = window.activeTextEditor;
-       		if (!editor) {
-           		window.showErrorMessage('No active editor found.');
-           		return;
-       		}
-			const filePath = editor.document.fileName;
-    		const fileName = path.basename(filePath);
-			await create_file(fileName, 'acsl');
-			await client.sendNotification('displayCIL', filePath);
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to compute displayCIL: ' + errorMessage);
-			console.error('Error computing displayCIL:', err);
-		}
-	});
-
-	const displayCIL_noannot = commands.registerCommand('displayCIL_noannot', async () => {
-		try {
-			const editor = window.activeTextEditor;
-       		if (!editor) {
-           		window.showErrorMessage('No active editor found.');
-           		return;
-       		}
-			const filePath = editor.document.fileName;
-    		const fileName = path.basename(filePath);
-			await create_file(fileName, 'acsl');
-			await client.sendNotification('displayCIL_noannot', filePath);
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to compute displayCIL_noannot: ' + errorMessage);
-			console.error('Error computing displayCIL_noannot:', err);
-		}
-	});
-
-	const displayCILProject = commands.registerCommand('displayCILProject', async () => {
-		try {
-    		const fileName = "project.c";
-			await create_file(fileName, 'acsl');
-			await client.sendNotification('displayCILProject');
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to compute displayCILProject: ' + errorMessage);
-			console.error('Error computing displayCILProject:', err);
-		}
-	});
-
-	const displayCILProject_noannot = commands.registerCommand('displayCILProject_noannot', async () => {
-		try {
-    		const fileName = "project.c";
-			await create_file(fileName, 'acsl');
-			await client.sendNotification('displayCILProject_noannot');
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to compute displayCILProject_noannot: ' + errorMessage);
-			console.error('Error computing displayCILProject_noannot:', err);
-		}
-	});
-
-	const computeCG = commands.registerCommand('computeCG', async () => {
-		try {
-			const editor = window.activeTextEditor;
-       		if (!editor) {
-           		window.showErrorMessage('No active editor found.');
-           		return;
-       		}
-			const filePath = editor.document.fileName;
-			const dirPath = path.dirname(filePath);
-    		const fileName = path.basename(filePath);
-			const extension = path.extname(filePath);
-			const fileNameBase = fileName.slice(0, -extension.length);
-			const workspacePath = get_workspace ();
-			const filePathOut = path.join(workspacePath, ".frama-c", "fc_" + fileNameBase + ".dot.pdf");
-			if (!fs.existsSync(filePathOut)) {
-				try {fs.writeFileSync(filePathOut, 'Task in progress ...')}
-				catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
-			}
-			const fileUri = vscode.Uri.parse(filePathOut);
-			await vscode.commands.executeCommand('revealInExplorer', fileUri);
-
-			await client.sendNotification('computeCG', filePath);
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to compute callgraph: ' + errorMessage);
-			console.error('Error computing callgraph:', err);
-		}
-	});
-
-	const showPOVC = commands.registerCommand('showPOVC', async () => {
-		try {
-			const editor = window.activeTextEditor;
-       		if (!editor) {
-           		window.showErrorMessage('No active editor found.');
-           		return;
-       		}
-			const res = await client.sendRequest('showPOVC', [editor.document.fileName, editor.selection.active]);
-			const wpResult = JSON.parse(JSON.stringify(res, null, 1));
-			const newUri = Uri.parse('untitled:Proof Obligation');
-			const document = await workspace.openTextDocument(newUri);
-			await languages.setTextDocumentLanguage(document, 'plaintext');
-			const textDocument = await window.showTextDocument(document, ViewColumn.One, true);
-
-			textDocument.edit(editBuilder => {
-				const start = new Position(0, 0);
-				const end = new Position(document.lineCount, 0);
-				const fullRange = new Range(start, end);
-				editBuilder.delete(fullRange);
-				editBuilder.insert(textDocument.selection.start, wpResult);
-			});
-			window.showInformationMessage('Proof obligation computed');
-
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to fetch and display WP proof obligation: ' + errorMessage);
-			console.error('Error fetching WP proof obligation:', err);
-		}
-	});
-
-
-	const showPO = commands.registerCommand('showPO', async () => {
-		try {
-			const selectedItems = wpResultsView.selection;
-        	if (selectedItems.length > 0) {
-				const selectedItem = selectedItems[0];
-				const workspacePath = get_workspace ();
-				let fileUri: vscode.Uri;
-				const path_name = path.join(workspacePath, ".frama-c", `${selectedItem.goal_id}.txt`);
-				fileUri = vscode.Uri.parse(path_name);
-				const document = await workspace.openTextDocument(fileUri);
-				await languages.setTextDocumentLanguage(document, 'plaintext');
-				const editor = await window.showTextDocument(document, ViewColumn.One, true);
-			}
-			else {vscode.window.showInformationMessage('No item selected');}
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to fetch and display WP proof obligation: ' + errorMessage);
-			console.error('Error fetching WP proof obligation:', err);
-		}
-	});
-
-	const wpResults = new MyTreeDataProvider();
-	const wpResultsView = window.createTreeView('WPPan', {treeDataProvider: wpResults,
-        showCollapseAll: true,      // Show "Collapse All" button
-        canSelectMany: true,        // Allow multiple selection in the tree
-        //contextValue: 'myTree',     // A context value for filtering actions/commands
-		});
-
-	const showScript = commands.registerCommand('showScript', async (item: TreeItem) => {
-		try {
-			const selectedItems = wpResultsView.selection;
-        	if (selectedItems.length > 0) {
-				const selectedItem = selectedItems[0];
-				const workspacePath = get_workspace ();
-				let fileUri: vscode.Uri;
-				fileUri = vscode.Uri.parse(`${workspacePath}/${selectedItem.script}`);
-				const document = await workspace.openTextDocument(fileUri);
-				await languages.setTextDocumentLanguage(document, 'plaintext');
-				const editor = await window.showTextDocument(document, ViewColumn.One, true);
-			}
-			else {vscode.window.showInformationMessage('No item selected');}
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to fetch and display script: ' + errorMessage);
-			console.error('Error fetching script:', err);
-		}
-	});
-
-	const runAgain = commands.registerCommand('runAgain', async (item: TreeItem) => {
-		try {
-			const selectedItems = wpResultsView.selection;
-        	if (selectedItems.length > 0) {
-				const selectedItem = selectedItems[0];
-				const args = await get_args_from_item(selectedItem, false);
-				const res = await client.sendRequest('provePO', args);
-				wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
-				wpResults.refresh();
-				window.showInformationMessage('Proof results updated');
-
-			}
-			else {vscode.window.showInformationMessage('No item selected');}
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to fetch and display script: ' + errorMessage);
-			console.error('Error fetching script:', err);
-		}
-	});
-
-	const runAgainGui = commands.registerCommand('runAgainGui', async (item: TreeItem) => {
-		try {
-			const selectedItems = wpResultsView.selection;
-        	if (selectedItems.length > 0) {
-				const selectedItem = selectedItems[0];
-				const args = await get_args_from_item(selectedItem, true);
-				const res = await client.sendRequest('provePO', args);
-				wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
-				wpResults.refresh();
-				window.showInformationMessage('Proof results updated');
-
-			}
-			else {vscode.window.showInformationMessage('No item selected');}
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to fetch and display script: ' + errorMessage);
-			console.error('Error fetching script:', err);
-		}
-	});
-
-	const runAgainStrategies = commands.registerCommand('runAgainStrategies', async (item: TreeItem) => {
-		try {
-			const selectedItems = wpResultsView.selection;
-        	if (selectedItems.length > 0) {
-				const selectedItem = selectedItems[0];
-				const args = await get_args_from_item(selectedItem, false);
-				const res = await client.sendRequest('provePOStrategies', args);
-				wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
-				wpResults.refresh();
-				window.showInformationMessage('Proof results updated');
-
-			}
-			else {vscode.window.showInformationMessage('No item selected');}
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to fetch and display script: ' + errorMessage);
-			console.error('Error fetching script:', err);
-		}
-	});
-
-	const runAgainStrategiesGui = commands.registerCommand('runAgainStrategiesGui', async (item: TreeItem) => {
-		try {
-			const selectedItems = wpResultsView.selection;
-        	if (selectedItems.length > 0) {
-				const selectedItem = selectedItems[0];
-				const args = await get_args_from_item(selectedItem, true);
-				const res = await client.sendRequest('provePOStrategies', args);
-				wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
-				wpResults.refresh();
-				window.showInformationMessage('Proof results updated');
-
-			}
-			else {vscode.window.showInformationMessage('No item selected');}
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to fetch and display script: ' + errorMessage);
-			console.error('Error fetching script:', err);
-		}
-	});
-
-    const provePO = commands.registerCommand('provePO', async () => {
-		try {
-			const args = await get_proof_args(false);
-            const res = await client.sendRequest('provePO', args);
-			wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
-			wpResults.refresh();
-			window.showInformationMessage('Proof results updated');
-        }
-        catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-            window.showErrorMessage('Failed to fetch and display WP proof: ' + errorMessage);
-            console.error('Error fetching WP proof:', err);
-        }
+    // 3. TreeViews Initialization (Sidebar + Bottom Panel)
+    wpDataProvider = new MyTreeDataProvider();
+    wpResultsView = vscode.window.createTreeView('wpGoalsView', { 
+        treeDataProvider: wpDataProvider,
+        showCollapseAll: true,
+        canSelectMany: true 
     });
 
-	const provePOGUI = commands.registerCommand('provePOGUI', async () => {
-		try {
-            const args = await get_proof_args(true);
-            const res = await client.sendRequest('provePO', args);
-			window.showInformationMessage('frama-c-gui closed');
-        }
-        catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-            window.showErrorMessage('Failed to fetch and display WP proof: ' + errorMessage);
-            console.error('Error fetching WP proof:', err);
-        }
+    framaCProvider = new FramaCProvider();
+    vscode.window.createTreeView('framaCExplorer', {
+        treeDataProvider: framaCProvider
     });
 
-    const provePOStrategies = commands.registerCommand('provePOStrategies', async () => {
-		try {
-            const args = await get_proof_args(false);
-            const res = await client.sendRequest('provePOStrategies', args);
-			wpResults.update(JSON.parse(JSON.stringify(res, null, 1)));
-			wpResults.refresh();
-			window.showInformationMessage('Proof results updated');
-        }
-        catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-            window.showErrorMessage('Failed to fetch and display WP proof: ' + errorMessage);
-            console.error('Error fetching WP proof:', err);
-        }
-    });
+    const workspacePath = get_workspace();
+    const resultsJsonPattern = new vscode.RelativePattern(workspacePath, '.frama-c/latest_results.json');
+    const resultsWatcher = vscode.workspace.createFileSystemWatcher(resultsJsonPattern);
 
-    const provePOStrategiesGUI = commands.registerCommand('provePOStrategiesGUI', async () => {
-		try {
-            const args = await get_proof_args(true);
-            const res = await client.sendRequest('provePOStrategies', args);
-			window.showInformationMessage('frama-c-gui closed');
-        }
-        catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-            window.showErrorMessage('Failed to fetch and display WP proof: ' + errorMessage);
-            console.error('Error fetching WP proof:', err);
+    resultsWatcher.onDidChange(async (uri) => {
+        await new Promise(resolve => setTimeout(resolve, 300)); // Latence pour I/O disque
+        if (fs.existsSync(uri.fsPath)) {
+            const content = fs.readFileSync(uri.fsPath, 'utf8');
+            try {
+                const rawData = JSON.parse(content);
+                await processWpData(rawData, "WP Results Updated");
+            } catch (e) {
+                console.error("Erreur parsing JSON:", e);
+            }
         }
     });
+	vscode.window.onDidChangeActiveTextEditor(editor => {
+        updateDecorations();
+    }, null, context.subscriptions);
+    
 
-    const stop = commands.registerCommand('stop', async () => {
-		try {
-            const res = await client.sendRequest('stop');
-			window.showInformationMessage('Stopped processes');
-        }
-        catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-            window.showErrorMessage('Failed to stop Frama-C: ' + errorMessage);
-            console.error('Error stropping Frama-C:', err);
-        }
-    });
+    // 6. Register all Frama-C Commands
+    registerAllExtensionCommands(context);
 
-
-	const showLocalMetrics = commands.registerCommand('showLocalMetrics', async () => {
-		try {
-			const editor = window.activeTextEditor;
-       		if (!editor) {
-           		window.showErrorMessage('No active editor found.');
-           		return;
-       		}
-			const filePath = editor.document.fileName;
-			const file_name = "metrics.txt";
-			await create_file(file_name, 'plaintext');
-			client.sendNotification('showLocalMetrics', filePath);
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to get local metrics: ' + errorMessage);
-			console.error('Error getting local metrics:', err);
-		}
-	});
-
-	const showGlobalMetrics = commands.registerCommand('showGlobalMetrics', async () => {
-		try {
-			const file_name = "metrics.txt";
-			await create_file(file_name, 'plaintext');
-			client.sendNotification('showGlobalMetrics');
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			window.showErrorMessage('Failed to get global metrics: ' + errorMessage);
-			console.error('Error getting global metrics:', err);
-		}
-	});
-
-	context.subscriptions.push(smokeTests, displayCIL, displayCIL_noannot, displayCILProject, displayCILProject_noannot, computeCG, showPOVC, showPO, runAgain, runAgainGui, runAgainStrategies, runAgainStrategiesGui, provePO, provePOGUI, provePOStrategies, provePOStrategiesGUI, showGlobalMetrics, showLocalMetrics);
-
-	// Start the client. This will also launch the server
-	client.start();
+     client.start();
 }
 
+/**
+ * Register all extension commands without touching original logic or error handling
+ */
+function registerAllExtensionCommands(context: ExtensionContext) {
+    context.subscriptions.push(
+        // --- Sidebar Exploration & Toggles ---
+        
+    
+
+        // --- Analysis & AST Commands ---
+        commands.registerCommand('DisplayAST', async () => {
+            const editor = window.activeTextEditor;
+            if (!editor) return;
+            const uri = editor.document.uri.toString();
+            try {
+                const response = await client.sendRequest("getAST", { uri: uri });
+                if (response) {
+                    framaCProvider.updateAST(uri, response);
+                    window.showInformationMessage("AST Loaded!");
+                    return response;
+                } else {
+                    window.showWarningMessage("No AST Found");
+                }
+            } catch (error) { console.error(error); }
+            
+        }),commands.registerCommand('framaCExplorer.search', async () => {
+    const val = await window.showInputBox({ 
+        prompt: "Search AST (functions, variables, types, annotations)...",
+        value: framaCProvider.getFilter(),  // pré-rempli avec la valeur courante
+        placeHolder: "Leave empty to clear"
+    });
+    if (val !== undefined) framaCProvider.setFilter(val);
+}),
+	
+// Command to handle clicking on any Sidebar element
+
+commands.registerCommand('framaC.openAndDetail', async (item: { fsPath?: string, line?: number, label: string }) => {
+    if (!item.fsPath || item.line === undefined) return;
+    const uri = vscode.Uri.file(item.fsPath);  // ← Uri.file() pas Uri.parse()
+    const document = await workspace.openTextDocument(uri);
+    const editor = await window.showTextDocument(document);
+    if (item.line > 0) {
+        const pos = new Position(item.line - 1, 0);
+        const lineText = document.lineAt(pos.line).text;
+        const charIndex = lineText.indexOf(item.label);
+        const finalPos = new Position(pos.line, charIndex !== -1 ? charIndex : 0);
+        editor.selection = new vscode.Selection(finalPos, finalPos);
+        editor.revealRange(new Range(finalPos, finalPos), vscode.TextEditorRevealType.InCenter);
+    } 
+}),commands.registerCommand('framaC.filterAnnotations', async () => {
+    const options = [
+        { label: "all", description: "All annotations" },
+        { label: "predicate", description: "Predicates" },
+        { label: "logic_function", description: "Logic functions" },
+        { label: "lemma", description: "Lemmas" },
+        { label: "axiomatic", description: "Axiomatics" },
+        { label: "invariant", description: "Global invariants" },
+        { label: "type_invariant", description: "Type invariants" },
+        { label: "model", description: "Model fields" },
+    ];
+    const choice = await window.showQuickPick(options, { 
+        placeHolder: "Filter annotations by type" 
+    });
+    if (choice) framaCProvider.setAnnotationFilter(choice.label);
+}),
+commands.registerCommand('framaC.refreshAST', () => {
+    vscode.commands.executeCommand('acsl-lsp.DisplayAST');
+}),
+
+        commands.registerCommand('smokeTests', async () => {
+            try {
+                const editor = window.activeTextEditor;
+                if (!editor) { window.showErrorMessage('No active editor found.'); return; }
+                await client.sendNotification('smokeTests', editor.document.fileName);
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                window.showErrorMessage('Failed to run smoke tests: ' + msg);
+            }
+        }),
+
+        commands.registerCommand('ccdoc', async () => {
+            try { await client.sendNotification('ccdoc'); }
+            catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                window.showErrorMessage('Failed to run ccdoc: ' + msg);
+            }
+        }),
+
+        // --- CIL Display Commands ---
+        commands.registerCommand('displayCIL', async () => {
+            try {
+                const editor = window.activeTextEditor;
+                if (!editor) { window.showErrorMessage('No active editor found.'); return; }
+                const filePath = editor.document.fileName;
+                await create_file(path.basename(filePath), 'c');
+                await client.sendNotification('displayCIL', filePath);
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                window.showErrorMessage('Failed to compute displayCIL: ' + msg);
+            }
+        }),
+
+        commands.registerCommand('displayCIL_noannot', async () => {
+            try {
+                const editor = window.activeTextEditor;
+                if (!editor) { window.showErrorMessage('No active editor found.'); return; }
+                const filePath = editor.document.fileName;
+                await create_file(path.basename(filePath), 'c');
+                await client.sendNotification('displayCIL_noannot', filePath);
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                window.showErrorMessage('Failed to compute displayCIL_noannot: ' + msg);
+            }
+        }),
+
+        commands.registerCommand('displayCILProject', async () => {
+            try {
+                await create_file("project.c", 'c');
+                await client.sendNotification('displayCILProject');
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                window.showErrorMessage('Failed to compute displayCILProject: ' + msg);
+            }
+        }),
+
+        commands.registerCommand('displayCILProject_noannot', async () => {
+            try {
+                await create_file("project.c", 'c');
+                await client.sendNotification('displayCILProject_noannot');
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                window.showErrorMessage('Failed to compute displayCILProject_noannot: ' + msg);
+            }
+        }),
+
+        // --- Metrics & Graphs ---
+        commands.registerCommand('computeCG', async () => {
+            try {
+                const editor = window.activeTextEditor;
+                if (!editor) { window.showErrorMessage('No active editor found.'); return; }
+                const filePath = editor.document.fileName;
+                const workspacePath = get_workspace();
+                const fileNameBase = path.basename(filePath, path.extname(filePath));
+                const filePathOut = path.join(workspacePath, ".frama-c", "fc_" + fileNameBase + ".dot.pdf");
+                if (!fs.existsSync(filePathOut)) {
+                    try { fs.writeFileSync(filePathOut, 'Task in progress ...'); }
+                    catch (error) { vscode.window.showErrorMessage(`Failed to create file: ${error.message}`); }
+                }
+                await vscode.commands.executeCommand('revealInExplorer', vscode.Uri.file(filePathOut));
+                await client.sendNotification('computeCG', filePath);
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                window.showErrorMessage('Failed to compute callgraph: ' + msg);
+            }
+        }),
+
+        commands.registerCommand('showLocalMetrics', async () => {
+            try {
+                const editor = window.activeTextEditor;
+                if (!editor) { window.showErrorMessage('No active editor found.'); return; }
+                await create_file("metrics.txt", 'plaintext');
+                client.sendNotification('showLocalMetrics', editor.document.fileName);
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                window.showErrorMessage('Failed to get local metrics: ' + msg);
+            }
+        }),
+
+        commands.registerCommand('showGlobalMetrics', async () => {
+            try {
+                await create_file("metrics.txt", 'plaintext');
+                client.sendNotification('showGlobalMetrics');
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                window.showErrorMessage('Failed to get global metrics: ' + msg);
+            }
+        }),
+
+        commands.registerCommand('computeIncludeGraph', async () => {
+            await showRealIncludeMatrix();
+        }),
+        // --- Proof Commands ---
+        commands.registerCommand('showPOVC', async () => {
+            try {
+                const editor = window.activeTextEditor;
+                if (!editor) { window.showErrorMessage('No active editor found.'); return; }
+                const res = await client.sendRequest('showPOVC', [editor.document.fileName, editor.selection.active]);
+                const wpResult = JSON.parse(JSON.stringify(res, null, 1));
+                const doc = await workspace.openTextDocument({ content: wpResult, language: 'plaintext' });
+                await window.showTextDocument(doc, ViewColumn.One, true);
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                window.showErrorMessage('Failed to display WP PO: ' + msg);
+            }
+        }),
+
+        commands.registerCommand('showPO', async () => {
+            try {
+                const selected = wpResultsView.selection[0];
+                if (selected && selected.goal_id) {
+                    const fileUri = vscode.Uri.file(path.join(get_workspace(), ".frama-c", `${selected.goal_id}.txt`));
+                    const doc = await workspace.openTextDocument(fileUri);
+                    await window.showTextDocument(doc, ViewColumn.One, true);
+                } else { window.showInformationMessage('No item selected'); }
+            } catch (err) {
+                window.showErrorMessage('Failed to display PO: ' + err);
+            }
+        }),
+
+        commands.registerCommand('showScript', async () => {
+            try {
+                const selected = wpResultsView.selection[0];
+                if (selected && selected.script) {
+                    const fileUri = vscode.Uri.file(path.join(get_workspace(), selected.script));
+                    const doc = await workspace.openTextDocument(fileUri);
+                    await window.showTextDocument(doc, ViewColumn.One, true);
+                } else { window.showInformationMessage('No item selected'); }
+            } catch (err) {
+                window.showErrorMessage('Failed to fetch script: ' + err);
+            }
+        }),
+
+        commands.registerCommand('provePO', async () => {
+            try {
+                const args = await get_proof_args(false);
+                const res = await client.sendRequest('provePO', args);
+                wpDataProvider.update(res);
+                wpDataProvider.refresh();
+                window.showInformationMessage('Proof results updated');
+            } catch (err) {
+                window.showErrorMessage('Failed to run WP proof: ' + err);
+            }
+        }),
+
+        commands.registerCommand('provePOStrategies', async () => {
+            try {
+                const args = await get_proof_args(false);
+                const res = await client.sendRequest('provePOStrategies', args);
+                wpDataProvider.update(res);
+                wpDataProvider.refresh();
+                window.showInformationMessage('Proof results updated');
+            } catch (err) {
+                window.showErrorMessage('Failed to run Strategies proof: ' + err);
+            }
+        }),
+
+        commands.registerCommand('provePOGUI', async () => {
+            try {
+                const args = await get_proof_args(true);
+                await client.sendRequest('provePO', args);
+                window.showInformationMessage('frama-c-gui closed');
+            } catch (err) { window.showErrorMessage('Failed to run WP GUI proof: ' + err); }
+        }),
+
+        commands.registerCommand('provePOStrategiesGUI', async () => {
+            try {
+                const args = await get_proof_args(true);
+                await client.sendRequest('provePOStrategies', args);
+                window.showInformationMessage('frama-c-gui closed');
+            } catch (err) { window.showErrorMessage('Failed to run Strategies GUI proof: ' + err); }
+        }),
+
+        // --- Run Again (Bottom Panel selection) ---
+        commands.registerCommand('runAgain', async () => {
+            const selected = wpResultsView.selection[0];
+            if (selected) {
+                try {
+                    const args = await get_args_from_item(selected, false);
+                    const res = await client.sendRequest('provePO', args);
+                    wpDataProvider.update(res);
+                    wpDataProvider.refresh();
+                    window.showInformationMessage('Proof results updated');
+                } catch (err) { window.showErrorMessage('Error: ' + err); }
+            }
+        }),
+
+        commands.registerCommand('runAgainGui', async () => {
+            const selected = wpResultsView.selection[0];
+            if (selected) {
+                try {
+                    const args = await get_args_from_item(selected, true);
+                    const res = await client.sendRequest('provePO', args);
+                    wpDataProvider.update(res);
+                    wpDataProvider.refresh();
+                    window.showInformationMessage('Proof results updated');
+                } catch (err) { window.showErrorMessage('Error: ' + err); }
+            }
+        }),
+
+        commands.registerCommand('runAgainStrategies', async () => {
+            const selected = wpResultsView.selection[0];
+            if (selected) {
+                try {
+                    const args = await get_args_from_item(selected, false);
+                    const res = await client.sendRequest('provePOStrategies', args);
+                    wpDataProvider.update(res);
+                    wpDataProvider.refresh();
+                    window.showInformationMessage('Proof results updated');
+                } catch (err) { window.showErrorMessage('Error: ' + err); }
+            }
+        }),
+
+        commands.registerCommand('runAgainStrategiesGui', async () => {
+            const selected = wpResultsView.selection[0];
+            if (selected) {
+                try {
+                    const args = await get_args_from_item(selected, true);
+                    const res = await client.sendRequest('provePOStrategies', args);
+                    wpDataProvider.update(res);
+                    wpDataProvider.refresh();
+                    window.showInformationMessage('Proof results updated');
+                } catch (err) { window.showErrorMessage('Error: ' + err); }
+            }
+        }),
+
+        // --- Specialized Cursor Commands ---
+        commands.registerCommand('provePO Cursor', async () => {
+            try {
+                const editor = window.activeTextEditor;
+                if (!editor) return;
+                const timeout = await window.showInputBox({ prompt: `Launch Auto-Proof (Timeout in s)`, value: '10' });
+                if (!timeout) return;
+                const args = [editor.document.fileName, editor.selection.active.line, parseInt(timeout, 10)];
+                const res: any = await client.sendRequest('proveAuto', args);
+                if (res && Array.isArray(res)) {
+                    window.showInformationMessage(`Targeting '${res[2]}' in '${res[1]}'.`);
+                    wpDataProvider.update(res);
+                    wpDataProvider.refresh();
+                } else { window.showWarningMessage("No context detected."); }
+            } catch (err) { window.showErrorMessage('Error: ' + err); }
+        }),
+
+        commands.registerCommand('stop', async () => {
+            try { await client.sendRequest('stop'); window.showInformationMessage('Stopped processes'); }
+            catch (err) { window.showErrorMessage('Failed to stop: ' + err); }
+        }),
+       
+        // --- WP Goals Filtering Commands ---
+
+        commands.registerCommand('wpFilters.search', async () => {
+            const query = await window.showInputBox({ 
+                prompt: "Search globally (Function, File, or Type)...",
+                value: activeFilters.search
+            });
+            if (query !== undefined) {
+                activeFilters.search = query.trim();
+                applyFiltersAndRefreshUI();
+            }
+        }),
+
+        commands.registerCommand('wpFilters.filterFunction', async () => {
+            const uniqueFuncs = new Set<string>();
+            allGoalsRaw.forEach(item => {
+                if (item.function) uniqueFuncs.add(item.function);
+            });
+            
+            const options = ["all", ...Array.from(uniqueFuncs).sort()];
+            
+            const choice = await window.showQuickPick(options, { 
+                placeHolder: "Select a Function to filter by (Type to search...)" 
+            });
+            
+            if (choice) {
+                activeFilters.function = choice === "all" ? "" : choice;
+                applyFiltersAndRefreshUI();
+            }
+        }),
+
+        commands.registerCommand('wpFilters.filterFile', async () => {
+            const uniqueFiles = new Set<string>();
+            allGoalsRaw.forEach(item => {
+                const filePath = item._localPath || item.file;
+                if (filePath) uniqueFiles.add(filePath);
+            });
+            
+            const options = ["all", ...Array.from(uniqueFiles).sort()];
+            
+            const choice = await window.showQuickPick(options, { 
+                placeHolder: "Select a File to filter by (Type to search...)" 
+            });
+            
+            if (choice) {
+                activeFilters.file = choice === "all" ? "" : choice;
+                applyFiltersAndRefreshUI();
+            }
+        }),
+
+
+        commands.registerCommand('wpFilters.filterType', async () => {
+            const options = [
+                { label: "all", description: "Show all property types" },
+                { label: "requires", description: "Preconditions" },
+                { label: "ensures", description: "Postconditions" },
+                { label: "assigns", description: "Memory assignments" },
+                { label: "assert", description: "Assertions" },
+                { label: "invariant", description: "Loop invariants" },
+                { label: "lemma", description: "Lemmas / Axiomatics" }
+            ];
+            
+            const choice = await window.showQuickPick(options, { 
+                placeHolder: "Select an ACSL Property Type" 
+            });
+            
+            if (choice) {
+                activeFilters.type = choice.label === "all" ? "" : choice.label;
+                applyFiltersAndRefreshUI();
+            }
+        }),
+
+        commands.registerCommand('wpFilters.sortByTime', () => {
+            activeFilters.sortByTime = !activeFilters.sortByTime;
+            window.showInformationMessage(`Sort by most expensive time: ${activeFilters.sortByTime ? "ON" : "OFF"}`);
+            applyFiltersAndRefreshUI();
+        }),
+
+        commands.registerCommand('wpFilters.filterStatus', async () => {
+            const options = ["all", "passed", "failed", "unknown"];
+            const choice = await window.showQuickPick(options, { placeHolder: "Select Goal Status" });
+            if (choice) {
+                activeFilters.status = choice;
+                applyFiltersAndRefreshUI();
+            }
+        }),
+
+
+        commands.registerCommand('wpFilters.toggleSmoke', () => {
+            activeFilters.smokeOnly = !activeFilters.smokeOnly;
+            window.showInformationMessage(`Smoke tests only: ${activeFilters.smokeOnly ? "ON" : "OFF"}`);
+            applyFiltersAndRefreshUI();
+        }),
+
+        commands.registerCommand('wpFilters.filterVerdict', async () => {
+    const uniqueVerdicts = new Set<string>();
+    allGoalsRaw.forEach(item => {
+        if (item.verdict) uniqueVerdicts.add(item.verdict);
+    });
+    const options = ["all", ...Array.from(uniqueVerdicts).sort()];
+    const choice = await window.showQuickPick(options, { placeHolder: "Select a verdict" });
+    if (choice) {
+        activeFilters.verdict = choice;  // ← champ dédié, pas status
+        applyFiltersAndRefreshUI();
+    }
+}),
+        commands.registerCommand('wpFilters.filterProver', async () => {
+            const uniqueProvers = new Set<string>();
+            allGoalsRaw.forEach(item => {
+                if (item.provers) {
+                    item.provers.forEach((p: any) => {
+                        if (p.prover) uniqueProvers.add(p.prover);
+                    });
+                }
+            });
+            
+            const options = ["all", ...Array.from(uniqueProvers)];
+            const choice = await window.showQuickPick(options, { placeHolder: "Select Prover (Dynamic)" });
+            if (choice) {
+                activeFilters.prover = choice;
+                applyFiltersAndRefreshUI();
+            }
+        }),
+
+        commands.registerCommand('wpFilters.clearAll', () => {
+            activeFilters = { status: "all", smokeOnly: false, prover: "all",verdict:"all", search: "", function: "", file: "", type: "", sortByTime: false,hasScript: false };
+            applyFiltersAndRefreshUI();
+            window.showInformationMessage("All filters and sorting cleared.");
+        }),
+        
+
+        commands.registerCommand('wpFilters.toggleHasScript', () => {
+            activeFilters.hasScript = !activeFilters.hasScript;
+            window.showInformationMessage(`Filter Scripts: ${activeFilters.hasScript ? "ON" : "OFF"}`);
+            applyFiltersAndRefreshUI();
+        }),
+        commands.registerCommand('wpGoalsView.downloadJson', () => downloadWpJson()),
+        commands.registerCommand('wpGoalsView.uploadJson', () => uploadWpJson()),
+    );
+}
+
+// --- DATA PROVIDER: BOTTOM PANEL (GOALS) ---
 class MyTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
-	private _onDidChangeTreeData: vscode.EventEmitter<TreeItem | undefined | null | void> = new vscode.EventEmitter<TreeItem | undefined | null | void>();
-    readonly onDidChangeTreeData: vscode.Event<TreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
-	private data: TreeItem[];
+    private _onDidChangeTreeData = new vscode.EventEmitter<TreeItem | undefined | null | void>();
+    readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+    private data: TreeItem[] = [new TreeItem("No goals !")];
 
-	constructor() {this.data = [new TreeItem("No goals !")];}
-
-	update(data) {
-		// Check if the data is an array (list)
+    update(data: any) {
         if (Array.isArray(data)) {
-			let [filename_id, fct_id, prop_id, jsonData] = data;
-			if (jsonData.length == 0) {this.data = [new TreeItem("No goals !")];}
-			else {
-			// Iterate over each item in the list
-			this.data = [];
-			jsonData.forEach((item, index) => {
-				let item_list = item.trim().split(":");
-				let verdict = item_list[0].trim();
-				let goal_id = item_list[1].trim();
-				let file_id = item_list[2].trim();
-				let line = item_list[3].trim();
-				let stats = item_list[4].trim();
-				let script = item_list[5].trim();
-				let function_id = item_list[6].trim();
-				let property_id = item_list[7].trim();
-				let t_item = new TreeItem(verdict, goal_id + " " + stats, file_id, function_id, goal_id, script, filename_id, fct_id, prop_id, 'itemContext');
-				const workspacePath = get_workspace ();
-				t_item.command = {
-					command: 'vscode.open',
-					arguments: [vscode.Uri.parse(path.join(workspacePath, file_id) + "#L" + line)]
-				} as vscode.Command;
-				this.data.push(t_item);
-			});
-		  }} else {
-			vscode.window.showErrorMessage('Parsed JSON is not an array.');
-		  }
-	}
-  
-	getTreeItem(element: TreeItem): vscode.TreeItem|Thenable<vscode.TreeItem> {
-	  return element;
-	}
-  
-	getChildren(element?: TreeItem|undefined): vscode.ProviderResult<TreeItem[]> {
-	  if (element === undefined) {
-		return this.data;
-	  }
-	  return element.children;
-	}
+            let [filename_id, fct_id, prop_id, jsonData] = data;
+            if (jsonData && Array.isArray(jsonData)) {
+                lastWpData = jsonData;
+                if (filename_id !== "Filtered" && filename_id !== "Imported") {
+                    allGoalsRaw = jsonData.map((item: string) => {
+                        const p = item.trim().split(":");
+                        return {
+                            passed: p[0] === "passed",
+                            verdict: p[0] === "unknown" ? "timeout" : (p[0] === "passed" ? "valid" : "failed"),
+                            goal: p[1] || "goal",
+                            file: p[2] || "",
+                            _localPath: p[2] || "",
+                            line: parseInt(p[3] || "1", 10),
+                            provers: [{ prover: p[4] || "qed" }],
+                            script: p[5] || "",
+                            function: p[6] || "",
+                            smoke: false // (By default)
+                        };
+                    });
+                     activeFilters = { status: "all", smokeOnly: false, prover: "all",verdict:"all", search: "", function: "", file: "", type: "", sortByTime: false,hasScript: false };
+                }
 
-	refresh(): void {
-		// Trigger the update by emitting the change event
-		this._onDidChangeTreeData.fire();
-	}
-	
-	addItem(newItem: TreeItem): void {
-		this.data.push(newItem);
-		this.refresh(); // Update the tree when an item is added
-	}
-	
-	removeItem(itemToRemove: TreeItem): void {
-		this.data = this.data.filter(item => item !== itemToRemove);
-		this.refresh(); // Update the tree when an item is removed
-	}
+            } else {
+                lastWpData = [];
+                if (filename_id !== "Filtered" && filename_id !== "Imported") {
+                    allGoalsRaw = [];
+                }
+            }
+            
+            updateDecorations();
+            
+            if (!jsonData || jsonData.length === 0) {
+                this.data = [new TreeItem("No goals !")];
+            } else {
+                this.data = jsonData.map((item: any) => {
+                    let status: string, goal: string, file: string, line: string, proverInfo: string, script: string, func: string;
 
-	dispose() {
-		this._onDidChangeTreeData.dispose();
-	}
+                    if (typeof item === 'string') {
+                        const p = item.trim().split(":");
+                        status = p[0].trim();
+                        goal = p[1] || "";
+                        file = p[2] || "";
+                        line = p[3] || "1";
+                        proverInfo = p[4] || "";
+                        script = p[5] || "";
+                        func = p[6] || "";
+                    } else {
+                        status = item.status;
+                        goal = item.goal;
+                        file = item.file;
+                        line = String(item.line);
+                        proverInfo = item.proverInfo;
+                        script = item.script;
+                        func = item.function;
+                    }
 
-  }
-  
-class TreeItem extends vscode.TreeItem {
-	children: TreeItem[]|undefined;
-  
-	constructor(label: string, description?:string, public file_id?:string, public function_id?:string, public goal_id?:string, public script?:string, public filename_id?:string, public fct_id?:string, public prop_id?:string, context?:string, children?: TreeItem[]) {
-	  	super(label, children === undefined ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Expanded);
-		this.description = description;
-	  	this.children = children;
-	  	this.tooltip = `${this.label}`;
-		
-		if (this.label == "passed") {this.iconPath = new vscode.ThemeIcon('check');}
-		else {this.iconPath = new vscode.ThemeIcon('error');}
-	  	this.contextValue = context;
-	}
+                    const t_item = new TreeItem(status, `${goal} ${proverInfo}`, file, func, goal, script, filename_id, fct_id, prop_id, 'itemContext');
+                    const workspacePath = get_workspace();
+                    
+                    const absolutePath = path.resolve(workspacePath, file);
+                    
+                    t_item.command = {
+                        command: 'vscode.open',
+                        title: 'Open File',
+                        arguments: [vscode.Uri.file(absolutePath).with({ fragment: `L${line}` })]
+                    };
+                    return t_item;
+                });
+            }
+        }
+    }
+    refresh() { this._onDidChangeTreeData.fire(); }
+    getTreeItem(element: TreeItem) { return element; }
+    getChildren(element?: TreeItem) { return element ? [] : this.data; }
 }
 
+class TreeItem extends vscode.TreeItem {
+    constructor(label: string, description?: string, public file_id?: string, public function_id?: string, public goal_id?: string, public script?: string, public filename_id?: string, public fct_id?: string, public prop_id?: string, context?: string) {
+        super(label, vscode.TreeItemCollapsibleState.None);
+        this.description = description;
+        this.contextValue = context;
+        const passed = label.toLowerCase() === "passed";
+        this.iconPath = new vscode.ThemeIcon(passed ? 'check' : 'error', new vscode.ThemeColor(passed ? "testing.iconPassed" : "testing.iconFailed"));
+    }
+}
+
+// --- DATA PROVIDER: SIDEBAR (EXPLORER/AST) ---
+export class FramaCProvider implements vscode.TreeDataProvider<FramaCItem> {
+    private _onDidChangeTreeData = new vscode.EventEmitter<FramaCItem | undefined | void>();
+    readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+
+    private astData: Map<string, any> = new Map();
+    private functionDetails: Map<string, any[]> = new Map(); 
+    private searchQuery = "";
+ 
+    private currentAstUri: string | undefined;
+    private annotationFilter: string = "all";
+
+setAnnotationFilter(kind: string) {
+    this.annotationFilter = kind;
+    this.refresh();
+}
+    refresh(): void {
+        this._onDidChangeTreeData.fire();
+    }
+
+    // --- Configuration methods ---
+    setFilter(q: string) { this.searchQuery = q.toLowerCase(); this.refresh(); }
+    getFilter(): string { return this.searchQuery; }
+
+    // --- Data update methods ---
+    updateAST(uri: string, data: any) {
+        this.astData.set(uri, data);
+        this.currentAstUri = uri;
+        this.refresh();
+    }
+
+    updateFunctionDetails(funcName: string, details: any[]) {
+        this.functionDetails.set(funcName, details);
+        this.refresh();
+    }
+
+    getTreeItem(element: FramaCItem): vscode.TreeItem {
+        return element;
+    }
+
+async getChildren(element?: FramaCItem): Promise<FramaCItem[]> {
+    if (!element) {
+        return [
+            new FramaCItem("Functions", vscode.TreeItemCollapsibleState.Expanded, "cat_func"),
+            new FramaCItem("Variables", vscode.TreeItemCollapsibleState.Collapsed, "cat_var"),
+            new FramaCItem("Types", vscode.TreeItemCollapsibleState.Collapsed, "cat_type"),
+            new FramaCItem("Annotations", vscode.TreeItemCollapsibleState.Collapsed, "cat_annot")
+        ];
+    }
+
+    if (!this.currentAstUri) return [];
+    
+    const data = this.astData.get(this.currentAstUri);
+    if (!data) return [];
+
+    let children: FramaCItem[] = [];
+
+    const resolveUri = (filePath: string) => {
+        if (!filePath) return vscode.Uri.parse(this.currentAstUri!); // Fallback sécurisé
+        
+        const workspacePath = workspace.workspaceFolders ? workspace.workspaceFolders[0].uri.fsPath : process.cwd();
+        let cleanPath = filePath;
+        if (cleanPath.startsWith('./')) {
+            cleanPath = cleanPath.substring(2);
+        }
+        const absolutePath = path.resolve(workspacePath, cleanPath);
+        return vscode.Uri.file(absolutePath);
+    };
+
+    switch (element.contextValue) {
+        case "cat_func":
+    if (data.functions) {
+        data.functions
+            .filter((f: any) => !this.searchQuery || f.name.toLowerCase().includes(this.searchQuery))
+            .forEach((f: any) => {
+                children.push(new FramaCItem(f.name, vscode.TreeItemCollapsibleState.None, "function", resolveUri(f.file), f.line));
+            });
+    }
+    break;
+case "cat_var":
+    if (data.globals) {
+        data.globals
+            .filter((g: any) => !this.searchQuery || g.name.toLowerCase().includes(this.searchQuery))
+            .forEach((g: any) => {
+                children.push(new FramaCItem(g.name, vscode.TreeItemCollapsibleState.None, "variable", resolveUri(g.file), g.line));
+            });
+    }
+    break;
+case "cat_type":
+    if (data.types) {
+        data.types
+            .filter((t: any) => !this.searchQuery || t.name.toLowerCase().includes(this.searchQuery))
+            .forEach((t: any) => {
+                children.push(new FramaCItem(t.name, vscode.TreeItemCollapsibleState.None, "type", resolveUri(t.file), t.line));
+            });
+    }
+    break;
+        case "cat_annot":
+    if (data.annotations) {
+        data.annotations
+            .filter((a: any) => 
+                this.annotationFilter === "all" || 
+                a.type === this.annotationFilter
+            )
+            .filter((a: any) => 
+                !this.searchQuery || 
+                a.name.toLowerCase().includes(this.searchQuery)
+            )
+            .forEach((a: any) => {
+                const item = new FramaCItem(
+                    `${a.name}`,
+                    vscode.TreeItemCollapsibleState.None,
+                    a.type,
+                    resolveUri(a.file),  // ← correct
+                    a.line
+                );
+                item.description = a.type;
+                children.push(item);
+            });
+    }
+    break;
+    }
+    return children;
+}
+}
+
+export class FramaCItem extends vscode.TreeItem {
+    constructor(
+        public readonly label: string, 
+        public readonly collapsibleState: vscode.TreeItemCollapsibleState, 
+        public readonly contextValue: string, 
+		
+        public filePath?: vscode.Uri,
+		public readonly line?: number
+    ) {
+        super(label, collapsibleState);
+        
+        // Assign the click command to any item that is not a folder
+        if (contextValue !== "folder") {
+            this.command = { 
+                command: 'framaC.openAndDetail', 
+                title: 'Open Definition', 
+                arguments: [{ 
+    fsPath: filePath?.fsPath,  // ← fsPath string, pas toString()
+    line: line,
+    label: label
+}]
+            };
+        }
+
+        // Icon logic
+if (contextValue.startsWith("cat_")) {
+    this.iconPath = new vscode.ThemeIcon("list-flat"); 
+} else if (contextValue === "function") {
+    this.iconPath = new vscode.ThemeIcon("symbol-method");
+} else if (contextValue === "variable") {
+    this.iconPath = new vscode.ThemeIcon("symbol-variable");
+} else if (contextValue === "type") {
+    this.iconPath = new vscode.ThemeIcon("symbol-parameter");
+} else if (contextValue === "predicate" || contextValue === "logic_function") {
+    this.iconPath = new vscode.ThemeIcon("symbol-function");
+} else if (contextValue === "lemma") {
+    this.iconPath = new vscode.ThemeIcon("symbol-boolean");
+} else if (contextValue === "axiomatic") {
+    this.iconPath = new vscode.ThemeIcon("symbol-namespace");
+} else if (contextValue === "invariant" || contextValue === "type_invariant") {
+    this.iconPath = new vscode.ThemeIcon("symbol-constant");
+} else if (contextValue === "model" || contextValue === "logic_type") {
+    this.iconPath = new vscode.ThemeIcon("symbol-interface");
+}
+    }
+}
+
+// --- UTILS ---
+function get_workspace() { return workspace.workspaceFolders ? workspace.workspaceFolders[0].uri.fsPath : process.cwd(); }
 
 async function create_file(fileName:string, type:string){
-	const workspacePath = get_workspace ();
-	const fileNameOut = path.join(workspacePath, ".frama-c", `fc_${fileName}`);
-	if (!fs.existsSync(fileNameOut)) {
-		try {fs.writeFileSync(fileNameOut, 'Task in progress ...')}
-		catch (error) {vscode.window.showErrorMessage(`Failed to create the file: ${error.message}`);}
-	}
-	const fileUri = vscode.Uri.parse(fileNameOut);
-	const document = await workspace.openTextDocument(fileUri);
-	await languages.setTextDocumentLanguage(document, type);
-	const editor = await window.showTextDocument(document, ViewColumn.One, true);
-}
-
-async function get_args_from_item(selectedItem:TreeItem, gui:boolean){
-	const workspacePath = get_workspace ();
-	const file_name = selectedItem.file_id;
-	const function_name = selectedItem.fct_id;
-	const property_name = selectedItem.prop_id;
-	const proof_timeout = await window.showInputBox({
-		placeHolder: 'timeout',
-		prompt: 'Please specify timeout for provers (c.f. -wp-timeout )',
-		validateInput: (input) => {
-			if (input.length === 0) {return 'Input cannot be empty!';}
-			if (!/^\d+$/.test(input)) {return 'Please enter a valid integer';}
-			return null; // Return null to indicate valid input
-	}});
-	const int_proof_timeout = parseInt(proof_timeout, 10);
-	// If need to empty the list of item:
-	// wpResults.update(["","","",[]]);
-	// wpResults.refresh();
-	return [file_name, function_name, property_name, int_proof_timeout, gui]
-}
-
-async function get_proof_args(gui:boolean){
-	const function_name = await window.showInputBox({
-		placeHolder: 'function',
-		prompt: 'Please specify functions to prove (c.f. -wp-fct ) (@all for all functions)',
-		validateInput: (input) => {
-			if (input.length === 0) {return 'Input cannot be empty!';}
-			return null; // Return null to indicate valid input
-	}});
-	const property_name = await window.showInputBox({
-		placeHolder: 'property',
-		prompt: 'Please specify properties to prove (c.f. -wp-prop (@all for all properties))',
-		validateInput: (input) => {
-			if (input.length === 0) {return 'Input cannot be empty!';}
-			return null; // Return null to indicate valid input
-	}});
-	const proof_timeout = await window.showInputBox({
-		placeHolder: 'timeout',
-		prompt: 'Please specify timeout for provers (c.f. -wp-timeout )',
-		validateInput: (input) => {
-			if (input.length === 0) {return 'Input cannot be empty!';}
-			if (!/^\d+$/.test(input)) {return 'Please enter a valid integer';}
-			return null; // Return null to indicate valid input
-	}});
-	const int_proof_timeout = parseInt(proof_timeout, 10);
-	// If need to empty the list of item:
-	// wpResults.update(["","","",[]]);
-	// wpResults.refresh();
-	const editor = window.activeTextEditor;
-    if (!editor) {
-    	window.showErrorMessage('No active editor found.');
-        return;
+    const workspacePath = get_workspace();
+    const fileNameOut = path.join(workspacePath, ".frama-c", `fc_${fileName}`);
+    if (!fs.existsSync(fileNameOut)) {
+        if (!fs.existsSync(path.dirname(fileNameOut))) fs.mkdirSync(path.dirname(fileNameOut), {recursive: true});
+        fs.writeFileSync(fileNameOut, 'Task in progress ...');
     }
-	return([editor.document.fileName, function_name, property_name, int_proof_timeout, gui]);
+    const doc = await workspace.openTextDocument(vscode.Uri.file(fileNameOut));
+    await languages.setTextDocumentLanguage(doc, type);
+    await window.showTextDocument(doc, ViewColumn.One, true);
 }
 
-function get_workspace(){
-	if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
-		const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
-		create_frama_c_folder(workspacePath);
-		return workspacePath;
-	} else {
-		const currentFolder = process.cwd();
-		create_frama_c_folder(currentFolder);
-		return currentFolder
-	}
+async function get_args_from_item(item: TreeItem, gui: boolean) {
+    const t = await window.showInputBox({ prompt: 'Timeout', value: '10' });
+    return [item.filename_id, item.fct_id, item.prop_id, parseInt(t || "10"), gui];
 }
 
-
-async function create_frama_c_folder(workspace:string){
-	try {
-		const path_name = path.join(workspace, ".frama-c");
-		await fs.promises.mkdir(path_name, {recursive: true})
-	} catch(err) {
-	}
+async function get_proof_args(gui: boolean) {
+    const f = await window.showInputBox({ prompt: 'Function (@all)' });
+    const p = await window.showInputBox({ prompt: 'Property (@all)' });
+    const t = await window.showInputBox({ prompt: 'Timeout', value: '10' });
+    const editor = window.activeTextEditor;
+    if (!editor || !f || !p) return null;
+    return [editor.document.fileName, f, p, parseInt(t || "10"), gui];
 }
+async function showRealIncludeMatrix() {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) return;
 
-/*
-export function deactivate(): Thenable<void> | undefined {
-	if (!client) {
-		return undefined;
-	}
-	return client.stop();
-}
-*/
+    const uri = editor.document.uri.toString();
 
-export function deactivate(context: ExtensionContext): Thenable<void> | undefined {
-	if (client) {
-		client.stop();
-	}
-	context.subscriptions.forEach(subscription => subscription.dispose());
-	return undefined;
+    try {
+        const realDependencies: any = await client.sendRequest("computeRealDependencies", { uri: uri });
+        
+        if (!realDependencies || Object.keys(realDependencies).length === 0) {
+            vscode.window.showWarningMessage("No dependencies found.");
+            return;
+        }
+
+        const allFiles = new Set<string>();
+        
+        Object.entries(realDependencies).forEach(([caller, calleesMap]) => {
+    const cleanCaller = caller.trim();
+    if (cleanCaller && !cleanCaller.startsWith("<")) {
+        allFiles.add(cleanCaller);
+        
+        if (calleesMap && typeof calleesMap === 'object') {
+            Object.keys(calleesMap).forEach(callee => {
+                const cleanCallee = callee.trim();
+                if (cleanCallee && !cleanCallee.startsWith("<")) {
+                    allFiles.add(cleanCallee);
+                }
+            });
+        }
+    }
+});
+
+        const sortedFiles = Array.from(allFiles).sort();
+
+        if (sortedFiles.length === 0) {
+            vscode.window.showWarningMessage("Matrix is empty after filtering.");
+            return;
+        }
+
+        const panel = vscode.window.createWebviewPanel('realMatrix', 'Dependency Matrix (AST)', vscode.ViewColumn.Active, { enableScripts: true });
+        
+        const htmlChunks: string[] = [`
+            <!DOCTYPE html><html><head><style>
+                body { font-family: sans-serif; padding: 20px; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
+                table { border-collapse: collapse; margin-top: 10px; }
+                th, td { border: 1px solid var(--vscode-panel-border); padding: 8px; text-align: center; min-width: 40px; }
+                th { background-color: var(--vscode-sideBar-background); font-size: 12px; }
+                
+                .yes { background-color: #2e7d32; color: white; cursor: help; position: relative; }
+                .self { background-color: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); opacity: 0.5; font-size: 10px; }
+                
+                .yes:hover::after {
+                    content: attr(data-symbols);
+                    position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%);
+                    background: #1e1e1e; color: #fff; padding: 8px; border-radius: 4px;
+                    font-size: 11px; white-space: pre; z-index: 1000; text-align: left;
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.5); border: 1px solid #555;
+                }
+                .col-header { writing-mode: vertical-rl; transform: rotate(180deg); padding: 10px 5px; white-space: nowrap; }
+                .row-header { text-align: right; white-space: nowrap; font-weight: bold; background-color: var(--vscode-sideBar-background); }
+            </style></head><body>
+            <h2>Dependency Matrix (AST Analysis)</h2>
+            <p style="font-size: 0.8em; opacity: 0.7;">Rows: <b>Callers</b> (Who uses) | Columns: <b>Called</b> (Who is used)</p>
+            <table><thead><tr><th>Caller \\ Called</th>`];
+
+        sortedFiles.forEach(file => htmlChunks.push(`<th><div class="col-header">${file}</div></th>`));
+        htmlChunks.push('</tr></thead><tbody>');
+
+        sortedFiles.forEach(caller => {
+            htmlChunks.push(`<tr><td class="row-header">${caller}</td>`);
+            
+            sortedFiles.forEach(called => {
+                if (caller === called) {
+                    htmlChunks.push(`<td class="self" title="Self-reference">self</td>`);
+                } 
+                else {
+                    const symbols = (realDependencies[caller] && realDependencies[caller][called]) ? realDependencies[caller][called] : null;
+                    
+                    if (symbols && Array.isArray(symbols) && symbols.length > 0) {
+                        const firstSymbol = symbols[0];
+                        const othersCount = symbols.length - 1;
+                        const tooltip = othersCount > 0 
+                            ? `Used: ${firstSymbol}\\n(+ ${othersCount} others)` 
+                            : `Used: ${firstSymbol}`;
+
+                        htmlChunks.push(`<td class="yes" data-symbols="${tooltip}">✔</td>`);
+                    } else {
+                        htmlChunks.push(`<td></td>`);
+                    }
+                }
+            });
+            htmlChunks.push('</tr>');
+        });
+
+        htmlChunks.push(`</tbody></table></body></html>`);
+        panel.webview.html = htmlChunks.join('');
+    } catch (e) { vscode.window.showErrorMessage("Matrix Error: " + e); }
 }
+export function deactivate() { if (client) return client.stop(); }

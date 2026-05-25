@@ -28,20 +28,19 @@ let getnumber str =
   ignore (Str.search_forward regex str 0);
   int_of_string (Str.matched_string str)
 
-let rec send_request server_sock response =
+let  send_request server_sock response =
   let response_str = Printf.sprintf "Content-Length: %d\r\n\r\n%s" (String.length response) response in
   Options.Self.debug ~level:1 "Size of response : %d, Response: %s\n%!" (String.length response_str) response_str;
   let response_bytes = Bytes.of_string response_str in
-  if ((Bytes.length response_bytes) < 65530) then
-    let sent = Unix.send server_sock response_bytes 0 (Bytes.length response_bytes) [] in
-    Options.Self.debug ~level:1 "Size of sent content : %d\n%!" sent
-  else (
-    Options.Self.debug ~level:1 "Too long message can not be sent ! ";
-    let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Error ~message: "Too long message can not be sent !!" () in
-    let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
-    let json_notification = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
-    send_request server_sock json_notification;
-  )
+  let total = Bytes.length response_bytes in
+  let chunk_size = 65530 in
+  let sent = ref 0 in
+  while !sent < total do
+    let to_send = min chunk_size (total - !sent) in
+    let n = Unix.send server_sock response_bytes !sent to_send [] in
+    sent := !sent + n;
+  done;
+  Options.Self.debug ~level:1 "Size of sent content : %d\n%!" !sent
 
 let update_empty_diagnostics string_json =
   Options.Self.debug ~level:2 "json data: %s\n" string_json;
