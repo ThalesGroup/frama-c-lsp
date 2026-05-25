@@ -10,8 +10,9 @@ The server part is a Frama-C plugin called "lsp" that has two usage modes:
 - feature mode: ensures background Frama-C process execution with parameters required for each requested feature.
 
 ## Configuration
-This software is compatible with Frama-C v29.0/v30.0 and Linux ubuntu 22.04 LTS.
-No other configuration has been tested so far.
+This software is compatible with Linux ubuntu 22.04 LTS.
+No other OS configuration has been tested so far.
+Please refer to available releases to choose the software version that is compatible with your Frama-C version.
 
 ## Contributing
 We welcome contributions to both the server and client parts of this solution !
