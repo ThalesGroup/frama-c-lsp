@@ -50,25 +50,20 @@ pipeline {
             }
         }
 
-        // ── NOUVEAU STAGE ──────────────────────────────────────────────────
         stage('Tests Unitaires (sans VSCode)') {
             steps {
                 dir('client') {
                     echo "Installation de rewire si absent..."
                     sh 'npm install --save-dev rewire 2>/dev/null || true'
 
+                    echo "Attribution des droits d'execution sur mocha..."
+                    sh 'chmod +x node_modules/.bin/mocha'
+
                     echo "Lancement des tests unitaires Mocha..."
-                    sh '''
-                        node_modules/.bin/mocha \
-                            --timeout 10000 \
-                            --ui tdd \
-                            --reporter spec \
-                            "out/test/suite/unit/**/*.test.js"
-                    '''
+                    sh 'node_modules/.bin/mocha --timeout 10000 --ui tdd --reporter spec "out/test/suite/unit/**/*.test.js"'
                 }
             }
         }
-        // ───────────────────────────────────────────────────────────────────
 
         stage('Tests E2E avec Ecran Virtuel') {
             steps {
