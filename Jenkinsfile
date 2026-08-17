@@ -10,11 +10,10 @@ pipeline {
         stage('Recuperation des dependances') {
             steps {
                 dir('client') {
-                    // Utilisation des identifiants stockes dans Jenkins pour Artifactory
                     withCredentials([
-usernamePassword(credentialsId: "eddc7593-09ea-4939-96f8-6d455dfa4101", usernameVariable: 'ARTIFACTORYL1_EMEA_USERNAME', passwordVariable: 'ARTIFACTORYL1_EMEA_API_KEY'),
-usernamePassword(credentialsId: "22c9bebb-a044-4183-bbe5-53c052ac9201", usernameVariable: 'ARTIFACTORYL2_EMEA_USERNAME', passwordVariable: 'ARTIFACTORYL2_EMEA_API_KEY'),
-]){
+                        usernamePassword(credentialsId: "eddc7593-09ea-4939-96f8-6d455dfa4101", usernameVariable: 'ARTIFACTORYL1_EMEA_USERNAME', passwordVariable: 'ARTIFACTORYL1_EMEA_API_KEY'),
+                        usernamePassword(credentialsId: "22c9bebb-a044-4183-bbe5-53c052ac9201", usernameVariable: 'ARTIFACTORYL2_EMEA_USERNAME', passwordVariable: 'ARTIFACTORYL2_EMEA_API_KEY'),
+                    ]){
                         echo "Telechargement des artefacts depuis Artifactory..."
                         sh 'bash ./downloadartifacts.sh'
                     }
@@ -28,29 +27,49 @@ usernamePassword(credentialsId: "22c9bebb-a044-4183-bbe5-53c052ac9201", username
                     echo "Nettoyage et reparation des liens symboliques..."
                     sh 'rm -f node_modules/.bin/tsc'
                     sh 'ln -s ../typescript/bin/tsc node_modules/.bin/tsc || true'
-                    
+
                     echo "Attribution des droits d'execution..."
                     sh 'chmod +x node_modules/typescript/bin/tsc || true'
                     sh 'chmod +x node_modules/.bin/tsc || true'
-                    
+
                     echo "Lancement de la compilation TypeScript..."
                     sh 'npm run compile'
                     sh 'chmod +x run.sh'
                 }
             }
         }
-    stage('Build et Install Serveur (OCaml)') {
+
+        stage('Build et Install Serveur (OCaml)') {
             steps {
                 dir('server'){
-               
                     echo "Compilation et installation du serveur LSP..."
                     sh 'eval $(opam env) && dune build'
-                    
                     sh 'eval $(opam env) && dune install'
                     sh 'eval $(opam env) && which frama-c-lsp || echo "ERREUR : Serveur non installe"'
-                
-            }}
+                }
+            }
         }
+
+        // ── NOUVEAU STAGE ──────────────────────────────────────────────────
+        stage('Tests Unitaires (sans VSCode)') {
+            steps {
+                dir('client') {
+                    echo "Installation de rewire si absent..."
+                    sh 'npm install --save-dev rewire 2>/dev/null || true'
+
+                    echo "Lancement des tests unitaires Mocha..."
+                    sh '''
+                        node_modules/.bin/mocha \
+                            --timeout 10000 \
+                            --ui tdd \
+                            --reporter spec \
+                            "out/test/suite/unit/**/*.test.js"
+                    '''
+                }
+            }
+        }
+        // ───────────────────────────────────────────────────────────────────
+
         stage('Tests E2E avec Ecran Virtuel') {
             steps {
                 dir('client') {
