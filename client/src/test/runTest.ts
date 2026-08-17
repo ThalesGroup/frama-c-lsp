@@ -8,18 +8,18 @@ async function main() {
         const workspacePath = '/home/user/git/L2/code';
 
         await runTests({
-    extensionDevelopmentPath,
-    extensionTestsPath,
-    version: '1.115.0',   // ← force exactement cette version
-    extensionTestsEnv: { 
-        ...process.env,
-        "VSCODE_SKIP_DOWNLOAD": "true"
-    },
-    launchArgs: [
-        workspacePath,
-        '--disable-extensions' 
-    ]
-});
+            extensionDevelopmentPath,
+            extensionTestsPath,
+            version: '1.115.0',
+            extensionTestsEnv: { 
+                ...process.env,
+                "VSCODE_SKIP_DOWNLOAD": "true"
+            },
+            launchArgs: [
+                workspacePath,
+                '--disable-extensions' 
+            ]
+        });
     } catch (err) {
         console.error('Failed to run tests');
         process.exit(1);
