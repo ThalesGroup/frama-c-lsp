@@ -5,36 +5,21 @@ async function main() {
     try {
         const extensionDevelopmentPath = path.resolve(__dirname, '../../');
         const extensionTestsPath = path.resolve(__dirname, './suite/index');
-
         const workspacePath = '/home/user/git/L2/code';
 
         await runTests({
             extensionDevelopmentPath,
             extensionTestsPath,
-            
-            extensionTestsEnv: { 
+            vscodeExecutablePath: process.env.VSCODE_EXECUTABLE_PATH,
+            extensionTestsEnv: {
                 ...process.env,
                 "VSCODE_SKIP_DOWNLOAD": "true"
             },
-            
             launchArgs: [
                 workspacePath,
-                '--disable-extensions' 
+                '--disable-extensions'
             ]
         });
-        await runTests({
-    extensionDevelopmentPath,
-    extensionTestsPath,
-    vscodeExecutablePath: process.env.VSCODE_EXECUTABLE_PATH,
-    extensionTestsEnv: {
-        ...process.env,
-        "VSCODE_SKIP_DOWNLOAD": "true"
-    },
-    launchArgs: [
-        workspacePath,
-        '--disable-extensions'
-    ]
-});
     } catch (err) {
         console.error('Failed to run tests');
         process.exit(1);
@@ -42,4 +27,3 @@ async function main() {
 }
 
 main();
-
