@@ -50,18 +50,43 @@ pipeline {
             }
         }
 
-        stage('Tests Unitaires (sans VSCode)') {
+       stage('Tests Unitaires (sans VSCode)') {
     steps {
         dir('client') {
-            echo "Installation de rewire sans modifier mocha..."
+            echo "Installation de rewire..."
             sh 'npm install rewire --no-save --legacy-peer-deps 2>/dev/null || true'
 
-            echo "Attribution des droits d'execution sur mocha..."
-            sh 'chmod +x node_modules/.bin/mocha || true'
-            sh 'chmod +x node_modules/mocha/bin/mocha.js || true'
+            echo "Creation du stub vscode en memoire temporaire..."
+            sh '''
+                mkdir -p /tmp/stubs/vscode
+                cat > /tmp/stubs/vscode/index.js << 'EOF'
+module.exports = {
+    window: {
+        showWarningMessage: () => {},
+        showInformationMessage: () => {},
+        showErrorMessage: () => {},
+        visibleTextEditors: [],
+        createTextEditorDecorationType: () => ({ dispose: () => {} })
+    },
+    workspace: {
+        workspaceFolders: [{ uri: { fsPath: '/workspace/test' } }],
+        createFileSystemWatcher: () => ({ onDidChange: () => {}, dispose: () => {} })
+    },
+    commands: { executeCommand: () => Promise.resolve() },
+    Uri: { file: (p) => ({ fsPath: p }), parse: (p) => ({ fsPath: p }) },
+    EventEmitter: class { fire() {} },
+    TreeItemCollapsibleState: { None: 0, Collapsed: 1, Expanded: 2 },
+    TreeItem: class { constructor(l) { this.label = l; } },
+    ThemeIcon: class { constructor(id) { this.id = id; } },
+    ThemeColor: class { constructor(id) { this.id = id; } },
+    RelativePattern: class { constructor(b, p) {} }
+};
+EOF
+                echo '{"name":"vscode","main":"index.js"}' > /tmp/stubs/vscode/package.json
+            '''
 
             echo "Lancement des tests unitaires Mocha..."
-            sh 'node node_modules/mocha/bin/mocha.js --timeout 10000 --ui tdd --reporter spec "out/test/suite/unit/**/*.test.js"'
+            sh 'NODE_PATH=/tmp/stubs node node_modules/mocha/bin/mocha.js --timeout 10000 --ui tdd --reporter spec "out/test/suite/unit/**/*.test.js"'
         }
     }
 }
