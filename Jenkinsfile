@@ -53,6 +53,23 @@ pipeline {
         stage('Tests E2E avec Ecran Virtuel') {
     steps {
         dir('client') {
+            echo "Forçage de la version VSCode a 1.115.0..."
+            sh '''
+                node -e "
+                const fs = require('fs');
+                const p = 'node_modules/@vscode/test-electron/package.json';
+                const pkg = JSON.parse(fs.readFileSync(p, 'utf8'));
+                pkg.engines = pkg.engines || {};
+                pkg.version = pkg.version;
+                fs.writeFileSync(p, JSON.stringify(pkg, null, 2));
+                "
+                # Forcer la version dans le fichier de config de test-electron
+                VSCODE_TEST_PKG="node_modules/@vscode/test-electron/out/download.js"
+                if [ -f "$VSCODE_TEST_PKG" ]; then
+                    sed -i "s/stable/1.115.0/g" "$VSCODE_TEST_PKG" 2>/dev/null || true
+                fi
+            '''
+
             echo "Demarrage de xvfb et lancement des tests..."
             sh 'find .vscode-test -type f -exec chmod +x {} +'
             sh 'eval $(opam env) && xvfb-run -a npm test -- --logLevel=off'
