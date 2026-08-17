@@ -51,19 +51,20 @@ pipeline {
         }
 
         stage('Tests Unitaires (sans VSCode)') {
-            steps {
-                dir('client') {
-                    echo "Installation de rewire si absent..."
-                    sh 'npm install --save-dev rewire 2>/dev/null || true'
+    steps {
+        dir('client') {
+            echo "Installation de rewire sans modifier mocha..."
+            sh 'npm install rewire --no-save --legacy-peer-deps 2>/dev/null || true'
 
-                    echo "Attribution des droits d'execution sur mocha..."
-                    sh 'chmod +x node_modules/.bin/mocha'
+            echo "Attribution des droits d'execution sur mocha..."
+            sh 'chmod +x node_modules/.bin/mocha || true'
+            sh 'chmod +x node_modules/mocha/bin/mocha.js || true'
 
-                    echo "Lancement des tests unitaires Mocha..."
-                    sh 'node_modules/.bin/mocha --timeout 10000 --ui tdd --reporter spec "out/test/suite/unit/**/*.test.js"'
-                }
-            }
+            echo "Lancement des tests unitaires Mocha..."
+            sh 'node node_modules/mocha/bin/mocha.js --timeout 10000 --ui tdd --reporter spec "out/test/suite/unit/**/*.test.js"'
         }
+    }
+}
 
         stage('Tests E2E avec Ecran Virtuel') {
             steps {
