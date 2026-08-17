@@ -51,31 +51,14 @@ pipeline {
         }
 
         stage('Tests E2E avec Ecran Virtuel') {
-            steps {
-                dir('client') {
-                    echo "Recherche du VSCode deja installe..."
-                    sh '''
-                        VSCODE_PATH=$(find .vscode-test -name "code" -type f 2>/dev/null | head -1)
-                        if [ -z "$VSCODE_PATH" ]; then
-                            echo "ERREUR : VSCode introuvable dans .vscode-test/"
-                            echo "Veuillez lancer le pipeline une premiere fois avec internet pour telecharger VSCode"
-                            exit 1
-                        fi
-                        echo "VSCode trouve : $VSCODE_PATH"
-                    '''
-
-                    echo "Attribution des droits d'execution..."
-                    sh 'find .vscode-test -type f -exec chmod +x {} +'
-
-                    echo "Demarrage de xvfb et lancement des tests..."
-                    sh '''
-                        VSCODE_EXECUTABLE_PATH=$(find .vscode-test -name "code" -type f | head -1)
-                        export VSCODE_EXECUTABLE_PATH
-                        eval $(opam env) && xvfb-run -a npm test -- --logLevel=off
-                    '''
-                }
-            }
+    steps {
+        dir('client') {
+            echo "Demarrage de xvfb et lancement des tests..."
+            sh 'find .vscode-test -type f -exec chmod +x {} +'
+            sh 'eval $(opam env) && xvfb-run -a npm test -- --logLevel=off'
         }
+    }
+}
     }
 
     post {

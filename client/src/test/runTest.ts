@@ -10,14 +10,13 @@ async function main() {
         await runTests({
             extensionDevelopmentPath,
             extensionTestsPath,
-            vscodeExecutablePath: process.env.VSCODE_EXECUTABLE_PATH,
-            extensionTestsEnv: {
+            extensionTestsEnv: { 
                 ...process.env,
                 "VSCODE_SKIP_DOWNLOAD": "true"
             },
             launchArgs: [
                 workspacePath,
-                '--disable-extensions'
+                '--disable-extensions' 
             ]
         });
     } catch (err) {
