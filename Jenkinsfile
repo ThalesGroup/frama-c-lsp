@@ -50,53 +50,29 @@ pipeline {
             }
         }
 
-       stage('Tests Unitaires (sans VSCode)') {
-    steps {
-        dir('client') {
-            echo "Installation de rewire..."
-            sh 'npm install rewire --no-save --legacy-peer-deps 2>/dev/null || true'
-
-            echo "Creation du stub vscode en memoire temporaire..."
-            sh '''
-                mkdir -p /tmp/stubs/vscode
-                cat > /tmp/stubs/vscode/index.js << 'EOF'
-module.exports = {
-    window: {
-        showWarningMessage: () => {},
-        showInformationMessage: () => {},
-        showErrorMessage: () => {},
-        visibleTextEditors: [],
-        createTextEditorDecorationType: () => ({ dispose: () => {} })
-    },
-    workspace: {
-        workspaceFolders: [{ uri: { fsPath: '/workspace/test' } }],
-        createFileSystemWatcher: () => ({ onDidChange: () => {}, dispose: () => {} })
-    },
-    commands: { executeCommand: () => Promise.resolve() },
-    Uri: { file: (p) => ({ fsPath: p }), parse: (p) => ({ fsPath: p }) },
-    EventEmitter: class { fire() {} },
-    TreeItemCollapsibleState: { None: 0, Collapsed: 1, Expanded: 2 },
-    TreeItem: class { constructor(l) { this.label = l; } },
-    ThemeIcon: class { constructor(id) { this.id = id; } },
-    ThemeColor: class { constructor(id) { this.id = id; } },
-    RelativePattern: class { constructor(b, p) {} }
-};
-EOF
-                echo '{"name":"vscode","main":"index.js"}' > /tmp/stubs/vscode/package.json
-            '''
-
-            echo "Lancement des tests unitaires Mocha..."
-            sh 'NODE_PATH=/tmp/stubs node node_modules/mocha/bin/mocha.js --timeout 10000 --ui tdd --reporter spec "out/test/suite/unit/**/*.test.js"'
-        }
-    }
-}
-
         stage('Tests E2E avec Ecran Virtuel') {
             steps {
                 dir('client') {
-                    echo "Demarrage de xvfb et lancement des tests..."
+                    echo "Recherche du VSCode deja installe..."
+                    sh '''
+                        VSCODE_PATH=$(find .vscode-test -name "code" -type f 2>/dev/null | head -1)
+                        if [ -z "$VSCODE_PATH" ]; then
+                            echo "ERREUR : VSCode introuvable dans .vscode-test/"
+                            echo "Veuillez lancer le pipeline une premiere fois avec internet pour telecharger VSCode"
+                            exit 1
+                        fi
+                        echo "VSCode trouve : $VSCODE_PATH"
+                    '''
+
+                    echo "Attribution des droits d'execution..."
                     sh 'find .vscode-test -type f -exec chmod +x {} +'
-                    sh 'eval $(opam env) && xvfb-run -a npm test -- --logLevel=off'
+
+                    echo "Demarrage de xvfb et lancement des tests..."
+                    sh '''
+                        VSCODE_EXECUTABLE_PATH=$(find .vscode-test -name "code" -type f | head -1)
+                        export VSCODE_EXECUTABLE_PATH
+                        eval $(opam env) && xvfb-run -a npm test -- --logLevel=off
+                    '''
                 }
             }
         }

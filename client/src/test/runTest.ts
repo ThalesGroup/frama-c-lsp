@@ -22,6 +22,19 @@ async function main() {
                 '--disable-extensions' 
             ]
         });
+        await runTests({
+    extensionDevelopmentPath,
+    extensionTestsPath,
+    vscodeExecutablePath: process.env.VSCODE_EXECUTABLE_PATH,
+    extensionTestsEnv: {
+        ...process.env,
+        "VSCODE_SKIP_DOWNLOAD": "true"
+    },
+    launchArgs: [
+        workspacePath,
+        '--disable-extensions'
+    ]
+});
     } catch (err) {
         console.error('Failed to run tests');
         process.exit(1);
