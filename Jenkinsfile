@@ -22,23 +22,25 @@ pipeline {
         }
 
         stage('Build et Reparation') {
-            steps {
-                dir('client') {
-                    echo "Nettoyage et reparation des liens symboliques..."
-                    sh 'rm -f node_modules/.bin/tsc'
-                    sh 'ln -s ../typescript/bin/tsc node_modules/.bin/tsc || true'
+    steps {
+        dir('client') {
+            echo "Nettoyage des anciens fichiers compiles..."
+            sh 'rm -rf out/'
 
-                    echo "Attribution des droits d'execution..."
-                    sh 'chmod +x node_modules/typescript/bin/tsc || true'
-                    sh 'chmod +x node_modules/.bin/tsc || true'
+            echo "Nettoyage et reparation des liens symboliques..."
+            sh 'rm -f node_modules/.bin/tsc'
+            sh 'ln -s ../typescript/bin/tsc node_modules/.bin/tsc || true'
 
-                    echo "Lancement de la compilation TypeScript..."
-                    sh 'npm run compile'
-                    sh 'chmod +x run.sh'
-                }
-            }
+            echo "Attribution des droits d'execution..."
+            sh 'chmod +x node_modules/typescript/bin/tsc || true'
+            sh 'chmod +x node_modules/.bin/tsc || true'
+
+            echo "Lancement de la compilation TypeScript..."
+            sh 'npm run compile'
+            sh 'chmod +x run.sh'
         }
-
+    }
+}
         stage('Build et Install Serveur (OCaml)') {
             steps {
                 dir('server'){
