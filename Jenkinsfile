@@ -42,15 +42,15 @@ pipeline {
     }
 }
         stage('Build et Install Serveur (OCaml)') {
-            steps {
-                dir('server'){
-                    echo "Compilation et installation du serveur LSP..."
-                    sh 'eval $(opam env) && dune build'
-                    sh 'eval $(opam env) && dune install'
-                    sh 'eval $(opam env) && which frama-c-lsp || echo "ERREUR : Serveur non installe"'
-                }
-            }
+    steps {
+        dir('server'){
+            echo "Compilation et installation du serveur LSP..."
+            sh 'eval $(opam env) && dune build'
+            sh 'eval $(opam env) && dune install'
+            sh 'eval $(opam env) && which frama-c && frama-c -version || echo "ERREUR : Frama-C non installe"'
         }
+    }
+}
 
         stage('Tests E2E avec Ecran Virtuel') {
     steps {
