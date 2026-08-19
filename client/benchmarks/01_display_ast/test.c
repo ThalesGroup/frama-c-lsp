@@ -204,3 +204,10 @@ static uint32_t max(uint32_t a, uint32_t b) {
 
 /* déclaration seule (pas de corps) — cas "forward declaration" */
 int32_t external_func(int32_t x);
+
+/*@ requires a >= 0 && b >= 0;
+  @ assigns \nothing;
+  @*/
+uint32_t public_max(uint32_t a, uint32_t b) {
+    return max(a, b);  // ← appel à max
+}
