@@ -11,4 +11,5 @@
     "wp.cache": "update",
     "wp.script": "batch",
     "wp.session": ".frama-c",
-    "metrics.byFunction": true}
+    "metrics.byFunction": true
+}

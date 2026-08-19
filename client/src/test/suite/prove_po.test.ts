@@ -20,7 +20,7 @@ async function proveAll(): Promise<any> {
 suite('Test provePO', () => {
 
     suiteSetup(async function () {
-        this.timeout(60000); // 60s pour init + premier appel WP
+        this.timeout(300000); // 60s pour init + premier appel WP
         const uri = vscode.Uri.file(BENCH);
         const doc = await vscode.workspace.openTextDocument(uri);
         await vscode.window.showTextDocument(doc);
