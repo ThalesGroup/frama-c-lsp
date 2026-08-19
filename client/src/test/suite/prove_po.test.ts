@@ -7,15 +7,7 @@ import * as path from 'path';
 const BENCH = path.resolve(__dirname, '../../../benchmarks/wp_pass/test.c');
 const TIMEOUT_WP = 120000;
 
-async function openAndActivate(): Promise<void> {
-    const uri = vscode.Uri.file(BENCH);
-    const doc = await vscode.workspace.openTextDocument(uri);
-    await vscode.window.showTextDocument(doc);
-    const ext = vscode.extensions.getExtension('innov-org.acsl-lsp')!;
-    await ext.activate();
-    console.log("Attente initialisation serveur OCaml...");
-    await new Promise(r => setTimeout(r, 10000));
-}
+
 
 // ── Suite ─────────────────────────────────────────────────────────────────────
 
@@ -24,7 +16,7 @@ suite('Test provePO', () => {
     // ── TEST 1 : structure de base de la réponse ──────────────────────────────
     test('provePO @all/@all — structure de la réponse', async function () {
         this.timeout(TIMEOUT_WP);
-        await openAndActivate();
+        
 
         const uri = vscode.Uri.file(BENCH);
         const response: any = await vscode.commands.executeCommand(
@@ -57,7 +49,7 @@ suite('Test provePO', () => {
     // ── TEST 2 : tous les goals de wp_pass doivent être prouvés ──────────────
     test('provePO @all/@all — tous les goals passent (wp_pass)', async function () {
         this.timeout(TIMEOUT_WP);
-        await openAndActivate();
+        
 
         const uri = vscode.Uri.file(BENCH);
         const response: any = await vscode.commands.executeCommand(
@@ -81,7 +73,7 @@ suite('Test provePO', () => {
     // ── TEST 3 : fonctions attendues présentes dans la réponse ───────────────
     test('provePO @all/@all — fonctions attendues présentes', async function () {
         this.timeout(TIMEOUT_WP);
-        await openAndActivate();
+        
 
         const uri = vscode.Uri.file(BENCH);
         const response: any = await vscode.commands.executeCommand(
@@ -104,7 +96,7 @@ suite('Test provePO', () => {
     // ── TEST 4 : types de property présents (assigns, ensures, rte...) ────────
     test('provePO @all/@all — types de property couverts', async function () {
         this.timeout(TIMEOUT_WP);
-        await openAndActivate();
+        
 
         const uri = vscode.Uri.file(BENCH);
         const response: any = await vscode.commands.executeCommand(
@@ -136,7 +128,7 @@ suite('Test provePO', () => {
     // ── TEST 5 : provePO sur fonction spécifique — isolation ─────────────────
     test('provePO increment/@all — goals limités à increment', async function () {
         this.timeout(TIMEOUT_WP);
-        await openAndActivate();
+        
 
         const uri = vscode.Uri.file(BENCH);
         const response: any = await vscode.commands.executeCommand(
@@ -159,7 +151,7 @@ suite('Test provePO', () => {
     // ── TEST 6 : behaviors nommés — sign() ───────────────────────────────────
     test('provePO sign/@all — behaviors positive/zero/negative présents', async function () {
         this.timeout(TIMEOUT_WP);
-        await openAndActivate();
+        
 
         const uri = vscode.Uri.file(BENCH);
         const response: any = await vscode.commands.executeCommand(
@@ -190,7 +182,7 @@ suite('Test provePO', () => {
     // ── TEST 7 : provers utilisés (qed + alt-ergo) ───────────────────────────
     test('provePO @all/@all — provers qed et alt-ergo utilisés', async function () {
         this.timeout(TIMEOUT_WP);
-        await openAndActivate();
+        
 
         const uri = vscode.Uri.file(BENCH);
         const response: any = await vscode.commands.executeCommand(
@@ -213,7 +205,7 @@ suite('Test provePO', () => {
     // ── TEST 8 : RTE goals — safe_div division par zéro ──────────────────────
     test('provePO safe_div/@all — RTE division prouvée', async function () {
         this.timeout(TIMEOUT_WP);
-        await openAndActivate();
+        
 
         const uri = vscode.Uri.file(BENCH);
         const response: any = await vscode.commands.executeCommand(
@@ -241,7 +233,7 @@ suite('Test provePO', () => {
     // ── TEST 9 : loop invariant — gauss() ────────────────────────────────────
     test('provePO gauss/@all — loop invariant et variant prouvés', async function () {
         this.timeout(TIMEOUT_WP);
-        await openAndActivate();
+        
 
         const uri = vscode.Uri.file(BENCH);
         const response: any = await vscode.commands.executeCommand(
