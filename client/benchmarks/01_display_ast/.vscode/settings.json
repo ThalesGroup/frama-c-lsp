@@ -1,0 +1,18 @@
+{
+    "kernel.includePaths": [],
+    "kernel.sourceFiles": ["./test.c"],
+    "kernel.macros": [],
+    "kernel.machdep": "gcc_x86_32",
+    "kernel.inlineCalls": [],
+    "kernel.removeInlined": [],
+    "kernel.noAnnot": false,
+    "kernel.lspDebug": 0,
+    "wp.rte": false,
+    "wp.prover": "script,alt-ergo",
+    "wp.timeout": 10,
+    "wp.par": 4,
+    "wp.cache": "update",
+    "wp.script": "batch",
+    "wp.session": ".frama-c",
+    "metrics.byFunction": true
+}
