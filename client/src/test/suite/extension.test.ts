@@ -23,7 +23,7 @@ const uri = vscode.Uri.file(testFilePath);
     try {
       
         
-        const response = await vscode.commands.executeCommand('acsl-lsp.debugAST');
+        const response = await vscode.commands.executeCommand('acsl-lsp.DisplayAST');
         
         if (response) {
             console.log(" RÉPONSE REÇUE :");
