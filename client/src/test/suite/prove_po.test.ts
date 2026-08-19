@@ -5,7 +5,7 @@ import * as path from 'path';
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const BENCH = path.resolve(__dirname, '../../../benchmarks/wp_pass/test.c');
-const TIMEOUT_WP = 120000; // 2min car WP peut prendre du temps
+const TIMEOUT_WP = 120000;
 
 async function openAndActivate(): Promise<void> {
     const uri = vscode.Uri.file(BENCH);
@@ -33,11 +33,10 @@ suite('Test provePO', () => {
 
         console.log("Réponse brute:", JSON.stringify(response, null, 2));
 
-        assert.ok(response,               "Réponse undefined");
-        assert.ok(Array.isArray(response),"Réponse doit être un tableau");
-        assert.ok(response.length > 0,   "Tableau vide — aucun goal retourné");
+        assert.ok(response,                "Réponse undefined");
+        assert.ok(Array.isArray(response), "Réponse doit être un tableau");
+        assert.ok(response.length > 0,    "Tableau vide — aucun goal retourné");
 
-        // Vérifier la structure de chaque goal
         for (const goal of response) {
             assert.ok('goal'     in goal, `Champ 'goal' manquant dans : ${JSON.stringify(goal)}`);
             assert.ok('property' in goal, `Champ 'property' manquant`);
@@ -51,8 +50,7 @@ suite('Test provePO', () => {
             assert.ok(Array.isArray(goal.provers), `'provers' doit être un tableau`);
         }
 
-        const total = response.length;
-        console.log(`✔ Total goals reçus : ${total}`);
+        console.log(`✔ Total goals reçus : ${response.length}`);
     });
 
 
@@ -92,7 +90,7 @@ suite('Test provePO', () => {
 
         assert.ok(response && response.length > 0, "Aucun goal retourné");
 
-        const functions: string[] = [...new Set(response.map((g: any) => g.function as string))];
+        const functions: string[] = [...new Set<string>(response.map((g: any) => g.function as string))];
         console.log("Fonctions prouvées:", functions);
 
         const expected = ['increment', 'swap', 'sign', 'gauss', 'safe_div',
@@ -117,25 +115,21 @@ suite('Test provePO', () => {
 
         const properties: string[] = response.map((g: any) => (g.property as string).toLowerCase());
 
-        // assigns
         assert.ok(properties.some(p => p.includes('assign')),
             "Aucun goal de type 'assigns' trouvé");
 
-        // ensures / postcondition
         assert.ok(properties.some(p => p.includes('ensures') || p.includes('post')),
             "Aucun goal de type 'ensures' trouvé");
 
-        // loop invariant
         assert.ok(properties.some(p => p.includes('invariant') || p.includes('loop')),
             "Aucun goal de type 'loop invariant' trouvé");
 
-        // RTE
         assert.ok(properties.some(p =>
             p.includes('rte') || p.includes('division') || p.includes('overflow') || p.includes('index')),
             "Aucun goal RTE trouvé (rte:division_by_zero, rte:overflow, rte:index_bound)"
         );
 
-        console.log("Types de property présents:", [...new Set(properties)]);
+        console.log("Types de property présents:", [...new Set<string>(properties)]);
     });
 
 
@@ -151,7 +145,7 @@ suite('Test provePO', () => {
 
         assert.ok(response && response.length > 0, "Aucun goal pour 'increment'");
 
-        const functions: string[] = [...new Set(response.map((g: any) => g.function as string))];
+        const functions: string[] = [...new Set<string>(response.map((g: any) => g.function as string))];
         assert.ok(
             functions.every(f => f === 'increment'),
             `Goals d'autres fonctions présents : ${functions.filter(f => f !== 'increment').join(', ')}`
@@ -178,7 +172,7 @@ suite('Test provePO', () => {
             .map((g: any) => (g.behavior as string || '').toLowerCase())
             .filter((b: string) => b !== '');
 
-        console.log("Behaviors trouvés:", [...new Set(behaviors)]);
+        console.log("Behaviors trouvés:", [...new Set<string>(behaviors)]);
 
         assert.ok(behaviors.some(b => b.includes('positive')),
             "Behavior 'positive' non trouvé dans les goals");
@@ -209,9 +203,8 @@ suite('Test provePO', () => {
             (g.provers as any[]).map(p => (p.prover as string).toLowerCase())
         );
 
-        console.log("Provers utilisés:", [...new Set(allProvers)]);
+        console.log("Provers utilisés:", [...new Set<string>(allProvers)]);
 
-        // qed doit toujours être présent (goals triviaux)
         assert.ok(allProvers.some(p => p.includes('qed')),
             "Prover 'qed' jamais utilisé");
     });
