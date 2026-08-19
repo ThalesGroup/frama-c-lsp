@@ -5,11 +5,22 @@ import * as path from 'path';
 const BENCH = path.resolve(__dirname, '../../../benchmarks/wp_pass/test.c');
 const TIMEOUT_WP = 120000;
 
+// Cache du résultat @all/@all — lancé une seule fois
+let cachedAll: any = null;
+
+async function proveAll(): Promise<any> {
+    if (cachedAll) return cachedAll;
+    const uri = vscode.Uri.file(BENCH);
+    cachedAll = await vscode.commands.executeCommand(
+        'provePO', uri.toString(), '@all', '@all', 30, false
+    );
+    return cachedAll;
+}
+
 suite('Test provePO', () => {
 
-    // ── Initialisation unique avant tous les tests ────────────────────────────
     suiteSetup(async function () {
-        this.timeout(30000);
+        this.timeout(60000); // 60s pour init + premier appel WP
         const uri = vscode.Uri.file(BENCH);
         const doc = await vscode.workspace.openTextDocument(uri);
         await vscode.window.showTextDocument(doc);
@@ -17,15 +28,16 @@ suite('Test provePO', () => {
         await ext.activate();
         console.log("Attente initialisation serveur OCaml...");
         await new Promise(r => setTimeout(r, 10000));
+        // Lance @all/@all une seule fois ici pour chauffer le cache
+        console.log("Lancement provePO @all/@all (cache)...");
+        await proveAll();
+        console.log("Cache prêt.");
     });
 
     // ── TEST 1 ────────────────────────────────────────────────────────────────
     test('provePO @all/@all — structure de la réponse', async function () {
         this.timeout(TIMEOUT_WP);
-        const uri = vscode.Uri.file(BENCH);
-        const response: any = await vscode.commands.executeCommand(
-            'provePO', uri.toString(), '@all', '@all', 30, false
-        );
+        const response: any = await proveAll();
         console.log("Réponse brute:", JSON.stringify(response, null, 2));
         assert.ok(response,                "Réponse undefined");
         assert.ok(Array.isArray(response), "Réponse doit être un tableau");
@@ -48,10 +60,7 @@ suite('Test provePO', () => {
     // ── TEST 2 ────────────────────────────────────────────────────────────────
     test('provePO @all/@all — tous les goals passent (wp_pass)', async function () {
         this.timeout(TIMEOUT_WP);
-        const uri = vscode.Uri.file(BENCH);
-        const response: any = await vscode.commands.executeCommand(
-            'provePO', uri.toString(), '@all', '@all', 30, false
-        );
+        const response: any = await proveAll();
         assert.ok(response && response.length > 0, "Aucun goal retourné");
         const failed = response.filter((g: any) => !g.passed);
         assert.strictEqual(
@@ -65,10 +74,7 @@ suite('Test provePO', () => {
     // ── TEST 3 ────────────────────────────────────────────────────────────────
     test('provePO @all/@all — fonctions attendues présentes', async function () {
         this.timeout(TIMEOUT_WP);
-        const uri = vscode.Uri.file(BENCH);
-        const response: any = await vscode.commands.executeCommand(
-            'provePO', uri.toString(), '@all', '@all', 30, false
-        );
+        const response: any = await proveAll();
         assert.ok(response && response.length > 0, "Aucun goal retourné");
         const functions: string[] = [...new Set<string>(response.map((g: any) => g.function as string))];
         console.log("Fonctions prouvées:", functions);
@@ -82,10 +88,7 @@ suite('Test provePO', () => {
     // ── TEST 4 ────────────────────────────────────────────────────────────────
     test('provePO @all/@all — types de property couverts', async function () {
         this.timeout(TIMEOUT_WP);
-        const uri = vscode.Uri.file(BENCH);
-        const response: any = await vscode.commands.executeCommand(
-            'provePO', uri.toString(), '@all', '@all', 30, false
-        );
+        const response: any = await proveAll();
         assert.ok(response && response.length > 0, "Aucun goal retourné");
         const properties: string[] = response.map((g: any) => (g.property as string).toLowerCase());
         assert.ok(properties.some(p => p.includes('assign')), "Aucun goal 'assigns'");
@@ -132,10 +135,7 @@ suite('Test provePO', () => {
     // ── TEST 7 ────────────────────────────────────────────────────────────────
     test('provePO @all/@all — provers qed et alt-ergo utilisés', async function () {
         this.timeout(TIMEOUT_WP);
-        const uri = vscode.Uri.file(BENCH);
-        const response: any = await vscode.commands.executeCommand(
-            'provePO', uri.toString(), '@all', '@all', 30, false
-        );
+        const response: any = await proveAll();
         assert.ok(response && response.length > 0, "Aucun goal retourné");
         const allProvers: string[] = response.flatMap((g: any) =>
             (g.provers as any[]).map(p => (p.prover as string).toLowerCase())
