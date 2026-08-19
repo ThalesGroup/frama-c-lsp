@@ -45,11 +45,20 @@ const testFilePath = path.resolve(__dirname, '../../../benchmarks/01_display_ast
             `annotations vide - reçu ${response.annotations.length}`);
 
         // 3. Fonctions spécifiques présentes
-        const funcNames = response.functions.map((f: any) => f.name);
-        assert.ok(funcNames.includes('add'),       "Fonction 'add' manquante");
-        assert.ok(funcNames.includes('fill_zero'), "Fonction 'fill_zero' manquante");
-        assert.ok(funcNames.includes('factorial'), "Fonction 'factorial' manquante");
-        assert.ok(funcNames.includes('max'),       "Fonction 'max' manquante");
+        // Fonctions spécifiques présentes
+const funcNames = response.functions.map((f: any) => f.name);
+assert.ok(funcNames.includes('add'),        "Fonction 'add' manquante");
+assert.ok(funcNames.includes('fill_zero'),  "Fonction 'fill_zero' manquante");
+assert.ok(funcNames.includes('factorial'),  "Fonction 'factorial' manquante");
+assert.ok(funcNames.includes('public_max'), "Fonction 'public_max' manquante");
+
+// static appelée → présente dans l'AST
+assert.ok(funcNames.includes('max'),
+    "Fonction 'max' (static appelée par public_max) doit apparaître");
+
+// déclaration sans corps → absente de l'AST (comportement Frama-C documenté)
+assert.ok(!funcNames.includes('external_func'),
+    "Déclaration sans corps ne doit pas apparaître");
 
         // 4. Globals spécifiques présents
         const globalNames = response.globals.map((g: any) => g.name);
