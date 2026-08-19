@@ -7,8 +7,7 @@ async function main() {
         const extensionTestsPath = path.resolve(__dirname, './suite/index');
 
         // Workspace = le dossier benchmark, avec son .vscode/settings.json
-        const workspacePath = path.resolve(__dirname, '../../../../benchmarks/01_display_ast');
-
+const workspacePath = path.resolve(__dirname, '../../benchmarks/01_display_ast');
         await runTests({
             extensionDevelopmentPath,
             extensionTestsPath,

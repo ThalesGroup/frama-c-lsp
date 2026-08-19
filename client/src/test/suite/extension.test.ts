@@ -7,7 +7,7 @@ suite('Test DisplayAST', () => {
     test('DisplayAST retourne les 4 catégories AST', async function() {
         this.timeout(60000);
 
-        const testFilePath = path.resolve(__dirname, '../../../../benchmarks/01_display_ast/test.c');
+const testFilePath = path.resolve(__dirname, '../../../benchmarks/01_display_ast/test.c');
         const uri = vscode.Uri.file(testFilePath);
         const document = await vscode.workspace.openTextDocument(uri);
         await vscode.window.showTextDocument(document);
