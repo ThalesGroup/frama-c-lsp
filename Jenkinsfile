@@ -15,6 +15,9 @@ pipeline {
 
             echo "Installation des dependances via npm install..."
             sh 'npm install'
+            sh 'ls node_modules/@vscode/ || echo "pas de dossier @vscode"'
+sh 'ls node_modules/ | grep -i test || echo "aucun paquet test"'
+sh 'cat package.json | grep -i test'
 
             echo "Verification que les paquets critiques sont bien la..."
             sh 'test -d node_modules/@vscode/test-electron'
