@@ -7,19 +7,30 @@ pipeline {
     }
 
     stages {
-        stage('Recuperation des dependances') {
-            steps {
-                dir('client') {
-                    withCredentials([
-                        usernamePassword(credentialsId: "eddc7593-09ea-4939-96f8-6d455dfa4101", usernameVariable: 'ARTIFACTORYL1_EMEA_USERNAME', passwordVariable: 'ARTIFACTORYL1_EMEA_API_KEY'),
-                        usernamePassword(credentialsId: "22c9bebb-a044-4183-bbe5-53c052ac9201", usernameVariable: 'ARTIFACTORYL2_EMEA_USERNAME', passwordVariable: 'ARTIFACTORYL2_EMEA_API_KEY'),
-                    ]){
-                        echo "Telechargement des artefacts depuis Artifactory..."
-                        sh 'bash ./downloadartifacts.sh'
-                    }
-                }
-            }
+        stage('Installation des dependances') {
+    steps {
+        dir('client') {
+            echo "Suppression de l'ancien node_modules pour repartir de zero..."
+            sh 'rm -rf node_modules package-lock.json'
+
+            echo "Installation des dependances via npm install..."
+            sh 'npm install'
+            sh 'ls node_modules/@vscode/ || echo "pas de dossier @vscode"'
+sh 'ls node_modules/ | grep -i test || echo "aucun paquet test"'
+sh 'cat package.json | grep -i test'
+
+            echo "Verification que les paquets critiques sont bien la..."
+            sh 'test -d node_modules/@vscode/test-electron'
+            sh 'test -d node_modules/mocha'
+            sh 'test -d node_modules/typescript'
+            sh 'test -d node_modules/vscode-languageclient'
+            sh 'test -x node_modules/.bin/tsc'
+            sh 'test -x node_modules/.bin/mocha'
+
+            echo "Dependances installees avec succes."
         }
+    }
+}
 
         stage('Build et Reparation') {
     steps {
@@ -42,15 +53,15 @@ pipeline {
     }
 }
         stage('Build et Install Serveur (OCaml)') {
-            steps {
-                dir('server'){
-                    echo "Compilation et installation du serveur LSP..."
-                    sh 'eval $(opam env) && dune build'
-                    sh 'eval $(opam env) && dune install'
-                    sh 'eval $(opam env) && which frama-c-lsp || echo "ERREUR : Serveur non installe"'
-                }
-            }
+    steps {
+        dir('server'){
+            echo "Compilation et installation du serveur LSP..."
+            sh 'eval $(opam env) && dune build'
+            sh 'eval $(opam env) && dune install'
+            sh 'eval $(opam env) && which frama-c && frama-c -version || echo "ERREUR : Frama-C non installe"'
         }
+    }
+}
 
         stage('Tests E2E avec Ecran Virtuel') {
     steps {

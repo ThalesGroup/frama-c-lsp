@@ -697,9 +697,11 @@ commands.registerCommand('framaC.refreshAST', () => {
                 wpDataProvider.update(res);
                 wpDataProvider.refresh();
                 window.showInformationMessage('Proof results updated');
+                return res;
             } catch (err) {
                 window.showErrorMessage('Failed to run WP proof: ' + err);
             }
+            
         }),
 
         commands.registerCommand('provePOStrategies', async () => {
