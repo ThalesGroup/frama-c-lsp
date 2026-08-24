@@ -20,7 +20,6 @@
         "c",
         "frama-c"
     ],
-    "test:unit": "mocha --timeout 10000 --ui tdd --reporter spec \"out/test/suite/unit/**/*.test.js\"",
     "activationEvents": [
         "onLanguage:acsl",
         "onLanguage:c",
@@ -67,7 +66,7 @@
             "editor/context": [
                 {
                     "command": "stop",
-"when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
+                    "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
                 },
                 {
                     "submenu": "Frama-C"
@@ -81,12 +80,12 @@
             ],
             "Frama-C": [
                 {
-        "command": "acsl.importProjectConfig",
-        "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
-    },
+                    "command": "acsl.importProjectConfig",
+                    "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
+                },
                 {
                     "command": "displayCIL",
-"when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
+                    "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
                 },
                 {
                     "command": "displayCIL_noannot",
@@ -116,7 +115,6 @@
                     "command": "showLocalMetrics",
                     "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
                 }
-        
             ],
             "Frama-C/WP": [
                 {
@@ -150,10 +148,10 @@
             ],
             "view/title": [
                 {
-    "command": "framaCExplorer.search",
-    "when": "view == framaCExplorer",
-    "group": "navigation@0"
-},
+                    "command": "framaCExplorer.search",
+                    "when": "view == framaCExplorer",
+                    "group": "navigation@0"
+                },
                 {
                     "command": "wpGoalsView.downloadJson",
                     "when": "view == wpGoalsView",
@@ -183,11 +181,12 @@
                     "command": "wpFilters.sortByTime",
                     "when": "view == wpGoalsView",
                     "group": "navigation@5"
-                },{
-    "command": "framaC.filterAnnotations",
-    "when": "view == framaCExplorer",
-    "group": "navigation@5"
-},
+                },
+                {
+                    "command": "framaC.filterAnnotations",
+                    "when": "view == framaCExplorer",
+                    "group": "navigation@5"
+                },
                 {
                     "command": "wpFilters.clearAll",
                     "when": "view == wpGoalsView",
@@ -219,15 +218,15 @@
                     "group": "navigation@1"
                 },
                 {
-          "command": "wpFilters.filterVerdict",
-          "group": "navigation@3",
-          "when": "view == wpGoalsView"
-        },
-        {
-          "command": "wpFilters.toggleHasScript",
-          "group": "navigation@4",
-          "when": "view == wpGoalsView"
-        }
+                    "command": "wpFilters.filterVerdict",
+                    "group": "navigation@3",
+                    "when": "view == wpGoalsView"
+                },
+                {
+                    "command": "wpFilters.toggleHasScript",
+                    "group": "navigation@4",
+                    "when": "view == wpGoalsView"
+                }
             ],
             "Frama-C/CCDOC": [
                 {
@@ -235,7 +234,6 @@
                     "when": "resourceLangId == c || resourceLangId == h || resourceLangId == acsl"
                 }
             ],
-            
             "view/item/context": [
                 {
                     "command": "showScript",
@@ -288,19 +286,20 @@
         ],
         "commands": [
             {
-    "command": "framaCExplorer.search",
-    "title": "Search AST",
-    "icon": "$(search)"
-},
+                "command": "framaCExplorer.search",
+                "title": "Search AST",
+                "icon": "$(search)"
+            },
             {
                 "command": "wpGoalsView.downloadJson",
                 "title": "Export WP Results (JSON)",
                 "icon": "$(cloud-upload)"
-            },{
-    "command": "framaC.filterAnnotations",
-    "title": "Filter Annotations by Type",
-    "icon": "$(tag)"
-},
+            },
+            {
+                "command": "framaC.filterAnnotations",
+                "title": "Filter Annotations by Type",
+                "icon": "$(tag)"
+            },
             {
                 "command": "wpFilters.sortByTime",
                 "title": "Sort by Time (Expensive first)",
@@ -322,35 +321,35 @@
                 "icon": "$(circuit-board)"
             },
             {
-            "command": "wpFilters.filterFunction",
-            "title": "Filter by Function",
-            "icon": "$(symbol-method)"
-        },
-        {
-            "command": "wpFilters.filterFile",
-            "title": "Filter by File",
-            "icon": "$(file)"
-        },
-        {
-            "command": "wpFilters.filterType",
-            "title": "Filter by ACSL Type",
-            "icon": "$(symbol-property)"
-        },
+                "command": "wpFilters.filterFunction",
+                "title": "Filter by Function",
+                "icon": "$(symbol-method)"
+            },
+            {
+                "command": "wpFilters.filterFile",
+                "title": "Filter by File",
+                "icon": "$(file)"
+            },
+            {
+                "command": "wpFilters.filterType",
+                "title": "Filter by ACSL Type",
+                "icon": "$(symbol-property)"
+            },
             {
                 "command": "wpFilters.toggleSmoke",
                 "title": "WP: Toggle Smoke Tests",
                 "icon": "$(flame)"
             },
             {
-        "command": "wpFilters.filterVerdict",
-        "title": "Filter by Verdict (Passed/Failed/Timeout)",
-        "icon": "$(filter)"
-      },
-      {
-        "command": "wpFilters.toggleHasScript",
-        "title": "Toggle: Only with Scripts",
-        "icon": "$(file-code)"
-      },
+                "command": "wpFilters.filterVerdict",
+                "title": "Filter by Verdict (Passed/Failed/Timeout)",
+                "icon": "$(filter)"
+            },
+            {
+                "command": "wpFilters.toggleHasScript",
+                "title": "Toggle: Only with Scripts",
+                "icon": "$(file-code)"
+            },
             {
                 "command": "wpFilters.clearAll",
                 "title": "WP: Clear All Filters",
@@ -367,10 +366,10 @@
                 "icon": "$(project)"
             },
             {
-    "command": "DisplayAST",
-    "title": "Update Ast For Current File",
-    "icon": "$(refresh)"
-},
+                "command": "DisplayAST",
+                "title": "Update Ast For Current File",
+                "icon": "$(refresh)"
+            },
             {
                 "command": "computeIncludeGraph",
                 "title": "Compute Dependency Matrix"
@@ -768,14 +767,14 @@
                         "description": "Frama-C option: -wp-filename-truncation"
                     },
                     "wp.autoProveFunctions": {
-    "scope": "workspace",
-    "type": "array",
-    "items": {
-        "type": "string"
-    },
-    "default": [],
-    "description": "List of functions to automatically prove via WP upon saving a file. Use ['@all'] to target all functions."
-}
+                        "scope": "workspace",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "default": [],
+                        "description": "List of functions to automatically prove via WP upon saving a file. Use ['@all'] to target all functions."
+                    }
                 }
             },
             {
@@ -854,14 +853,17 @@
         "test": "sh ./scripts/e2e.sh"
     },
     "devDependencies": {
-        "@types/mocha": "^10.0.7",
-        "@types/node": "^18.19.44",
+        "@types/glob": "^8.1.0",
+        "@types/mocha": "^10.0.10",
+        "@types/node": "^18.19.130",
         "@types/vscode": "^1.85.0",
         "@typescript-eslint/eslint-plugin": "^7.18.0",
         "@typescript-eslint/parser": "^7.18.0",
+        "@vscode/test-electron": "^2.5.2",
         "eslint": "^8.57.0",
+        "glob": "^13.0.6",
         "minimatch": "^3.1.2",
-        "mocha": "^11.0.1",
+        "mocha": "^11.8.0",
         "typescript": "^5.5.4"
     },
     "dependencies": {
