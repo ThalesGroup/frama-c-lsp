@@ -57,17 +57,33 @@ pipeline {
         }
 
         stage('Tests E2E') {
-            steps {
-                dir('client') {
-                    echo "Lancement des tests E2E avec xvfb..."
-                    sh 'find .vscode-test -type f -exec chmod +x {} + 2>/dev/null || true'
-                    sh '''
-                        eval $(opam env)
-                        xvfb-run -a npm test -- --logLevel=off
-                    '''
-                }
-            }
+    steps {
+        dir('client') {
+            echo "Nettoyage des processus résiduels..."
+            sh '''
+                # Tuer tout processus qui tient le port 8005 ou 8006
+                fuser -k 8005/tcp 2>/dev/null || true
+                fuser -k 8006/tcp 2>/dev/null || true
+                fuser -k 8007/tcp 2>/dev/null || true
+                fuser -k 8008/tcp 2>/dev/null || true
+                
+                # Tuer les éventuels serveurs OCaml résiduels
+                pkill -f "run.sh" 2>/dev/null || true
+                pkill -f "frama-c" 2>/dev/null || true
+                
+                # Attendre que les ports soient libérés
+                sleep 3
+            '''
+
+            echo "Lancement des tests E2E avec xvfb..."
+            sh 'find .vscode-test -type f -exec chmod +x {} + 2>/dev/null || true'
+            sh '''
+                eval $(opam env)
+                xvfb-run -a npm test -- --logLevel=off
+            '''
         }
+    }
+}
     }
 
     post {
