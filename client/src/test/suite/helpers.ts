@@ -23,7 +23,10 @@ export async function activateExtension(waitMs = 10000) {
     await ext.activate();
     await new Promise(r => setTimeout(r, waitMs));
 }
-
+/** Attend que le LSP soit stable (plus de processus en cours) */
+export async function waitForLspStable(ms = 5000): Promise<void> {
+    await new Promise(r => setTimeout(r, ms));
+}
 /**
  * Attend que le fichier existe ET que son contenu ne soit plus le placeholder
  * "Task in progress ..." écrit par create_file() côté extension.
