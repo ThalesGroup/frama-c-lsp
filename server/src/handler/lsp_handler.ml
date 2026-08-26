@@ -823,72 +823,38 @@ let rq_handler json_string wrapper_port =
       let prog, args = (Command.args_of_t command) in
       let data, pid = fork_execute_command prog args feature wrapper_port in
       Lsp_types.CONTENT (data), pid;
-      | "proveAuto" -> 
-      Options.Self.debug ~level:1 "Auto-Prove Request triggered\n%!";
-      
-      let (file, line, timeout) = match request.params with
-        | Some `List [`List [`String f; `Int l; `Int t]] -> (f, l, t)
-        | Some `List [`String f; `Int l; `Int t] -> (f, l, t)
-        | _ -> ("", 0, 10)
+      | "getContext" -> 
+    Options.Self.debug ~level:1 "GetContext Request triggered\n%!";
+    
+    let (file, line) = match request.params with
+      | Some `List [`List [`String f; `Int l]] -> (f, l)
+      | Some `List [`String f; `Int l] -> (f, l)
+      | _ -> ("", 0)
+    in
+
+    if file = "" then 
+      let resp = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:id ~result:(`List []) () in
+      Lsp_types.CONTENT (Json.save_string (Lsp_types.ResponseMessage.json_of_t resp)), 1
+    else begin
+      let id_int = Utils.id_to_int id in
+      let src_file = Utils.remove_newline (Utils.remove_quotes file) in
+      let kernel_opt = KernelOpt.create ~strategies:false () in
+      let feature = GetContext_feature (id_int, src_file, line, 0) in
+      let lsp_opt = LspOpt.create feature in
+      let command = Command.create 
+        ~port:wrapper_port 
+        ~strategies:false 
+        ~kernel:kernel_opt 
+        ~files:[src_file] 
+        ~lsp:lsp_opt 
+        () 
       in
-
-      if file = "" then 
-        let resp = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:id ~result:(`List []) () in
-        Lsp_types.CONTENT (Json.save_string (Lsp_types.ResponseMessage.json_of_t resp)), 1
-      else begin
-
-          let ctx_feature = GetContext_feature (0, file, line, 0) in
-          let kernel_opt = KernelOpt.create ~strategies:false () in
-          let ctx_command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[file] ~lsp:(LspOpt.create ctx_feature) () in
-          let (ctx_prog, ctx_args) = Command.args_of_t ctx_command in
-         let ctx_response_str = execute_command ctx_prog ctx_args ctx_feature wrapper_port in
-          Options.Self.debug ~level:1 "ctx_response_str = [%s]\n%!" ctx_response_str;
-
-          let ctx_json_str =
-            let parts = Str.split (Str.regexp ":::") ctx_response_str in
-            match List.rev parts with
-            | [] -> ""
-            | last :: _ -> String.trim last
-          in
-          Options.Self.debug ~level:1 "ctx_json_str = [%s]\n%!" ctx_json_str;
-
-          let (func_name, prop_name) = 
-            try match Json.load_string ctx_json_str with
-              | `List [`String f; `String p] -> (f, p)
-              | _ -> ("@none", "")
-            with _ -> ("@none", "")
-          in
-
-          if func_name = "@none" || func_name = "" then
-             let resp = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:id ~result:(`List []) () in
-             Lsp_types.CONTENT (Json.save_string (Lsp_types.ResponseMessage.json_of_t resp)), 1
-          else begin
-             let prop = check_prop func_name prop_name in
-              let fct = check_fct func_name in
-
-             let uncast_opt = UncastOpt.create () in
-             let root_dir = Printf.sprintf "%s/.frama-c" !rootPath in
-      if not (Sys.file_exists root_dir) then Unix.mkdir root_dir 0o755;
-      let report_json_path = Printf.sprintf "%s/latest_results.json" root_dir in
-      let wp_opt = WpOpt.create 
-          ~wp_fct:fct 
-          ~wp_prop:prop 
-          ~wp_gen:false 
-          ~wp_timeout:timeout 
-          ~wp_report_json:report_json_path 
-          () 
-      in
-             let metacsl_opt = MetacslOpt.create () in
-             
-             let feature = Prove_feature ((Utils.id_to_int request.id), file, (String.concat "," fct), (String.concat "," prop)) in
-             let lsp_opt = LspOpt.create (feature) in
-             let prove_command = Command.create ~port:wrapper_port ~strategies:false ~gui:false ~kernel:kernel_opt ~files:[file] ~uncast:uncast_opt ~wp:wp_opt ~metacsl:metacsl_opt ~lsp:lsp_opt () in
-             let (prove_prog, prove_args) = Command.args_of_t prove_command in
-             
-             let data, pid = fork_execute_command prove_prog prove_args feature wrapper_port in
-             Lsp_types.CONTENT (data), pid
-          end
-      end
+      let command_str = (Command.string_of_t command) in
+      Options.Self.feedback ~level:1 "GetContext Command = %s\n%!" command_str;
+      let prog, args = (Command.args_of_t command) in
+      let data, pid = fork_execute_command prog args feature wrapper_port in
+      Lsp_types.CONTENT (data), pid
+    end;
       | "getAST" -> 
       Options.Self.debug ~level:1 "AST Request triggered\n%!";
       
