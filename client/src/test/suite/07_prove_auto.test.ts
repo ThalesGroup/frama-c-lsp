@@ -10,22 +10,27 @@ suite('proveAuto', () => {
         const src = await openBenchmark('wp_pass/test.c');
         await activateExtension();
 
-        // positionne le curseur sur une fonction connue de wp_pass/test.c
-        // ligne 77 = swap (visible dans les logs de provePO)
         const editor = vscode.window.activeTextEditor!;
+        assert.ok(editor, 'aucun editor actif');
+        assert.ok(editor.document.fileName.endsWith('test.c'), 'mauvais fichier ouvert');
+
+        // curseur sur une ligne dans une fonction connue (ex. swap ligne 77)
         editor.selection = new vscode.Selection(76, 0, 76, 0);
 
-        // mocke le prompt de timeout (le command affiche un inputBox bloquant)
+        // mock du inputBox
         const original = vscode.window.showInputBox;
         (vscode.window as any).showInputBox = async () => '10';
+
+        let commandThrew = false;
         try {
             await vscode.commands.executeCommand('provePO Cursor');
-            // le command declenche proveAuto qui met a jour wpDataProvider
-            // difficile d'inspecter sans exposer le client — au moins on verifie
-            // que le command s'execute sans throw
-            assert.ok(true, 'proveAuto a ete declenche sans erreur');
+        } catch (e) {
+            commandThrew = true;
+            console.error('provePO Cursor a throw:', e);
         } finally {
             (vscode.window as any).showInputBox = original;
         }
+
+        assert.ok(!commandThrew, 'provePO Cursor ne doit pas throw');
     });
 });
