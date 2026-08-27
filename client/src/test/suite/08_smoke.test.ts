@@ -11,16 +11,19 @@ suite('smokeTests', () => {
         await activateExtension();
 
         const uri = vscode.Uri.file(src);
-
-        // diagnostics avant
         const before = vscode.languages.getDiagnostics(uri).length;
         console.log(`Diagnostics avant smokeTests : ${before}`);
 
-       
         await vscode.commands.executeCommand('smokeTests');
 
-     
-        const diags = vscode.languages.getDiagnostics(uri);
+       
+        const start = Date.now();
+        let diags: readonly vscode.Diagnostic[] = [];
+        while (Date.now() - start < 90000) {
+            diags = vscode.languages.getDiagnostics(uri);
+            if (diags.length > before) break;
+            await new Promise(r => setTimeout(r, 1000));
+        }
 
         console.log(`Diagnostics apres smokeTests : ${diags.length}`);
         diags.forEach(d =>
@@ -32,7 +35,6 @@ suite('smokeTests', () => {
             `aucun diagnostic smoke recu — attendu au moins 1 sur impossible()`
         );
 
-     
         const hasSmokeDiag = diags.some(d =>
             d.message.toLowerCase().includes('smoke') ||
             d.message.toLowerCase().includes('failed') ||
