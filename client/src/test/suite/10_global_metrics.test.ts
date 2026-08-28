@@ -1,3 +1,11 @@
+
+import * as assert from 'assert';
+import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
+import { openBenchmark, activateExtension, waitForFileWritten, cleanFile, getWorkspacePath } from './helpers';
+
+suite('showGlobalMetrics', () => {
 test('produit un rapport de metriques global sur plusieurs fichiers', async function() {
     this.timeout(120000);
 
@@ -40,4 +48,4 @@ test('produit un rapport de metriques global sur plusieurs fichiers', async func
         ['./wp_pass/test.c'],
         vscode.ConfigurationTarget.Workspace
     );
-});
+});})
