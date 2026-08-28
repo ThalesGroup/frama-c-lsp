@@ -1,6 +1,7 @@
 {
     "kernel.includePaths": [],
-    "kernel.sourceFiles": ["./wp_pass/test.c"],
+    "kernel.sourceFiles": ["./benchmarks/global_metrics/main.c",
+        "./benchmarks/global_metrics/utils.c"],
     "kernel.macros": [],
     "kernel.machdep": "gcc_x86_32",
     "kernel.noAnnot": false,
