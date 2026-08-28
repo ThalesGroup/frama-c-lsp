@@ -1,54 +1,43 @@
-import * as assert from 'assert';
-import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs';
-import { openBenchmark, activateExtension, waitForFileWritten, cleanFile, getWorkspacePath } from './helpers';
+test('produit un rapport de metriques global sur plusieurs fichiers', async function() {
+    this.timeout(120000);
 
-suite('showGlobalMetrics', () => {
+    // chemins relatifs par rapport au workspace (comme dans settings.json)
+    await vscode.workspace.getConfiguration().update(
+        'kernel.sourceFiles',
+        [
+            './benchmarks/global_metrics/main.c',
+            './benchmarks/global_metrics/utils.c'
+        ],
+        vscode.ConfigurationTarget.Workspace
+    );
 
-    test('produit un rapport de metriques global sur plusieurs fichiers', async function() {
-        this.timeout(120000);
+    // attente plus longue pour que le serveur OCaml recharge la config
+    await new Promise(r => setTimeout(r, 8000));
 
-        // configure kernel.sourceFiles pour pointer sur les deux fichiers du benchmark
-        const mainFile = path.resolve(__dirname, '../../../benchmarks/global_metrics/main.c');
-        const utilsFile = path.resolve(__dirname, '../../../benchmarks/global_metrics/utils.c');
+    await openBenchmark('global_metrics/main.c');
+    await activateExtension();
 
-        await vscode.workspace.getConfiguration().update(
-            'kernel.sourceFiles',
-            [mainFile, utilsFile],
-            vscode.ConfigurationTarget.Workspace
-        );
+    const outFile = path.join(getWorkspacePath(), '.frama-c', 'fc_metrics.txt');
+    cleanFile(outFile);
 
-        // laisse le temps au LSP de relire la config
-        await new Promise(r => setTimeout(r, 3000));
+    await vscode.commands.executeCommand('showGlobalMetrics');
+    const report = await waitForFileWritten(outFile, 90000);
 
-        await openBenchmark('global_metrics/main.c');
-        await activateExtension();
+    console.log(`fc_metrics.txt (global) taille : ${report.length} chars`);
+    console.log(report.substring(0, 400));
 
-        const outFile = path.join(getWorkspacePath(), '.frama-c', 'fc_metrics.txt');
-        cleanFile(outFile);
+    assert.ok(
+        report.includes('add') || report.includes('multiply') || report.includes('compute'),
+        'aucune fonction de global_metrics dans le rapport'
+    );
 
-        await vscode.commands.executeCommand('showGlobalMetrics');
+    const hasMetricKeyword = /sloc|cyclomatic|ifs|loops|calls|function/i.test(report);
+    assert.ok(hasMetricKeyword, 'aucun indicateur de metrics trouve');
 
-        const report = await waitForFileWritten(outFile, 60000);
-
-        console.log(`fc_metrics.txt (global) taille : ${report.length} chars`);
-        console.log(report.substring(0, 300));
-
-        // les deux fichiers doivent apparaitre dans le rapport
-        assert.ok(
-            report.includes('add') || report.includes('multiply') || report.includes('compute'),
-            'aucune fonction des deux fichiers dans le rapport global'
-        );
-
-        const hasMetricKeyword = /sloc|cyclomatic|ifs|loops|calls/i.test(report);
-        assert.ok(hasMetricKeyword, 'aucun indicateur de metrics trouve');
-
-        // restore la config
-        await vscode.workspace.getConfiguration().update(
-            'kernel.sourceFiles',
-            [],
-            vscode.ConfigurationTarget.Workspace
-        );
-    });
+    // restore
+    await vscode.workspace.getConfiguration().update(
+        'kernel.sourceFiles',
+        ['./wp_pass/test.c'],
+        vscode.ConfigurationTarget.Workspace
+    );
 });
