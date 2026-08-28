@@ -1,0 +1,15 @@
+{
+    "kernel.includePaths": [],
+    "kernel.sourceFiles": [],
+    "kernel.macros": [],
+    "kernel.machdep": "gcc_x86_32",
+    "kernel.noAnnot": false,
+    "wp.rte": true,
+    "wp.prover": "script,alt-ergo",
+    "wp.timeout": 30,
+    "wp.par": 4,
+    "wp.cache": "update",
+    "wp.script": "batch",
+    "wp.session": ".frama-c",
+    "metrics.byFunction": true
+}

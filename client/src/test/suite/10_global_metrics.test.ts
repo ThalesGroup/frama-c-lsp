@@ -7,61 +7,65 @@ import { openBenchmark, activateExtension, waitForFileWritten, cleanFile, getWor
 suite('showGlobalMetrics', () => {
 
     test('produit un rapport de metriques global sur plusieurs fichiers', async function() {
-        this.timeout(150000);
+    this.timeout(150000);
 
-        const mainFile = path.resolve(__dirname, '../../../benchmarks/global_metrics/main.c');
-        const utilsFile = path.resolve(__dirname, '../../../benchmarks/global_metrics/utils.c');
-        const wpPassFile = path.resolve(__dirname, '../../../benchmarks/wp_pass/test.c');
+    const mainFile = path.resolve(__dirname, '../../../benchmarks/global_metrics/main.c');
+    const utilsFile = path.resolve(__dirname, '../../../benchmarks/global_metrics/utils.c');
+    const wpPassFile = path.resolve(__dirname, '../../../benchmarks/wp_pass/test.c');
 
-        console.log('mainFile:', mainFile);
-        console.log('mainFile existe:', fs.existsSync(mainFile));
+    console.log('mainFile existe:', fs.existsSync(mainFile));
+    console.log('workspace:', getWorkspacePath());
 
-        // modifie directement le fichier settings.json sur disque
-        // c'est la façon la plus fiable de déclencher didChangeConfiguration
-        const settingsPath = path.join(getWorkspacePath(), '.vscode', 'settings.json');
-        console.log('settingsPath:', settingsPath);
+    // le settings.json du workspace de test est dans testFixture/.vscode/
+    const settingsDir = path.join(getWorkspacePath(), '.vscode');
+    const settingsPath = path.join(settingsDir, 'settings.json');
+    console.log('settingsPath:', settingsPath);
 
-        // lit les settings actuels
-        const currentSettings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
-        const originalSourceFiles = currentSettings['kernel.sourceFiles'];
+    // crée le dossier .vscode si absent
+    if (!fs.existsSync(settingsDir)) {
+        fs.mkdirSync(settingsDir, { recursive: true });
+    }
 
-        // écrit les nouveaux settings avec les fichiers global_metrics
-        const newSettings = {
-            ...currentSettings,
-            'kernel.sourceFiles': [mainFile, utilsFile]
-        };
-        fs.writeFileSync(settingsPath, JSON.stringify(newSettings, null, 4));
-        console.log('settings.json mis à jour');
+    // lit ou crée les settings
+    let currentSettings: any = {};
+    if (fs.existsSync(settingsPath)) {
+        currentSettings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+    }
+    const originalSourceFiles = currentSettings['kernel.sourceFiles'];
 
-        // attend que VSCode détecte le changement et envoie didChangeConfiguration au serveur
-        await new Promise(r => setTimeout(r, 10000));
+    // écrit les nouveaux settings
+    const newSettings = {
+        ...currentSettings,
+        'kernel.sourceFiles': [mainFile, utilsFile]
+    };
+    fs.writeFileSync(settingsPath, JSON.stringify(newSettings, null, 4));
+    console.log('settings.json écrit dans:', settingsPath);
 
-        await openBenchmark('global_metrics/main.c');
-        await activateExtension();
+    // attend le rechargement
+    await new Promise(r => setTimeout(r, 12000));
 
-        const outFile = path.join(getWorkspacePath(), '.frama-c', 'fc_metrics.txt');
-        cleanFile(outFile);
+    await openBenchmark('global_metrics/main.c');
+    await activateExtension();
 
-        await vscode.commands.executeCommand('showGlobalMetrics');
-        const report = await waitForFileWritten(outFile, 90000);
+    const outFile = path.join(getWorkspacePath(), '.frama-c', 'fc_metrics.txt');
+    cleanFile(outFile);
 
-        console.log(`fc_metrics.txt (global) taille : ${report.length} chars`);
-        console.log(report.substring(0, 500));
+    await vscode.commands.executeCommand('showGlobalMetrics');
+    const report = await waitForFileWritten(outFile, 90000);
 
-        // restore les settings originaux
-        const restoredSettings = {
-            ...newSettings,
-            'kernel.sourceFiles': originalSourceFiles
-        };
-        fs.writeFileSync(settingsPath, JSON.stringify(restoredSettings, null, 4));
-        console.log('settings.json restauré');
+    console.log(`fc_metrics.txt taille : ${report.length} chars`);
+    console.log(report.substring(0, 500));
 
-        assert.ok(report.length > 0, 'fc_metrics.txt vide');
-        assert.ok(
-            report.includes('add') || report.includes('multiply') || report.includes('compute'),
-            'aucune fonction de global_metrics dans le rapport'
-        );
-        const hasMetricKeyword = /sloc|cyclomatic|ifs|loops|calls|function/i.test(report);
-        assert.ok(hasMetricKeyword, 'aucun indicateur de metrics trouve');
-    });
+    // restore
+    const restoredSettings = { ...newSettings, 'kernel.sourceFiles': originalSourceFiles };
+    fs.writeFileSync(settingsPath, JSON.stringify(restoredSettings, null, 4));
+
+    assert.ok(report.length > 0, 'fc_metrics.txt vide');
+    assert.ok(
+        report.includes('add') || report.includes('multiply') || report.includes('compute'),
+        'aucune fonction de global_metrics dans le rapport'
+    );
+    const hasMetricKeyword = /sloc|cyclomatic|ifs|loops|calls|function/i.test(report);
+    assert.ok(hasMetricKeyword, 'aucun indicateur de metrics trouve');
+});
 });
