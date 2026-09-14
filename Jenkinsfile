@@ -4,6 +4,7 @@ pipeline {
     environment {
         NODE_TLS_REJECT_UNAUTHORIZED = '0'
         VSCODE_SKIP_DOWNLOAD = 'true'
+        PATH = "/opt/ant/bin:/home/user/.nvm/versions/node/v22.14.0/bin:${env.PATH}"
     }
 
     stages {
