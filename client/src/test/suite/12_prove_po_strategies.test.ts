@@ -5,21 +5,30 @@ import { openBenchmark, activateExtension } from './helpers';
 suite('provePOStrategies', () => {
 
     test('lance WP avec strategies sans throw', async function() {
-        this.timeout(90000);
+    this.timeout(60000);
 
-        await openBenchmark('wp_pass/test.c');
-        await activateExtension();
+    await openBenchmark('wp_pass/test.c');
+    await activateExtension();
 
-        let threw = false;
-        try {
-            await vscode.commands.executeCommand('provePOStrategies');
-           
-            await new Promise(r => setTimeout(r, 20000));
-        } catch (e) {
-            threw = true;
-            console.error('provePOStrategies a throw:', e);
-        }
+    // vérifie que la commande est enregistrée
+    const allCommands = await vscode.commands.getCommands(true);
+    console.log('provePOStrategies enregistre:', allCommands.includes('provePOStrategies'));
+    assert.ok(
+        allCommands.includes('provePOStrategies'),
+        'commande provePOStrategies non enregistree'
+    );
 
-        assert.ok(!threw, 'provePOStrategies ne doit pas throw');
-    });
+    // déclenche la commande — notification, retourne immédiatement
+    let threw = false;
+    try {
+        await vscode.commands.executeCommand('provePOStrategies');
+        // attente courte — juste vérifier que ça part sans throw
+        await new Promise(r => setTimeout(r, 5000));
+    } catch (e) {
+        threw = true;
+        console.error('provePOStrategies a throw:', e);
+    }
+
+    assert.ok(!threw, 'provePOStrategies ne doit pas throw');
+});
 });
