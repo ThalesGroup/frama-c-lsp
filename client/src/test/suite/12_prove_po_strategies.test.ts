@@ -19,8 +19,7 @@ suite('provePOStrategies', () => {
 
     let threw = false;
     try {
-        
-        vscode.commands.executeCommand('provePOStrategies').catch(() => {});
+void vscode.commands.executeCommand('provePOStrategies').then(undefined, () => {});
         await new Promise(r => setTimeout(r, 5000));
     } catch (e) {
         threw = true;
