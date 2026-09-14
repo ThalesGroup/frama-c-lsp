@@ -5,10 +5,10 @@ import { openBenchmark, activateExtension, waitForFileWritten, cleanFile, getWor
 
 suite('displayCIL_noannot', () => {
 
-    test('supprime les annotations ACSL du CIL', async function() {
+    test('removes ACSL annotations from CIL', async function() {
         this.timeout(60000);
 
-        // wp_pass/test.c est deja tres annote en ACSL
+        // wp_pass/test.c is heavily annotated with ACSL
         await openBenchmark('wp_pass/test.c');
         await activateExtension();
 
@@ -18,14 +18,14 @@ suite('displayCIL_noannot', () => {
         await vscode.commands.executeCommand('displayCIL_noannot');
         const cil = await waitForFileWritten(outFile);
 
-        // le code C reste
-        assert.ok(cil.includes('swap'),      'fonction swap absente');
-        assert.ok(cil.includes('increment'), 'fonction increment absente');
+        // C code is preserved
+        assert.ok(cil.includes('swap'),      'function swap missing');
+        assert.ok(cil.includes('increment'), 'function increment missing');
 
-        // mais AUCUNE annotation ACSL
-        assert.ok(!cil.includes('/*@'),      'marqueur /*@ encore present');
-        assert.ok(!cil.includes('requires'), 'clause requires encore presente');
-        assert.ok(!cil.includes('ensures'),  'clause ensures encore presente');
-        assert.ok(!cil.includes('assigns'),  'clause assigns encore presente');
+        // but NO ACSL annotations
+        assert.ok(!cil.includes('/*@'),      'ACSL marker /*@ still present');
+        assert.ok(!cil.includes('requires'), 'requires clause still present');
+        assert.ok(!cil.includes('ensures'),  'ensures clause still present');
+        assert.ok(!cil.includes('assigns'),  'assigns clause still present');
     });
 });

@@ -5,7 +5,7 @@ import { openBenchmark, activateExtension, waitForFileWritten, cleanFile, getWor
 
 suite('showLocalMetrics', () => {
 
-    test('produit un rapport de metriques par fonction', async function() {
+    test('produces a per-function metrics report', async function() {
         this.timeout(60000);
 
         await openBenchmark('metrics/test.c');
@@ -17,15 +17,15 @@ suite('showLocalMetrics', () => {
         await vscode.commands.executeCommand('showLocalMetrics');
         const report = await waitForFileWritten(outFile);
 
-        // les 4 fonctions doivent etre mentionnees
-        assert.ok(report.includes('trivial'),   'fonction trivial absente du rapport');
-        assert.ok(report.includes('branchy'),   'fonction branchy absente du rapport');
-        assert.ok(report.includes('with_loop'), 'fonction with_loop absente du rapport');
-        assert.ok(report.includes('ptr_ops'),   'fonction ptr_ops absente du rapport');
+        // all 4 functions must appear in the report
+        assert.ok(report.includes('trivial'),   'function trivial missing from report');
+        assert.ok(report.includes('branchy'),   'function branchy missing from report');
+        assert.ok(report.includes('with_loop'), 'function with_loop missing from report');
+        assert.ok(report.includes('ptr_ops'),   'function ptr_ops missing from report');
 
-        // le rapport doit contenir des indicateurs classiques
-        // (frama-c metrics genere: sloc, ifs, loops, calls, pointer dereferencing, cyclomatic)
+        // report must contain standard metric indicators
+        // (frama-c metrics generates: sloc, ifs, loops, calls, pointer dereferencing, cyclomatic)
         const hasMetricKeyword = /sloc|cyclomatic|ifs|loops|calls/i.test(report);
-        assert.ok(hasMetricKeyword, 'aucun indicateur classique de metrics trouve');
+        assert.ok(hasMetricKeyword, 'no standard metric indicator found');
     });
 });

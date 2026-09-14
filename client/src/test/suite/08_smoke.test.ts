@@ -4,7 +4,7 @@ import { openBenchmark, activateExtension } from './helpers';
 
 suite('smokeTests', () => {
 
-    test('publie des diagnostics WP smoke sur impossible()', async function() {
+    test('publishes WP smoke diagnostics on impossible()', async function() {
         this.timeout(120000);
 
         const src = await openBenchmark('smoke/test.c');
@@ -12,11 +12,12 @@ suite('smokeTests', () => {
 
         const uri = vscode.Uri.file(src);
         const before = vscode.languages.getDiagnostics(uri).length;
-        console.log(`Diagnostics avant smokeTests : ${before}`);
+        console.log(`Diagnostics before smokeTests: ${before}`);
 
         await vscode.commands.executeCommand('smokeTests');
 
-       
+        // poll diagnostics — server uses synchronous execute_command
+        // diagnostics arrive after analysis completes
         const start = Date.now();
         let diags: readonly vscode.Diagnostic[] = [];
         while (Date.now() - start < 90000) {
@@ -25,14 +26,14 @@ suite('smokeTests', () => {
             await new Promise(r => setTimeout(r, 1000));
         }
 
-        console.log(`Diagnostics apres smokeTests : ${diags.length}`);
+        console.log(`Diagnostics after smokeTests: ${diags.length}`);
         diags.forEach(d =>
-            console.log(`  [sev:${d.severity}] ligne ${d.range.start.line + 1} : ${d.message.substring(0, 100)}`)
+            console.log(`  [sev:${d.severity}] line ${d.range.start.line + 1} : ${d.message.substring(0, 100)}`)
         );
 
         assert.ok(
             diags.length > before,
-            `aucun diagnostic smoke recu — attendu au moins 1 sur impossible()`
+            `no smoke diagnostic received — expected at least 1 on impossible()`
         );
 
         const hasSmokeDiag = diags.some(d =>
@@ -41,6 +42,6 @@ suite('smokeTests', () => {
             d.message.toLowerCase().includes('doomed') ||
             d.message.toLowerCase().includes('impossible')
         );
-        assert.ok(hasSmokeDiag, 'aucun diagnostic smoke/failed/doomed trouve');
+        assert.ok(hasSmokeDiag, 'no smoke/failed/doomed diagnostic found');
     });
 });

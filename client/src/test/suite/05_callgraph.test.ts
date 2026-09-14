@@ -5,14 +5,14 @@ import { openBenchmark, activateExtension, waitForFileWritten, cleanFile, getWor
 
 suite('computeCG', () => {
 
-    test('genere le graphe .dot avec les bons noeuds et aretes', async function() {
+    test('generates .dot graph with correct nodes and edges', async function() {
         this.timeout(60000);
 
         await openBenchmark('callgraph/test.c');
         await activateExtension();
 
-        // le serveur ecrit le .dot (texte) puis convertit en .dot.pdf.
-        // on teste le .dot qui est parsable.
+        // server writes the .dot file (text) then converts to .dot.pdf
+        // we test the .dot file which is parsable
         const dotFile = path.join(getWorkspacePath(), '.frama-c', 'fc_test.dot');
         cleanFile(dotFile);
         cleanFile(dotFile + '.pdf');
@@ -20,17 +20,17 @@ suite('computeCG', () => {
         await vscode.commands.executeCommand('computeCG');
         const dot = await waitForFileWritten(dotFile);
 
-        // format graphviz
-        assert.ok(dot.includes('digraph') || dot.includes('graph'), 'pas un fichier .dot valide');
+        // graphviz format
+        assert.ok(dot.includes('digraph') || dot.includes('graph'), 'not a valid .dot file');
 
-        // les 5 fonctions doivent etre des noeuds
-        assert.ok(dot.includes('helper'),    'noeud helper absent');
-        assert.ok(dot.includes('process_a'), 'noeud process_a absent');
-        assert.ok(dot.includes('process_b'), 'noeud process_b absent');
-        assert.ok(dot.includes('entry'),     'noeud entry absent');
+        // the 4 connected functions must appear as nodes
+        assert.ok(dot.includes('helper'),    'node helper missing');
+        assert.ok(dot.includes('process_a'), 'node process_a missing');
+        assert.ok(dot.includes('process_b'), 'node process_b missing');
+        assert.ok(dot.includes('entry'),     'node entry missing');
 
-        // arete entry -> process_a (syntaxe dot : "->" entre les deux)
+        // edge entry -> process_a (dot syntax: "->" between the two)
         const hasEntryToA = /entry.*->.*process_a|process_a.*<-.*entry/.test(dot);
-        assert.ok(hasEntryToA, 'arete entry -> process_a absente');
+        assert.ok(hasEntryToA, 'edge entry -> process_a missing');
     });
 });

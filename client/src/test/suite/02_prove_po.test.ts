@@ -7,30 +7,29 @@ const TIMEOUT_WP = 120000;
 
 let cachedAll: any[] = [];
 
-// ── Parser le format string du serveur OCaml ──────────────────────────────────
-// Format: "status:goal_id:file_path:line: (provers):script:function:behavior\n"
+// ── Parse OCaml server string format ─────────────────────────────────────────
+// Format: "status:goal_id:file_path:line:(provers):script:function:behavior\n"
 function parseGoal(item: any): any {
     if (typeof item !== 'string') return item;
     const s = item.trim();
-    // Split sur : mais on sait que les champs sont dans cet ordre fixe
-    const firstColon  = s.indexOf(':');                          // après status
-    const secondColon = s.indexOf(':', firstColon + 1);         // après goal_id
-    const thirdColon  = s.indexOf(':', secondColon + 1);        // après file
-    const fourthColon = s.indexOf(':', thirdColon + 1);         // après line
-    const fifthColon  = s.indexOf(':', fourthColon + 1);        // après proverInfo
-    const sixthColon  = s.indexOf(':', fifthColon + 1);         // après script
-    const seventhColon = s.indexOf(':', sixthColon + 1);        // après function
+    const firstColon   = s.indexOf(':');
+    const secondColon  = s.indexOf(':', firstColon + 1);
+    const thirdColon   = s.indexOf(':', secondColon + 1);
+    const fourthColon  = s.indexOf(':', thirdColon + 1);
+    const fifthColon   = s.indexOf(':', fourthColon + 1);
+    const sixthColon   = s.indexOf(':', fifthColon + 1);
+    const seventhColon = s.indexOf(':', sixthColon + 1);
 
-    const status    = s.substring(0, firstColon).trim();
-    const goal      = s.substring(firstColon + 1, secondColon).trim();
-    const file      = s.substring(secondColon + 1, thirdColon).trim();
-    const line      = parseInt(s.substring(thirdColon + 1, fourthColon).trim(), 10);
+    const status     = s.substring(0, firstColon).trim();
+    const goal       = s.substring(firstColon + 1, secondColon).trim();
+    const file       = s.substring(secondColon + 1, thirdColon).trim();
+    const line       = parseInt(s.substring(thirdColon + 1, fourthColon).trim(), 10);
     const proverInfo = fourthColon > 0 ? s.substring(fourthColon + 1, fifthColon > 0 ? fifthColon : undefined).trim() : "";
-    const script    = fifthColon > 0 ? s.substring(fifthColon + 1, sixthColon > 0 ? sixthColon : undefined).trim() : "";
-    const func      = sixthColon > 0 ? s.substring(sixthColon + 1, seventhColon > 0 ? seventhColon : undefined).trim() : "";
-    const behavior  = seventhColon > 0 ? s.substring(seventhColon + 1).trim() : "";
+    const script     = fifthColon > 0 ? s.substring(fifthColon + 1, sixthColon > 0 ? sixthColon : undefined).trim() : "";
+    const func       = sixthColon > 0 ? s.substring(sixthColon + 1, seventhColon > 0 ? seventhColon : undefined).trim() : "";
+    const behavior   = seventhColon > 0 ? s.substring(seventhColon + 1).trim() : "";
 
-    // Détecter les provers depuis proverInfo ex: "(Qed 490ms) (Z3 70ms)"
+    // Detect provers from proverInfo e.g. "(Qed 490ms) (Z3 70ms)"
     const provers: any[] = [];
     const proverMatches = proverInfo.matchAll(/\((\w[\w\s\-\.]*?)\s*(?:\d+ms)?\)/g);
     for (const m of proverMatches) {
@@ -46,7 +45,7 @@ function parseGoal(item: any): any {
         proverInfo: proverInfo,
         script:    script,
         function:  func,
-        property:  goal,   // le goal_id contient le type (ensures, assigns, rte...)
+        property:  goal,
         verdict:   status === 'passed' ? 'valid' : 'unknown',
         provers:   provers,
         smoke:     goal.toLowerCase().includes('smoke'),
@@ -54,8 +53,8 @@ function parseGoal(item: any): any {
     };
 }
 
-// ── Helper pour extraire et parser la réponse brute ───────────────────────────
-// La réponse du serveur est [file, function, property, [strings]]
+// ── Extract and parse raw server response ─────────────────────────────────────
+// Server response format: [file, function, property, [strings]]
 function extractGoals(raw: any): any[] {
     if (!raw) return [];
     if (Array.isArray(raw) && raw.length === 4 && Array.isArray(raw[3])) {
@@ -65,7 +64,8 @@ function extractGoals(raw: any): any[] {
     return [];
 }
 
-// ── Mock showInputBox ──────────────────────────────────────────────────────────
+// ── Mock showInputBox ─────────────────────────────────────────────────────────
+// Headless environment has no UI — simulate user input for function/property/timeout
 function mockInputBox(fct: string, prop: string, timeout: string) {
     const original = vscode.window.showInputBox;
     (vscode.window as any).showInputBox = async (opts?: any) => {
@@ -87,146 +87,146 @@ suite('Test provePO', () => {
         await vscode.window.showTextDocument(doc);
         const ext = vscode.extensions.getExtension('innov-org.acsl-lsp')!;
         await ext.activate();
-        console.log("Attente initialisation serveur OCaml...");
+        console.log("Waiting for OCaml server initialization...");
         await new Promise(r => setTimeout(r, 10000));
 
         const original = mockInputBox('@all', '@all', '30');
-        console.log("Lancement provePO @all/@all (cache)...");
+        console.log("Running provePO @all/@all (cache)...");
         const raw = await vscode.commands.executeCommand('provePO');
         (vscode.window as any).showInputBox = original;
 
         cachedAll = extractGoals(raw);
-        console.log(`Cache prêt: ${cachedAll.length} goals parsés`);
+        console.log(`Cache ready: ${cachedAll.length} goals parsed`);
         if (cachedAll.length > 0) {
-            console.log("Exemple goal[0]:", JSON.stringify(cachedAll[0], null, 2));
+            console.log("Example goal[0]:", JSON.stringify(cachedAll[0], null, 2));
         }
     });
 
     // ── TEST 1 ────────────────────────────────────────────────────────────────
-    test('provePO @all/@all — structure de la réponse', async function () {
+    test('provePO @all/@all — response structure', async function () {
         this.timeout(TIMEOUT_WP);
-        assert.ok(cachedAll.length > 0, "Aucun goal retourné");
+        assert.ok(cachedAll.length > 0, "No goals returned");
         for (const goal of cachedAll) {
-            assert.ok('goal'     in goal, `Champ 'goal' manquant`);
-            assert.ok('property' in goal, `Champ 'property' manquant`);
-            assert.ok('file'     in goal, `Champ 'file' manquant`);
-            assert.ok('line'     in goal, `Champ 'line' manquant`);
-            assert.ok('function' in goal, `Champ 'function' manquant`);
-            assert.ok('passed'   in goal, `Champ 'passed' manquant`);
-            assert.ok('verdict'  in goal, `Champ 'verdict' manquant`);
-            assert.ok('provers'  in goal, `Champ 'provers' manquant`);
-            assert.ok('smoke'    in goal, `Champ 'smoke' manquant`);
+            assert.ok('goal'     in goal, `Field 'goal' missing`);
+            assert.ok('property' in goal, `Field 'property' missing`);
+            assert.ok('file'     in goal, `Field 'file' missing`);
+            assert.ok('line'     in goal, `Field 'line' missing`);
+            assert.ok('function' in goal, `Field 'function' missing`);
+            assert.ok('passed'   in goal, `Field 'passed' missing`);
+            assert.ok('verdict'  in goal, `Field 'verdict' missing`);
+            assert.ok('provers'  in goal, `Field 'provers' missing`);
+            assert.ok('smoke'    in goal, `Field 'smoke' missing`);
         }
         console.log(`✔ Total goals : ${cachedAll.length}`);
     });
 
     // ── TEST 2 ────────────────────────────────────────────────────────────────
-    test('provePO @all/@all — tous les goals passent', async function () {
-    this.timeout(TIMEOUT_WP);
-    assert.ok(cachedAll.length > 0, "Aucun goal");
+    test('provePO @all/@all — all goals pass', async function () {
+        this.timeout(TIMEOUT_WP);
+        assert.ok(cachedAll.length > 0, "No goals");
 
-    // Exclure les lemmes axiomatiques qui nécessitent un prouveur interactif
-    const failed = cachedAll.filter((g: any) => 
-        !g.passed && g.function !== '@axiomatic'
-    );
+        // exclude axiomatic lemmas that require an interactive prover
+        const failed = cachedAll.filter((g: any) =>
+            !g.passed && g.function !== '@axiomatic'
+        );
 
-    assert.strictEqual(failed.length, 0,
-        `${failed.length} goal(s) échoués :\n` +
-        failed.map((g: any) => `  - ${g.function} / ${g.goal} → ${g.verdict}`).join('\n')
-    );
+        assert.strictEqual(failed.length, 0,
+            `${failed.length} goal(s) failed:\n` +
+            failed.map((g: any) => `  - ${g.function} / ${g.goal} → ${g.verdict}`).join('\n')
+        );
 
-    const passed = cachedAll.filter((g: any) => g.passed).length;
-    const axiom = cachedAll.filter((g: any) => g.function === '@axiomatic').length;
-    console.log(`✔ ${passed}/${cachedAll.length} goals prouvés (${axiom} axiomatiques exclus)`);
-});
+        const passed = cachedAll.filter((g: any) => g.passed).length;
+        const axiom  = cachedAll.filter((g: any) => g.function === '@axiomatic').length;
+        console.log(`✔ ${passed}/${cachedAll.length} goals proved (${axiom} axiomatic excluded)`);
+    });
 
     // ── TEST 3 ────────────────────────────────────────────────────────────────
-    test('provePO @all/@all — fonctions attendues présentes', async function () {
+    test('provePO @all/@all — expected functions present', async function () {
         this.timeout(TIMEOUT_WP);
-        assert.ok(cachedAll.length > 0, "Aucun goal");
+        assert.ok(cachedAll.length > 0, "No goals");
         const functions: string[] = [...new Set<string>(cachedAll.map((g: any) => g.function as string))];
-        console.log("Fonctions prouvées:", functions);
+        console.log("Proved functions:", functions);
         const expected = ['increment', 'swap', 'sign', 'gauss', 'safe_div',
                           'safe_get', 'fill_zero', 'find_min_sorted', 'square', 'copy_point'];
         for (const fn of expected) {
-            assert.ok(functions.includes(fn), `Fonction '${fn}' absente des goals`);
+            assert.ok(functions.includes(fn), `Function '${fn}' missing from goals`);
         }
     });
 
     // ── TEST 4 ────────────────────────────────────────────────────────────────
-    test('provePO @all/@all — types de property couverts', async function () {
+    test('provePO @all/@all — property types covered', async function () {
         this.timeout(TIMEOUT_WP);
-        assert.ok(cachedAll.length > 0, "Aucun goal");
+        assert.ok(cachedAll.length > 0, "No goals");
         const goals: string[] = cachedAll.map((g: any) => (g.goal as string).toLowerCase());
-        assert.ok(goals.some(g => g.includes('assign')),   "Aucun goal 'assigns'");
-        assert.ok(goals.some(g => g.includes('ensures') || g.includes('post')), "Aucun goal 'ensures'");
-        assert.ok(goals.some(g => g.includes('invariant') || g.includes('loop')), "Aucun goal 'loop invariant'");
+        assert.ok(goals.some(g => g.includes('assign')),                                    "No 'assigns' goal found");
+        assert.ok(goals.some(g => g.includes('ensures') || g.includes('post')),             "No 'ensures' goal found");
+        assert.ok(goals.some(g => g.includes('invariant') || g.includes('loop')),           "No 'loop invariant' goal found");
         assert.ok(goals.some(g =>
             g.includes('rte') || g.includes('division') || g.includes('overflow') || g.includes('index')),
-            "Aucun goal RTE");
-        console.log("Types présents:", [...new Set<string>(goals.map(g => {
-            if (g.includes('ensures')) return 'ensures';
-            if (g.includes('assign')) return 'assigns';
+            "No RTE goal found");
+        console.log("Types present:", [...new Set<string>(goals.map(g => {
+            if (g.includes('ensures'))              return 'ensures';
+            if (g.includes('assign'))               return 'assigns';
             if (g.includes('invariant') || g.includes('loop')) return 'loop';
-            if (g.includes('rte')) return 'rte';
+            if (g.includes('rte'))                  return 'rte';
             return 'other';
         }))]);
     });
 
     // ── TEST 5 ────────────────────────────────────────────────────────────────
-    test('provePO increment — isolation par fonction', async function () {
+    test('provePO increment — isolation by function', async function () {
         this.timeout(TIMEOUT_WP);
         const original = mockInputBox('increment', '@all', '30');
         const raw = await vscode.commands.executeCommand('provePO');
         (vscode.window as any).showInputBox = original;
 
         const goals = extractGoals(raw);
-        assert.ok(goals.length > 0, "Aucun goal pour 'increment'");
+        assert.ok(goals.length > 0, "No goals for 'increment'");
         const functions: string[] = [...new Set<string>(goals.map((g: any) => g.function as string))];
         assert.ok(functions.every(f => f === 'increment'),
-            `Goals d'autres fonctions : ${functions.filter(f => f !== 'increment').join(', ')}`);
+            `Goals from other functions: ${functions.filter(f => f !== 'increment').join(', ')}`);
         console.log(`✔ increment : ${goals.filter((g: any) => g.passed).length}/${goals.length} goals`);
     });
 
     // ── TEST 6 ────────────────────────────────────────────────────────────────
-    test('provePO sign — behaviors nommés présents', async function () {
+    test('provePO sign — named behaviors present', async function () {
         this.timeout(TIMEOUT_WP);
         const original = mockInputBox('sign', '@all', '30');
         const raw = await vscode.commands.executeCommand('provePO');
         (vscode.window as any).showInputBox = original;
 
         const goals = extractGoals(raw);
-        assert.ok(goals.length > 0, "Aucun goal pour 'sign'");
+        assert.ok(goals.length > 0, "No goals for 'sign'");
 
-        // Le behavior est dans le goal_id ex: "typed_sign_positive_ensures_..."
+        // behavior is embedded in goal_id e.g. "typed_sign_positive_ensures_..."
         const behaviors: string[] = goals.map((g: any) => (g.goal as string).toLowerCase());
         console.log("Goals sign:", behaviors.slice(0, 3));
-        assert.ok(behaviors.some(b => b.includes('positive')), "Behavior 'positive' non trouvé dans goals");
-        assert.ok(behaviors.some(b => b.includes('zero')),     "Behavior 'zero' non trouvé dans goals");
-        assert.ok(behaviors.some(b => b.includes('negative')), "Behavior 'negative' non trouvé dans goals");
-        assert.strictEqual(goals.filter((g: any) => !g.passed).length, 0, "Goals échoués dans sign");
+        assert.ok(behaviors.some(b => b.includes('positive')), "Behavior 'positive' not found in goals");
+        assert.ok(behaviors.some(b => b.includes('zero')),     "Behavior 'zero' not found in goals");
+        assert.ok(behaviors.some(b => b.includes('negative')), "Behavior 'negative' not found in goals");
+        assert.strictEqual(goals.filter((g: any) => !g.passed).length, 0, "Failed goals in sign");
     });
 
     // ── TEST 7 ────────────────────────────────────────────────────────────────
-    test('provePO @all — provers qed utilisé', async function () {
+    test('provePO @all — prover qed used', async function () {
         this.timeout(TIMEOUT_WP);
-        assert.ok(cachedAll.length > 0, "Aucun goal");
+        assert.ok(cachedAll.length > 0, "No goals");
         const allProvers: string[] = cachedAll.flatMap((g: any) =>
             (g.provers as any[]).map((p: any) => (p.prover as string).toLowerCase())
         );
         console.log("Provers:", [...new Set<string>(allProvers)]);
-        assert.ok(allProvers.some(p => p.includes('qed')), "Prover 'qed' jamais utilisé");
+        assert.ok(allProvers.some(p => p.includes('qed')), "Prover 'qed' never used");
     });
 
     // ── TEST 8 ────────────────────────────────────────────────────────────────
-    test('provePO safe_div — RTE division prouvée', async function () {
+    test('provePO safe_div — RTE division proved', async function () {
         this.timeout(TIMEOUT_WP);
         const original = mockInputBox('safe_div', '@all', '30');
         const raw = await vscode.commands.executeCommand('provePO');
         (vscode.window as any).showInputBox = original;
 
         const goals = extractGoals(raw);
-        assert.ok(goals.length > 0, "Aucun goal pour 'safe_div'");
+        assert.ok(goals.length > 0, "No goals for 'safe_div'");
 
         const rteGoals = goals.filter((g: any) =>
             (g.goal as string).toLowerCase().includes('rte') ||
@@ -234,19 +234,19 @@ suite('Test provePO', () => {
             (g.proverInfo as string).toLowerCase().includes('rte')
         );
         console.log(`RTE goals safe_div : ${rteGoals.length}/${goals.length}`);
-        assert.ok(rteGoals.length > 0, "Aucun goal RTE pour safe_div");
-        assert.strictEqual(rteGoals.filter((g: any) => !g.passed).length, 0, "RTE non prouvé");
+        assert.ok(rteGoals.length > 0, "No RTE goal for safe_div");
+        assert.strictEqual(rteGoals.filter((g: any) => !g.passed).length, 0, "RTE not proved");
     });
 
     // ── TEST 9 ────────────────────────────────────────────────────────────────
-    test('provePO gauss — loop invariant prouvé', async function () {
+    test('provePO gauss — loop invariant proved', async function () {
         this.timeout(TIMEOUT_WP);
         const original = mockInputBox('gauss', '@all', '30');
         const raw = await vscode.commands.executeCommand('provePO');
         (vscode.window as any).showInputBox = original;
 
         const goals = extractGoals(raw);
-        assert.ok(goals.length > 0, "Aucun goal pour 'gauss'");
+        assert.ok(goals.length > 0, "No goals for 'gauss'");
 
         const loopGoals = goals.filter((g: any) =>
             (g.goal as string).toLowerCase().includes('invariant') ||
@@ -254,7 +254,7 @@ suite('Test provePO', () => {
             (g.goal as string).toLowerCase().includes('loop')
         );
         console.log(`Loop goals gauss : ${loopGoals.length}/${goals.length}`);
-        assert.ok(loopGoals.length > 0, "Aucun goal loop invariant/variant pour gauss");
-        assert.strictEqual(loopGoals.filter((g: any) => !g.passed).length, 0, "Loop goal non prouvé");
+        assert.ok(loopGoals.length > 0, "No loop invariant/variant goal for gauss");
+        assert.strictEqual(loopGoals.filter((g: any) => !g.passed).length, 0, "Loop goal not proved");
     });
 });

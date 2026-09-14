@@ -1,11 +1,11 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { openBenchmark, activateExtension, waitForFileWritten, cleanFile, getWorkspacePath } from './helpers';
+import { openBenchmark, activateExtension, cleanFile, getWorkspacePath } from './helpers';
 
 suite('ccdoc', () => {
 
-    test('genere le fichier LaTeX fc_ccdoc.tex', async function() {
+    test('generates the LaTeX file fc_ccdoc.tex', async function() {
         this.timeout(120000);
 
         await openBenchmark('ccdoc/test.c');
@@ -16,7 +16,8 @@ suite('ccdoc', () => {
 
         await vscode.commands.executeCommand('ccdoc');
 
-       
+        // poll the file — ccdoc uses synchronous execute_command
+        // the .tex file is written directly by the ccdoc plugin (no placeholder)
         const start = Date.now();
         let content = '';
         while (Date.now() - start < 90000) {
@@ -30,12 +31,12 @@ suite('ccdoc', () => {
             await new Promise(r => setTimeout(r, 1000));
         }
 
-        console.log(`fc_ccdoc.tex taille : ${content.length} chars`);
+        console.log(`fc_ccdoc.tex size: ${content.length} chars`);
 
-        assert.ok(content.length > 0, 'fc_ccdoc.tex vide ou absent');
+        assert.ok(content.length > 0, 'fc_ccdoc.tex is empty or missing');
         assert.ok(
             content.includes('\\') || content.includes('section') || content.includes('begin'),
-            'fc_ccdoc.tex ne semble pas etre du LaTeX valide'
+            'fc_ccdoc.tex does not appear to be valid LaTeX'
         );
     });
 });

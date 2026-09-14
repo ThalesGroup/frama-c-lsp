@@ -5,7 +5,7 @@ import { openBenchmark, activateExtension, waitForFileWritten, cleanFile, getWor
 
 suite('displayCIL', () => {
 
-    test('CIL normalise for, ternaire, court-circuit et return', async function() {
+    test('CIL normalizes for, ternary, short-circuit and return', async function() {
         this.timeout(60000);
 
         await openBenchmark('cil/test.c');
@@ -17,26 +17,26 @@ suite('displayCIL', () => {
         await vscode.commands.executeCommand('displayCIL');
         const cil = await waitForFileWritten(outFile);
 
-        // les 4 fonctions doivent apparaitre dans le CIL
-        assert.ok(cil.includes('abs_val'),  'fonction abs_val absente du CIL');
-        assert.ok(cil.includes('classify'), 'fonction classify absente du CIL');
-        assert.ok(cil.includes('sum_to'),   'fonction sum_to absente du CIL');
-        assert.ok(cil.includes('in_range'), 'fonction in_range absente du CIL');
+        // all 4 functions must appear in the CIL
+        assert.ok(cil.includes('abs_val'),  'function abs_val missing from CIL');
+        assert.ok(cil.includes('classify'), 'function classify missing from CIL');
+        assert.ok(cil.includes('sum_to'),   'function sum_to missing from CIL');
+        assert.ok(cil.includes('in_range'), 'function in_range missing from CIL');
 
-        // normalisation 1 : for -> while
-        assert.ok(cil.includes('while'), 'for non normalise en while');
-        assert.ok(!/\bfor\s*\(/.test(cil), 'for encore present dans le CIL');
+        // normalization 1 : for -> while
+        assert.ok(cil.includes('while'), 'for not normalized to while');
+        assert.ok(!/\bfor\s*\(/.test(cil), 'for still present in CIL');
 
-        // normalisation 2 : ternaire -> if/else + temporaire
-        // abs_val doit avoir une variable temporaire "tmp" et un if/else
+        // normalization 2 : ternary -> if/else + temporary variable
+        // abs_val must have a temporary variable "tmp" and an if/else
         const absValMatch = cil.match(/int\s+abs_val[\s\S]*?\n\}/);
-        assert.ok(absValMatch, 'abs_val introuvable dans la sortie');
+        assert.ok(absValMatch, 'abs_val not found in output');
         assert.ok(/int\s+tmp/.test(absValMatch![0]),
-            'ternaire non normalise — pas de temporaire dans abs_val');
+            'ternary not normalized — no temporary variable in abs_val');
 
-        // normalisation 3 : return multiples -> __retres + goto return_label
-        // classify a 3 return, ils doivent etre unifies
-        assert.ok(cil.includes('__retres'),      'return non normalise — __retres absent');
-        assert.ok(cil.includes('return_label'),  'return non normalise — return_label absent');
+        // normalization 3 : multiple returns -> __retres + goto return_label
+        // classify has 3 returns, they must be unified
+        assert.ok(cil.includes('__retres'),     'return not normalized — __retres missing');
+        assert.ok(cil.includes('return_label'), 'return not normalized — return_label missing');
     });
 });

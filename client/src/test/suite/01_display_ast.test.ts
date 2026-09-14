@@ -4,10 +4,10 @@ import * as path from 'path';
 
 suite('Test DisplayAST', () => {
 
-    test('DisplayAST retourne les 4 catégories AST', async function() {
+    test('DisplayAST returns the 4 AST categories', async function() {
         this.timeout(60000);
 
-const testFilePath = path.resolve(__dirname, '../../../benchmarks/display_ast/test.c');
+        const testFilePath = path.resolve(__dirname, '../../../benchmarks/display_ast/test.c');
         const uri = vscode.Uri.file(testFilePath);
         const document = await vscode.workspace.openTextDocument(uri);
         await vscode.window.showTextDocument(document);
@@ -15,72 +15,71 @@ const testFilePath = path.resolve(__dirname, '../../../benchmarks/display_ast/te
         const extension = vscode.extensions.getExtension('innov-org.acsl-lsp')!;
         await extension.activate();
 
-        console.log("Attente initialisation serveur OCaml...");
+        console.log("Waiting for OCaml server initialization...");
         await new Promise(resolve => setTimeout(resolve, 10000));
 
-        console.log("--- DÉBUT TEST DisplayAST ---");
+        console.log("--- START DisplayAST TEST ---");
 
         const response: any = await vscode.commands.executeCommand('DisplayAST');
 
-        console.log("Réponse brute:", JSON.stringify(response, null, 2));
+        console.log("Raw response:", JSON.stringify(response, null, 2));
 
         // ── Assertions ──────────────────────────────────────────────
 
-        assert.ok(response, "La réponse ne doit pas être undefined");
+        assert.ok(response, "Response must not be undefined");
 
-        // 1. Les 4 catégories existent
-        assert.ok(response.functions,   "La catégorie 'functions' doit exister");
-        assert.ok(response.globals,     "La catégorie 'globals' doit exister");
-        assert.ok(response.types,       "La catégorie 'types' doit exister");
-        assert.ok(response.annotations, "La catégorie 'annotations' doit exister");
+        // 1. All 4 categories exist
+        assert.ok(response.functions,   "Category 'functions' must exist");
+        assert.ok(response.globals,     "Category 'globals' must exist");
+        assert.ok(response.types,       "Category 'types' must exist");
+        assert.ok(response.annotations, "Category 'annotations' must exist");
 
-        // 2. Les catégories ne sont pas vides
+        // 2. Categories are not empty
         assert.ok(response.functions.length > 0,
-            `functions vide - reçu ${response.functions.length}`);
+            `functions is empty - received ${response.functions.length}`);
         assert.ok(response.globals.length > 0,
-            `globals vide - reçu ${response.globals.length}`);
+            `globals is empty - received ${response.globals.length}`);
         assert.ok(response.types.length > 0,
-            `types vide - reçu ${response.types.length}`);
+            `types is empty - received ${response.types.length}`);
         assert.ok(response.annotations.length > 0,
-            `annotations vide - reçu ${response.annotations.length}`);
+            `annotations is empty - received ${response.annotations.length}`);
 
-        // 3. Fonctions spécifiques présentes
-        // Fonctions spécifiques présentes
-const funcNames = response.functions.map((f: any) => f.name);
-assert.ok(funcNames.includes('add'),        "Fonction 'add' manquante");
-assert.ok(funcNames.includes('fill_zero'),  "Fonction 'fill_zero' manquante");
-assert.ok(funcNames.includes('factorial'),  "Fonction 'factorial' manquante");
-assert.ok(funcNames.includes('public_max'), "Fonction 'public_max' manquante");
+        // 3. Specific functions present
+        const funcNames = response.functions.map((f: any) => f.name);
+        assert.ok(funcNames.includes('add'),        "Function 'add' missing");
+        assert.ok(funcNames.includes('fill_zero'),  "Function 'fill_zero' missing");
+        assert.ok(funcNames.includes('factorial'),  "Function 'factorial' missing");
+        assert.ok(funcNames.includes('public_max'), "Function 'public_max' missing");
 
-// static appelée → présente dans l'AST
-assert.ok(funcNames.includes('max'),
-    "Fonction 'max' (static appelée par public_max) doit apparaître");
+        // static function called by public_max → present in AST
+        assert.ok(funcNames.includes('max'),
+            "Function 'max' (static, called by public_max) must appear");
 
-// déclaration sans corps → absente de l'AST (comportement Frama-C documenté)
-assert.ok(!funcNames.includes('external_func'),
-    "Déclaration sans corps ne doit pas apparaître");
+        // declaration without body → absent from AST (documented Frama-C behavior)
+        assert.ok(!funcNames.includes('external_func'),
+            "Declaration without body must not appear");
 
-        // 4. Globals spécifiques présents
+        // 4. Specific globals present
         const globalNames = response.globals.map((g: any) => g.name);
-        assert.ok(globalNames.includes('g_counter'), "Global 'g_counter' manquant");
-        assert.ok(globalNames.includes('g_MAX'),     "Global 'g_MAX' manquant");
+        assert.ok(globalNames.includes('g_counter'), "Global 'g_counter' missing");
+        assert.ok(globalNames.includes('g_MAX'),     "Global 'g_MAX' missing");
 
-        // 5. Types spécifiques présents
+        // 5. Specific types present
         const typeNames = response.types.map((t: any) => t.name);
-        assert.ok(typeNames.includes('point_t'),  "Type 'point_t' manquant");
-        assert.ok(typeNames.includes('status_t'), "Type 'status_t' manquant");
-        assert.ok(typeNames.includes('data_t'),   "Type 'data_t' manquant");
+        assert.ok(typeNames.includes('point_t'),  "Type 'point_t' missing");
+        assert.ok(typeNames.includes('status_t'), "Type 'status_t' missing");
+        assert.ok(typeNames.includes('data_t'),   "Type 'data_t' missing");
 
-        // 6. Annotations spécifiques présentes
+        // 6. Specific annotations present
         const annotNames = response.annotations.map((a: any) => a.name);
-        assert.ok(annotNames.includes('valid_buffer'), "Predicate 'valid_buffer' manquant");
-        assert.ok(annotNames.includes('max_commut'),   "Lemma 'max_commut' manquant");
-        assert.ok(annotNames.includes('SumProps'),     "Axiomatic 'SumProps' manquant");
+        assert.ok(annotNames.includes('valid_buffer'), "Predicate 'valid_buffer' missing");
+        assert.ok(annotNames.includes('max_commut'),   "Lemma 'max_commut' missing");
+        assert.ok(annotNames.includes('SumProps'),     "Axiomatic 'SumProps' missing");
 
         console.log(`✔ functions  : ${response.functions.length}`);
         console.log(`✔ globals    : ${response.globals.length}`);
         console.log(`✔ types      : ${response.types.length}`);
         console.log(`✔ annotations: ${response.annotations.length}`);
-        console.log("--- FIN TEST DisplayAST ---");
+        console.log("--- END DisplayAST TEST ---");
     });
 });
