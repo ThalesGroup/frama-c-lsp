@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'DBOUCHENNA_VM1_Linux' }
+    agent { label 'DBOUCHENNA_VM2_Linux' }
 
     environment {
         NODE_TLS_REJECT_UNAUTHORIZED = '0'
