@@ -29,7 +29,7 @@ suite('Dependency matrix (groups)', () => {
         await new Promise(res => setTimeout(res, 5_000));
 
         // This command must RETURN the result — it does not exist yet, so the test fails (red).
-        result = await vscode.commands.executeCommand<DepResult>('acsl.computeIncludeGraph');
+        result = await vscode.commands.executeCommand<DepResult>('computeIncludeGraph');
         assert.ok(result, 'Command returned nothing');
     });
 
