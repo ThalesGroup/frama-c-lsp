@@ -1,7 +1,11 @@
 {
     "kernel.includePaths": [],
     "kernel.sourceFiles": ["./global_metrics/main.c",
-        "./global_metrics/utils.c"],
+        "./global_metrics/utils.c","deptest/src/core/core.c",
+    "deptest/src/features/auth/auth.c",
+    "deptest/src/features/billing/billing.c",
+    "deptest/lib/util.c",
+    "deptest/misc/orphan.c"],
     "kernel.macros": [],
     "kernel.machdep": "gcc_x86_32",
     "kernel.noAnnot": false,
@@ -14,5 +18,11 @@
     "wp.script": "batch",
     "wp.session": ".frama-c",
     "metrics.byFunction": true,
-    "ccdoc.active": true
+    "ccdoc.active": true,
+    "dependencies.groups": [
+    { "name": "core",    "kind": "core",    "paths": ["deptest/src/core/"] },
+    { "name": "auth",    "kind": "feature", "paths": ["deptest/src/features/auth/"] },
+    { "name": "billing", "kind": "feature", "paths": ["deptest/src/features/billing/"] },
+    { "name": "libs",    "kind": "lib",     "paths": ["deptest/lib/"] }
+]
 }
