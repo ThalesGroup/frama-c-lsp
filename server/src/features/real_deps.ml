@@ -20,12 +20,7 @@ let kind_of_string = function
   | "core" -> Core | "feature" -> Feature | "lib" -> Lib
   | s -> failwith ("dep_groups: unknown kind " ^ s)
 
-(* ---------- Path matching with wildcards ----------
-   '*' matches any characters EXCEPT '/' (a single directory level),
-   like a shell glob: dir/start*.c matches dir/start1.c but not dir/sub/x.c.
-   A pattern ending with '/' (a directory) matches its whole subtree.
-   Matching is done on the path SUFFIX, so it works whether the file path
-   is absolute or relative. *)
+(* ---------- Path matching with wildcards ----------*)
 let regex_of_pattern p =
   let buf = Buffer.create (String.length p * 2) in
   String.iter (fun c ->

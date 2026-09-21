@@ -29,8 +29,14 @@ suite('Dependency matrix (groups)', () => {
         await new Promise(res => setTimeout(res, 5_000));
 
         // The command runs the dependency analysis and returns the raw result.
-        result = await vscode.commands.executeCommand<DepResult>('computeIncludeGraph');
-        assert.ok(result, 'Command returned nothing');
+        try {
+    result = await vscode.commands.executeCommand<DepResult>('acsl.computeDependencies');
+} catch (e) {
+    console.error('computeDependencies threw:', e);
+    throw e;
+}
+console.log('computeDependencies returned:', JSON.stringify(result));
+assert.ok(result, 'Command returned nothing');
     });
 
     test('declares the four groups', () => {
