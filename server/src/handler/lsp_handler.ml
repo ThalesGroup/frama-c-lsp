@@ -598,18 +598,17 @@ let execute_command prog args feature wrapper_port =
         Unix.close wrapper_sock;
         data
       | ComputeCallGraph_feature ofile ->
-        let prog = "dot" in
-        let args = [|"dot"; "-Tpdf"; Printf.sprintf "%s" ofile; "-o"; Printf.sprintf "%s.pdf" ofile|] in
-        let _status = execute_extra_command prog args in
-        let prog = "evince" in
-        let args = [|"evince"; Printf.sprintf "%s.pdf" ofile|] in
-        let _status = execute_extra_command prog args in
-        Options.Self.debug ~level:1 "No Error after executing frama-c command\n%!";
-        let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: (Printf.sprintf "Successful operation !") () in
-        let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
-        let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
-        Unix.close wrapper_sock;
-        data
+    let prog = "dot" in
+    let args = [|"dot"; "-Tpdf"; ofile; "-o"; Printf.sprintf "%s.pdf" ofile|] in
+    let _status = execute_extra_command prog args feature in
+    (* evince est inutile sous WSL : le PDF est ouvert côté VS Code / Windows.
+       On le retire pour éviter un process qui échoue faute de display. *)
+    Options.Self.debug ~level:1 "No Error after executing frama-c command\n%!";
+    let lsp_message = Lsp_types.ShowMessageParams.create ~type_: Lsp_types.MessageType.Info ~message: "Successful operation !" () in
+    let lsp_notification = Lsp_types.NotificationMessage.create ~jsonrpc:"2.0" ~method_:"window/showMessage" ~params: (Lsp_types.ShowMessageParams.json_of_t lsp_message) () in
+    let data = Json.save_string (Lsp_types.NotificationMessage.json_of_t lsp_notification) in
+    Unix.close wrapper_sock;
+    data
         )
       
   | _, "frama-c-gui" -> (
@@ -897,29 +896,25 @@ let rq_handler json_string wrapper_port =
  
         Lsp_types.CONTENT (data), pid
       end
-            | "computeRealDependencies" ->
+                  | "computeRealDependencies" ->
       Options.Self.debug ~level:1 "Real Deps Request triggered\n%!";
       let params = match request.params with Some (`Assoc f) -> f | _ -> [] in
-      let groups = Option.value ~default:(`List []) (List.assoc_opt "groups" params) in
+      let file_groups = Option.value ~default:(`Assoc []) (List.assoc_opt "fileGroups" params) in
+      let kinds = Option.value ~default:(`Assoc []) (List.assoc_opt "kinds" params) in
       let files =
         match List.assoc_opt "files" params with
         | Some (`List fs) -> List.filter_map (function `String s -> Some s | _ -> None) fs
         | _ -> []
       in
-      (* chemins relatifs au workspace -> absolus, le plugin ne connaît pas rootPath *)
       let abs p = if Filename.is_relative p then Filename.concat !rootPath p else p in
       let files = List.map abs files in
-      let absolutize = function
-        | `Assoc fs -> `Assoc (List.map (function
-            | "paths", `List ps ->
-                "paths", `List (List.map (function `String p -> `String (abs p) | x -> x) ps)
-            | kv -> kv) fs)
+      let file_groups = match file_groups with
+        | `Assoc kv -> `Assoc (List.map (fun (k, v) -> abs k, v) kv)
         | x -> x
       in
-      let groups = match groups with `List gs -> `List (List.map absolutize gs) | x -> x in
       let groups_file = ".frama-c/dep_groups.json" in
       let oc = open_out groups_file in
-      output_string oc (Json.save_string (`Assoc [ "groups", groups ]));
+      output_string oc (Json.save_string (`Assoc [ "fileGroups", file_groups; "kinds", kinds ]));
       close_out oc;
 
       let id_int = Utils.id_to_int id in

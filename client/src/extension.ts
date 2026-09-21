@@ -1315,24 +1315,30 @@ function resolvePattern(pattern: string): string[] {
     return fs.existsSync(pattern) ? [pattern] : [];
 }
 
-function collectGroupFiles(groups: DepGroup[]): string[] {
+
+function resolveFileGroups(groups: DepGroup[]): Record<string, string> {
     const ws = get_workspace();
-    const files = new Set<string>();
+    const table: Record<string, string> = {};
     for (const g of groups) {
         for (const p of g.paths) {
             const abs = path.isAbsolute(p) ? p : path.join(ws, p);
-            resolvePattern(abs).forEach(f => files.add(f));
+            for (const f of resolvePattern(abs)) {
+                table[path.resolve(f)] = g.name;   // path.resolve normalise
+            }
         }
     }
-    return [...files];
+    return table;
 }
-/* Source unique : lit la config, résout les fichiers, interroge le serveur. */
+
 async function fetchDependencies(): Promise<DepResult | undefined> {
     const groups = vscode.workspace.getConfiguration().get<DepGroup[]>('dependencies.groups') || [];
     if (groups.length === 0) return undefined;
-const files = collectGroupFiles(groups);
-console.log('collectGroupFiles ->', files);
-    return await client.sendRequest<DepResult>("computeRealDependencies", { groups, files });
+    const fileGroups = resolveFileGroups(groups);
+    // On envoie aussi la liste des kinds par groupe, pour la règle allowed côté serveur.
+    const kinds: Record<string, string> = {};
+    for (const g of groups) kinds[g.name] = g.kind;
+    return await client.sendRequest<DepResult>("computeRealDependencies",
+        { fileGroups, kinds, files: Object.keys(fileGroups) });
 }
 
 async function showGroupDependencyMatrix() {
