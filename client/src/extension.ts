@@ -874,10 +874,7 @@ catch (error) { vscode.window.showErrorMessage(`Failed to create file: ${error i
                 const filePath = item._localPath || item.file;
                 if (filePath) uniqueFiles.add(filePath);
             });
-            commands.registerCommand('acsl.computeDependencies', async (): Promise<DepResult | undefined> => {
-    return await fetchDependencies();
-});
-            
+   
             const options = ["all", ...Array.from(uniqueFiles).sort()];
             
             const choice = await window.showQuickPick(options, { 
@@ -889,6 +886,10 @@ catch (error) { vscode.window.showErrorMessage(`Failed to create file: ${error i
                 applyFiltersAndRefreshUI();
             }
         }),
+                   commands.registerCommand('acsl.computeDependencies', async (): Promise<DepResult | undefined> => {
+    return await fetchDependencies();
+}),
+          
 
 
         commands.registerCommand('wpFilters.filterType', async () => {

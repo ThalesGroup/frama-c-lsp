@@ -30,7 +30,7 @@ suite('Dependency matrix (groups)', () => {
 
         // The command runs the dependency analysis and returns the raw result.
         try {
-    result = await vscode.commands.executeCommand<DepResult>('computeIncludeGraph');
+result = await vscode.commands.executeCommand<DepResult>('acsl.computeDependencies');
 } catch (e) {
     console.error('computeDependencies threw:', e);
     throw e;
