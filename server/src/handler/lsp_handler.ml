@@ -897,26 +897,40 @@ let rq_handler json_string wrapper_port =
  
         Lsp_types.CONTENT (data), pid
       end
-      | "computeRealDependencies" -> 
+            | "computeRealDependencies" ->
       Options.Self.debug ~level:1 "Real Deps Request triggered\n%!";
-      let uri = match request.params with
-        | Some (`Assoc fields) -> (try match List.assoc "uri" fields with | `String s -> s | _ -> "" with Not_found -> "")
-        | _ -> ""
+      let params = match request.params with Some (`Assoc f) -> f | _ -> [] in
+      let groups = Option.value ~default:(`List []) (List.assoc_opt "groups" params) in
+      let files =
+        match List.assoc_opt "files" params with
+        | Some (`List fs) -> List.filter_map (function `String s -> Some s | _ -> None) fs
+        | _ -> []
       in
-      if uri = "" then 
-        let resp = Lsp_types.ResponseMessage.create ~jsonrpc:"2.0" ~id:id ~result:(`List []) () in
-        Lsp_types.CONTENT (Json.save_string (Lsp_types.ResponseMessage.json_of_t resp)), 1
-      else begin
-        let src_file = Utils.remove_file_scheme (Utils.remove_newline (Utils.remove_quotes uri)) in
-        let id_int = Utils.id_to_int id in
-        let kernel_opt = KernelOpt.create ~strategies:false () in
-        let feature = ComputeRealDependencies_feature (id_int, src_file) in
-        let lsp_opt = LspOpt.create (feature) in
-        let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files:[src_file] ~lsp:lsp_opt () in
-        let prog, args = (Command.args_of_t command) in
-        let data, pid = fork_execute_command prog args feature wrapper_port in
-        Lsp_types.CONTENT (data), pid
-      end
+      (* chemins relatifs au workspace -> absolus, le plugin ne connaît pas rootPath *)
+      let abs p = if Filename.is_relative p then Filename.concat !rootPath p else p in
+      let files = List.map abs files in
+      let absolutize = function
+        | `Assoc fs -> `Assoc (List.map (function
+            | "paths", `List ps ->
+                "paths", `List (List.map (function `String p -> `String (abs p) | x -> x) ps)
+            | kv -> kv) fs)
+        | x -> x
+      in
+      let groups = match groups with `List gs -> `List (List.map absolutize gs) | x -> x in
+      let groups_file = ".frama-c/dep_groups.json" in
+      let oc = open_out groups_file in
+      output_string oc (Json.save_string (`Assoc [ "groups", groups ]));
+      close_out oc;
+
+      let id_int = Utils.id_to_int id in
+      let kernel_opt = KernelOpt.create ~strategies:false () in
+      let feature = ComputeRealDependencies_feature (id_int, groups_file) in
+      let lsp_opt = LspOpt.create feature in
+      let command = Command.create ~port:wrapper_port ~strategies:false ~kernel:kernel_opt ~files ~lsp:lsp_opt () in
+      Options.Self.feedback ~level:1 "Command = %s\n%!" (Command.string_of_t command);
+      let prog, args = Command.args_of_t command in
+      let data, pid = fork_execute_command prog args feature wrapper_port in
+      Lsp_types.CONTENT (data), pid
       | "provePO" -> (* prove with WP *)
       let id = (Utils.id_to_int request.id) in
       Options.Self.debug ~level:1 "provePO, %d\n%!" id;

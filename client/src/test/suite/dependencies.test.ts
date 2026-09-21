@@ -28,8 +28,8 @@ suite('Dependency matrix (groups)', () => {
         // Let the OCaml LSP server start up.
         await new Promise(res => setTimeout(res, 5_000));
 
-        // This command must RETURN the result — it does not exist yet, so the test fails (red).
-        result = await vscode.commands.executeCommand<DepResult>('computeIncludeGraph');
+        // The command runs the dependency analysis and returns the raw result.
+        result = await vscode.commands.executeCommand<DepResult>('acsl.computeDependencies');
         assert.ok(result, 'Command returned nothing');
     });
 
@@ -61,8 +61,7 @@ suite('Dependency matrix (groups)', () => {
         assert.strictEqual(result.violations.length, 1);
     });
 
-    test('lists orphan.c as unassigned', () => {
-        const found = result.unassigned.some(f => f.replace(/\\/g, '/').endsWith('misc/orphan.c'));
-        assert.ok(found, 'misc/orphan.c should be unassigned, got ' + JSON.stringify(result.unassigned));
-    });
+    test('leaves nothing unassigned (all analysed files belong to a group)', () => {
+    assert.deepStrictEqual(result.unassigned, []);
+});
 });

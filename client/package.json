@@ -289,7 +289,7 @@
                 "command": "framaCExplorer.search",
                 "title": "Search AST",
                 "icon": "$(search)"
-            },
+            },{ "command": "acsl.computeDependencies", "title": "Compute Dependencies (data)" },
             {
                 "command": "wpGoalsView.downloadJson",
                 "title": "Export WP Results (JSON)",
@@ -489,6 +489,26 @@
                     }
                 }
             },
+            {
+    "title": "Frama-C/Dependencies",
+    "properties": {
+        "dependencies.groups": {
+            "scope": "workspace",
+            "type": "array",
+            "default": [],
+            "description": "Dependency groups for the group matrix. Paths are directory prefixes relative to the workspace. Allowed: feature -> core, anything -> lib.",
+            "items": {
+                "type": "object",
+                "required": ["name", "kind", "paths"],
+                "properties": {
+                    "name": { "type": "string" },
+                    "kind": { "type": "string", "enum": ["core", "feature", "lib"] },
+                    "paths": { "type": "array", "items": { "type": "string" } }
+                }
+            }
+        }
+    }
+},
             {
                 "title": "Frama-C/kernel",
                 "properties": {

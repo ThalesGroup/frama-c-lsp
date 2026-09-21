@@ -1,15 +1,11 @@
 {
-    "kernel.includePaths": [],
+    "kernel.includePaths": ["deptest/lib", "deptest/src/core"],
     "kernel.sourceFiles": ["./global_metrics/main.c",
-        "./global_metrics/utils.c","deptest/src/core/core.c",
-    "deptest/src/features/auth/auth.c",
-    "deptest/src/features/billing/billing.c",
-    "deptest/lib/util.c",
-    "deptest/misc/orphan.c"],
+        "./global_metrics/utils.c"],
     "kernel.macros": [],
     "kernel.machdep": "gcc_x86_32",
     "kernel.noAnnot": false,
-    "kerne.lspDebug": 3,
+    "kernel.lspDebug": 3,
     "wp.rte": true,
     "wp.prover": "script,alt-ergo",
     "wp.timeout": 30,
@@ -20,9 +16,9 @@
     "metrics.byFunction": true,
     "ccdoc.active": true,
     "dependencies.groups": [
-    { "name": "core",    "kind": "core",    "paths": ["deptest/src/core/"] },
-    { "name": "auth",    "kind": "feature", "paths": ["deptest/src/features/auth/"] },
-    { "name": "billing", "kind": "feature", "paths": ["deptest/src/features/billing/"] },
-    { "name": "libs",    "kind": "lib",     "paths": ["deptest/lib/"] }
+   { "name": "core",    "kind": "core",    "paths": ["deptest/src/core/*.c"] },
+        { "name": "auth",    "kind": "feature", "paths": ["deptest/src/features/auth/*.c"] },
+        { "name": "billing", "kind": "feature", "paths": ["deptest/src/features/billing/*.c"] },
+        { "name": "libs",    "kind": "lib",     "paths": ["deptest/lib/*.c"] }
 ]
 }

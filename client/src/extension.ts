@@ -254,7 +254,10 @@ async function initializeDefaultSettings() {
     const defaultSettings = {
         "kernel.includePaths": [],
         "kernel.sourceFiles": [],
-        
+        "dependencies.groups": [
+    { "name": "core", "kind": "core",    "paths": ["src/core/"] },
+    { "name": "libs", "kind": "lib",     "paths": ["lib/"] }
+],
         "kernel.macros": [],
 
         "vscodeacsl.maxNumberOfProblems": 100000,
@@ -614,7 +617,7 @@ commands.registerCommand('framaC.refreshAST', () => {
                 const filePathOut = path.join(workspacePath, ".frama-c", "fc_" + fileNameBase + ".dot.pdf");
                 if (!fs.existsSync(filePathOut)) {
                     try { fs.writeFileSync(filePathOut, 'Task in progress ...'); }
-                    catch (error) { vscode.window.showErrorMessage(`Failed to create file: ${error.message}`); }
+catch (error) { vscode.window.showErrorMessage(`Failed to create file: ${error instanceof Error ? error.message : String(error)}`); }
                 }
                 await vscode.commands.executeCommand('revealInExplorer', vscode.Uri.file(filePathOut));
                 await client.sendNotification('computeCG', filePath);
@@ -647,7 +650,7 @@ commands.registerCommand('framaC.refreshAST', () => {
         }),
 
         commands.registerCommand('computeIncludeGraph', async () => {
-            await showRealIncludeMatrix();
+            await showGroupDependencyMatrix();
         }),
         // --- Proof Commands ---
         commands.registerCommand('showPOVC', async () => {
@@ -871,6 +874,9 @@ commands.registerCommand('framaC.refreshAST', () => {
                 const filePath = item._localPath || item.file;
                 if (filePath) uniqueFiles.add(filePath);
             });
+            commands.registerCommand('acsl.computeDependencies', async (): Promise<DepResult | undefined> => {
+    return await fetchDependencies();
+});
             
             const options = ["all", ...Array.from(uniqueFiles).sort()];
             
@@ -1270,102 +1276,151 @@ async function get_proof_args(gui: boolean) {
     if (!editor || !f || !p) return null;
     return [editor.document.fileName, f, p, parseInt(t || "10"), gui];
 }
-async function showRealIncludeMatrix() {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor) return;
+// --- DEPENDENCY MATRIX (groups) ---
+type DepGroup = { name: string; kind: "core" | "feature" | "lib"; paths: string[] };
+type DepEdge = { caller: string; callee: string; symbol: string };
+type DepCell = { from: string; to: string; count: number; edges: DepEdge[] };
+type DepResult = {
+    groups: string[];
+    matrix: DepCell[];
+    violations: DepCell[];
+    unassigned: string[];
+    unresolved_calls: { file: string; line: number }[];
+};
+function collectCFiles(dir: string, acc: string[] = []): string[] {
+    if (!fs.existsSync(dir)) return acc;
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) collectCFiles(full, acc);
+        else if (entry.name.endsWith('.c')) acc.push(full);
+    }
+    return acc;
+}
 
-    const uri = editor.document.uri.toString();
 
+function resolvePattern(pattern: string): string[] {
+    if (pattern.endsWith('/')) return collectCFiles(pattern);
+
+    if (pattern.includes('*')) {
+        const dir = path.dirname(pattern);
+        const base = path.basename(pattern); // ex: debut*.c
+        const re = new RegExp('^' + base.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]*') + '$');
+        if (!fs.existsSync(dir)) return [];
+        return fs.readdirSync(dir)
+            .filter(f => f.endsWith('.c') && re.test(f))
+            .map(f => path.join(dir, f));
+    }
+
+    return fs.existsSync(pattern) ? [pattern] : [];
+}
+
+function collectGroupFiles(groups: DepGroup[]): string[] {
+    const ws = get_workspace();
+    const files = new Set<string>();
+    for (const g of groups) {
+        for (const p of g.paths) {
+            const abs = path.isAbsolute(p) ? p : path.join(ws, p);
+            resolvePattern(abs).forEach(f => files.add(f));
+        }
+    }
+    return [...files];
+}
+/* Source unique : lit la config, résout les fichiers, interroge le serveur. */
+async function fetchDependencies(): Promise<DepResult | undefined> {
+    const groups = vscode.workspace.getConfiguration().get<DepGroup[]>('dependencies.groups') || [];
+    if (groups.length === 0) return undefined;
+const files = collectGroupFiles(groups);
+console.log('collectGroupFiles ->', files);
+    return await client.sendRequest<DepResult>("computeRealDependencies", { groups, files });
+}
+
+async function showGroupDependencyMatrix() {
+    const groups = vscode.workspace.getConfiguration().get<DepGroup[]>('dependencies.groups') || [];
+    if (groups.length === 0) {
+        vscode.window.showWarningMessage("Define 'dependencies.groups' in .vscode/settings.json first.");
+        return;
+    }
     try {
-        const realDependencies: any = await client.sendRequest("computeRealDependencies", { uri: uri });
-        
-        if (!realDependencies || Object.keys(realDependencies).length === 0) {
+        const res = await fetchDependencies();
+        if (!res || !res.groups) {
             vscode.window.showWarningMessage("No dependencies found.");
             return;
         }
-
-        const allFiles = new Set<string>();
-        
-        Object.entries(realDependencies).forEach(([caller, calleesMap]) => {
-    const cleanCaller = caller.trim();
-    if (cleanCaller && !cleanCaller.startsWith("<")) {
-        allFiles.add(cleanCaller);
-        
-        if (calleesMap && typeof calleesMap === 'object') {
-            Object.keys(calleesMap).forEach(callee => {
-                const cleanCallee = callee.trim();
-                if (cleanCallee && !cleanCallee.startsWith("<")) {
-                    allFiles.add(cleanCallee);
-                }
-            });
-        }
+        const panel = vscode.window.createWebviewPanel(
+            'depMatrix', 'Dependency Matrix (groups)', vscode.ViewColumn.Active, { enableScripts: true });
+        panel.webview.html = renderGroupMatrix(res, groups);
+    } catch (e) {
+        vscode.window.showErrorMessage("Matrix Error: " + e);
     }
-});
-
-        const sortedFiles = Array.from(allFiles).sort();
-
-        if (sortedFiles.length === 0) {
-            vscode.window.showWarningMessage("Matrix is empty after filtering.");
-            return;
-        }
-
-        const panel = vscode.window.createWebviewPanel('realMatrix', 'Dependency Matrix (AST)', vscode.ViewColumn.Active, { enableScripts: true });
-        
-        const htmlChunks: string[] = [`
-            <!DOCTYPE html><html><head><style>
-                body { font-family: sans-serif; padding: 20px; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
-                table { border-collapse: collapse; margin-top: 10px; }
-                th, td { border: 1px solid var(--vscode-panel-border); padding: 8px; text-align: center; min-width: 40px; }
-                th { background-color: var(--vscode-sideBar-background); font-size: 12px; }
-                
-                .yes { background-color: #2e7d32; color: white; cursor: help; position: relative; }
-                .self { background-color: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); opacity: 0.5; font-size: 10px; }
-                
-                .yes:hover::after {
-                    content: attr(data-symbols);
-                    position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%);
-                    background: #1e1e1e; color: #fff; padding: 8px; border-radius: 4px;
-                    font-size: 11px; white-space: pre; z-index: 1000; text-align: left;
-                    box-shadow: 0 4px 8px rgba(0,0,0,0.5); border: 1px solid #555;
-                }
-                .col-header { writing-mode: vertical-rl; transform: rotate(180deg); padding: 10px 5px; white-space: nowrap; }
-                .row-header { text-align: right; white-space: nowrap; font-weight: bold; background-color: var(--vscode-sideBar-background); }
-            </style></head><body>
-            <h2>Dependency Matrix (AST Analysis)</h2>
-            <p style="font-size: 0.8em; opacity: 0.7;">Rows: <b>Callers</b> (Who uses) | Columns: <b>Called</b> (Who is used)</p>
-            <table><thead><tr><th>Caller \\ Called</th>`];
-
-        sortedFiles.forEach(file => htmlChunks.push(`<th><div class="col-header">${file}</div></th>`));
-        htmlChunks.push('</tr></thead><tbody>');
-
-        sortedFiles.forEach(caller => {
-            htmlChunks.push(`<tr><td class="row-header">${caller}</td>`);
-            
-            sortedFiles.forEach(called => {
-                if (caller === called) {
-                    htmlChunks.push(`<td class="self" title="Self-reference">self</td>`);
-                } 
-                else {
-                    const symbols = (realDependencies[caller] && realDependencies[caller][called]) ? realDependencies[caller][called] : null;
-                    
-                    if (symbols && Array.isArray(symbols) && symbols.length > 0) {
-                        const firstSymbol = symbols[0];
-                        const othersCount = symbols.length - 1;
-                        const tooltip = othersCount > 0 
-                            ? `Used: ${firstSymbol} (+ ${othersCount} others)` 
-                            : `Used: ${firstSymbol}`;
-
-                        htmlChunks.push(`<td class="yes" data-symbols="${tooltip}">✔</td>`);
-                    } else {
-                        htmlChunks.push(`<td></td>`);
-                    }
-                }
-            });
-            htmlChunks.push('</tr>');
-        });
-
-        htmlChunks.push(`</tbody></table></body></html>`);
-        panel.webview.html = htmlChunks.join('');
-    } catch (e) { vscode.window.showErrorMessage("Matrix Error: " + e); }
 }
+
+function renderGroupMatrix(res: DepResult, groups: DepGroup[]): string {
+    const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+    const ws = get_workspace().replace(/\\/g, '/').replace(/\/$/, '') + '/';
+    const rel = (f: string) => f.replace(/\\/g, '/').replace(ws, '');
+    const kindOf = new Map(groups.map(g => [g.name, g.kind]));
+
+    const cells = new Map<string, { cell: DepCell; violation: boolean }>();
+    res.matrix.forEach(c => cells.set(`${c.from}|${c.to}`, { cell: c, violation: false }));
+    res.violations.forEach(c => cells.set(`${c.from}|${c.to}`, { cell: c, violation: true }));
+
+    const names = res.groups;
+    const th = names.map(n => `<th><div class="col">${esc(n)}<br><small>${kindOf.get(n) ?? ""}</small></div></th>`).join("");
+
+    const rows = names.map(from => {
+        const tds = names.map(to => {
+            if (from === to) return `<td class="self">–</td>`;
+            const hit = cells.get(`${from}|${to}`);
+            if (!hit) return `<td></td>`;
+            const cls = hit.violation ? "bad" : "ok";
+            return `<td class="${cls}" data-key="${esc(from)}|${esc(to)}">${hit.cell.count}</td>`;
+        }).join("");
+        return `<tr><th class="row">${esc(from)}</th>${tds}</tr>`;
+    }).join("");
+
+    const edgesJson = JSON.stringify(Object.fromEntries(
+        [...cells.entries()].map(([k, v]) => [k, v.cell.edges.map(e =>
+            ({ caller: rel(e.caller), callee: rel(e.callee), symbol: e.symbol }))])));
+
+    const list = (title: string, items: string[], cls = "") =>
+        items.length === 0 ? "" :
+        `<h3 class="${cls}">${title} (${items.length})</h3><ul>${items.map(i => `<li>${esc(i)}</li>`).join("")}</ul>`;
+
+    const violationsList = res.violations.map(v => `${v.from} → ${v.to} : ${v.count} call(s)`);
+    const unassigned = res.unassigned.map(rel);
+    const unresolved = res.unresolved_calls.map(u => `${rel(u.file)}:${u.line}`);
+
+    return `<!DOCTYPE html><html><head><style>
+        body { font-family: sans-serif; padding: 20px; color: var(--vscode-foreground); background: var(--vscode-editor-background); }
+        table { border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid var(--vscode-panel-border); padding: 8px 12px; text-align: center; min-width: 48px; }
+        th { background: var(--vscode-sideBar-background); }
+        th.row { text-align: right; }
+        .self { opacity: 0.4; }
+        .ok  { background: #2e7d32; color: #fff; cursor: pointer; }
+        .bad { background: #c62828; color: #fff; cursor: pointer; font-weight: bold; }
+        h3.bad { color: #ef5350; } h3.warn { color: #ffa726; }
+        #detail { margin-top: 20px; font-family: monospace; font-size: 12px; }
+        #detail td { text-align: left; }
+    </style></head><body>
+        <h2>Dependency Matrix (groups)</h2>
+        <p style="opacity:.7;font-size:.85em">Rows: callers · Columns: callees · Red = architecture violation · Click a cell for details</p>
+        <table><thead><tr><th>from \\ to</th>${th}</tr></thead><tbody>${rows}</tbody></table>
+        ${list("Violations", violationsList, "bad")}
+        ${list("Unassigned files (fix dependencies.groups)", unassigned, "warn")}
+        ${list("Unresolved indirect calls (add //@ calls)", unresolved, "warn")}
+        <div id="detail"></div>
+        <script>
+            const edges = ${edgesJson};
+            document.querySelectorAll('td[data-key]').forEach(td => td.addEventListener('click', () => {
+                const key = td.dataset.key;
+                const rows = (edges[key] || []).map(e =>
+                    '<tr><td>' + e.caller + '</td><td>' + e.callee + '</td><td>' + e.symbol + '</td></tr>').join('');
+                document.getElementById('detail').innerHTML =
+                    '<h3>' + key.replace('|', ' → ') + '</h3><table><tr><th>caller</th><th>callee</th><th>symbol</th></tr>' + rows + '</table>';
+            }));
+        </script>
+    </body></html>`;
+}
+
 export function deactivate() { if (client) return client.stop(); }

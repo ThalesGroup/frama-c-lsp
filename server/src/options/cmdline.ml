@@ -276,7 +276,10 @@ let run () =
       | Some Lsp_handler.DidSave_feature _ -> let data = List.map Json.save_string (DidSave.handle ()) in Options.Self.feedback ~level:1 "Updated Diagnostics !\n%!"; send_result data
       | Some Lsp_handler.ComputeCIL_feature -> send_result []
       | Some Lsp_handler.ComputeCallGraph_feature _ -> send_result []
-      | Some Lsp_handler.ComputeRealDependencies_feature(id, file) -> let data = [(Export_dependencies.compute_and_serialize id file)] in Options.Self.feedback ~level:1 "Deps Extraction done !\n%!"; send_result data 
+      | Some Lsp_handler.ComputeRealDependencies_feature (id, groups_file) ->
+          let data = [ Real_deps.compute_and_serialize id groups_file ] in
+          Options.Self.feedback ~level:1 "Deps Extraction done !\n%!";
+          send_result data
       | Some Lsp_handler.ComputeMetrics_feature -> send_result []
       | Some Lsp_handler.ComputeProofObligation_feature(root_path, id, file, line, ch) -> let data = [(ShowPOVC.get_property root_path id file line ch)] in Options.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; send_result data
       | Some Lsp_handler.ComputeProofObligationID_feature(id, goal_id) -> let data = [(ShowPOVC.get_property_from_id id goal_id)] in Options.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; send_result data
