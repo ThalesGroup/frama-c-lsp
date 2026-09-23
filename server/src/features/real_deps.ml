@@ -65,6 +65,8 @@ let file_edges () =
         Hashtbl.replace acc { caller; callee; symbol = Kernel_function.get_name dst } ()
     end) (Callgraph.Cg.get ());
   Hashtbl.fold (fun e () l -> e :: l) acc []
+
+
   let unresolved_calls resolved =
   let module G = Callgraph.Cg.G in
   let in_callgraph = Cil_datatype.Stmt.Hashtbl.create 64 in
@@ -86,12 +88,6 @@ let file_edges () =
   Visitor.visitFramacFileSameGlobals v (Ast.get ());
   !res
 
-(* ---------- Aggregation + JSON ---------- *)
-(* Arêtes déclarées manuellement par une clause //@ calls sur un appel.
-   Pour chaque statement d'appel qui porte une clause calls, on crée une
-   arête "fichier appelant -> fichier de chaque fonction déclarée".
-   Renvoie aussi l'ensemble des statements ainsi résolus, pour pouvoir
-   les retirer de unresolved_calls ensuite. *)
 let declared_edges () =
   let edges = ref [] in
   let resolved = Cil_datatype.Stmt.Hashtbl.create 64 in
@@ -117,12 +113,15 @@ let declared_edges () =
   end in
   Visitor.visitFramacFileSameGlobals v (Ast.get ());
   (!edges, resolved)
+
+
+
+(* ---------- Aggregation + JSON ---------- *)
+
 let compute_and_serialize id groups_file =
   let file_group = load_file_groups groups_file in
   let cells = Hashtbl.create 16 and unassigned = Hashtbl.create 16 in
-  (* NOUVEAU : arêtes déclarées par //@ calls + statements résolus. *)
   let decl_edges, resolved = declared_edges () in
-  (* On fusionne les arêtes du callgraph et celles des clauses. *)
   let all_edges = file_edges () @ decl_edges in
   List.iter (fun e ->
     match group_of file_group e.caller, group_of file_group e.callee with
@@ -131,7 +130,7 @@ let compute_and_serialize id groups_file =
         Hashtbl.replace cells (gs_name, gs_kind, gd_name, gd_kind) (e :: l)
     | None, _ -> Hashtbl.replace unassigned e.caller ()
     | _, None -> Hashtbl.replace unassigned e.callee ()
-    | _ -> ()) all_edges;    (* <-- on itère sur all_edges, plus sur file_edges () *)
+    | _ -> ()) all_edges;   
 
   let edge_json e =
     `Assoc [ "caller", `String e.caller; "callee", `String e.callee; "symbol", `String e.symbol ] in
