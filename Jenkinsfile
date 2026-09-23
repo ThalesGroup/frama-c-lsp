@@ -31,23 +31,16 @@ stage('Diagnostic zip') {
         }
     }
 }
-      stage('Build et Reparation') {
+     stage('Build et Reparation') {
     steps {
         dir('client') {
             echo "Nettoyage des anciens fichiers compiles..."
             sh 'rm -rf out/'
 
-            echo "Nettoyage et reparation des liens symboliques..."
-            sh 'rm -f node_modules/.bin/tsc'
-            
-            // Copier directement le vrai binaire tsc fourni par typescript
-            sh 'cp node_modules/typescript/bin/tsc node_modules/.bin/tsc'
-
-            echo "Attribution des droits d'execution..."
-            sh 'chmod +x node_modules/.bin/tsc'
-
             echo "Lancement de la compilation TypeScript..."
             sh 'npm run compile'
+            
+            echo "Attribution des droits d'execution sur run.sh..."
             sh 'chmod +x run.sh'
         }
     }

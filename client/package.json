@@ -867,7 +867,7 @@
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
-        "compile": "tsc -b",
+        "compile": "node node_modules/typescript/lib/tsc.js -b",
         "watch": "tsc -b -w",
         "lint": "eslint ./src --ext .ts,.tsx",
         "test": "sh ./scripts/e2e.sh"
