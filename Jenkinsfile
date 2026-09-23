@@ -21,7 +21,16 @@ pipeline {
                 }
             }
         }
-
+stage('Diagnostic zip') {
+    steps {
+        dir('client') {
+            sh 'echo "=== .bin (tsc/vsce) ==="; ls -la node_modules/.bin/ | grep -E "tsc|vsce" || echo "absents de .bin"'
+            sh 'echo "=== typescript/bin ==="; ls -la node_modules/typescript/bin/ || echo "PAS de node_modules/typescript/bin"'
+            sh 'echo "=== @vscode/vsce ==="; ls -la node_modules/@vscode/vsce/ | head || echo "PAS de @vscode/vsce"'
+            sh 'echo "=== racine ==="; ls -la'
+        }
+    }
+}
         stage('Build et Reparation') {
     steps {
         dir('client') {
