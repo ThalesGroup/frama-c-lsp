@@ -1,12 +1,22 @@
 <project xmlns:ivy="antlib:org.apache.ivy.ant" default="ivy-resolve">
-    
+
+    <!-- Nécessaire pour lire les credentials depuis l'environnement -->
+    <property environment="env"/>
+
     <target name="ivy-resolve" description="Download and extract dependencies">
-        <ivy:retrieve pattern="artifacts/[artifact].[ext]"/>
+        <mkdir dir="artifacts"/>
+        <echo message="Telechargement direct de vscode-deps.zip (racine du module) ..."/>
+        <get
+            src="https://artifactoryl2-emea.gemalto.com/embedded_l2_ID/com/thalesgroup/platform.jlep.id.vscode_deps/vscode-deps.zip"
+            dest="artifacts/vscode-deps.zip"
+            username="${env.ARTIFACTORYL2_EMEA_USERNAME}"
+            password="${env.ARTIFACTORYL2_EMEA_API_KEY}"
+            verbose="true"/>
         <echo message="Download done . Decompression ..."/>
         <unzip src="artifacts/vscode-deps.zip" dest="."/>
         <echo message=" succes !"/>
-    </target>    
-   
+    </target>
+
     <target name="generate-timestamp">
         <tstamp>
             <format property="revision" pattern="yyyyMMddHHmmss"/>
