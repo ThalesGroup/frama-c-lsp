@@ -31,7 +31,7 @@ stage('Diagnostic zip') {
         }
     }
 }
-        stage('Build et Reparation') {
+       stage('Build et Reparation') {
     steps {
         dir('client') {
             echo "Nettoyage des anciens fichiers compiles..."
@@ -40,11 +40,11 @@ stage('Diagnostic zip') {
             echo "Nettoyage et reparation des liens symboliques..."
             sh 'rm -f node_modules/.bin/tsc'
             
-            // Pointer directement vers le fichier JS interne de TypeScript
-            sh 'ln -s ../typescript/lib/tsc.js node_modules/.bin/tsc'
+            // Créer un wrapper exécutable propre qui appelle node sur tsc.js
+            sh 'echo "#!/usr/bin/env node" > node_modules/.bin/tsc'
+            sh 'cat node_modules/typescript/lib/tsc.js >> node_modules/.bin/tsc'
 
             echo "Attribution des droits d'execution..."
-            sh 'chmod +x node_modules/typescript/lib/tsc.js'
             sh 'chmod +x node_modules/.bin/tsc'
 
             echo "Lancement de la compilation TypeScript..."
