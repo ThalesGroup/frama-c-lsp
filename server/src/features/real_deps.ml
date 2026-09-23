@@ -65,30 +65,65 @@ let file_edges () =
         Hashtbl.replace acc { caller; callee; symbol = Kernel_function.get_name dst } ()
     end) (Callgraph.Cg.get ());
   Hashtbl.fold (fun e () l -> e :: l) acc []
-  let unresolved_calls () =
+  let unresolved_calls resolved =
   let module G = Callgraph.Cg.G in
-  let resolved = Cil_datatype.Stmt.Hashtbl.create 64 in
-  G.iter_edges_e (fun e -> Cil_datatype.Stmt.Hashtbl.replace resolved (G.E.label e) ())
+  let in_callgraph = Cil_datatype.Stmt.Hashtbl.create 64 in
+  G.iter_edges_e (fun e -> Cil_datatype.Stmt.Hashtbl.replace in_callgraph (G.E.label e) ())
     (Callgraph.Cg.get ());
   let res = ref [] in
   let v = object
     inherit Visitor.frama_c_inplace
     method! vstmt_aux s =
       (match s.skind with
-       | Instr (Call _) when not (Cil_datatype.Stmt.Hashtbl.mem resolved s) ->
+       | Instr (Call _)
+         when not (Cil_datatype.Stmt.Hashtbl.mem in_callgraph s)
+           && not (Cil_datatype.Stmt.Hashtbl.mem resolved s) ->
            let loc = Cil_datatype.Stmt.loc s in
            res := (file_of_loc loc, line_of_loc loc) :: !res
        | _ -> ());
-      DoChildren
+      Cil.DoChildren
   end in
   Visitor.visitFramacFileSameGlobals v (Ast.get ());
   !res
 
 (* ---------- Aggregation + JSON ---------- *)
-
+(* Arêtes déclarées manuellement par une clause //@ calls sur un appel.
+   Pour chaque statement d'appel qui porte une clause calls, on crée une
+   arête "fichier appelant -> fichier de chaque fonction déclarée".
+   Renvoie aussi l'ensemble des statements ainsi résolus, pour pouvoir
+   les retirer de unresolved_calls ensuite. *)
+let declared_edges () =
+  let edges = ref [] in
+  let resolved = Cil_datatype.Stmt.Hashtbl.create 64 in
+  let v = object (self)
+    inherit Visitor.frama_c_inplace
+    method! vstmt_aux s =
+      (match s.skind with
+       | Instr (Call _) ->
+           (match Dyncall.get s with
+            | None -> ()
+            | Some (_, kfs) ->
+                Cil_datatype.Stmt.Hashtbl.replace resolved s ();
+                let caller_kf = Option.get self#current_kf in
+                let caller = file_of_loc (Kernel_function.get_location caller_kf) in
+                List.iter (fun callee_kf ->
+                    let callee = file_of_loc (Kernel_function.get_location callee_kf) in
+                    let symbol = Kernel_function.get_name callee_kf in
+                    if caller <> callee then
+                      edges := { caller; callee; symbol } :: !edges
+                  ) kfs)
+       | _ -> ());
+      Cil.DoChildren
+  end in
+  Visitor.visitFramacFileSameGlobals v (Ast.get ());
+  (!edges, resolved)
 let compute_and_serialize id groups_file =
   let file_group = load_file_groups groups_file in
   let cells = Hashtbl.create 16 and unassigned = Hashtbl.create 16 in
+  (* NOUVEAU : arêtes déclarées par //@ calls + statements résolus. *)
+  let decl_edges, resolved = declared_edges () in
+  (* On fusionne les arêtes du callgraph et celles des clauses. *)
+  let all_edges = file_edges () @ decl_edges in
   List.iter (fun e ->
     match group_of file_group e.caller, group_of file_group e.callee with
     | Some (gs_name, gs_kind), Some (gd_name, gd_kind) when gs_name <> gd_name ->
@@ -96,7 +131,7 @@ let compute_and_serialize id groups_file =
         Hashtbl.replace cells (gs_name, gs_kind, gd_name, gd_kind) (e :: l)
     | None, _ -> Hashtbl.replace unassigned e.caller ()
     | _, None -> Hashtbl.replace unassigned e.callee ()
-    | _ -> ()) (file_edges ());
+    | _ -> ()) all_edges;    (* <-- on itère sur all_edges, plus sur file_edges () *)
 
   let edge_json e =
     `Assoc [ "caller", `String e.caller; "callee", `String e.callee; "symbol", `String e.symbol ] in
@@ -118,7 +153,7 @@ let compute_and_serialize id groups_file =
     "violations", `List violations;
     "unassigned", `List (Hashtbl.fold (fun f () l -> `String f :: l) unassigned []);
     "unresolved_calls", `List (List.map (fun (f, l) ->
-        `Assoc [ "file", `String f; "line", `Int l ]) (unresolved_calls ()));
+        `Assoc [ "file", `String f; "line", `Int l ]) (unresolved_calls resolved));
   ] in
   let msg = Lsp_types.ResponseMessage.create
       ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result () in
