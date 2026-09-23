@@ -40,12 +40,12 @@ stage('Diagnostic zip') {
             echo "Nettoyage et reparation des liens symboliques..."
             sh 'rm -f node_modules/.bin/tsc'
             
-            // Utilisation du chemin absolu de l'espace de travail Jenkins
-            sh 'ln -s $(pwd)/node_modules/typescript/bin/tsc node_modules/.bin/tsc || true'
+            // Pointer directement vers le fichier JS interne de TypeScript
+            sh 'ln -s ../typescript/lib/tsc.js node_modules/.bin/tsc'
 
             echo "Attribution des droits d'execution..."
-            sh 'chmod +x node_modules/typescript/bin/tsc || true'
-            sh 'chmod +x node_modules/.bin/tsc || true'
+            sh 'chmod +x node_modules/typescript/lib/tsc.js'
+            sh 'chmod +x node_modules/.bin/tsc'
 
             echo "Lancement de la compilation TypeScript..."
             sh 'npm run compile'
