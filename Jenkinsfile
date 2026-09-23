@@ -59,9 +59,11 @@ stage('Diagnostic zip') {
        stage('Tests E2E avec Ecran Virtuel') {
     steps {
         dir('client') {
-            echo "Correction des droits sur vsce..."
-            sh 'chmod +x node_modules/.bin/vsce || true'
-            sh 'chmod +x node_modules/@vscode/vsce/bin/vsce || true'
+            echo "Correction de l'exécutable vsce..."
+            sh 'rm -f node_modules/.bin/vsce'
+            sh 'echo "#!/usr/bin/env node" > node_modules/.bin/vsce'
+            sh 'cat node_modules/@vscode/vsce/out/vsce.js >> node_modules/.bin/vsce'
+            sh 'chmod +x node_modules/.bin/vsce'
 
             echo "Demarrage de xvfb et lancement des tests..."
             sh 'find .vscode-test -type f -exec chmod +x {} +'
