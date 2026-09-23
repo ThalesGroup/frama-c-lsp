@@ -21,30 +21,30 @@ pipeline {
                 }
             }
         }
-stage('Diagnostic zip') {
-    steps {
-        dir('client') {
-            sh 'echo "=== .bin (tsc/vsce) ==="; ls -la node_modules/.bin/ | grep -E "tsc|vsce" || echo "absents de .bin"'
-            sh 'echo "=== typescript/bin ==="; ls -la node_modules/typescript/bin/ || echo "PAS de node_modules/typescript/bin"'
-            sh 'echo "=== @vscode/vsce ==="; ls -la node_modules/@vscode/vsce/ | head || echo "PAS de @vscode/vsce"'
-            sh 'echo "=== racine ==="; ls -la'
-        }
-    }
-}
-     stage('Build et Reparation') {
-    steps {
-        dir('client') {
-            echo "Nettoyage des anciens fichiers compiles..."
-            sh 'rm -rf out/'
 
-            echo "Lancement de la compilation TypeScript..."
-            sh 'npm run compile'
-            
-            echo "Attribution des droits d'execution sur run.sh..."
-            sh 'chmod +x run.sh'
+        stage('Build et Reparation') {
+            steps {
+                dir('client') {
+                    echo "Nettoyage des anciens fichiers compiles..."
+                    sh 'rm -rf out/'
+
+                    echo "Reparation propre des binaires node_modules..."
+                    // 1. Forcer le package.json à utiliser la compilation directe via node si besoin, ou réparer le lien tsc
+                    sh 'rm -f node_modules/.bin/tsc'
+                    sh 'ln -s ../typescript/bin/tsc node_modules/.bin/tsc || true'
+                    sh 'chmod +x node_modules/typescript/bin/tsc || true'
+
+                    // 2. Réparer le binaire vsce qui pose souvent problème avec les archives Artifactory
+                    sh 'rm -f node_modules/.bin/vsce'
+                    sh 'if [ -f node_modules/@vscode/vsce/vsce ]; then ln -s ../@vscode/vsce/vsce node_modules/.bin/vsce; fi || true'
+                    sh 'chmod +x node_modules/.bin/vsce || true'
+
+                    echo "Lancement de la compilation TypeScript..."
+                    sh 'npm run compile'
+                    sh 'chmod +x run.sh'
+                }
+            }
         }
-    }
-}
         stage('Build et Install Serveur (OCaml)') {
     steps {
         dir('server'){
@@ -56,15 +56,9 @@ stage('Diagnostic zip') {
     }
 }
 
-       stage('Tests E2E avec Ecran Virtuel') {
+        stage('Tests E2E avec Ecran Virtuel') {
     steps {
         dir('client') {
-            echo "Correction de l'exécutable vsce..."
-            sh 'rm -f node_modules/.bin/vsce'
-            sh 'echo "#!/usr/bin/env node" > node_modules/.bin/vsce'
-            sh 'cat node_modules/@vscode/vsce/out/vsce.js >> node_modules/.bin/vsce'
-            sh 'chmod +x node_modules/.bin/vsce'
-
             echo "Demarrage de xvfb et lancement des tests..."
             sh 'find .vscode-test -type f -exec chmod +x {} +'
             sh 'eval $(opam env) && xvfb-run -a npm test -- --logLevel=off'
