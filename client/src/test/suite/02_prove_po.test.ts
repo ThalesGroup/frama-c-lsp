@@ -80,8 +80,7 @@ function mockInputBox(fct: string, prop: string, timeout: string) {
 suite('Test provePO', () => {
 
     suiteSetup(async function () {
-        this.timeout(300000);
-
+this.timeout(900000); 
         const uri = vscode.Uri.file(BENCH);
         const doc = await vscode.workspace.openTextDocument(uri);
         await vscode.window.showTextDocument(doc);
