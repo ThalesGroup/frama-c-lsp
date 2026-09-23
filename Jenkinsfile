@@ -56,9 +56,13 @@ stage('Diagnostic zip') {
     }
 }
 
-        stage('Tests E2E avec Ecran Virtuel') {
+       stage('Tests E2E avec Ecran Virtuel') {
     steps {
         dir('client') {
+            echo "Correction des droits sur vsce..."
+            sh 'chmod +x node_modules/.bin/vsce || true'
+            sh 'chmod +x node_modules/@vscode/vsce/bin/vsce || true'
+
             echo "Demarrage de xvfb et lancement des tests..."
             sh 'find .vscode-test -type f -exec chmod +x {} +'
             sh 'eval $(opam env) && xvfb-run -a npm test -- --logLevel=off'
