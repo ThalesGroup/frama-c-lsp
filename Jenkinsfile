@@ -39,7 +39,9 @@ stage('Diagnostic zip') {
 
             echo "Nettoyage et reparation des liens symboliques..."
             sh 'rm -f node_modules/.bin/tsc'
-            sh 'ln -s ../typescript/bin/tsc node_modules/.bin/tsc || true'
+            
+            // Utilisation du chemin absolu de l'espace de travail Jenkins
+            sh 'ln -s $(pwd)/node_modules/typescript/bin/tsc node_modules/.bin/tsc || true'
 
             echo "Attribution des droits d'execution..."
             sh 'chmod +x node_modules/typescript/bin/tsc || true'
