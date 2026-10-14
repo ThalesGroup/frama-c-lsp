@@ -6,20 +6,19 @@ async function main() {
         const extensionDevelopmentPath = path.resolve(__dirname, '../../');
         const extensionTestsPath = path.resolve(__dirname, './suite/index');
 
-        const workspacePath = '/home/user/git/L2/code';
-
+        // Workspace = le dossier benchmark, avec son .vscode/settings.json
+const workspacePath = path.resolve(__dirname, '../../benchmarks');
         await runTests({
             extensionDevelopmentPath,
             extensionTestsPath,
-            
-            extensionTestsEnv: { 
+            version: '1.115.0',
+            extensionTestsEnv: {
                 ...process.env,
                 "VSCODE_SKIP_DOWNLOAD": "true"
             },
-            
             launchArgs: [
                 workspacePath,
-                '--disable-extensions' 
+                '--disable-extensions'
             ]
         });
     } catch (err) {
@@ -29,4 +28,3 @@ async function main() {
 }
 
 main();
-

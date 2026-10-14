@@ -74,7 +74,7 @@ async function uploadWpJson() {
             }) || "";
         }
 
-        await processWpData(rawData, `Imported ${rawData.length} goals successfully.`, keepOriginalPaths, normalizedPath);
+        await processWpData(rawData, `Imported ${rawData.length} goals successfully.`);
         vscode.commands.executeCommand('wpGoalsView.focus');
     } catch (err) {
         vscode.window.showErrorMessage("Error during import: " + err);
@@ -273,13 +273,14 @@ async function initializeDefaultSettings() {
         "wp.checkMemoryModel": true,
         "wp.noVolatile": false,
         "wp.rte": true,
+        "wp.autoProveFunctions":[],
         "wp.prover": "script,alt-ergo",
         "wp.timeout": 2,
         "wp.model": "Typed+var+int+float",
         "wp.par": 8,
         "wp.cache": "update",
         "wp.script": "batch",
-        "wp.session": ".framaC",
+        "wp.session": ".frama-C",
         "wp.autoDepth": 20,
         "wp.autoWidth": 1,
 
@@ -302,7 +303,7 @@ async function initializeDefaultSettings() {
 
     try {
         fs.writeFileSync(settingsPath, JSON.stringify(defaultSettings, null, 4), 'utf-8');
-        vscode.window.showInformationMessage("JCAT configuration initialized successfully.");
+        vscode.window.showInformationMessage("configuration initialized successfully.");
     } catch (error) {
         console.error("Initialization error:", error);
     }
@@ -696,9 +697,11 @@ commands.registerCommand('framaC.refreshAST', () => {
                 wpDataProvider.update(res);
                 wpDataProvider.refresh();
                 window.showInformationMessage('Proof results updated');
+                return res;
             } catch (err) {
                 window.showErrorMessage('Failed to run WP proof: ' + err);
             }
+            
         }),
 
         commands.registerCommand('provePOStrategies', async () => {
@@ -784,20 +787,47 @@ commands.registerCommand('framaC.refreshAST', () => {
 
         // --- Specialized Cursor Commands ---
         commands.registerCommand('provePO Cursor', async () => {
-            try {
-                const editor = window.activeTextEditor;
-                if (!editor) return;
-                const timeout = await window.showInputBox({ prompt: `Launch Auto-Proof (Timeout in s)`, value: '10' });
-                if (!timeout) return;
-                const args = [editor.document.fileName, editor.selection.active.line, parseInt(timeout, 10)];
-                const res: any = await client.sendRequest('proveAuto', args);
-                if (res && Array.isArray(res)) {
-                    window.showInformationMessage(`Targeting '${res[2]}' in '${res[1]}'.`);
-                    wpDataProvider.update(res);
-                    wpDataProvider.refresh();
-                } else { window.showWarningMessage("No context detected."); }
-            } catch (err) { window.showErrorMessage('Error: ' + err); }
-        }),
+    try {
+        const editor = window.activeTextEditor;
+        if (!editor) return;
+
+        const timeout = await window.showInputBox({ 
+            prompt: `Launch Auto-Proof (Timeout in s)`, 
+            value: '10' 
+        });
+        if (!timeout) return;
+
+        const file = editor.document.fileName;
+        const line = editor.selection.active.line;
+
+        const ctx: any = await client.sendRequest('getContext', [file, line]);
+
+        if (!ctx || !Array.isArray(ctx) || ctx.length < 2) {
+            window.showWarningMessage("No context detected at cursor position.");
+            return;
+        }
+
+        const [funcName, propName] = ctx;
+
+        if (!funcName || funcName === '@none' || funcName === '') {
+            window.showWarningMessage("No function detected at cursor position.");
+            return;
+        }
+
+        window.showInformationMessage(`Detected: '${propName}' in '${funcName}'. Launching prove...`);
+
+        const proveArgs = [file, funcName, propName, parseInt(timeout, 10), false];
+        const res: any = await client.sendRequest('provePO', proveArgs);
+
+        if (res) {
+            wpDataProvider.update(res);
+            wpDataProvider.refresh();
+        }
+    } catch (err) { 
+        const msg = err instanceof Error ? err.message : String(err);
+        window.showErrorMessage('Error in auto-prove: ' + msg); 
+    }
+}),
 
         commands.registerCommand('stop', async () => {
             try { await client.sendRequest('stop'); window.showInformationMessage('Stopped processes'); }
@@ -1322,7 +1352,7 @@ async function showRealIncludeMatrix() {
                         const firstSymbol = symbols[0];
                         const othersCount = symbols.length - 1;
                         const tooltip = othersCount > 0 
-                            ? `Used: ${firstSymbol}\\n(+ ${othersCount} others)` 
+                            ? `Used: ${firstSymbol} (+ ${othersCount} others)` 
                             : `Used: ${firstSymbol}`;
 
                         htmlChunks.push(`<td class="yes" data-symbols="${tooltip}">✔</td>`);

@@ -66,9 +66,12 @@ let compute_and_serialize id _current_file_uri =
       current_file <- Filepath.to_string (fst loc).Filepath.pos_path;
       DoChildren
 
-    method! vvrbl vi =
-      let decl_file = Filepath.to_string (fst vi.vdecl).Filepath.pos_path in
-      add_dep current_file decl_file vi.vname;
+   method! vvrbl vi =
+      let is_global = (vi.vstorage = Extern) || (vi.vstorage = Static && vi.vglob) in
+      if is_global then begin
+         let decl_file = Filepath.to_string (fst vi.vdecl).Filepath.pos_path in
+         add_dep current_file decl_file vi.vname;
+      end;
       DoChildren
 
     method! vtype typ =

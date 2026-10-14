@@ -1,5 +1,5 @@
 pipeline {
-    agent {label 'DBOUCHENNA_VM1_Linux'}
+    agent { label 'DBOUCHENNA_VM1_Linux' }
 
     environment {
         NODE_TLS_REJECT_UNAUTHORIZED = '0'
@@ -7,59 +7,83 @@ pipeline {
     }
 
     stages {
-        stage('Recuperation des dependances') {
+
+        stage('Installation des dependances') {
             steps {
                 dir('client') {
-                    // Utilisation des identifiants stockes dans Jenkins pour Artifactory
-                    withCredentials([
-usernamePassword(credentialsId: "eddc7593-09ea-4939-96f8-6d455dfa4101", usernameVariable: 'ARTIFACTORYL1_EMEA_USERNAME', passwordVariable: 'ARTIFACTORYL1_EMEA_API_KEY'),
-usernamePassword(credentialsId: "22c9bebb-a044-4183-bbe5-53c052ac9201", usernameVariable: 'ARTIFACTORYL2_EMEA_USERNAME', passwordVariable: 'ARTIFACTORYL2_EMEA_API_KEY'),
-]){
-                        echo "Telechargement des artefacts depuis Artifactory..."
-                        sh 'bash ./downloadartifacts.sh'
-                    }
+                    echo "Installation propre des dependances npm..."
+                    sh 'rm -rf node_modules'
+                    sh 'npm ci'
+
+                    echo "Verification des paquets critiques..."
+                    sh '''
+                        for pkg in "@vscode/test-electron" "mocha" "typescript" "vscode-languageclient"; do
+                            if [ -d "node_modules/$pkg" ]; then
+                                echo "OK     : $pkg"
+                            else
+                                echo "MANQUE : $pkg"
+                                missing=1
+                            fi
+                        done
+                        [ -z "$missing" ] || exit 1
+                    '''
                 }
             }
         }
 
-        stage('Build et Reparation') {
+        stage('Build client TypeScript') {
             steps {
                 dir('client') {
-                    echo "Nettoyage et reparation des liens symboliques..."
-                    sh 'rm -f node_modules/.bin/tsc'
-                    sh 'ln -s ../typescript/bin/tsc node_modules/.bin/tsc || true'
-                    
-                    echo "Attribution des droits d'execution..."
-                    sh 'chmod +x node_modules/typescript/bin/tsc || true'
-                    sh 'chmod +x node_modules/.bin/tsc || true'
-                    
-                    echo "Lancement de la compilation TypeScript..."
+                    echo "Compilation du client TypeScript..."
+                    sh 'rm -rf out/'
                     sh 'npm run compile'
                     sh 'chmod +x run.sh'
                 }
             }
         }
-    stage('Build et Install Serveur (OCaml)') {
+
+        stage('Build serveur OCaml') {
             steps {
-                dir('server'){
-               
+                dir('server') {
                     echo "Compilation et installation du serveur LSP..."
-                    sh 'eval $(opam env) && dune build'
-                    
-                    sh 'eval $(opam env) && dune install'
-                    sh 'eval $(opam env) && which frama-c-lsp || echo "ERREUR : Serveur non installe"'
-                
-            }}
-        }
-        stage('Tests E2E avec Ecran Virtuel') {
-            steps {
-                dir('client') {
-                    echo "Demarrage de xvfb et lancement des tests..."
-                    sh 'find .vscode-test -type f -exec chmod +x {} +'
-                    sh 'eval $(opam env) && xvfb-run -a npm test -- --logLevel=off'
+                    sh '''
+                        eval $(opam env)
+                        dune build
+                        dune install
+                        which frama-c && frama-c -version
+                    '''
                 }
             }
         }
+
+        stage('Tests E2E') {
+    steps {
+        dir('client') {
+            echo "Nettoyage des processus résiduels..."
+            sh '''
+                # Tuer tout processus qui tient le port 8005 ou 8006
+                fuser -k 8005/tcp 2>/dev/null || true
+                fuser -k 8006/tcp 2>/dev/null || true
+                fuser -k 8007/tcp 2>/dev/null || true
+                fuser -k 8008/tcp 2>/dev/null || true
+                
+                # Tuer les éventuels serveurs OCaml résiduels
+                pkill -f "run.sh" 2>/dev/null || true
+                pkill -f "frama-c" 2>/dev/null || true
+                
+                # Attendre que les ports soient libérés
+                sleep 3
+            '''
+
+            echo "Lancement des tests E2E avec xvfb..."
+            sh 'find .vscode-test -type f -exec chmod +x {} + 2>/dev/null || true'
+            sh '''
+                eval $(opam env)
+                xvfb-run -a npm test -- --logLevel=off
+            '''
+        }
+    }
+}
     }
 
     post {

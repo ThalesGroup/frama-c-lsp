@@ -281,7 +281,18 @@ let run () =
       | Some Lsp_handler.ComputeProofObligation_feature(root_path, id, file, line, ch) -> let data = [(ShowPOVC.get_property root_path id file line ch)] in Options.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; send_result data
       | Some Lsp_handler.ComputeProofObligationID_feature(id, goal_id) -> let data = [(ShowPOVC.get_property_from_id id goal_id)] in Options.Self.feedback ~level:1 "Find Proof obligation attempt done !\n%!"; send_result data
       | Some Lsp_handler.Prove_feature(id, file, fct, prop) -> let data = [(ProvePO.get_property_status id file fct prop)] in Options.Self.feedback ~level:1 "Proof attempt done !\n%!"; send_result data
-      | Some Lsp_handler.GetContext_feature(_id, file, line, _ch) ->  let (func_name, prop_name) = Context_finder.get_context file line in let json_response = `List [`String func_name; `String prop_name] in let data = [Json.save_string json_response] in send_result data
+      | Some Lsp_handler.GetContext_feature(id, file, line, _ch) ->  
+    let (func_name, prop_name) = Context_finder.get_context file line in 
+    let json_response = `List [`String func_name; `String prop_name] in 
+    let lsp_response = Lsp_types.ResponseMessage.create 
+        ~jsonrpc:"2.0" 
+        ~id:(Lsp_types.Int id) 
+        ~result:json_response 
+        () 
+    in
+    let data = [Json.save_string (Lsp_types.ResponseMessage.json_of_t lsp_response)] in 
+    Options.Self.feedback ~level:1 "Context detected : (%s, %s)\n%!" func_name prop_name;
+    send_result data
       | Some Lsp_handler.ComputeAST_feature(id, file) -> let data = [(Extract_ast.compute_and_serialize id file)] in Options.Self.feedback ~level:1 "AST Extraction done !\n%!"; send_result data
       | None ->  Self.debug ~level:1 "LSP started !!!"
   )
