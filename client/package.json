@@ -863,12 +863,12 @@
         "eslint": "^8.57.0",
         "glob": "^13.0.6",
         "minimatch": "^3.1.2",
-        "mocha": "^11.8.0",
+        "mocha": "^12.0.3",
         "typescript": "^5.5.4"
     },
     "dependencies": {
         "@types/vscode-webview": "^1.57.5",
-        "fast-xml-parser": "^5.5.9",
+        "fast-xml-parser": "^5.7.0",
         "types": "^0.1.1",
         "vscode-languageclient": "^9.0.1"
     }
