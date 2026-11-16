@@ -25,7 +25,9 @@ async function main() {
         cp.execSync('npm run compile', { cwd: clientRoot, stdio: 'inherit' });
 
         console.log('== Packaging du VSIX ==');
-cp.execSync(`node node_modules/@vscode/vsce/out/vsce.js package -o ${vsixName}`, { cwd: clientRoot, stdio: 'inherit' });        if (!fs.existsSync(vsixPath)) {
+cp.execSync(`node node_modules/@vscode/vsce/out/main.js package -o ${vsixName}`,
+    { cwd: clientRoot, stdio: 'inherit' });
+           if (!fs.existsSync(vsixPath)) {
             throw new Error(`VSIX non généré : ${vsixPath}`);
         }
 
