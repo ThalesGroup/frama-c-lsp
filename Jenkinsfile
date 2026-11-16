@@ -45,6 +45,15 @@ pipeline {
                 }
             }
         }
+        stage('Diag vsce') {
+    steps {
+        dir('client') {
+            sh 'cat node_modules/@vscode/vsce/package.json | grep -A3 -iE "\\"bin\\"|\\"main\\""'
+            sh 'head -3 node_modules/@vscode/vsce/vsce'
+            sh 'find node_modules/@vscode/vsce -maxdepth 2 -name "*.js" | grep -iE "vsce|cli|index" | head'
+        }
+    }
+}
         stage('Build et Install Serveur (OCaml)') {
     steps {
         dir('server'){
