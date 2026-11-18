@@ -99,7 +99,7 @@ function extractResponse(raw) {
     fail('truncated JSON in frama-c output');
 }
 
-// Stylesheet written next to matrix.html: Jenkins' default CSP blocks inline <style> and JS.
+// Stylesheet embedded in matrix.html and also written as style.css (fallback when the Jenkins CSP blocks inline <style>).
 const CSS = `
 *{box-sizing:border-box}
 body{margin:0;padding:28px 36px;font-family:"Segoe UI",Roboto,Arial,sans-serif;font-size:14px;color:#1f2430;background:#f6f7fb}
@@ -181,6 +181,7 @@ function renderHtml(res) {
     const nCalls = res.matrix.concat(res.violations).reduce((s, c) => s + c.count, 0);
 
     return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Dependency Matrix</title>
+<style>${CSS}</style>
 <link rel="stylesheet" href="style.css"></head><body>
 <h1 id="top">Dependency Matrix</h1>
 <div class="sub">Generated ${esc(new Date().toISOString().replace('T', ' ').slice(0, 16))} UTC · ${names.length} groups</div>
