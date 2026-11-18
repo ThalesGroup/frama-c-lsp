@@ -12,6 +12,7 @@ const WS = path.resolve(wsArg || '.');
 const log = (...m) => console.log('[deps]', ...m);
 const fail = (m) => { console.error('[deps] ERROR:', m); process.exit(1); };
 
+// ---------- config (JSON with comments / trailing commas) ----------
 function readJsonc(file) {
     const txt = fs.readFileSync(file, 'utf8');
     let out = '', inStr = false;
@@ -35,6 +36,7 @@ const abs = p => path.resolve(WS, p);
 const rel = f => path.relative(WS, f).replace(/\\/g, '/');
 
 // ---------- groups (same logic as resolveFileGroups in extension.ts) ----------
+
 function collectCFiles(dir, acc = []) {
     if (!fs.existsSync(dir)) return acc;
     for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -52,7 +54,8 @@ function resolvePattern(p) {
         const re = new RegExp('^' + path.basename(p).replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]*') + '$');
         return fs.existsSync(dir) ? fs.readdirSync(dir).filter(f => f.endsWith('.c') && re.test(f)).map(f => path.join(dir, f)) : [];
     }
-    return fs.existsSync(p) ? [p] : [];
+    // explicit file: only C sources are analysed (.s/.S assembly, .h, .lib... are skipped)
+    return fs.existsSync(p) && p.endsWith('.c') ? [p] : [];
 }
 
 function cmdGroups() {
@@ -113,8 +116,10 @@ function renderHtml(res) {
     const details = [...cells.values()].sort((a, b) => b.bad - a.bad).map(({ c, bad }) =>
         `<details id="${id(c)}"${bad ? ' open' : ''}><summary class="${bad ? 'red' : ''}">` +
         `${esc(c.from)} → ${esc(c.to)}: ${c.count} call(s)${bad ? ' — VIOLATION' : ''}</summary><table>` +
-        `<tr><th>caller</th><th>callee</th><th>symbol</th></tr>` +
-        c.edges.map(e => `<tr><td>${esc(rel(e.caller))}</td><td>${esc(rel(e.callee))}</td><td>${esc(e.symbol)}</td></tr>`).join('') +
+        `<tr><th>Function</th><th>Defined in</th><th>Used in</th></tr>` +
+        [...c.edges]
+            .sort((a, b) => a.symbol.localeCompare(b.symbol) || rel(a.caller).localeCompare(rel(b.caller)))
+            .map(e => `<tr><td>${esc(e.symbol)}</td><td>${esc(rel(e.callee))}</td><td>${esc(rel(e.caller))}</td></tr>`).join('') +
         `</table></details>`).join('');
 
     const list = (title, items) => items.length
@@ -161,6 +166,8 @@ function cmdRender() {
     if (msg.error) fail('frama-c returned an error: ' + JSON.stringify(msg.error));
     const res = msg.result;
     if (!res || !Array.isArray(res.groups)) fail('unexpected result (frama-c diagnostics instead of the matrix?)');
+    // Only .c files are grouped: headers are not reported as unassigned.
+    res.unassigned = res.unassigned.filter(f => f.endsWith('.c'));
 
     const out = path.resolve(WS, outArg || 'report');
     fs.mkdirSync(out, { recursive: true });
