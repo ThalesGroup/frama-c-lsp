@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 
 'use strict';
 const fs = require('fs');
@@ -58,6 +59,18 @@ function resolvePattern(p) {
     return fs.existsSync(p) && p.endsWith('.c') ? [p] : [];
 }
 
+// Frama-C kernel options built from the config, mirroring what the LSP server passes locally.
+function frama_c_options() {
+    const opts = [];
+    if (settings['kernel.machdep']) opts.push(`-machdep=${settings['kernel.machdep']}`);
+    if (settings['kernel.noAnnot']) opts.push('-no-annot');
+    // Always added by the server (KernelOpt), so CI matches VS Code.
+    opts.push('-keep-unused-functions=none', '-inline-calls=@inline', '-remove-inlined=@inline', '-no-unicode');
+    // Optional extra kernel arguments, e.g. ["-aggressive-merging", "-kernel-warn-key=annot-error=active"].
+    opts.push(...(settings['kernel.extraArgs'] || []));
+    return opts;
+}
+
 function cmdGroups() {
     if (groups.length === 0) fail(`'dependencies.groups' is empty in ${CONFIG}`);
     const fileGroups = {};
@@ -77,7 +90,8 @@ function cmdGroups() {
     fs.writeFileSync(path.join(dir, 'dep_groups.json'), JSON.stringify({ fileGroups, kinds }, null, 1));
     fs.writeFileSync(path.join(dir, 'files.txt'), files.join('\n') + '\n');
     fs.writeFileSync(path.join(dir, 'cpp_args.txt'), ['-CC', ...inc, ...mac].join(' '));
-    log(`${files.length} file(s) -> .frama-c/dep_groups.json, files.txt, cpp_args.txt`);
+    fs.writeFileSync(path.join(dir, 'fc_opts.txt'), frama_c_options().join(' '));
+    log(`${files.length} file(s) -> .frama-c/dep_groups.json, files.txt, cpp_args.txt, fc_opts.txt`);
 }
 
 // ---------- render ----------
