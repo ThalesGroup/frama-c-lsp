@@ -113,7 +113,7 @@ function extractResponse(raw) {
     fail('truncated JSON in frama-c output');
 }
 
-// Stylesheet embedded in matrix.html and also written as style.css (fallback when the Jenkins CSP blocks inline <style>).
+// Stylesheet embedded in matrix.html.
 const CSS = `
 *{box-sizing:border-box}
 body{margin:0;padding:28px 36px;font-family:"Segoe UI",Roboto,Arial,sans-serif;font-size:14px;color:#1f2430;background:#f6f7fb}
@@ -182,10 +182,10 @@ function renderHtml(res) {
         .map(({ c, bad }) =>
             `<div class="edge${bad ? ' bad' : ''}" id="${id(c)}">` +
             `<a class="hd" href="#${id(c)}">${esc(c.from)} → ${esc(c.to)}<span class="tag">${c.count} call(s)${bad ? ' · violation' : ''}</span></a>` +
-            `<div class="body"><table><tr><th>Function</th><th>Defined in</th><th>Used in</th></tr>` +
+            `<div class="body"><table><tr><th>Function</th><th>Used in</th><th>Defined in</th></tr>` +
             [...c.edges]
                 .sort((a, b) => a.symbol.localeCompare(b.symbol) || rel(a.caller).localeCompare(rel(b.caller)))
-                .map(e => `<tr><td class="fn">${esc(e.symbol)}</td><td class="file">${esc(rel(e.callee))}</td><td class="file">${esc(rel(e.caller))}</td></tr>`).join('') +
+                .map(e => `<tr><td class="fn">${esc(e.symbol)}</td><td class="file">${esc(rel(e.caller))}</td><td class="file">${esc(rel(e.callee))}</td></tr>`).join('') +
             `</table><a class="back" href="#top">↑ Back to matrix</a></div></div>`).join('');
 
     const panel = (title, items) => items.length
@@ -195,8 +195,7 @@ function renderHtml(res) {
     const nCalls = res.matrix.concat(res.violations).reduce((s, c) => s + c.count, 0);
 
     return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Dependency Matrix</title>
-<style>${CSS}</style>
-<link rel="stylesheet" href="style.css"></head><body>
+<style>${CSS}</style></head><body>
 <h1 id="top">Dependency Matrix</h1>
 <div class="sub">Generated ${esc(new Date().toISOString().replace('T', ' ').slice(0, 16))} UTC · ${names.length} groups</div>
 <div class="cards">
@@ -246,7 +245,6 @@ function cmdRender() {
     fs.mkdirSync(out, { recursive: true });
     fs.writeFileSync(path.join(out, 'deps.json'), JSON.stringify(res, null, 2));
     fs.writeFileSync(path.join(out, 'matrix.html'), renderHtml(res));
-    fs.writeFileSync(path.join(out, 'style.css'), CSS);
     fs.writeFileSync(path.join(out, 'deps-issues.json'), JSON.stringify(renderIssues(res), null, 2));
     log(`OK: ${res.violations.length} violation(s), ${res.unassigned.length} unassigned, ${res.unresolved_calls.length} unresolved -> ${out}`);
 }
