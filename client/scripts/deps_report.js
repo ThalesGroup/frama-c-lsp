@@ -33,6 +33,8 @@ if (!fs.existsSync(configPath)) fail(`config not found: ${configPath}`);
 const settings = readJsonc(configPath);
 const groups = settings['dependencies.groups'] || [];
 const kinds = Object.fromEntries(groups.map(g => [g.name, g.kind]));
+// Accepted dependencies. Group level: { from, to }. Function level: { caller, callee } (function names).
+const exclusions = settings['dependencies.exclusions'] || [];
 const abs = p => path.resolve(WS, p);
 const rel = f => path.relative(WS, f).replace(/\\/g, '/');
 
@@ -73,6 +75,7 @@ function frama_c_options() {
 
 function cmdGroups() {
     if (groups.length === 0) fail(`'dependencies.groups' is empty in ${CONFIG}`);
+    checkExclusions();
     const fileGroups = {};
     for (const g of groups) {
         if (!['core', 'feature', 'lib'].includes(g.kind)) fail(`group '${g.name}': invalid kind '${g.kind}' (core|feature|lib)`);
@@ -113,6 +116,53 @@ function extractResponse(raw) {
     fail('truncated JSON in frama-c output');
 }
 
+// ---------- exclusions ----------
+// Two levels:
+//   { "from": "feature1", "to": "feature2" }          every call between the two groups
+//   { "caller": "f1_run", "callee": "f2_helper" }     only this call between two functions
+// A call is excluded when every field the exclusion sets matches.
+function matches(x, from, to, e) {
+    return (x.from === undefined || x.from === from)
+        && (x.to === undefined || x.to === to)
+        && (x.caller === undefined || x.caller === e.caller_fn)
+        && (x.callee === undefined || x.callee === e.symbol);
+}
+
+function checkExclusions() {
+    exclusions.forEach((x, i) => {
+        const groupLevel = x.from !== undefined && x.to !== undefined;
+        const functionLevel = x.caller !== undefined && x.callee !== undefined;
+        if (!groupLevel && !functionLevel)
+            fail(`dependencies.exclusions[${i}]: expected { from, to } (groups) or { caller, callee } (functions)`);
+        for (const g of [x.from, x.to])
+            if (g !== undefined && !(g in kinds)) fail(`dependencies.exclusions[${i}]: unknown group '${g}'`);
+    });
+}
+
+// Removes excluded calls from the matrix and the violations; returns them for the report.
+function applyExclusions(res) {
+    const excluded = [];
+    const used = new Set();
+    const filter = cells => cells.flatMap(c => {
+        const kept = c.edges.filter(e => {
+            const i = exclusions.findIndex(x => matches(x, c.from, c.to, e));
+            if (i < 0) return true;
+            used.add(i);
+            excluded.push({ from: c.from, to: c.to, ...e, reason: exclusions[i].reason || '' });
+            return false;
+        });
+        return kept.length ? [{ ...c, edges: kept, count: kept.length }] : [];
+    });
+    res.matrix = filter(res.matrix);
+    res.violations = filter(res.violations);
+    res.excluded = excluded;
+    // Exclusions that matched nothing are probably stale (renamed function, merged group).
+    res.unused_exclusions = exclusions.filter((_, i) => !used.has(i));
+}
+
+const describeExclusion = x =>
+    (x.from !== undefined ? `${x.from} → ${x.to}` : `${x.caller} → ${x.callee}`) + (x.reason ? ` — ${x.reason}` : '');
+
 // Stylesheet embedded in matrix.html.
 const CSS = `
 *{box-sizing:border-box}
@@ -149,7 +199,7 @@ table{border-collapse:collapse}
 .edge.bad .hd:before,.edge:target .hd:before{content:"\\25BE"}
 .tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:10px;background:#eef0f7;color:#242a75}
 .edge.bad .tag{background:#fdecea;color:#c62828}
-.edge table{table-layout:fixed}.edge th:nth-child(1){width:34%}.edge th:nth-child(2),.edge th:nth-child(3){width:33%}
+.edge table{table-layout:fixed}.edge th:nth-child(1),.edge th:nth-child(2){width:20%}.edge th:nth-child(3),.edge th:nth-child(4){width:30%}
 .edge:target{border:2px solid #00bbdd;box-shadow:0 0 0 3px rgba(0,187,221,.15)}
 .edge table{width:100%;margin:0 0 4px;border-collapse:collapse}
 .edge th,.edge td{text-align:left;padding:7px 14px;border-top:1px solid #eef0f7;font-size:13px}
@@ -182,10 +232,10 @@ function renderHtml(res) {
         .map(({ c, bad }) =>
             `<div class="edge${bad ? ' bad' : ''}" id="${id(c)}">` +
             `<a class="hd" href="#${id(c)}">${esc(c.from)} → ${esc(c.to)}<span class="tag">${c.count} call(s)${bad ? ' · violation' : ''}</span></a>` +
-            `<div class="body"><table><tr><th>Function</th><th>Used in</th><th>Defined in</th></tr>` +
+            `<div class="body"><table><tr><th>Caller</th><th>Function</th><th>Used in</th><th>Defined in</th></tr>` +
             [...c.edges]
-                .sort((a, b) => a.symbol.localeCompare(b.symbol) || rel(a.caller).localeCompare(rel(b.caller)))
-                .map(e => `<tr><td class="fn">${esc(e.symbol)}</td><td class="file">${esc(rel(e.caller))}</td><td class="file">${esc(rel(e.callee))}</td></tr>`).join('') +
+                .sort((a, b) => a.symbol.localeCompare(b.symbol) || (a.caller_fn || '').localeCompare(b.caller_fn || ''))
+                .map(e => `<tr><td class="fn">${esc(e.caller_fn || '—')}</td><td class="fn">${esc(e.symbol)}</td><td class="file">${esc(rel(e.caller))}</td><td class="file">${esc(rel(e.callee))}</td></tr>`).join('') +
             `</table><a class="back" href="#top">↑ Back to matrix</a></div></div>`).join('');
 
     const panel = (title, items) => items.length
@@ -203,6 +253,7 @@ ${card(res.violations.length, 'Violations', 'bad')}
 ${card(nCalls, 'Cross-group calls')}
 ${card(res.unassigned.length, 'Unassigned files', 'warn')}
 ${card(res.unresolved_calls.length, 'Unresolved calls', 'warn')}
+${card(res.excluded.length, 'Excluded calls')}
 </div>
 <div class="panel"><h2>Group dependencies</h2>
 <p class="legend">Rows: caller group · Columns: called group ·<i class="ok"></i>Allowed<i class="bad"></i>Violation · Click a number to see the calls</p>
@@ -210,6 +261,9 @@ ${card(res.unresolved_calls.length, 'Unresolved calls', 'warn')}
 <div class="panel"><h2>Calls between groups</h2>${edges || '<p class="empty">No cross-group calls.</p>'}</div>
 ${panel('Unassigned files — add them to dependencies.groups', res.unassigned.map(rel))}
 ${panel('Unresolved indirect calls — add a //@ calls clause', res.unresolved_calls.map(u => `${rel(u.file)}:${u.line}`))}
+${panel('Excluded calls — accepted in dependencies.exclusions', res.excluded.map(e =>
+    `${e.from} → ${e.to} : ${e.caller_fn || '?'} → ${e.symbol} (${rel(e.caller)})` + (e.reason ? ` — ${e.reason}` : '')))}
+${panel('Unused exclusions — matched no call, check dependencies.exclusions', res.unused_exclusions.map(describeExclusion))}
 </body></html>`;
 }
 
@@ -218,7 +272,7 @@ function renderIssues(res) {
     const issues = [
         ...res.violations.flatMap(v => v.edges.map(e => ({
             fileName: e.caller, lineStart: 1, severity: 'ERROR', category: 'Architecture violation', type: `${v.from} -> ${v.to}`,
-            message: `${kinds[v.from]} '${v.from}' must not depend on ${kinds[v.to]} '${v.to}' (calls ${e.symbol} from ${rel(e.callee)})`,
+            message: `${kinds[v.from]} '${v.from}' must not depend on ${kinds[v.to]} '${v.to}' (${e.caller_fn || '?'} calls ${e.symbol} from ${rel(e.callee)})`,
         }))),
         ...res.unassigned.map(f => ({
             fileName: f, lineStart: 1, severity: 'NORMAL', category: 'Unassigned file', type: 'dependencies.groups',
@@ -240,13 +294,16 @@ function cmdRender() {
     if (!res || !Array.isArray(res.groups)) fail('unexpected result (frama-c diagnostics instead of the matrix?)');
     // Only .c files are grouped: headers are not reported as unassigned.
     res.unassigned = res.unassigned.filter(f => f.endsWith('.c'));
+    checkExclusions();
+    applyExclusions(res);
 
     const out = path.resolve(WS, outArg || 'report');
     fs.mkdirSync(out, { recursive: true });
     fs.writeFileSync(path.join(out, 'deps.json'), JSON.stringify(res, null, 2));
     fs.writeFileSync(path.join(out, 'matrix.html'), renderHtml(res));
     fs.writeFileSync(path.join(out, 'deps-issues.json'), JSON.stringify(renderIssues(res), null, 2));
-    log(`OK: ${res.violations.length} violation(s), ${res.unassigned.length} unassigned, ${res.unresolved_calls.length} unresolved -> ${out}`);
+    log(`OK: ${res.violations.length} violation(s), ${res.excluded.length} excluded, ${res.unassigned.length} unassigned, ${res.unresolved_calls.length} unresolved -> ${out}`);
+    if (res.unused_exclusions.length) log(`WARNING: ${res.unused_exclusions.length} exclusion(s) matched no call`);
 }
 
 if (MODE === 'groups') cmdGroups();

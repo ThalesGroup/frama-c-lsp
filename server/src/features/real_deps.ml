@@ -43,7 +43,8 @@ let allowed src dst =
   | _, Lib | Feature, Core | Core, Core -> true
   | _ -> false
 
-type edge = { caller : string; callee : string; symbol : string }
+(* caller/callee: files; caller_fn: calling function; symbol: called function *)
+type edge = { caller : string; callee : string; caller_fn : string; symbol : string }
 
 let file_edges () =
   let module G = Callgraph.Cg.G in
@@ -62,7 +63,9 @@ let file_edges () =
         else file_of_loc (Kernel_function.get_location dst)
       in
       if caller <> callee then
-        Hashtbl.replace acc { caller; callee; symbol = Kernel_function.get_name dst } ()
+        Hashtbl.replace acc { caller; callee;
+                              caller_fn = Kernel_function.get_name src;
+                              symbol = Kernel_function.get_name dst } ()
     end) (Callgraph.Cg.get ());
   Hashtbl.fold (fun e () l -> e :: l) acc []
 
@@ -101,12 +104,13 @@ let declared_edges () =
             | Some (_, kfs) ->
                 Cil_datatype.Stmt.Hashtbl.replace resolved s ();
                 let caller_kf = Option.get self#current_kf in
+                let caller_fn = Kernel_function.get_name caller_kf in
                 let caller = file_of_loc (Kernel_function.get_location caller_kf) in
                 List.iter (fun callee_kf ->
                     let callee = file_of_loc (Kernel_function.get_location callee_kf) in
                     let symbol = Kernel_function.get_name callee_kf in
                     if caller <> callee then
-                      edges := { caller; callee; symbol } :: !edges
+                      edges := { caller; callee; caller_fn; symbol } :: !edges
                   ) kfs)
        | _ -> ());
       Cil.DoChildren
@@ -133,7 +137,8 @@ let compute_and_serialize id groups_file =
     | _ -> ()) all_edges;   
 
   let edge_json e =
-    `Assoc [ "caller", `String e.caller; "callee", `String e.callee; "symbol", `String e.symbol ] in
+    `Assoc [ "caller", `String e.caller; "callee", `String e.callee;
+             "caller_fn", `String e.caller_fn; "symbol", `String e.symbol ] in
   let cell_json (gs, _, gd, _) es =
     `Assoc [ "from", `String gs; "to", `String gd;
              "count", `Int (List.length es); "edges", `List (List.map edge_json es) ] in
