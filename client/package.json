@@ -895,7 +895,9 @@
         "compile": "node node_modules/typescript/lib/tsc.js -b",
         "watch": "tsc -b -w",
         "lint": "eslint ./src --ext .ts,.tsx",
-        "test": "sh ./scripts/e2e.sh"
+        "test": "sh ./scripts/e2e.sh",
+        "package:dev": "vsce package --out \"vsix/acsl-lsp-$(date +%Y%m%d-%H%M)-$(git rev-parse --short HEAD).vsix\"",
+    "package:release": "npm version patch --no-git-tag-version && vsce package --out vsix/"
     },
     "devDependencies": {
         "@types/glob": "^8.1.0",
