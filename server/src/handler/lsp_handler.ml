@@ -146,6 +146,8 @@ module WpOpt = struct
   let string_of_t (options : t) : string =
     let option_if_not_empty_string s opt = if not (String.trim s = "") then (opt ^ s) else "" in
     let option_if_true b opt = if b then (opt) else "" in
+    (* 0 = option not passed: Frama-C default applies *)
+    let option_if_positive n opt = if n > 0 then Printf.sprintf "%s=%d" opt n else "" in
     let wp_opt = option_if_true options.wp "-wp" in
     let wp_prop_opt = option_if_not_empty_string (String.concat "," options.wp_prop) "-wp-prop=" in
     let wp_fct_opt = option_if_not_empty_string (String.concat "," options.wp_fct) "-wp-fct=" in
@@ -156,7 +158,7 @@ module WpOpt = struct
     let wp_no_volatile_opt = option_if_true options.wp_no_volatile "-wp-no-volatile" in
     let wp_prover_opt = option_if_not_empty_string (String.concat "," options.wp_prover) "-wp-prover=" in
     let wp_timeout_opt = Printf.sprintf "-wp-timeout=%d" options.wp_timeout in
-    let wp_par_opt = Printf.sprintf "-wp-par=%d" options.wp_par in
+    let wp_par_opt = option_if_positive options.wp_par "-wp-par" in
     let wp_session_opt = option_if_not_empty_string options.wp_session "-wp-session=" in
     let wp_smoke_tests_opt = option_if_true options.wp_smoke_tests "-wp-smoke-tests" in
     let wp_smoke_timeout_opt = option_if_not_empty_string (Stdlib.string_of_int options.wp_smoke_timeout) "-wp-smoke-timeout=" in
@@ -164,8 +166,8 @@ module WpOpt = struct
     let wp_cache = option_if_not_empty_string (options.wp_cache) "-wp-cache=" in
     let wp_auto_depth = Printf.sprintf "-wp-auto-depth=%d" options.wp_auto_depth in
     let wp_auto_width = Printf.sprintf "-wp-auto-width=%d" options.wp_auto_width in
-    let wp_auto_backtrack = Printf.sprintf "-wp-auto-backtrack=%d" options.wp_auto_backtrack in
-    let wp_filename_truncation = Printf.sprintf "-wp-filename-truncation=%d" options.wp_filename_truncation in
+    let wp_auto_backtrack = option_if_positive options.wp_auto_backtrack "-wp-auto-backtrack" in
+    let wp_filename_truncation = option_if_positive options.wp_filename_truncation "-wp-filename-truncation" in
     let wp_report_json_opt = match options.wp_report_json with
       | None -> ""
       | Some path -> Printf.sprintf "-wp-report-json %s" path
