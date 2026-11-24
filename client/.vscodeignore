@@ -14,3 +14,14 @@ client/node_modules/**
 !client/node_modules/vscode-languageserver-types/**
 !client/node_modules/{minimatch,brace-expansion,concat-map,balanced-match}/**
 !client/node_modules/{semver,lru-cache,yallist}/**
+benchmarks/**
+testFixture/**
+vsix/**
+build.xml
+ivy*.xml
+*.sh
+src/**
+**/*.ts
+**/*.map
+out/test/**
+scripts/e2e.sh
