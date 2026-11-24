@@ -289,7 +289,11 @@
                 "command": "framaCExplorer.search",
                 "title": "Search AST",
                 "icon": "$(search)"
-            },{ "command": "acsl.computeDependencies", "title": "Compute Dependencies (data)" },
+            },
+            {
+                "command": "acsl.computeDependencies",
+                "title": "Compute Dependencies (data)"
+            },
             {
                 "command": "wpGoalsView.downloadJson",
                 "title": "Export WP Results (JSON)",
@@ -464,10 +468,6 @@
                 "title": "Run"
             }
         ],
-        "activationEvents": [
-            "onLanguage:c",
-            "onLanguage:h"
-        ],
         "grammars": [
             {
                 "injectTo": [
@@ -484,31 +484,49 @@
                     "vscodeacsl.maxNumberOfProblems": {
                         "scope": "resource",
                         "type": "number",
-                        "default": 10000000,
+                        "default": 10000,
                         "description": "Maximum number of problems produced by the server."
                     }
                 }
             },
             {
-    "title": "Frama-C/Dependencies",
-    "properties": {
-        "dependencies.groups": {
-            "scope": "workspace",
-            "type": "array",
-            "default": [],
-            "description": "Dependency groups for the group matrix. Paths are directory prefixes relative to the workspace. Allowed: feature -> core, anything -> lib.",
-            "items": {
-                "type": "object",
-                "required": ["name", "kind", "paths"],
+                "title": "Frama-C/Dependencies",
                 "properties": {
-                    "name": { "type": "string" },
-                    "kind": { "type": "string", "enum": ["core", "feature", "lib"] },
-                    "paths": { "type": "array", "items": { "type": "string" } }
+                    "dependencies.groups": {
+                        "scope": "workspace",
+                        "type": "array",
+                        "default": [],
+                        "description": "Dependency groups for the dependency matrix. Each group has a name, a kind (core | feature | lib) and paths: a folder ending with '/' (all .c files, recursive), a glob pattern such as 'src/core/*.c', or a .c file. Allowed: feature -> core, core -> core, anything -> lib.",
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "name",
+                                "kind",
+                                "paths"
+                            ],
+                            "properties": {
+                                "name": {
+                                    "type": "string"
+                                },
+                                "kind": {
+                                    "type": "string",
+                                    "enum": [
+                                        "core",
+                                        "feature",
+                                        "lib"
+                                    ]
+                                },
+                                "paths": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
-            }
-        }
-    }
-},
+            },
             {
                 "title": "Frama-C/kernel",
                 "properties": {
@@ -518,10 +536,11 @@
                         "enum": [
                             0,
                             1,
-                            2
+                            2,
+                            3
                         ],
                         "default": 0,
-                        "description": "Frama-C option: -lsp-debug (2 => (1 + json messages), 1 => lsp handler output, 0 => off)."
+                        "description": "Frama-C option: -lsp-debug (0 = off, 1 = handler output, 2 = + JSON messages, 3 = + detailed traces)."
                     },
                     "kernel.serverPort": {
                         "scope": "resource",
@@ -541,7 +560,8 @@
                         "items": {
                             "type": "string"
                         },
-                        "description": "Include paths for the project. Frama-C option: -cpp-extra-args \"-I ...\""
+                        "description": "Include paths for the project. Frama-C option: -cpp-extra-args \"-I ...\"",
+                        "default": []
                     },
                     "kernel.sourceFiles": {
                         "scope": "workspace",
@@ -549,7 +569,8 @@
                         "items": {
                             "type": "string"
                         },
-                        "description": "Source files."
+                        "description": "Source files.",
+                        "default": []
                     },
                     "kernel.macros": {
                         "scope": "workspace",
@@ -557,12 +578,14 @@
                         "items": {
                             "type": "string"
                         },
-                        "description": "Frama-C option: -cpp-extra-args \"-D ...\""
+                        "description": "Frama-C option: -cpp-extra-args \"-D ...\"",
+                        "default": []
                     },
                     "kernel.macroStrategiesFunctionPrefix": {
                         "scope": "workspace",
                         "type": "string",
-                        "description": "Frama-C option: -cpp-extra-args \"-D ...\". Define a macro for each function given with option -wp-fct"
+                        "description": "Frama-C option: -cpp-extra-args \"-D ...\". Define a macro for each function given with option -wp-fct",
+                        "default": ""
                     },
                     "kernel.sourceFileStrategies": {
                         "scope": "workspace",
@@ -570,7 +593,8 @@
                         "items": {
                             "type": "string"
                         },
-                        "description": "Source files providing strategies."
+                        "description": "Source files providing strategies.",
+                        "default": []
                     },
                     "kernel.sourceFileMetacsl": {
                         "scope": "workspace",
@@ -578,24 +602,26 @@
                         "items": {
                             "type": "string"
                         },
-                        "description": "Source files providing metaproperties."
+                        "description": "Source files providing metaproperties.",
+                        "default": []
                     },
                     "kernel.machdep": {
                         "scope": "workspace",
                         "type": "string",
-                        "description": "Frama-C option: -machdep"
+                        "description": "Frama-C option: -machdep. Empty = Frama-C default.",
+                        "default": ""
                     },
                     "kernel.keepUnusedFunctions": {
                         "scope": "workspace",
                         "type": "string",
                         "enum": [
                             "none",
-                            "specified",
+                            "user-specified",
                             "all",
                             "all_debug"
                         ],
-                        "description": "Frama-C option: -keep-unused-functions",
-                        "default": "none"
+                        "description": "Frama-C option: -keep-unused-functions (Frama-C default: user-specified).",
+                        "default": "user-specified"
                     },
                     "kernel.generatedSpecCustom": {
                         "scope": "workspace",
@@ -603,7 +629,8 @@
                         "items": {
                             "type": "string"
                         },
-                        "description": "Frama-C option: -generated-spec-custom"
+                        "description": "Frama-C option: -generated-spec-custom",
+                        "default": []
                     },
                     "kernel.inlineCalls": {
                         "scope": "workspace",
@@ -611,7 +638,8 @@
                         "items": {
                             "type": "string"
                         },
-                        "description": "Frama-C option: -inline-calls"
+                        "description": "Frama-C option: -inline-calls",
+                        "default": []
                     },
                     "kernel.removeInlined": {
                         "scope": "workspace",
@@ -619,12 +647,14 @@
                         "items": {
                             "type": "string"
                         },
-                        "description": "Frama-C option: -remove-inlined"
+                        "description": "Frama-C option: -remove-inlined",
+                        "default": []
                     },
                     "kernel.noAnnot": {
                         "scope": "workspace",
                         "type": "boolean",
-                        "description": "Frama-C option: -no-annot"
+                        "description": "Frama-C option: -no-annot",
+                        "default": false
                     }
                 }
             },
@@ -677,13 +707,14 @@
                         "items": {
                             "type": "string"
                         },
-                        "description": "Frama-C option: -cg-roots"
+                        "description": "Frama-C option: -cg-roots",
+                        "default": []
                     },
                     "callgraph.services": {
                         "scope": "workspace",
                         "type": "boolean",
-                        "description": "Frama-C option: -cg-no-services",
-                        "default": true
+                        "description": "true: -cg-services, false: -cg-no-services",
+                        "default": false
                     }
                 }
             },
@@ -697,28 +728,27 @@
                         "default": false
                     },
                     "wp.rte": {
-                        "scope": "workspace",
-                        "type": "boolean",
-                        "description": "Frama-C option: -wp-rte",
-                        "default": false
-                    },
+    "type": "boolean",
+    "default": true,
+    "description": "Generate RTE guards (-wp-rte). Required by the RTE checks run on save."
+},
                     "wp.prover": {
                         "scope": "workspace",
                         "type": "string",
-                        "default": "script,alt-ergo",
+                        "default": "alt-ergo",
                         "description": "Frama-C option: -wp-prover"
                     },
                     "wp.timeout": {
                         "scope": "workspace",
                         "type": "integer",
-                        "default": 4,
-                        "description": "Frama-C option: -wp-timeout"
+                        "default": 2,
+                        "description": "Frama-C option: -wp-timeout (Frama-C default: 2)"
                     },
                     "wp.par": {
                         "scope": "workspace",
                         "type": "integer",
-                        "default": 4,
-                        "description": "Frama-C option: -wp-par"
+                        "default": 0,
+                        "description": "Frama-C option: -wp-par. 0 = Frama-C default (number of cores)."
                     },
                     "wp.session": {
                         "scope": "workspace",
@@ -736,55 +766,49 @@
                         "scope": "workspace",
                         "type": "string",
                         "default": "",
-                        "description": "Frama-C option: -wp-cache"
-                    },
-                    "wp.model": {
-                        "scope": "workspace",
-                        "type": "string",
-                        "default": "",
-                        "description": "Frama-C option: -wp-model"
+                        "description": "Frama-C option: -wp-cache. Empty = Frama-C default (none)."
                     },
                     "wp.noPruning": {
                         "scope": "workspace",
                         "type": "boolean",
                         "description": "Frama-C option: -wp-no-pruning",
-                        "default": true
+                        "default": false
                     },
                     "wp.checkMemoryModel": {
                         "scope": "workspace",
                         "type": "boolean",
-                        "description": "Frama-C option: -wp-check-memory-model",
+                        "description": "Frama-C option: -wp-check-memory-model (also sets -wp-model Typed+var+int+float)",
                         "default": false
                     },
                     "wp.noVolatile": {
                         "scope": "workspace",
                         "type": "boolean",
                         "description": "Frama-C option: -wp-no-volatile",
-                        "default": true
+                        "default": false
                     },
                     "wp.autoDepth": {
                         "scope": "workspace",
                         "type": "integer",
-                        "default": 4,
-                        "description": "Frama-C option: -wp-auto-depth"
+                        "default": 5,
+                        "description": "Frama-C option: -wp-auto-depth (Frama-C default: 5)"
                     },
                     "wp.autoWidth": {
                         "scope": "workspace",
                         "type": "integer",
-                        "default": 4,
-                        "description": "Frama-C option: -wp-auto-width"
+                        "default": 10,
+                        "description": "Frama-C option: -wp-auto-width (Frama-C default: 10)"
                     },
                     "wp.autoBacktrack": {
                         "scope": "workspace",
                         "type": "integer",
-                        "default": 4,
-                        "description": "Frama-C option: -wp-auto-backtrack"
+                        "default": 0,
+                        "description": "Frama-C option: -wp-auto-backtrack. 0 = disabled (Frama-C default)."
                     },
                     "wp.filenameTruncation": {
                         "scope": "workspace",
                         "type": "integer",
-                        "default": 220,
-                        "description": "Frama-C option: -wp-filename-truncation"
+                        "default": 0,
+                        "description": "Frama-C option: -wp-filename-truncation. 0 = Frama-C default."
                     },
                     "wp.autoProveFunctions": {
                         "scope": "workspace",
@@ -836,7 +860,8 @@
                         "items": {
                             "type": "string"
                         },
-                        "description": "Frama-C option: -meta-check-callee-assigns"
+                        "description": "Frama-C option: -meta-check-callee-assigns",
+                        "default": []
                     }
                 }
             },
@@ -853,13 +878,13 @@
                         "scope": "workspace",
                         "type": "boolean",
                         "description": "Frama-C option: -ccdoc-coverage-verif",
-                        "default": true
+                        "default": false
                     },
                     "ccdoc.latex": {
                         "scope": "workspace",
                         "type": "boolean",
                         "description": "Frama-C option: -ccdoc-latex",
-                        "default": true
+                        "default": false
                     }
                 }
             }

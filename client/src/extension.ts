@@ -233,80 +233,32 @@ const unknownDecoration = vscode.window.createTextEditorDecorationType({
 let lastWpData: string[] = [];
 
 
-async function initializeDefaultSettings() {
+// Creates .vscode/settings.json on first use, with every option and its default value.
+// Defaults are read from package.json .
+async function initializeDefaultSettings(context: ExtensionContext) {
     const workspaceFolders = vscode.workspace.workspaceFolders;
     if (!workspaceFolders) {
-        return; 
+        return;
     }
 
-    const workspacePath = workspaceFolders[0].uri.fsPath;
-    const vscodeFolder = path.join(workspacePath, '.vscode');
+    const vscodeFolder = path.join(workspaceFolders[0].uri.fsPath, '.vscode');
     const settingsPath = path.join(vscodeFolder, 'settings.json');
-
     if (fs.existsSync(settingsPath)) {
         return;
     }
 
-    if (!fs.existsSync(vscodeFolder)) {
-        fs.mkdirSync(vscodeFolder, { recursive: true });
+    const configuration = context.extension.packageJSON?.contributes?.configuration ?? [];
+    const defaultSettings: Record<string, unknown> = {};
+    for (const section of configuration) {
+        for (const [key, schema] of Object.entries<any>(section.properties ?? {})) {
+            defaultSettings[key] = schema.default;
+        }
     }
 
-    const defaultSettings = {
-        "kernel.includePaths": [],
-        "kernel.sourceFiles": [],
-        "dependencies.groups": [
-    { "name": "core", "kind": "core",    "paths": ["src/core/"] },
-    { "name": "libs", "kind": "lib",     "paths": ["lib/"] }
-],
-        "kernel.macros": [],
-
-        "vscodeacsl.maxNumberOfProblems": 100000,
-        "kernel.lspDebug": 0,
-        "kernel.macroStrategiesFunctionPrefix": "",
-        "kernel.sourceFileStrategies": [],
-        "kernel.sourceFileMetacsl": [],
-        "kernel.aggressiveMerging": false,
-        "kernel.removeUnusedSpecifiedFunctions": false,
-        "kernel.machdep": "x86_32",
-        "kernel.inlineCalls": [],
-        "kernel.removeInlined": [],
-        "kernel.noAnnot": false,
-        "kernel.generatedSpecCustom": [],
-
-        "wp.checkMemoryModel": true,
-        "wp.noVolatile": false,
-        "wp.rte": true,
-        "wp.autoProveFunctions":[],
-        "wp.prover": "script,alt-ergo",
-        "wp.timeout": 2,
-        "wp.model": "Typed+var+int+float",
-        "wp.par": 8,
-        "wp.cache": "update",
-        "wp.script": "batch",
-        "wp.session": ".frama-C",
-        "wp.autoDepth": 20,
-        "wp.autoWidth": 1,
-
-        "metrics.byFunction": true,
-        "callgraph.roots": [],
-        "callgraph.services": false,
-        "uncast.active": false,
-        "uncast.lshiftAsMul": true,
-        "uncast.rshiftAsDiv": true,
-        "uncast.endianness": "",
-        "metacsl.active": false,
-        "metacsl.checks": true,
-        "metacsl.noCheckExt": true,
-        "metacsl.noSimpl": true,
-        "metacsl.numberAssertions": true,
-        "ccdoc.active": false,
-        "ccdoc.coverageVerif": true,
-        "ccdoc.latex": true
-    };
-
     try {
+        fs.mkdirSync(vscodeFolder, { recursive: true });
         fs.writeFileSync(settingsPath, JSON.stringify(defaultSettings, null, 4), 'utf-8');
-        vscode.window.showInformationMessage("configuration initialized successfully.");
+        vscode.window.showInformationMessage("Frama-C configuration initialized (.vscode/settings.json).");
     } catch (error) {
         console.error("Initialization error:", error);
     }
@@ -396,7 +348,7 @@ function updateDecorations() {
 
 export async function activate(context: ExtensionContext) {
 	// The server is implemented in OCaml
-    await initializeDefaultSettings();
+    await initializeDefaultSettings(context);
     const config = vscode.workspace.getConfiguration();
     const serverPort = config.get<number>('kernel.serverPort') || 8005;
     const wrapperPort = config.get<number>('kernel.wrapperPort') || (serverPort + 1);
