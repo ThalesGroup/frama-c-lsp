@@ -35,6 +35,8 @@ const groups = settings['dependencies.groups'] || [];
 const kinds = Object.fromEntries(groups.map(g => [g.name, g.kind]));
 // Accepted dependencies. Group level: { from, to }. Function level: { caller, callee } (function names).
 const exclusions = settings['dependencies.exclusions'] || [];
+// .c files placed in several execution regions of different groups (written by gen_groups.py).
+const sharedFiles = settings['dependencies.sharedFiles'] || [];
 const abs = p => path.resolve(WS, p);
 const rel = f => path.relative(WS, f).replace(/\\/g, '/');
 
@@ -134,30 +136,32 @@ function checkExclusions() {
         const functionLevel = x.caller !== undefined && x.callee !== undefined;
         if (!groupLevel && !functionLevel)
             fail(`dependencies.exclusions[${i}]: expected { from, to } (groups) or { caller, callee } (functions)`);
+        // A group with no .c file is not in dependencies.groups: the exclusion simply never matches.
         for (const g of [x.from, x.to])
-            if (g !== undefined && !(g in kinds)) fail(`dependencies.exclusions[${i}]: unknown group '${g}'`);
+            if (g !== undefined && !(g in kinds)) log(`note: dependencies.exclusions[${i}]: group '${g}' has no file`);
     });
 }
 
-// Removes excluded calls from the matrix and the violations; returns them for the report.
+// Moves excluded calls out of the matrix and the violations (shown as allowed, in green, in the report).
 function applyExclusions(res) {
     const excluded = [];
     const used = new Set();
-    const filter = cells => cells.flatMap(c => {
+    const filter = (cells, violation) => cells.flatMap(c => {
         const kept = c.edges.filter(e => {
             const i = exclusions.findIndex(x => matches(x, c.from, c.to, e));
             if (i < 0) return true;
             used.add(i);
-            excluded.push({ from: c.from, to: c.to, ...e, reason: exclusions[i].reason || '' });
+            excluded.push({ from: c.from, to: c.to, violation, ...e, reason: exclusions[i].reason || '' });
             return false;
         });
         return kept.length ? [{ ...c, edges: kept, count: kept.length }] : [];
     });
-    res.matrix = filter(res.matrix);
-    res.violations = filter(res.violations);
+    res.matrix = filter(res.matrix, false);
+    res.violations = filter(res.violations, true);
     res.excluded = excluded;
-    // Exclusions that matched nothing are probably stale (renamed function, merged group).
-    res.unused_exclusions = exclusions.filter((_, i) => !used.has(i));
+    // Hand-written exclusions that matched nothing are probably stale (renamed function, merged group).
+    // platform.cfg requires are permissions, not obligations: an unused one is normal.
+    res.unused_exclusions = exclusions.filter((x, i) => !used.has(i) && !String(x.reason || '').startsWith('platform.cfg:'));
 }
 
 const describeExclusion = x =>
@@ -173,7 +177,7 @@ h1{margin:0 0 4px;font-size:22px;color:#242a75}
 .card{background:#fff;border-radius:8px;padding:14px 20px;min-width:150px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .card b{display:block;font-size:26px;color:#242a75}
 .card span{font-size:12px;color:#6b7084;text-transform:uppercase;letter-spacing:.04em}
-.card.bad b{color:#c62828}.card.warn b{color:#e65100}
+.card.bad b{color:#c62828}.card.warn b{color:#e65100}.card.excl b{color:#2e7d32}
 .panel{background:#fff;border-radius:8px;padding:18px 20px;margin-bottom:22px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .panel h2{margin:0 0 12px;font-size:16px;color:#242a75}
 .legend{font-size:12px;color:#6b7084;margin:0 0 12px}
@@ -188,8 +192,11 @@ table{border-collapse:collapse}
 .matrix th.row small{color:#6b7084;font-weight:400;margin-left:6px}
 .matrix td.self{background:#f3f4f8;color:#b8bccb}
 .matrix td a{display:block;color:#fff;font-weight:700;text-decoration:none;border-radius:4px;padding:2px 0}
-.matrix td.ok{background:#2e7d32}.matrix td.bad{background:#c62828}
-.matrix td.ok:hover,.matrix td.bad:hover{filter:brightness(1.15)}
+.matrix td.ok{background:#2e7d32}.matrix td.bad{background:#c62828}.matrix td.excl{background:#2e7d32}
+.matrix td.ok:hover,.matrix td.bad:hover,.matrix td.excl:hover{filter:brightness(1.15)}
+.matrix td small{display:block;font-size:10px;font-weight:400;opacity:.9}
+.edge.excl .hd{color:#2e7d32}.edge.excl .tag{background:#e8f5e9;color:#2e7d32}
+.edge tr.excl td{background:#f3faf3}.edge tr.excl td.why{color:#2e7d32;font-style:italic}
 .edge{border:1px solid #e3e5ee;border-radius:6px;margin-bottom:10px;scroll-margin-top:12px}
 .edge .hd{display:block;padding:10px 14px;font-weight:600;color:#242a75;text-decoration:none}
 .edge .hd:before{content:"\\25B8";display:inline-block;margin-right:8px}
@@ -199,7 +206,7 @@ table{border-collapse:collapse}
 .edge.bad .hd:before,.edge:target .hd:before{content:"\\25BE"}
 .tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:10px;background:#eef0f7;color:#242a75}
 .edge.bad .tag{background:#fdecea;color:#c62828}
-.edge table{table-layout:fixed}.edge th:nth-child(1),.edge th:nth-child(2){width:20%}.edge th:nth-child(3),.edge th:nth-child(4){width:30%}
+.edge table{table-layout:fixed}.edge th:nth-child(1),.edge th:nth-child(2){width:17%}.edge th:nth-child(3),.edge th:nth-child(4){width:26%}.edge th:nth-child(5){width:14%}
 .edge:target{border:2px solid #00bbdd;box-shadow:0 0 0 3px rgba(0,187,221,.15)}
 .edge table{width:100%;margin:0 0 4px;border-collapse:collapse}
 .edge th,.edge td{text-align:left;padding:7px 14px;border-top:1px solid #eef0f7;font-size:13px}
@@ -212,31 +219,48 @@ ul.files{margin:0;padding-left:18px;font-family:Consolas,Menlo,monospace;font-si
 `;
 
 function renderHtml(res) {
-    const cells = new Map();
-    res.matrix.forEach(c => cells.set(`${c.from}|${c.to}`, { c, bad: false }));
-    res.violations.forEach(c => cells.set(`${c.from}|${c.to}`, { c, bad: true }));
+    // One entry per (from, to): kept calls (green/red) and excluded calls (green, marked 'excluded').
+    const pairs = new Map();
+    const pair = (from, to) => {
+        const k = `${from}|${to}`;
+        if (!pairs.has(k)) pairs.set(k, { from, to, kept: [], excluded: [], bad: false });
+        return pairs.get(k);
+    };
+    res.matrix.forEach(c => pair(c.from, c.to).kept.push(...c.edges));
+    res.violations.forEach(c => { const p = pair(c.from, c.to); p.kept.push(...c.edges); p.bad = true; });
+    res.excluded.forEach(e => pair(e.from, e.to).excluded.push(e));
     const names = [...res.groups].sort();
-    const id = c => esc(`${c.from}__${c.to}`);
+    const id = p => esc(`${p.from}__${p.to}`);
     const kind = n => kinds[n] ? `<small>${esc(kinds[n])}</small>` : '';
+    const state = p => p.kept.length ? (p.bad ? 'bad' : 'ok') : 'excl';
 
     const head = names.map(n => `<th>${esc(n)}${kind(n)}</th>`).join('');
     const rows = names.map(from => `<tr><th class="row">${esc(from)}${kind(from)}</th>` + names.map(to => {
         if (from === to) return '<td class="self">–</td>';
-        const h = cells.get(`${from}|${to}`);
-        return h ? `<td class="${h.bad ? 'bad' : 'ok'}"><a href="#${id(h.c)}" title="${esc(from)} → ${esc(to)}">${h.c.count}</a></td>` : '<td></td>';
+        const p = pairs.get(`${from}|${to}`);
+        if (!p) return '<td></td>';
+        const n = p.kept.length || p.excluded.length;
+        const extra = p.kept.length && p.excluded.length ? `<small>+${p.excluded.length} excl.</small>` : '';
+        return `<td class="${state(p)}"><a href="#${id(p)}" title="${esc(from)} → ${esc(to)}">${n}${extra}</a></td>`;
     }).join('') + '</tr>').join('');
 
-    // Violations first and always expanded; other edges open when targeted (matrix cell or header click). Pure CSS, no JS.
-    const edges = [...cells.values()]
-        .sort((a, b) => b.bad - a.bad || a.c.from.localeCompare(b.c.from) || a.c.to.localeCompare(b.c.to))
-        .map(({ c, bad }) =>
-            `<div class="edge${bad ? ' bad' : ''}" id="${id(c)}">` +
-            `<a class="hd" href="#${id(c)}">${esc(c.from)} → ${esc(c.to)}<span class="tag">${c.count} call(s)${bad ? ' · violation' : ''}</span></a>` +
-            `<div class="body"><table><tr><th>Caller</th><th>Function</th><th>Used in</th><th>Defined in</th></tr>` +
-            [...c.edges]
-                .sort((a, b) => a.symbol.localeCompare(b.symbol) || (a.caller_fn || '').localeCompare(b.caller_fn || ''))
-                .map(e => `<tr><td class="fn">${esc(e.caller_fn || '—')}</td><td class="fn">${esc(e.symbol)}</td><td class="file">${esc(rel(e.caller))}</td><td class="file">${esc(rel(e.callee))}</td></tr>`).join('') +
-            `</table><a class="back" href="#top">↑ Back to matrix</a></div></div>`).join('');
+    // Violations first and always expanded; other edges open when targeted. Pure CSS, no JS.
+    const order = { bad: 0, excl: 1, ok: 2 };
+    const sortEdges = l => [...l].sort((a, b) => a.symbol.localeCompare(b.symbol) || (a.caller_fn || '').localeCompare(b.caller_fn || ''));
+    const row = (e, excl) => `<tr${excl ? ' class="excl"' : ''}><td class="fn">${esc(e.caller_fn || '—')}</td><td class="fn">${esc(e.symbol)}</td>` +
+        `<td class="file">${esc(rel(e.caller))}</td><td class="file">${esc(rel(e.callee))}</td>` +
+        `<td class="why">${excl ? 'excluded' + (e.reason ? ': ' + esc(e.reason) : '') : ''}</td></tr>`;
+    const edges = [...pairs.values()]
+        .sort((a, b) => order[state(a)] - order[state(b)] || a.from.localeCompare(b.from) || a.to.localeCompare(b.to))
+        .map(p => {
+            const tag = [p.kept.length && `${p.kept.length} call(s)`, p.bad && 'violation',
+                         p.excluded.length && `${p.excluded.length} excluded`].filter(Boolean).join(' · ');
+            return `<div class="edge ${state(p)}" id="${id(p)}">` +
+                `<a class="hd" href="#${id(p)}">${esc(p.from)} → ${esc(p.to)}<span class="tag">${tag}</span></a>` +
+                `<div class="body"><table><tr><th>Caller</th><th>Function</th><th>Used in</th><th>Defined in</th><th></th></tr>` +
+                sortEdges(p.kept).map(e => row(e, false)).join('') + sortEdges(p.excluded).map(e => row(e, true)).join('') +
+                `</table><a class="back" href="#top">↑ Back to matrix</a></div></div>`;
+        }).join('');
 
     const panel = (title, items) => items.length
         ? `<div class="panel"><h2>${title} (${items.length})</h2><ul class="files">${items.map(i => `<li>${esc(i)}</li>`).join('')}</ul></div>` : '';
@@ -253,12 +277,15 @@ ${card(res.violations.length, 'Violations', 'bad')}
 ${card(nCalls, 'Cross-group calls')}
 ${card(res.unassigned.length, 'Unassigned files', 'warn')}
 ${card(res.unresolved_calls.length, 'Unresolved calls', 'warn')}
-${card(res.excluded.length, 'Excluded calls')}
+${card(res.excluded.length, 'Excluded calls', 'excl')}
+${card(sharedFiles.length, 'Files in several groups', 'warn')}
 </div>
 <div class="panel"><h2>Group dependencies</h2>
-<p class="legend">Rows: caller group · Columns: called group ·<i class="ok"></i>Allowed<i class="bad"></i>Violation · Click a number to see the calls</p>
+<p class="legend">Rows: caller group · Columns: called group ·<i class="ok"></i>Allowed (rule or dependencies.exclusions)<i class="bad"></i>Violation · Click a number to see the calls</p>
 <div class="scroll"><table class="matrix"><thead><tr><th>caller \\ called</th>${head}</tr></thead><tbody>${rows}</tbody></table></div></div>
 <div class="panel"><h2>Calls between groups</h2>${edges || '<p class="empty">No cross-group calls.</p>'}</div>
+${panel('Files in several groups — placed in execution regions of different features (counted in the first one)',
+    sharedFiles.map(f => `${f.file} — ${f.groups.join(', ')} (counted in ${f.kept})`))}
 ${panel('Unassigned files — add them to dependencies.groups', res.unassigned.map(rel))}
 ${panel('Unresolved indirect calls — add a //@ calls clause', res.unresolved_calls.map(u => `${rel(u.file)}:${u.line}`))}
 ${panel('Excluded calls — accepted in dependencies.exclusions', res.excluded.map(e =>
@@ -274,6 +301,10 @@ function renderIssues(res) {
             fileName: e.caller, lineStart: 1, severity: 'ERROR', category: 'Architecture violation', type: `${v.from} -> ${v.to}`,
             message: `${kinds[v.from]} '${v.from}' must not depend on ${kinds[v.to]} '${v.to}' (${e.caller_fn || '?'} calls ${e.symbol} from ${rel(e.callee)})`,
         }))),
+        ...sharedFiles.map(f => ({
+            fileName: abs(f.file), lineStart: 1, severity: 'NORMAL', category: 'File in several groups', type: f.groups.join(', '),
+            message: `File placed in several groups (${f.groups.join(', ')}); counted in ${f.kept}`,
+        })),
         ...res.unassigned.map(f => ({
             fileName: f, lineStart: 1, severity: 'NORMAL', category: 'Unassigned file', type: 'dependencies.groups',
             message: 'File involved in a dependency but not in any group',
@@ -302,7 +333,7 @@ function cmdRender() {
     fs.writeFileSync(path.join(out, 'deps.json'), JSON.stringify(res, null, 2));
     fs.writeFileSync(path.join(out, 'matrix.html'), renderHtml(res));
     fs.writeFileSync(path.join(out, 'deps-issues.json'), JSON.stringify(renderIssues(res), null, 2));
-    log(`OK: ${res.violations.length} violation(s), ${res.excluded.length} excluded, ${res.unassigned.length} unassigned, ${res.unresolved_calls.length} unresolved -> ${out}`);
+    log(`OK: ${res.violations.length} violation(s), ${res.excluded.length} excluded, ${sharedFiles.length} shared file(s), ${res.unassigned.length} unassigned, ${res.unresolved_calls.length} unresolved -> ${out}`);
     if (res.unused_exclusions.length) log(`WARNING: ${res.unused_exclusions.length} exclusion(s) matched no call`);
 }
 
