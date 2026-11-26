@@ -1289,8 +1289,9 @@ async function fetchDependencies(): Promise<DepResult | undefined> {
     // On envoie aussi la liste des kinds par groupe, pour la règle allowed côté serveur.
     const kinds: Record<string, string> = {};
     for (const g of groups) kinds[g.name] = g.kind;
-    return await client.sendRequest<DepResult>("computeRealDependencies",
-        { fileGroups, kinds, files: Object.keys(fileGroups) });
+    const exclusions = vscode.workspace.getConfiguration().get<object[]>('dependencies.exclusions') || [];
+return await client.sendRequest<DepResult>("computeRealDependencies",
+    { fileGroups, kinds, exclusions, files: Object.keys(fileGroups) });
 }
 
 async function showGroupDependencyMatrix() {

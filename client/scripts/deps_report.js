@@ -33,7 +33,10 @@ if (!fs.existsSync(configPath)) fail(`config not found: ${configPath}`);
 const settings = readJsonc(configPath);
 const groups = settings['dependencies.groups'] || [];
 const kinds = Object.fromEntries(groups.map(g => [g.name, g.kind]));
-// Accepted dependencies. Group level: { from, to }. Function level: { caller, callee } (function names).
+// Accepted dependencies, applied by the Frama-C plugin (real_deps):
+//   group level     { from, to }
+//   function level  { caller, callee, fromCaller, fromCallee }: accepted if fromCaller calls fromCallee
+//                   and caller is reachable from fromCallee in the callgraph.
 const exclusions = settings['dependencies.exclusions'] || [];
 // .c files placed in several execution regions of different groups (written by gen_groups.py).
 const sharedFiles = settings['dependencies.sharedFiles'] || [];
@@ -92,7 +95,7 @@ function cmdGroups() {
     const mac = (settings['kernel.macros'] || []).map(m => '-D' + m);
     const dir = path.join(WS, '.frama-c');
     fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(path.join(dir, 'dep_groups.json'), JSON.stringify({ fileGroups, kinds }, null, 1));
+    fs.writeFileSync(path.join(dir, 'dep_groups.json'), JSON.stringify({ fileGroups, kinds, exclusions }, null, 1));
     fs.writeFileSync(path.join(dir, 'files.txt'), files.join('\n') + '\n');
     fs.writeFileSync(path.join(dir, 'cpp_args.txt'), ['-CC', ...inc, ...mac].join(' '));
     fs.writeFileSync(path.join(dir, 'fc_opts.txt'), frama_c_options().join(' '));
@@ -119,10 +122,8 @@ function extractResponse(raw) {
 }
 
 // ---------- exclusions ----------
-// Two levels:
-//   { "from": "feature1", "to": "feature2" }          every call between the two groups
-//   { "caller": "f1_run", "callee": "f2_helper" }     only this call between two functions
-// A call is excluded when every field the exclusion sets matches.
+// Applied by the plugin; checkExclusions only validates the format, applyExclusions is the fallback
+// for an older plugin that does not return "excluded".
 function matches(x, from, to, e) {
     return (x.from === undefined || x.from === from)
         && (x.to === undefined || x.to === to)
@@ -135,7 +136,9 @@ function checkExclusions() {
         const groupLevel = x.from !== undefined && x.to !== undefined;
         const functionLevel = x.caller !== undefined && x.callee !== undefined;
         if (!groupLevel && !functionLevel)
-            fail(`dependencies.exclusions[${i}]: expected { from, to } (groups) or { caller, callee } (functions)`);
+            fail(`dependencies.exclusions[${i}]: expected { from, to } or { caller, callee, fromCaller, fromCallee }`);
+        if ((x.fromCaller === undefined) !== (x.fromCallee === undefined))
+            fail(`dependencies.exclusions[${i}]: set both fromCaller and fromCallee, or neither`);
         // A group with no .c file is not in dependencies.groups: the exclusion simply never matches.
         for (const g of [x.from, x.to])
             if (g !== undefined && !(g in kinds)) log(`note: dependencies.exclusions[${i}]: group '${g}' has no file`);
@@ -165,7 +168,9 @@ function applyExclusions(res) {
 }
 
 const describeExclusion = x =>
-    (x.from !== undefined ? `${x.from} → ${x.to}` : `${x.caller} → ${x.callee}`) + (x.reason ? ` — ${x.reason}` : '');
+    (x.caller !== undefined ? `${x.caller} → ${x.callee}` : `${x.from} → ${x.to}`)
+    + (x.fromCaller ? `, from ${x.fromCaller} → ${x.fromCallee}` : '') + (x.reason ? ` — ${x.reason}` : '');
+const describeCall = e => `${e.from} → ${e.to} : ${e.caller_fn || '?'} → ${e.symbol}` + (e.context ? `, from ${e.context}` : '');
 
 // Stylesheet embedded in matrix.html.
 const CSS = `
@@ -249,7 +254,7 @@ function renderHtml(res) {
     const sortEdges = l => [...l].sort((a, b) => a.symbol.localeCompare(b.symbol) || (a.caller_fn || '').localeCompare(b.caller_fn || ''));
     const row = (e, excl) => `<tr${excl ? ' class="excl"' : ''}><td class="fn">${esc(e.caller_fn || '—')}</td><td class="fn">${esc(e.symbol)}</td>` +
         `<td class="file">${esc(rel(e.caller))}</td><td class="file">${esc(rel(e.callee))}</td>` +
-        `<td class="why">${excl ? 'excluded' + (e.reason ? ': ' + esc(e.reason) : '') : ''}</td></tr>`;
+        `<td class="why">${excl ? 'excluded' + (e.context ? ', from ' + esc(e.context) : '') + (e.reason ? ': ' + esc(e.reason) : '') : ''}</td></tr>`;
     const edges = [...pairs.values()]
         .sort((a, b) => order[state(a)] - order[state(b)] || a.from.localeCompare(b.from) || a.to.localeCompare(b.to))
         .map(p => {
@@ -289,7 +294,9 @@ ${panel('Files in several groups — placed in execution regions of different fe
 ${panel('Unassigned files — add them to dependencies.groups', res.unassigned.map(rel))}
 ${panel('Unresolved indirect calls — add a //@ calls clause', res.unresolved_calls.map(u => `${rel(u.file)}:${u.line}`))}
 ${panel('Excluded calls — accepted in dependencies.exclusions', res.excluded.map(e =>
-    `${e.from} → ${e.to} : ${e.caller_fn || '?'} → ${e.symbol} (${rel(e.caller)})` + (e.reason ? ` — ${e.reason}` : '')))}
+    `${describeCall(e)} (${rel(e.caller)})` + (e.reason ? ` — ${e.reason}` : '')))}
+${panel('Exclusions not applied — no callgraph path from fromCaller → fromCallee to the caller (the call stays in the matrix)',
+    res.invalid_exclusions.map(e => describeCall(e) + (e.callers.length ? ` (callers of ${e.caller_fn}: ${e.callers.join(', ')})` : '')))}
 ${panel('Unused exclusions — matched no call, check dependencies.exclusions', res.unused_exclusions.map(describeExclusion))}
 </body></html>`;
 }
@@ -304,6 +311,10 @@ function renderIssues(res) {
         ...sharedFiles.map(f => ({
             fileName: abs(f.file), lineStart: 1, severity: 'NORMAL', category: 'File in several groups', type: f.groups.join(', '),
             message: `File placed in several groups (${f.groups.join(', ')}); counted in ${f.kept}`,
+        })),
+        ...res.invalid_exclusions.map(e => ({
+            fileName: e.caller, lineStart: 1, severity: 'NORMAL', category: 'Exclusion not applied', type: `${e.caller_fn} -> ${e.symbol}`,
+            message: `Exclusion ${e.caller_fn} -> ${e.symbol}${e.context ? ', from ' + e.context : ''}: no callgraph path, call kept`,
         })),
         ...res.unassigned.map(f => ({
             fileName: f, lineStart: 1, severity: 'NORMAL', category: 'Unassigned file', type: 'dependencies.groups',
@@ -326,14 +337,22 @@ function cmdRender() {
     // Only .c files are grouped: headers are not reported as unassigned.
     res.unassigned = res.unassigned.filter(f => f.endsWith('.c'));
     checkExclusions();
-    applyExclusions(res);
+    if (Array.isArray(res.excluded)) {
+        // Exclusions applied by the plugin. platform.cfg requires are permissions: an unused one is normal.
+        res.invalid_exclusions = res.invalid_exclusions || [];
+        res.unused_exclusions = (res.unused_exclusions || []).filter(x => !String(x.reason || '').startsWith('platform.cfg:'));
+    } else {
+        log('note: the plugin did not apply the exclusions (old version): applied here, without the path check');
+        applyExclusions(res);
+        res.invalid_exclusions = [];
+    }
 
     const out = path.resolve(WS, outArg || 'report');
     fs.mkdirSync(out, { recursive: true });
     fs.writeFileSync(path.join(out, 'deps.json'), JSON.stringify(res, null, 2));
     fs.writeFileSync(path.join(out, 'matrix.html'), renderHtml(res));
     fs.writeFileSync(path.join(out, 'deps-issues.json'), JSON.stringify(renderIssues(res), null, 2));
-    log(`OK: ${res.violations.length} violation(s), ${res.excluded.length} excluded, ${sharedFiles.length} shared file(s), ${res.unassigned.length} unassigned, ${res.unresolved_calls.length} unresolved -> ${out}`);
+    log(`OK: ${res.violations.length} violation(s), ${res.excluded.length} excluded, ${res.invalid_exclusions.length} not applied, ${sharedFiles.length} shared file(s), ${res.unassigned.length} unassigned, ${res.unresolved_calls.length} unresolved -> ${out}`);
     if (res.unused_exclusions.length) log(`WARNING: ${res.unused_exclusions.length} exclusion(s) matched no call`);
 }
 

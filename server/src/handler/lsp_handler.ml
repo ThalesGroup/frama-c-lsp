@@ -898,7 +898,7 @@ let rq_handler json_string wrapper_port =
  
         Lsp_types.CONTENT (data), pid
       end
-                  | "computeRealDependencies" ->
+      | "computeRealDependencies" ->
       Options.Self.debug ~level:1 "Real Deps Request triggered\n%!";
       let params = match request.params with Some (`Assoc f) -> f | _ -> [] in
       let file_groups = Option.value ~default:(`Assoc []) (List.assoc_opt "fileGroups" params) in
@@ -914,11 +914,11 @@ let rq_handler json_string wrapper_port =
         | `Assoc kv -> `Assoc (List.map (fun (k, v) -> abs k, v) kv)
         | x -> x
       in
+      let exclusions = Option.value ~default:(`List []) (List.assoc_opt "exclusions" params) in
       let groups_file = ".frama-c/dep_groups.json" in
       let oc = open_out groups_file in
-      output_string oc (Json.save_string (`Assoc [ "fileGroups", file_groups; "kinds", kinds ]));
+      output_string oc (Json.save_string (`Assoc [ "fileGroups", file_groups; "kinds", kinds; "exclusions", exclusions ]));
       close_out oc;
-
       let id_int = Utils.id_to_int id in
       let kernel_opt = KernelOpt.create ~strategies:false () in
       let feature = ComputeRealDependencies_feature (id_int, groups_file) in

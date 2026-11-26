@@ -120,25 +120,133 @@ let declared_edges () =
 
 
 
+type exclusion = {
+  x_from : string option; x_to : string option;
+  x_caller : string option; x_callee : string option;
+  x_from_caller : string option; x_from_callee : string option;
+  x_reason : string;
+}
+
+let load_exclusions path =
+  let json = Json.load_string (read_file path) in
+  let field kv k = match List.assoc_opt k kv with Some (`String s) -> Some s | _ -> None in
+  match json with
+  | `Assoc top ->
+      (match List.assoc_opt "exclusions" top with
+       | Some (`List l) ->
+           List.filter_map (function
+             | `Assoc kv ->
+                 Some { x_from = field kv "from"; x_to = field kv "to";
+                        x_caller = field kv "caller"; x_callee = field kv "callee";
+                        x_from_caller = field kv "fromCaller"; x_from_callee = field kv "fromCallee";
+                        x_reason = Option.value ~default:"" (field kv "reason") }
+             | _ -> None) l
+       | _ -> [])
+  | _ -> []
+
+let kf_of_name name = try Some (Globals.Functions.find_by_name name) with Not_found -> None
+
+let reachable g src dst =
+  let module G = Callgraph.Cg.G in
+  let seen = Kernel_function.Hashtbl.create 64 in
+  let rec visit = function
+    | [] -> false
+    | kf :: rest ->
+        if Kernel_function.equal kf dst then true
+        else if Kernel_function.Hashtbl.mem seen kf || not (G.mem_vertex g kf) then visit rest
+        else begin
+          Kernel_function.Hashtbl.replace seen kf ();
+          visit (G.succ g kf @ rest)
+        end
+  in
+  visit [src]
+
+let context_ok g x caller_fn =
+  match x.x_from_caller, x.x_from_callee with
+  | None, None -> true
+  | Some c2, Some f2 ->
+      (match kf_of_name c2, kf_of_name f2, kf_of_name caller_fn with
+       | Some k2, Some kf2, Some k1 ->
+           Callgraph.Cg.G.mem_vertex g k2 && Callgraph.Cg.G.mem_edge g k2 kf2 && reachable g kf2 k1
+       | _ -> false)
+  | _ -> false                                   (* only one of fromCaller / fromCallee *)
+
+let callers_of g name =
+  match kf_of_name name with
+  | Some kf when Callgraph.Cg.G.mem_vertex g kf ->
+      List.map Kernel_function.get_name (Callgraph.Cg.G.pred g kf)
+  | _ -> []
+
+let opt_matches o v = match o with None -> true | Some s -> s = v
+
+let is_group_level x = x.x_from <> None && x.x_to <> None && x.x_caller = None && x.x_callee = None
+
+let find_exclusion g exclusions gs gd e =
+  let rec go i = function
+    | [] -> None
+    | x :: rest ->
+        if is_group_level x then
+          if opt_matches x.x_from gs && opt_matches x.x_to gd then Some (i, x, true) else go (i + 1) rest
+        else if x.x_caller = Some e.caller_fn && x.x_callee = Some e.symbol
+             && opt_matches x.x_from gs && opt_matches x.x_to gd then
+          Some (i, x, context_ok g x e.caller_fn)
+        else go (i + 1) rest
+  in
+  go 0 exclusions
+
+let context_string x =
+  match x.x_from_caller, x.x_from_callee with
+  | Some c2, Some f2 -> c2 ^ " -> " ^ f2
+  | _ -> ""
+
 (* ---------- Aggregation + JSON ---------- *)
 
 let compute_and_serialize id groups_file =
   let file_group = load_file_groups groups_file in
+  let exclusions = load_exclusions groups_file in
+  let g = Callgraph.Cg.get () in
   let cells = Hashtbl.create 16 and unassigned = Hashtbl.create 16 in
+  let used = Hashtbl.create 16 in                         (* exclusion index -> () *)
+  let excluded = ref [] and invalid = ref [] in
   let decl_edges, resolved = declared_edges () in
   let all_edges = file_edges () @ decl_edges in
   List.iter (fun e ->
     match group_of file_group e.caller, group_of file_group e.callee with
     | Some (gs_name, gs_kind), Some (gd_name, gd_kind) when gs_name <> gd_name ->
-        let l = Option.value ~default:[] (Hashtbl.find_opt cells (gs_name, gs_kind, gd_name, gd_kind)) in
-        Hashtbl.replace cells (gs_name, gs_kind, gd_name, gd_kind) (e :: l)
+        let keep () =
+          let l = Option.value ~default:[] (Hashtbl.find_opt cells (gs_name, gs_kind, gd_name, gd_kind)) in
+          Hashtbl.replace cells (gs_name, gs_kind, gd_name, gd_kind) (e :: l) in
+        (match find_exclusion g exclusions gs_name gd_name e with
+         | Some (i, x, true) ->
+             Hashtbl.replace used i ();
+             excluded := (gs_name, gd_name, not (allowed gs_kind gd_kind), e, x) :: !excluded
+         | Some (i, x, false) ->
+             (* context not verified: the call stays in the matrix and is reported *)
+             Hashtbl.replace used i ();
+             invalid := (gs_name, gd_name, e, x) :: !invalid;
+             keep ()
+         | None -> keep ())
     | None, _ -> Hashtbl.replace unassigned e.caller ()
     | _, None -> Hashtbl.replace unassigned e.callee ()
-    | _ -> ()) all_edges;   
+    | _ -> ()) all_edges;
 
   let edge_json e =
     `Assoc [ "caller", `String e.caller; "callee", `String e.callee;
              "caller_fn", `String e.caller_fn; "symbol", `String e.symbol ] in
+  let with_fields e extra = match edge_json e with `Assoc kv -> `Assoc (kv @ extra) | j -> j in
+  let excluded_json (gs, gd, violation, e, x) =
+    with_fields e [ "from", `String gs; "to", `String gd; "violation", `Bool violation;
+                    "reason", `String x.x_reason; "context", `String (context_string x) ] in
+  let invalid_json (gs, gd, e, x) =
+    with_fields e [ "from", `String gs; "to", `String gd; "reason", `String x.x_reason;
+                    "context", `String (context_string x);
+                    "callers", `List (List.map (fun n -> `String n) (callers_of g e.caller_fn)) ] in
+  let exclusion_json x =
+    let opt k = function Some v -> [ k, `String v ] | None -> [] in
+    `Assoc (opt "from" x.x_from @ opt "to" x.x_to @ opt "caller" x.x_caller @ opt "callee" x.x_callee
+            @ opt "fromCaller" x.x_from_caller @ opt "fromCallee" x.x_from_callee
+            @ [ "reason", `String x.x_reason ]) in
+  let unused = List.filteri (fun i _ -> not (Hashtbl.mem used i)) exclusions in
   let cell_json (gs, _, gd, _) es =
     `Assoc [ "from", `String gs; "to", `String gd;
              "count", `Int (List.length es); "edges", `List (List.map edge_json es) ] in
@@ -158,6 +266,9 @@ let compute_and_serialize id groups_file =
     "unassigned", `List (Hashtbl.fold (fun f () l -> `String f :: l) unassigned []);
     "unresolved_calls", `List (List.map (fun (f, l) ->
         `Assoc [ "file", `String f; "line", `Int l ]) (unresolved_calls resolved));
+    "excluded", `List (List.map excluded_json !excluded);
+    "invalid_exclusions", `List (List.map invalid_json !invalid);
+    "unused_exclusions", `List (List.map exclusion_json unused);
   ] in
   let msg = Lsp_types.ResponseMessage.create
       ~jsonrpc:"2.0" ~id:(Lsp_types.Int id) ~result () in
