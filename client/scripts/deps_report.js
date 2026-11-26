@@ -211,7 +211,12 @@ table{border-collapse:collapse}
 .edge.bad .hd:before,.edge:target .hd:before{content:"\\25BE"}
 .tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:10px;background:#eef0f7;color:#242a75}
 .edge.bad .tag{background:#fdecea;color:#c62828}
-.edge table{table-layout:fixed}.edge th:nth-child(1),.edge th:nth-child(2){width:17%}.edge th:nth-child(3),.edge th:nth-child(4){width:26%}.edge th:nth-child(5){width:14%}
+.edge table{table-layout:fixed}.edge th:nth-child(1),.edge th:nth-child(2){width:32%}.edge th:nth-child(3){width:36%}
+.edge td{overflow-wrap:anywhere;word-break:break-word}
+.edge tr.files td{background:#f3f4f9;border-top:2px solid #e3e5ee;padding:8px 14px;font-size:12px;color:#4a4f63}
+.edge tr.files .file{font-family:Consolas,Menlo,monospace;overflow-wrap:anywhere}
+.edge tr.files b{color:#242a75;margin:0 4px}
+.edge tr.files .n{float:right;font-size:11px;font-weight:600;background:#fff;border-radius:10px;padding:1px 8px;color:#242a75}
 .edge:target{border:2px solid #00bbdd;box-shadow:0 0 0 3px rgba(0,187,221,.15)}
 .edge table{width:100%;margin:0 0 4px;border-collapse:collapse}
 .edge th,.edge td{text-align:left;padding:7px 14px;border-top:1px solid #eef0f7;font-size:13px}
@@ -251,10 +256,24 @@ function renderHtml(res) {
 
     // Violations first and always expanded; other edges open when targeted. Pure CSS, no JS.
     const order = { bad: 0, excl: 1, ok: 2 };
-    const sortEdges = l => [...l].sort((a, b) => a.symbol.localeCompare(b.symbol) || (a.caller_fn || '').localeCompare(b.caller_fn || ''));
     const row = (e, excl) => `<tr${excl ? ' class="excl"' : ''}><td class="fn">${esc(e.caller_fn || '—')}</td><td class="fn">${esc(e.symbol)}</td>` +
-        `<td class="file">${esc(rel(e.caller))}</td><td class="file">${esc(rel(e.callee))}</td>` +
         `<td class="why">${excl ? 'excluded' + (e.context ? ', from ' + esc(e.context) : '') + (e.reason ? ': ' + esc(e.reason) : '') : ''}</td></tr>`;
+    // Calls grouped by file pair: one header "used in → defined in", then one line per call.
+    const byFiles = (kept, excl) => {
+        const groups = new Map();
+        for (const [e, x] of [...kept.map(e => [e, false]), ...excl.map(e => [e, true])]) {
+            const k = `${rel(e.caller)}|${rel(e.callee)}`;
+            if (!groups.has(k)) groups.set(k, []);
+            groups.get(k).push([e, x]);
+        }
+        return [...groups.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([k, list]) => {
+            const [used, defined] = k.split('|');
+            return `<tr class="files"><td colspan="3"><span class="file">${esc(used)}</span> <b>→</b> <span class="file">${esc(defined)}</span>` +
+                `<span class="n">${list.length}</span></td></tr>` +
+                list.sort(([a, xa], [b, xb]) => xa - xb || a.symbol.localeCompare(b.symbol) || (a.caller_fn || '').localeCompare(b.caller_fn || ''))
+                    .map(([e, x]) => row(e, x)).join('');
+        }).join('');
+    };
     const edges = [...pairs.values()]
         .sort((a, b) => order[state(a)] - order[state(b)] || a.from.localeCompare(b.from) || a.to.localeCompare(b.to))
         .map(p => {
@@ -262,8 +281,7 @@ function renderHtml(res) {
                          p.excluded.length && `${p.excluded.length} excluded`].filter(Boolean).join(' · ');
             return `<div class="edge ${state(p)}" id="${id(p)}">` +
                 `<a class="hd" href="#${id(p)}">${esc(p.from)} → ${esc(p.to)}<span class="tag">${tag}</span></a>` +
-                `<div class="body"><table><tr><th>Caller</th><th>Function</th><th>Used in</th><th>Defined in</th><th></th></tr>` +
-                sortEdges(p.kept).map(e => row(e, false)).join('') + sortEdges(p.excluded).map(e => row(e, true)).join('') +
+                `<div class="body"><table><tr><th>Caller</th><th>Function</th><th></th></tr>` + byFiles(p.kept, p.excluded) +
                 `</table><a class="back" href="#top">↑ Back to matrix</a></div></div>`;
         }).join('');
 
@@ -294,7 +312,8 @@ ${panel('Files in several groups — placed in execution regions of different fe
 ${panel('Unassigned files — add them to dependencies.groups', res.unassigned.map(rel))}
 ${panel('Unresolved indirect calls — add a //@ calls clause', res.unresolved_calls.map(u => `${rel(u.file)}:${u.line}`))}
 ${panel('Excluded calls — accepted in dependencies.exclusions', res.excluded.map(e =>
-    `${describeCall(e)} (${rel(e.caller)})` + (e.reason ? ` — ${e.reason}` : '')))}
+    `${describeCall(e)} (${rel(e.caller)})` + (e.reason ? ` — ${e.reason}` : '')
+    + ((e.callers || []).length ? ` [no fromCaller/fromCallee yet — callers of ${e.caller_fn}: ${e.callers.join(', ')}]` : '')))}
 ${panel('Exclusions not applied — no callgraph path from fromCaller → fromCallee to the caller (the call stays in the matrix)',
     res.invalid_exclusions.map(e => describeCall(e) + (e.callers.length ? ` (callers of ${e.caller_fn}: ${e.callers.join(', ')})` : '')))}
 ${panel('Unused exclusions — matched no call, check dependencies.exclusions', res.unused_exclusions.map(describeExclusion))}
