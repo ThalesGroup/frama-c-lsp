@@ -119,7 +119,6 @@ let declared_edges () =
   (!edges, resolved)
 
 
-
 type exclusion = {
   x_from : string option; x_to : string option;
   x_caller : string option; x_callee : string option;
@@ -146,6 +145,7 @@ let load_exclusions path =
 
 let kf_of_name name = try Some (Globals.Functions.find_by_name name) with Not_found -> None
 
+(* Is [dst] reachable from [src] in the callgraph (src = dst counts)? *)
 let reachable g src dst =
   let module G = Callgraph.Cg.G in
   let seen = Kernel_function.Hashtbl.create 64 in
@@ -161,15 +161,17 @@ let reachable g src dst =
   in
   visit [src]
 
-let context_ok g x caller_fn =
+type context = Verified | No_context | Failed
+let check_context g x caller_fn callee_fn =
   match x.x_from_caller, x.x_from_callee with
-  | None, None -> true
+  | None, None -> No_context
+  | Some c2, Some f2 when c2 = caller_fn && f2 = callee_fn -> Verified
   | Some c2, Some f2 ->
       (match kf_of_name c2, kf_of_name f2, kf_of_name caller_fn with
-       | Some k2, Some kf2, Some k1 ->
-           Callgraph.Cg.G.mem_vertex g k2 && Callgraph.Cg.G.mem_edge g k2 kf2 && reachable g kf2 k1
-       | _ -> false)
-  | _ -> false                                   (* only one of fromCaller / fromCallee *)
+       | Some k2, Some kf2, Some k1
+         when Callgraph.Cg.G.mem_vertex g k2 && Callgraph.Cg.G.mem_edge g k2 kf2 && reachable g kf2 k1 -> Verified
+       | _ -> Failed)
+  | _ -> Failed                                  (* only one of fromCaller / fromCallee *)
 
 let callers_of g name =
   match kf_of_name name with
@@ -186,10 +188,10 @@ let find_exclusion g exclusions gs gd e =
     | [] -> None
     | x :: rest ->
         if is_group_level x then
-          if opt_matches x.x_from gs && opt_matches x.x_to gd then Some (i, x, true) else go (i + 1) rest
+          if opt_matches x.x_from gs && opt_matches x.x_to gd then Some (i, x, Verified) else go (i + 1) rest
         else if x.x_caller = Some e.caller_fn && x.x_callee = Some e.symbol
              && opt_matches x.x_from gs && opt_matches x.x_to gd then
-          Some (i, x, context_ok g x e.caller_fn)
+          Some (i, x, check_context g x e.caller_fn e.symbol)
         else go (i + 1) rest
   in
   go 0 exclusions
@@ -217,10 +219,10 @@ let compute_and_serialize id groups_file =
           let l = Option.value ~default:[] (Hashtbl.find_opt cells (gs_name, gs_kind, gd_name, gd_kind)) in
           Hashtbl.replace cells (gs_name, gs_kind, gd_name, gd_kind) (e :: l) in
         (match find_exclusion g exclusions gs_name gd_name e with
-         | Some (i, x, true) ->
+         | Some (i, x, ((Verified | No_context) as ctx)) ->
              Hashtbl.replace used i ();
-             excluded := (gs_name, gd_name, not (allowed gs_kind gd_kind), e, x) :: !excluded
-         | Some (i, x, false) ->
+             excluded := (gs_name, gd_name, not (allowed gs_kind gd_kind), e, x, ctx = No_context) :: !excluded
+         | Some (i, x, Failed) ->
              (* context not verified: the call stays in the matrix and is reported *)
              Hashtbl.replace used i ();
              invalid := (gs_name, gd_name, e, x) :: !invalid;
@@ -234,9 +236,13 @@ let compute_and_serialize id groups_file =
     `Assoc [ "caller", `String e.caller; "callee", `String e.callee;
              "caller_fn", `String e.caller_fn; "symbol", `String e.symbol ] in
   let with_fields e extra = match edge_json e with `Assoc kv -> `Assoc (kv @ extra) | j -> j in
-  let excluded_json (gs, gd, violation, e, x) =
+  let excluded_json (gs, gd, violation, e, x, no_context) =
+    (* applied without context: warning, with the direct callers as fromCaller candidates *)
+    let callers = if no_context then callers_of g e.caller_fn else [] in
     with_fields e [ "from", `String gs; "to", `String gd; "violation", `Bool violation;
-                    "reason", `String x.x_reason; "context", `String (context_string x) ] in
+                    "no_context", `Bool no_context;
+                    "reason", `String x.x_reason; "context", `String (context_string x);
+                    "callers", `List (List.map (fun n -> `String n) callers) ] in
   let invalid_json (gs, gd, e, x) =
     with_fields e [ "from", `String gs; "to", `String gd; "reason", `String x.x_reason;
                     "context", `String (context_string x);

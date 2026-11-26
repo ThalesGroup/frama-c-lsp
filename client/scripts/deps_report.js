@@ -132,6 +132,7 @@ function matches(x, from, to, e) {
 }
 
 function checkExclusions() {
+    const empty = new Set();
     exclusions.forEach((x, i) => {
         const groupLevel = x.from !== undefined && x.to !== undefined;
         const functionLevel = x.caller !== undefined && x.callee !== undefined;
@@ -141,8 +142,9 @@ function checkExclusions() {
             fail(`dependencies.exclusions[${i}]: set both fromCaller and fromCallee, or neither`);
         // A group with no .c file is not in dependencies.groups: the exclusion simply never matches.
         for (const g of [x.from, x.to])
-            if (g !== undefined && !(g in kinds)) log(`note: dependencies.exclusions[${i}]: group '${g}' has no file`);
+            if (g !== undefined && !(g in kinds)) empty.add(g);
     });
+    if (empty.size) log(`note: exclusions mention groups with no file (never matched): ${[...empty].sort().join(', ')}`);
 }
 
 // Moves excluded calls out of the matrix and the violations (shown as allowed, in green, in the report).
@@ -256,7 +258,7 @@ function renderHtml(res) {
     const filePath = f => esc(rel(f)).replace(/\//g, '/<wbr>');          // line breaks only after '/'
     const row = (e, excl, note) => `<tr${excl ? ' class="excl"' : ''}><td class="fn">${esc(e.caller_fn || '—')}</td><td class="fn">${esc(e.symbol)}</td>` +
         `<td class="file">${filePath(e.caller)}</td><td class="file">${filePath(e.callee)}</td>` +
-        (note ? `<td class="why">${excl ? 'excluded' + (e.context ? ', from ' + esc(e.context) : '') + (e.reason ? ': ' + esc(e.reason) : '') : ''}</td>` : '') + '</tr>';
+        (note ? `<td class="why">${excl ? 'excluded' + (e.no_context ? ' (no context ⚠)' : '') + (e.context ? ', from ' + esc(e.context) : '') + (e.reason ? ': ' + esc(e.reason) : '') : ''}</td>` : '') + '</tr>';
     // Violations/allowed calls first, then excluded ones; sorted by file then function.
     const callRows = (kept, excl) => [...kept.map(e => [e, false]), ...excl.map(e => [e, true])]
         .sort(([a, xa], [b, xb]) => xa - xb || rel(a.caller).localeCompare(rel(b.caller))
@@ -277,6 +279,7 @@ function renderHtml(res) {
         ? `<div class="panel"><h2>${title} (${items.length})</h2><ul class="files">${items.map(i => `<li>${esc(i)}</li>`).join('')}</ul></div>` : '';
 
     const card = (n, label, cls = '') => `<div class="card ${n ? cls : ''}"><b>${n}</b><span>${label}</span></div>`;
+    const noContext = res.excluded.filter(e => e.no_context);
     const nCalls = res.matrix.concat(res.violations).reduce((s, c) => s + c.count, 0);
 
     return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Dependency Matrix</title>
@@ -289,6 +292,7 @@ ${card(nCalls, 'Cross-group calls')}
 ${card(res.unassigned.length, 'Unassigned files', 'warn')}
 ${card(res.unresolved_calls.length, 'Unresolved calls', 'warn')}
 ${card(res.excluded.length, 'Excluded calls', 'excl')}
+${card(noContext.length, 'Exclusions without context', 'warn')}
 ${card(sharedFiles.length, 'Files in several groups', 'warn')}
 </div>
 <div class="panel"><h2>Group dependencies</h2>
@@ -299,11 +303,14 @@ ${panel('Files in several groups — placed in execution regions of different fe
     sharedFiles.map(f => `${f.file} — ${f.groups.join(', ')} (counted in ${f.kept})`))}
 ${panel('Unassigned files — add them to dependencies.groups', res.unassigned.map(rel))}
 ${panel('Unresolved indirect calls — add a //@ calls clause', res.unresolved_calls.map(u => `${rel(u.file)}:${u.line}`))}
-${panel('Excluded calls — accepted in dependencies.exclusions', res.excluded.map(e =>
-    `${describeCall(e)} (${rel(e.caller)})` + (e.reason ? ` — ${e.reason}` : '')
-    + ((e.callers || []).length ? ` [no fromCaller/fromCallee yet — callers of ${e.caller_fn}: ${e.callers.join(', ')}]` : '')))}
-${panel('Exclusions not applied — no callgraph path from fromCaller → fromCallee to the caller (the call stays in the matrix)',
-    res.invalid_exclusions.map(e => describeCall(e) + (e.callers.length ? ` (callers of ${e.caller_fn}: ${e.callers.join(', ')})` : '')))}
+${panel('Excluded calls without context (warning) — add fromCaller/fromCallee; the call itself is accepted (fromCaller = caller, fromCallee = callee)',
+    noContext.map(e => `${describeCall(e)} (${rel(e.caller)})` + (e.reason ? ` — ${e.reason}` : '')
+        + ((e.callers || []).length ? ` (callers of ${e.caller_fn}: ${e.callers.join(', ')})` : '')))}
+${panel('Excluded calls — accepted in dependencies.exclusions', res.excluded.filter(e => !e.no_context).map(e =>
+    `${describeCall(e)} (${rel(e.caller)})` + (e.reason ? ` — ${e.reason}` : '')))}
+${panel('Exclusions not applied — no callgraph path from fromCaller → fromCallee to the caller (the call stays a violation)',
+    res.invalid_exclusions.map(e => describeCall(e) + (e.reason ? ` — ${e.reason}` : '')
+        + (e.callers.length ? ` (callers of ${e.caller_fn}: ${e.callers.join(', ')})` : '')))}
 ${panel('Unused exclusions — matched no call, check dependencies.exclusions', res.unused_exclusions.map(describeExclusion))}
 </body></html>`;
 }
@@ -321,7 +328,11 @@ function renderIssues(res) {
         })),
         ...res.invalid_exclusions.map(e => ({
             fileName: e.caller, lineStart: 1, severity: 'NORMAL', category: 'Exclusion not applied', type: `${e.caller_fn} -> ${e.symbol}`,
-            message: `Exclusion ${e.caller_fn} -> ${e.symbol}${e.context ? ', from ' + e.context : ''}: no callgraph path, call kept`,
+            message: `Exclusion ${e.caller_fn} -> ${e.symbol}, from ${e.context}: no callgraph path, call kept`,
+        })),
+        ...res.excluded.filter(e => e.no_context).map(e => ({
+            fileName: e.caller, lineStart: 1, severity: 'LOW', category: 'Exclusion without context', type: `${e.caller_fn} -> ${e.symbol}`,
+            message: `Exclusion ${e.caller_fn} -> ${e.symbol} applied without fromCaller/fromCallee (${e.reason})`,
         })),
         ...res.unassigned.map(f => ({
             fileName: f, lineStart: 1, severity: 'NORMAL', category: 'Unassigned file', type: 'dependencies.groups',
@@ -359,7 +370,7 @@ function cmdRender() {
     fs.writeFileSync(path.join(out, 'deps.json'), JSON.stringify(res, null, 2));
     fs.writeFileSync(path.join(out, 'matrix.html'), renderHtml(res));
     fs.writeFileSync(path.join(out, 'deps-issues.json'), JSON.stringify(renderIssues(res), null, 2));
-    log(`OK: ${res.violations.length} violation(s), ${res.excluded.length} excluded, ${res.invalid_exclusions.length} not applied, ${sharedFiles.length} shared file(s), ${res.unassigned.length} unassigned, ${res.unresolved_calls.length} unresolved -> ${out}`);
+    log(`OK: ${res.violations.length} violation(s), ${res.excluded.length} excluded (${res.excluded.filter(e => e.no_context).length} without context), ${res.invalid_exclusions.length} not applied, ${sharedFiles.length} shared file(s), ${res.unassigned.length} unassigned, ${res.unresolved_calls.length} unresolved -> ${out}`);
     if (res.unused_exclusions.length) log(`WARNING: ${res.unused_exclusions.length} exclusion(s) matched no call`);
 }
 
